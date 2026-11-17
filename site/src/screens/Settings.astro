@@ -34,6 +34,14 @@ const { t, lang } = ctx;
     <p class="online-note">{t.s('onlineAdvisory')}</p>
     <button class="ft online-retry" data-online-retry type="button" hidden>{t.s('checkOnline')}</button>
   </section>
+  <section class="online-check pairing-preview" data-pairing hidden role="dialog" aria-modal="true" aria-label={t.s('companionPhones')}>
+    <div class="online-heading">
+      <button class="ft online-back" data-pair-action="back" type="button" aria-label={t.s('back')}><Icon name="back" size={32} /></button>
+      <h2 class="display-bold">{t.s('companionPhones')}</h2>
+    </div>
+    <p class="online-note">{t.ar ? 'عرض تجريبي في المتصفح — لا يوجد تلفاز متصل' : 'Browser demo — no TV is connected'}</p>
+    <div class="pairing-demo-body" data-pairing-body></div>
+  </section>
   <div class="toast" data-toast-out hidden role="status"></div>
   <a data-home href={href('', lang) + '#tv'} tabindex="-1" hidden>{lang === 'ar' ? 'الرئيسية' : 'Home'}</a>
   <audio data-audio preload="none"></audio>
@@ -50,8 +58,9 @@ const { t, lang } = ctx;
   import type { Ctx } from '../lib/ctx';
   import type { Lang } from '../lib/text';
   import {fetchComparison, onlineRequest} from '../lib/online-prayer';
+  import {pairingDemo, pairingHtml, pairingStep, type PairingAction} from './pairing';
   import {
-    APPEARANCE, DOCK_MODES, REMIND, VOICES, chooserHtml, citiesOf, commit, countries, methodItems, regionOf, moveDraft, pick, rowsFor, rowsHtml,
+    APPEARANCE, DEVICE, DOCK_MODES, REMIND, VOICES, chooserHtml, citiesOf, commit, countries, methodItems, regionOf, moveDraft, pick, rowsFor, rowsHtml,
     savedDraft, sectionName, stationChoice, stationsOf, onlineHtml, type Edit, type SPrefs,
   } from './settings';
 
@@ -82,6 +91,17 @@ const { t, lang } = ctx;
     type OnlineView = {row: number; request: AbortController | null};
     let online: OnlineView | null = null;
     const onlineBackground = [...root.children].filter(el => el !== onlineEl) as HTMLElement[];
+    const pairingEl=$('[data-pairing]'),pairingBody=$('[data-pairing-body]'),pairingBack=$('[data-pair-action=back]');
+    let pairingRow:number|null=null,pairingState=pairingDemo();
+    const pairingBackground=[...root.children].filter(el=>el!==pairingEl) as HTMLElement[];
+    const renderPairing=()=>{
+      pairingBody.innerHTML=pairingHtml(ctx.t,pairingState);
+      (pairingBody.querySelector<HTMLElement>(pairingState.phase==='pending'?'[data-pair-action=reject]':pairingState.phase==='approved'?'[data-pair-action=cancel]':'[data-pair-action]')??pairingBack).focus({preventScroll:true});
+    };
+    const closePairing=(restoreFocus=true)=>{
+      if(pairingRow===null)return;const row=pairingRow;pairingRow=null;pairingState=pairingStep(pairingState,'cancel');pairingEl.hidden=true;pairingBody.replaceChildren();
+      pairingBackground.forEach(el=>el.inert=false);if(restoreFocus)focusRow(row);
+    };
 
     const rowEls = () => [...rowsEl.querySelectorAll<HTMLElement>('[data-row]')];
     const focusRow = (i: number) => {
@@ -103,7 +123,7 @@ const { t, lang } = ctx;
       $('[data-appearance-preview]').hidden = section !== APPEARANCE;
       if (appearanceDraft) appearance($('[data-appearance-preview]'), appearanceDraft);
       $('[data-theme-name]').textContent = ctx.t.list('themeNames')[Math.max(0, THEMES.indexOf(rowCtx().prefs.theme ?? 'mihrab'))];
-      rowsEl.classList.toggle('scrolling', section === APPEARANCE || (ctx.prefs.uiScale ?? 100) > 110);
+      rowsEl.classList.toggle('scrolling', section === APPEARANCE || section === DEVICE || (ctx.prefs.uiScale ?? 100) > 110);
       rowsEl.classList.toggle('appearance', section === APPEARANCE);
       if (appearanceDraft) $('[data-home-plan]').innerHTML = homePreview(appearanceDraft, rtl);
       $('[data-label]').textContent = offsetsPage ? ctx.t.s('prayerOffsets') : sectionName(ctx.t, section);
@@ -220,8 +240,8 @@ const { t, lang } = ctx;
         onlineBody.textContent = ctx.t.s('onlineUnavailable'); onlineRetry.hidden = false;
       } finally { if (online === owner) owner.request = null; }
     };
-    document.addEventListener('visibilitychange', () => { if (document.hidden) cancelOnline(); });
-    window.addEventListener('pagehide', () => closeOnline(false));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelOnline(); closePairing(false); } });
+    window.addEventListener('pagehide', () => { closeOnline(false); closePairing(false); });
     const choose = (i: number) => {
       const before = chooser;
       onPick(i);
@@ -315,6 +335,7 @@ const { t, lang } = ctx;
     const act = (i: number) => {
       const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[i];
       if (!r) return;
+      if(r.id==='device.companion'){pairingRow=i;pairingEl.hidden=false;pairingBackground.forEach(el=>el.inert=true);renderPairing();return;}
       if (r.id === 'prayer.online') { void checkOnline(i); return; }
       if (r.id === 'homeReset' && appearanceDraft) save({ ...appearanceDraft, homeCountdown: 0, homeSide: 0, homeBar: 0, homePrayers: 0, homeLayout: 'two_rows' });
       else if (r.id === 'apply' && appearanceDraft) { appearanceDraft = armCycle(appearanceDraft, Date.now()); update(appearanceDraft); showSaved(); }
@@ -354,6 +375,16 @@ const { t, lang } = ctx;
       const horiz = k === 'ArrowRight' ? 1 : k === 'ArrowLeft' ? -1 : 0;
       const toEnd = rtl ? -horiz : horiz; // +1 toward the end of the line, mirrored in RTL
       const handled = () => { e.preventDefault(); e.stopPropagation(); };
+      if(pairingRow!==null){
+        if(!ok&&!back&&!vert&&!horiz&&k!=='Tab')return;handled();
+        if(back)closePairing();
+        else if(ok&&pairingEl.contains(a))a.click();
+        else if(vert||k==='Tab'){
+          const buttons=[...pairingEl.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+          buttons[Math.max(0,Math.min(buttons.length-1,buttons.indexOf(a as HTMLButtonElement)+(vert||1)))]?.focus({preventScroll:true});
+        }
+        return;
+      }
 
       if (online) {
         if (!ok && !back && !vert && !horiz && k !== 'Tab') return;
@@ -411,6 +442,7 @@ const { t, lang } = ctx;
 
     // Focus on a section shows it at once, as on the TV.
     root.addEventListener('focusin', (e) => {
+      if(pairingRow!==null){if(!pairingEl.contains(e.target as Node))pairingBack.focus({preventScroll:true});return;}
       if (online) {
         if (!onlineEl.contains(e.target as Node)) onlineBack.focus({preventScroll: true});
         return;
@@ -422,6 +454,12 @@ const { t, lang } = ctx;
     // Pointer: the same actions.
     root.addEventListener('click', (e) => {
       const el = e.target as HTMLElement;
+      if(pairingRow!==null){
+        const button=el.closest<HTMLElement>('[data-pair-action]');if(!button)return;
+        const action=button.dataset.pairAction;if(action==='back')closePairing();
+        else {pairingState=pairingStep(pairingState,action as PairingAction,Number(button.dataset.pairPhone));renderPairing();}
+        return;
+      }
       if (online) {
         if (el.closest('[data-online-back]')) closeOnline();
         else if (el.closest('[data-online-retry]')) void checkOnline(online.row);
@@ -473,6 +511,13 @@ const { t, lang } = ctx;
   .settings .online-check thead { font-size:var(--font-size-label); color:var(--color-mist-400); }
   .settings .online-check tbody th { font-weight:500; }
   .settings .online-retry { position:relative; display:flex; align-items:center; justify-content:center; width:580px; height:72px; font-size:var(--font-size-body); border-radius:var(--radius-cell); }
+  .settings .pairing-demo-body { display:flex; gap:var(--space-6); width:100%; min-height:0; overflow:auto; padding:24px; }
+  .settings .pairing-demo-qr { flex:none;width:420px;height:420px;background:white; }
+  .settings .pairing-demo-qr svg { display:block;width:420px;height:420px; }
+  .settings .pairing-demo-controls { flex:1; min-width:0; }
+  .settings .pairing-demo-controls button { position:relative;display:flex;align-items:center;width:100%;min-height:72px;padding:var(--space-4);margin-bottom:12px;border-radius:var(--radius-cell);font-size:var(--font-size-body); }
+  .settings .pairing-demo-code { display:block;font-size:var(--font-size-display-s);letter-spacing:8px; }
+  .settings .rows.scrolling:not(.appearance) { top:calc(var(--layout-settings-rows-top) - var(--layout-settings-scroll-padding));height:calc(100% - var(--layout-settings-rows-top) - var(--space-safe-block)); }
   .settings .slide { width: var(--layout-settings-carousel-width); height: var(--layout-settings-carousel-height); padding: 0 12px; display: grid; place-items: center; overflow: hidden; white-space: nowrap; font-size: var(--font-size-label); opacity: .65; }
   .settings .slide.home-choice { width:var(--layout-settings-home-arrow-width); }
   .settings .slide.home-choice.on { width:var(--layout-settings-home-choice-width); }

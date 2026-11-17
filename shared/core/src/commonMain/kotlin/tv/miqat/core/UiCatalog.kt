@@ -92,6 +92,12 @@ internal object UiCatalog {
         UiControl("favourites.move-later", "favourites", "action", "moveLater", "action", "", emptyArray()),
         UiControl("favourites.replace", "favourites", "action", "replaceFavourite", "action", "", emptyArray()),
         UiControl("favourites.cancel", "favourites", "action", "cancel", "action", "", emptyArray()),
+        UiControl("device.companion", "device", "action", "companionPhones", "action", "", emptyArray()),
+        UiControl("pairing.open", "pairing", "action", "pairPhone", "action", "", emptyArray()),
+        UiControl("pairing.cancel", "pairing", "action", "cancel", "action", "", emptyArray()),
+        UiControl("pairing.approve", "pairing", "action", "approvePhone", "action", "", emptyArray()),
+        UiControl("pairing.reject", "pairing", "action", "rejectPhone", "action", "", emptyArray()),
+        UiControl("pairing.revoke", "pairing", "action", "revokePhone", "action", "", emptyArray()),
         UiControl("apps.uninstall", "apps", "action", "uninstall", "action", "", emptyArray()),
     )
 }

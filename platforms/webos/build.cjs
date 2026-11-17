@@ -23,7 +23,23 @@ for (const directory of [out, ...outputs]) {
 for (const directory of outputs) fs.rmSync(directory, {recursive: true, force: true});
 for (const part of ['app', 'service']) fs.cpSync(path.join(__dirname, part), path.join(out, part), { recursive: true });
 write(path.join(out, 'app/splash.png'), fs.readFileSync(path.join(root, 'shared/design/artwork/splash.png')));
-const data = {
+execFileSync(process.execPath, [path.join(root, 'companion/generate.mjs'), '--lg-tv'], {stdio: 'inherit'});
+write(path.join(out, 'service/companion-lan.json'), read('companion/protocol/lan.json'));
+const forgeRoot = path.join(__dirname, 'node_modules/node-forge');
+for (const name of fs.readdirSync(path.join(forgeRoot, 'lib')).filter(n => n.endsWith('.js'))) {
+  const source = fs.readFileSync(path.join(forgeRoot, 'lib', name), 'utf8');
+  const compiled = babel.transformSync(source, {configFile:false, babelrc:false, comments:true,
+    presets:[[require.resolve('@babel/preset-env'), {targets:{safari:'7'}, modules:false}]]}).code;
+  acorn.parse(compiled, {ecmaVersion:5});
+  write(path.join(out, 'service/vendor/forge', name), compiled);
+}
+write(path.join(out, 'service/licenses/node-forge.txt'), fs.readFileSync(path.join(forgeRoot, 'LICENSE')));
+write(path.join(out, 'app/qrcode.js'), fs.readFileSync(require.resolve('qrcode-generator')));
+write(path.join(out, 'app/qr-style.js'), read('shared/design/qr.js'));
+write(path.join(out, 'app/pairing-qr.js'), read('companion/qr.js'));
+  const data = {
+    qrStyle: json('shared/design/assets/qr-style.json'),
+    companionCommands: JSON.parse(read('companion/protocol/lan.json')).commands,
   cities: json('shared/data/cities.json'), methods: methods.map(method => method.id),
   presets: Object.fromEntries(methods.filter(method => method.preset).map(method => [method.id, {...method.preset, ...(method.methodAdjustments ? {methodAdjustments: method.methodAdjustments} : {})}])),
   strings,

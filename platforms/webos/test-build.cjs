@@ -44,6 +44,11 @@ for (const [property, source, width, height] of [
 }
 assert.deepEqual(fs.readFileSync(path.join(out, 'service/trust/usertrust-rsa.pem')),
   fs.readFileSync(path.join(__dirname, 'service/trust/usertrust-rsa.pem')), 'package the exact verified public HTTPS root');
+assert.deepEqual(fs.readFileSync(path.join(out,'service/companion-lan.json')),fs.readFileSync(path.join(__dirname,'../../companion/protocol/lan.json')));
+assert.deepEqual(fs.readFileSync(path.join(out,'service/licenses/node-forge.txt')),fs.readFileSync(path.join(__dirname,'node_modules/node-forge/LICENSE')));
+assert.deepEqual(fs.readFileSync(path.join(out,'app/qrcode.js')),fs.readFileSync(require.resolve('qrcode-generator')));
+assert.deepEqual(fs.readFileSync(path.join(out,'app/licenses/qrcode-generator.txt')),fs.readFileSync(path.join(__dirname,'../../shared/design/assets/licenses/qrcode-generator.txt')));
+assert.ok(fs.readdirSync(path.join(out,'service/vendor/forge')).every(name=>name.endsWith('.js')),'only Forge library sources ship; no upstream examples/test keys');
 const data = require('node:vm').runInNewContext(fs.readFileSync(path.join(out, 'app/data.js'), 'utf8') + ';MiqatData;');
 const root = path.resolve(__dirname, '../..');
 for (const theme of data.themes) {

@@ -9,6 +9,15 @@ for (const name of ['compat.js', 'adhan.js', 'data.js', 'kotlin-kotlin-stdlib.js
   vm.runInContext(fs.readFileSync(path.join(__dirname, 'build/app', name), 'utf8'), legacy);
 }
 const A = legacy.Miqat, data = legacy.MiqatData;
+const companionModule = {exports:{}};
+const companionCatalog = JSON.parse(fs.readFileSync(path.join(__dirname,'build/service/companion-catalog.json')));
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'service/companion-settings.js'),'utf8'), {
+  module:companionModule, require(name) {
+    return name === './core' ? A : name === './Miqat-core' ? legacy['tv.miqat:core'] : companionCatalog;
+  }
+});
+require('./test-companion-settings.cjs')(companionModule.exports,A);
+require('./test-companion-settings.cjs')(require('./build/service/companion-settings'),require('./build/service/core'));
 const prefs = A.prefs({utcOffset: 120});
 const now = new Date('2026-11-10T10:00:00Z');
 const day = A.day(now, prefs);
@@ -90,6 +99,7 @@ checkCalendar(A, data);
 checkCalendar(serviceCore, data);
 assert.equal(serviceCore.day(now, serviceCore.prefs({utcOffset: 120})).times[0], day.times[0], 'Node service and TV UI use the same calculation');
 for (const core of [A, serviceCore]) {
+  require('./test-preferences.cjs')(core);
   for (const value of [NaN, Infinity, '1', null]) assert.throws(() => core.deliveryState(value, +now), /Invalid/);
   for (const [delta, state] of [[-1, 'early'], [0, 'due'], [90000, 'due'], [90001, 'expired']]) {
     assert.equal(core.deliveryState(+now, +now + delta), state);
@@ -148,14 +158,20 @@ const fakeFs = {
   writeFileSync(p, value) { if (failWrite) throw new Error('EACCES'); files[p] = value; clockNow += advanceOnWrite; advanceOnWrite = 0; },
   renameSync(from, to) { files[to] = files[from]; delete files[from]; }
 };
+let companionIo;
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'service/service.js'), 'utf8'), {
-  require(name) { return name === 'fs' ? fakeFs : name === 'webos-service' ? Service : A; },
+  require(name) { return name === 'fs' ? fakeFs : name === 'webos-service' ? Service : name === './companion-session' ? (service,io)=>{companionIo=io;return require('./build/service/companion-session')(service,io);} : name === './companion-settings' ? require('./build/service/companion-settings') : A; },
   process: {getuid() { return 5901; }}, setTimeout, clearTimeout, Date: TestDate
 });
 function invoke(name, payload = {}, activity = ['startupTick', 'firePrayer', 'fireTest'].includes(name) ? {} : undefined) {
   let result;
   handlers[name]({payload, activity, respond(value) { assert.equal(result, undefined, 'respond once'); result = value; }});
   assert.ok(result, name + ' responds'); return result;
+}
+function prefsRequest(changes) {
+  const expected = A.prefs(invoke('status').state.prefs), next = A.prefs(expected);
+  Object.assign(next, changes);
+  return {expected, prefs: next};
 }
 assert.equal(invoke('inputs').current.id, 'HDMI_2');
 assert.equal(invoke('inputs').inputs.length, 3, 'ignore untrusted source IDs');
@@ -166,10 +182,10 @@ assert.equal(invoke('selectInput', {id: 'random-app'}).returnValue, false);
 assert.equal(invoke('exitToInput', {id: 'HDMI_3'}).returnValue, true);
 assert.equal(calls.at(-1).params.id, 'com.webos.app.hdmi3');
 const before = files['/media/internal/tv.miqat.webos/settings.json'];
-assert.equal(invoke('savePrefs', {prefs: {city: 'invalid'}}).returnValue, false);
+assert.equal(invoke('savePrefs', prefsRequest({city: 'invalid'})).returnValue, false);
 assert.equal(files['/media/internal/tv.miqat.webos/settings.json'], before, 'invalid write preserves saved state');
 failWrite = true;
-assert.equal(invoke('savePrefs', {prefs: {lang: 'en'}}).returnValue, false);
+assert.equal(invoke('savePrefs', prefsRequest({lang: 'en'})).returnValue, false);
 assert.equal(files['/media/internal/tv.miqat.webos/settings.json'], before, 'failed write preserves saved state');
 failWrite = false;
 assert.equal(invoke('setStartup', {enabled: true}).returnValue, true);
@@ -192,7 +208,7 @@ assert.equal(invoke('status').state.startup.enabled, false);
 assert.equal(invoke('report', {view: 'home', instance: '123', input: 'HDMI_3'}).returnValue, true);
 assert.equal(invoke('report', {view: 'bad', instance: '123', input: null}).returnValue, false);
 failCreate = false; failLaunch = false;
-assert.equal(invoke('savePrefs', {prefs: {automatic: true, utcOffset: 120}}).scheduleResult.returnValue, true);
+assert.equal(invoke('savePrefs', prefsRequest({automatic: true, utcOffset: 120})).scheduleResult.returnValue, true);
 let alarmState = invoke('status').state;
 const earlyId = alarmState.alarm.id;
 invoke('firePrayer', {id: earlyId, generation: alarmState.alarmGeneration});
@@ -215,7 +231,7 @@ invoke('firePrayer', {id: alarmState.alarm.id, generation: alarmState.alarmGener
 assert.equal(launches(), count, 'missed standby alerts expire without sound');
 assert.ok(invoke('status').state.alarm.time > clockNow, 'expired callback schedules the next future event');
 alarmState = invoke('status').state;
-invoke('savePrefs', {prefs: {automatic: false}}); clockNow = alarmState.alarm.time;
+invoke('savePrefs', prefsRequest({automatic: false})); clockNow = alarmState.alarm.time;
 invoke('firePrayer', {id: alarmState.alarm.id, generation: alarmState.alarmGeneration}); assert.equal(launches(), count, 'off cancels delivery');
 assert.equal(invoke('testAlert', {mode: 'adhan', prayer: 1}).returnValue, false);
 invoke('report', {view: 'hidden', instance: '123', input: 'HDMI_3'});
@@ -241,7 +257,7 @@ failLaunch = false;
 assert.equal(invoke('media', {kind: 'adhan', event: 'playing', time: 1}).returnValue, true);
 assert.equal(invoke('media', {kind: 'adhan', event: 'playing', time: Infinity}).returnValue, false);
 // Real Luna replies are asynchronous; overlapping changes must finish in order.
-invoke('savePrefs', {prefs: {automatic: true}});
+invoke('savePrefs', prefsRequest({automatic: true}));
 deferActivities = true;
 function begin(name, payload = {}) {
   const replies = [];
@@ -249,7 +265,7 @@ function begin(name, payload = {}) {
   return replies;
 }
 const refreshA = begin('syncAlerts'), refreshB = begin('syncAlerts');
-const disabled = begin('savePrefs', {prefs: {automatic: false}});
+const disabled = begin('savePrefs', prefsRequest({automatic: false}));
 assert.equal(activityReplies.length, 1, 'only one Activity Manager request may be in flight');
 for (let i = 0; i < 3; i++) {
   assert.equal(activityReplies.length, 1);
@@ -259,7 +275,7 @@ assert.equal(activityReplies.length, 0, 'overlapping requests settle without res
 for (const reply of [refreshA, refreshB, disabled]) { assert.equal(reply.length, 1); assert.equal(reply[0].returnValue, true); }
 assert.equal(invoke('status').state.alarm, null, 'a queued disable wins over in-flight creates');
 assert.equal(calls.at(-1).uri, 'luna://com.palm.activitymanager/cancel');
-const queuedEnable = begin('savePrefs', {prefs: {automatic: true}});
+const queuedEnable = begin('savePrefs', prefsRequest({automatic: true}));
 const recovery = begin('syncAlerts');
 failWrite = true; activityReplies.shift()(); failWrite = false;
 assert.equal(queuedEnable[0].scheduleResult.returnValue, false, 'asynchronous disk errors are reported');
@@ -269,7 +285,7 @@ assert.equal(afterFailure[0].returnValue, true, 'queue remains usable after fail
 assert.equal(activityReplies.length, 0);
 deferActivities = false;
 for (const lateness of [-1, 0, 90000, 90001]) {
-  invoke('savePrefs', {prefs: {automatic: true, utcOffset: 120}});
+  invoke('savePrefs', prefsRequest({automatic: true, utcOffset: 120}));
   const state = invoke('status').state, alarm = state.alarm;
   const params = {id: alarm.id, generation: state.alarmGeneration};
   const before = launches();
@@ -302,9 +318,39 @@ invoke('testAlert', {mode: 'banner', prayer: 0});
 test = invoke('status').state.test; clockNow = test.time + 90001; count = launches();
 invoke('fireTest', {id: test.id});
 assert.equal(launches(), count, 'expired manual test stays silent');
-invoke('savePrefs', {prefs: {automatic: true, utcOffset: 120}});
+invoke('savePrefs', prefsRequest({automatic: true, utcOffset: 120}));
 const slowState = invoke('status').state;
 clockNow = slowState.alarm.time + 89999; count = launches(); advanceOnWrite = 2;
 invoke('firePrayer', {id: slowState.alarm.id, generation: slowState.alarmGeneration});
 assert.equal(launches(), count, 'delivery must expire if the persisted claim crosses its deadline');
+const localClock = prefsRequest({clock: '12'});
+assert.equal(invoke('savePrefs', prefsRequest({volume: 25})).returnValue, true);
+const outer = invoke('status').state;
+assert.equal(invoke('savePrefs', localClock).returnValue, true);
+const afterMerge = invoke('status').state;
+assert.equal(afterMerge.prefs.volume, 25, 'stale full-object save preserves a later unrelated edit');
+assert.equal(afterMerge.prefs.clock, '12');
+for (const key of ['input', 'startup', 'audioVolume', 'handled', 'test', 'app']) {
+  assert.deepEqual(afterMerge[key], outer[key], 'preference merging preserves outer state: ' + key);
+}
+const conflictingVolume = prefsRequest({volume: 35});
+assert.equal(invoke('savePrefs', prefsRequest({volume: 30})).returnValue, true);
+const beforeConflict = files['/media/internal/tv.miqat.webos/settings.json'], callsBeforeConflict = calls.length;
+const conflict = invoke('savePrefs', conflictingVolume);
+assert.equal(conflict.returnValue, false); assert.deepEqual(Array.from(conflict.conflicts), ['volume']);
+assert.equal(conflict.prefs.volume, 30);
+assert.equal(files['/media/internal/tv.miqat.webos/settings.json'], beforeConflict, 'conflict does not persist or reschedule');
+assert.equal(calls.length, callsBeforeConflict);
+assert.equal(invoke('savePrefs', {prefs: A.prefs()}).returnValue, false, 'missing baseline cannot replace settings');
+assert.equal(files['/media/internal/tv.miqat.webos/settings.json'], beforeConflict);
+const lanBefore=companionIo.snapshot();let lanResult;
+companionIo.apply(lanBefore.values,{'display.clock':lanBefore.values['display.clock']==='12'?'24':'12'},(error,result)=>{assert.ifError(error);lanResult=result;});
+assert.equal(lanResult.status,'saved');assert.notEqual(lanResult.values['display.clock'],lanBefore.values['display.clock']);assert.equal(lanResult.values['reminders.volume'],'30');
+const lanFile=files['/media/internal/tv.miqat.webos/settings.json'];
+companionIo.apply(lanBefore.values,{'display.clock':'12'},(error,result)=>{assert.ifError(error);lanResult=result;});assert.equal(lanResult.status,'conflict');assert.equal(files['/media/internal/tv.miqat.webos/settings.json'],lanFile);
+failWrite=true;companionIo.apply(companionIo.snapshot().values,{'reminders.volume':'35'},(error,result)=>{assert.ifError(error);lanResult=result;});failWrite=false;
+assert.equal(lanResult.status,'uncertain');assert.equal(lanResult.values['reminders.volume'],'30');
+const startupPrefs=JSON.stringify(invoke('status').state.prefs);
+companionIo.apply(companionIo.snapshot().values,{'device.startup':'false'},(error,result)=>{assert.ifError(error);lanResult=result;});assert.equal(lanResult.status,'saved');assert.equal(lanResult.values['device.startup'],'false');
+assert.equal(JSON.stringify(invoke('status').state.prefs),startupPrefs,'startup uses existing OS workflow and preserves all preferences');
 console.log('PASS: legacy calculations, preferences, atomic state, startup, exact prayer scheduling, asynchronous overlap/failure recovery, expired/duplicate/cancelled alerts and media diagnostics.');

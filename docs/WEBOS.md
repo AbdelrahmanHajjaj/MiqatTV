@@ -90,3 +90,11 @@ Do not use historical probes, firmware changes or root recipes for routine testi
 Physical picture, sound, remote and power checks require a ready watcher. LG
 capture APIs do not reliably show the video plane. See [TESTING.md](TESTING.md)
 and the platform [agent rules](../platforms/webos/AGENTS.md).
+
+## Foreground phone pairing
+
+The companion branch adds Settings / Phones with themed local QR and physical
+remote approval/revocation. Its listener follows the foreground app subscription.
+See [protocol and legacy TLS limits](COMPANION-LAN.md) and
+[current companion evidence](COMPANION-WORK.md). Physical Miqat installation and
+pairing acceptance remain pending; old app observations are not Miqat passes.

@@ -18,16 +18,28 @@ const server = http.createServer((req, res) => {
 });
 (async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  let browser;
+  let browser, page;
   try {
     browser = await chromium.launch({channel: 'msedge', headless: true});
-    const page = await browser.newPage({viewport: {width: 1920, height: 1080}});
-    await page.addInitScript(() => {
+    page = await browser.newPage({viewport: {width: 1920, height: 1080}});
+    const identity=await new Promise((resolve,reject)=>require('./build/service/companion-identity').load({read:()=>null,write(){}},(error,value)=>error?reject(error):resolve(value)));
+    const qrFixture={type:'miqat-tv-pair',version:3,url:'https://192.168.1.5:45761',pin:identity.pin,token:require('./service/companion-pairing').token()};
+    await page.addInitScript(qrFixture => {
       // Mock the TV boundary and decoder events; the physical LG validates actual picture/sound.
       window.mediaCalls = [];
       window.volumeCalls = [];
       window.onlineCalls = [];
       window.closeCount = 0; window.close = () => { window.closeCount++; };
+      window.companionCalls=[]; window.companionState={supported:true,starting:false,failure:'',phones:[],open:false,pending:null,approved:false,ownsPairing:false,qr:null};
+      window.publishCompanion=(extra={})=>window.companionBridge?.onservicecallback(JSON.stringify({returnValue:true,subscribed:true,session:'owned-frontend',companion:window.companionState,...extra}));
+      window.companionRequest=(name='Home phone')=>{
+        window.companionState.pending={name,nonce:'N'.repeat(43),code:'123456'};window.publishCompanion();
+      };
+      window.companionComplete=()=>{
+        if(!window.companionState.approved)throw Error('Fixture approval required');
+        window.companionState.phones.push({id:'P'.repeat(43),name:window.companionState.pending.name});
+        Object.assign(window.companionState,{open:false,pending:null,approved:false,ownsPairing:false,qr:null});window.publishCompanion();
+      };
       HTMLMediaElement.prototype.load = function () { window.mediaCalls.push({op: 'load', tag: this.tagName, src: this.getAttribute('src'), children: this.children.length}); };
       HTMLMediaElement.prototype.pause = function () { window.mediaCalls.push({op: 'pause', tag: this.tagName}); };
       HTMLMediaElement.prototype.play = function () {
@@ -35,10 +47,37 @@ const server = http.createServer((req, res) => {
         setTimeout(() => this.dispatchEvent(new Event('playing')), 0); return Promise.resolve();
       };
       window.PalmServiceBridge = function () {
+        this.cancel=()=>{window.companionCalls.push({action:'bridge-cancel'});if(window.companionBridge===this)window.companionBridge=null;};
         this.call = (uri, raw) => {
           const p = JSON.parse(raw), method = uri.split('/').pop();
+          if(method.startsWith('companion')) {
+            window.companionCalls.push({method,...p});const fixture=window.companionState;
+            const respond=(ok=true)=>setTimeout(()=>this.onservicecallback(JSON.stringify({returnValue:ok})),5);
+            if(method==='companionForeground'){window.companionBridge=this;setTimeout(()=>window.publishCompanion(),5);return;}
+            if(method==='companionLeave'){Object.assign(fixture,{open:false,pending:null,approved:false,ownsPairing:false,qr:null});respond();return;}
+            if(method==='companionUi') {
+              window.companionEditing=p.editing;window.companionPage=p.pairingPage;
+              if(!p.pairingPage&&fixture.open){Object.assign(fixture,{open:false,pending:null,approved:false,ownsPairing:false,qr:null});setTimeout(()=>window.publishCompanion(),5);}
+              respond();return;
+            }
+            if(method==='companionPairing') {
+              if(window.failCompanion||!window.companionPage||!fixture.supported){respond(false);return;}
+              if(p.action==='open')Object.assign(fixture,{open:true,pending:null,approved:false,ownsPairing:true,qr:qrFixture});
+              else if(p.action==='approve'){if(p.nonce!==fixture.pending?.nonce){respond(false);return;}fixture.approved=true;}
+              else if(p.action==='reject'||p.action==='cancel')Object.assign(fixture,{open:false,pending:null,approved:false,ownsPairing:false,qr:null});
+              else if(p.action==='revoke')fixture.phones=fixture.phones.filter(phone=>phone.id!==p.id);
+              else {respond(false);return;}
+              setTimeout(()=>{this.onservicecallback(JSON.stringify({returnValue:true}));window.publishCompanion();},5);return;
+            }
+          }
           const state = JSON.parse(localStorage.getItem('fixture') || '{}');
-          if (method === 'savePrefs') state.prefs = p.prefs;
+          if (method === 'savePrefs') {
+            const merged = window.Miqat.mergePrefs(state.prefs, p.expected, p.prefs);
+            if (merged.conflicts.length) {
+              setTimeout(() => this.onservicecallback(JSON.stringify({returnValue: false, conflicts: merged.conflicts, prefs: merged.prefs})), 5); return;
+            }
+            state.prefs = merged.prefs;
+          }
           if (method === 'setStartup') state.startup = {enabled: p.enabled};
           if (method === 'selectInput') state.input = p.id;
           if (method === 'media') state.media = p;
@@ -90,7 +129,7 @@ const server = http.createServer((req, res) => {
           setTimeout(() => this.onservicecallback(JSON.stringify(reply)), 5);
         };
       };
-    });
+    },qrFixture);
     async function inputRestored() {
       await page.waitForFunction(() => {
         const source = document.querySelector('#input-video source');
@@ -130,6 +169,156 @@ const server = http.createServer((req, res) => {
     await page.reload(); await inputRestored();
     console.log('PASS: Settings sidebar/content spacing and appearance bounds in both languages at every supported size.');
     if(process.argv.includes('--settings-layout')) return;
+    async function preservingSettings() {
+      const original = await page.evaluate(() => localStorage.getItem('fixture'));
+      for (const lang of ['ar', 'en']) {
+        await page.evaluate(lang => localStorage.setItem('fixture', JSON.stringify({prefs: window.Miqat.prefs({lang}), input:'HDMI_1', startup:{enabled:false, launches:7}, audioVolume:{fixture:true}})), lang);
+        await page.reload(); await inputRestored(); await page.keyboard.press('Enter');
+        await page.locator('[data-action=home]').click(); await page.locator('[data-action=settings]').click();
+        await page.locator('[data-action=section][data-value=display]').click();
+        const size = page.locator('[data-action=uiScale]');
+        await size.click(); await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+        await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.volume=25; localStorage.setItem('fixture',JSON.stringify(state)); });
+        await page.keyboard.press('Enter'); await page.locator('[data-action=uiScale]:not(.editing)').waitFor();
+        assert.deepEqual(await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); return [state.prefs.uiScale,state.prefs.volume,state.startup.launches,state.input,state.audioVolume]; }), [110,25,7,'HDMI_1',{fixture:true}], 'local save preserves newer unrelated preferences and outer state');
+        await page.locator('[data-action=section][data-value=reminders]').click();
+        const volume = page.locator('[data-action=volume]');
+        await volume.click(); await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+        await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.volume=40; localStorage.setItem('fixture',JSON.stringify(state)); });
+        await page.keyboard.press('Enter'); await page.locator('[data-action=reload-settings]').waitFor();
+        assert.equal(await volume.locator('strong').innerText(), lang === 'ar' ? '٣٠%' : '30%', 'conflict retains the unsaved inline draft');
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.volume),40);
+        await page.locator('[data-action=reload-settings]').click();
+        await page.locator('[data-action=volume]:not(.editing)').waitFor();
+        assert.equal(await volume.locator('strong').innerText(),lang === 'ar' ? '٤٠%' : '40%', 'explicit reload discards draft and reads actual values');
+        await page.locator('[data-action=section][data-value=appearance]').click();
+        await page.locator('[data-action=carousel-step][data-value="theme:1"]').click();
+        const choice=await page.locator('[data-action=carousel][data-value=theme] .carousel-choice').innerText();
+        await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.homeLayout='compact'; localStorage.setItem('fixture',JSON.stringify(state)); });
+        await page.locator('[data-action=apply-appearance]').click(); await page.locator('[data-action=reload-settings]').waitFor();
+        assert.equal(await page.locator('[data-action=carousel][data-value=theme] .carousel-choice').innerText(),choice,'appearance conflict retains the local preview');
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.theme),'mihrab');
+        await page.locator('[data-action=reload-settings]').click(); await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.homeLayout),'compact');
+        await page.locator('[data-action=section][data-value=display]').click();await page.locator('[data-action=uiScale]').focus();
+        await page.evaluate(()=>{const state=JSON.parse(localStorage.getItem('fixture'));state.prefs.clock='12';localStorage.setItem('fixture',JSON.stringify(state));window.publishCompanion({current:{prefs:state.prefs,startup:false}});});
+        await page.waitForFunction(()=>document.querySelector('[data-action=clock] .segment.selected')?.getAttribute('data-choice-index')==='0');
+        assert.equal(await page.locator(':focus').getAttribute('data-action'),'uiScale','a phone save preserves TV browsing focus');
+        await page.locator('[data-action=uiScale]').click();await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
+        await page.evaluate(()=>{const state=JSON.parse(localStorage.getItem('fixture'));state.prefs.uiScale=130;localStorage.setItem('fixture',JSON.stringify(state));window.publishCompanion({current:{prefs:state.prefs,startup:false}});});
+        await page.locator('[data-action=reload-settings]').waitFor();assert.equal(await page.locator('[data-action=uiScale] strong').innerText(),lang==='ar'?'١٢٠%':'120%','an accepted race never discards the active TV draft');
+        await page.locator('[data-action=reload-settings]').click();await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
+        await page.locator('[data-action=uiScale]').click();await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
+        await page.evaluate(()=>window.publishCompanion({currentUnavailable:true}));await page.locator('[data-action=reload-settings]').waitFor();
+        assert.equal(await page.locator('[data-action=uiScale] strong').innerText(),lang==='ar'?'١٤٠%':'140%','notification failure keeps the draft');
+        assert.equal(await page.evaluate(()=>window.companionEditing),true);
+        await page.locator('[data-action=reload-settings]').click();await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
+      }
+      await page.evaluate(original => { if(original===null)localStorage.removeItem('fixture'); else localStorage.setItem('fixture',original); }, original);
+      await page.reload(); await inputRestored();
+    }
+    await preservingSettings();
+    if (process.argv.includes('--preferences-only')) {
+      assert.deepEqual(errors, []);
+      console.log('PASS: bilingual LG settings merge, unrelated/outer-state preservation, inline and appearance conflicts, retained drafts and explicit reload. Luna and media are mocked.'); return;
+    }
+    async function pairingControls(collect=async()=>{}) {
+      await page.locator('[data-action=section][data-value=device]').click();
+      await page.locator('[data-action=companion]').click(); await page.waitForSelector('[data-action=pairing-open]:enabled');
+      await collect();
+      await page.locator('[data-action=pairing-open]').click(); await page.waitForSelector('.pairing-symbol svg');
+      assert.deepEqual(await page.locator('.pairing-symbol svg').evaluate(el=>[el.getAttribute('width'),el.getAttribute('height'),!!el.getAttribute('viewBox')]),['400','400',true],'old WebKit gets explicit compact QR dimensions');
+      assert.equal(await page.locator('.pairing-symbol svg > g[transform]').count(),3,'three original styled finder eyes');
+      assert.ok(await page.locator('.pairing-symbol svg path').count()>300,'actual data modules use canonical mihrab paths');
+      const assertQrVisible=async()=>assert.ok(await page.locator('.pairing-symbol').evaluate(el=>{const qr=el.getBoundingClientRect(),body=el.closest('.pairing-body').getBoundingClientRect();return qr.left>=body.left&&qr.right<=body.right&&qr.top>=body.top&&qr.bottom<=body.bottom;}),'complete QR and quiet zone stay visible at the chosen UI size');
+      await assertQrVisible();
+      assert.equal(await page.locator('.pairing-qr').getAttribute('role'),'img');await collect();
+      await page.locator('[data-action=pairing-cancel]').click();await page.locator('.pairing-qr').waitFor({state:'detached'});
+      await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();
+      await page.evaluate(()=>window.companionRequest('هاتف <b>المنزل</b> & "Phone"'));
+      await page.waitForSelector('[data-action=pairing-reject]');assert.equal(await page.locator(':focus').getAttribute('data-action'),'pairing-reject','new requests default to Reject');
+      assert.ok(await page.locator('[data-action=pairing-reject]').evaluate(el=>{const box=el.getBoundingClientRect(),frame=el.closest('.pairing-body').getBoundingClientRect();const scale=window.Miqat.prefs(JSON.parse(localStorage.getItem('fixture')).prefs).uiScale/100;return box.left>=frame.left+10*scale&&box.right<=frame.right-10*scale;}),'focused pairing controls reserve the complete shared focus ring');
+      assert.equal(await page.locator('.pairing-code').innerText(),'123456');assert.equal(await page.locator('.pairing-controls h2 b').count(),0,'phone names are escaped');await collect();
+      await assertQrVisible();
+      if(process.argv.includes('--pairing-only')) {
+        const label=await page.evaluate(()=>document.documentElement.lang+'-'+window.Miqat.prefs(JSON.parse(localStorage.getItem('fixture')).prefs).uiScale);
+        await page.screenshot({path:path.join(shots,'companion-browser-'+label+'.png')});
+        if(label==='en-100') {
+          await page.locator('.pairing-qr').screenshot({path:path.join(shots,'companion-browser-qr.png')});
+          fs.writeFileSync(path.join(shots,'companion-browser-qr.json'),require('../../companion/qr').encode(qrFixture));
+        }
+      }
+      await page.locator('[data-action=pairing-reject]').click();await page.locator('.pairing-code').waitFor({state:'detached'});
+      await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();await page.evaluate(()=>window.companionRequest());
+      await page.locator('[data-action=pairing-approve]').click();await page.locator('[data-action=pairing-approve]').waitFor({state:'detached'});
+      assert.equal(await page.locator(':focus').getAttribute('data-action'),'pairing-cancel');assert.equal(await page.locator('[data-action=pairing-revoke]').count(),0,'approval waits for completion');
+      await page.evaluate(()=>window.companionComplete());await page.locator('[data-action=pairing-revoke]').waitFor();await collect();
+      await page.evaluate(()=>window.failCompanion=true);await page.locator('[data-action=pairing-revoke]').click();await page.waitForFunction(()=>document.querySelector('.pairing-controls [role=status]'));
+      assert.equal(await page.locator('[data-action=pairing-revoke]').count(),1,'failed revocation keeps the phone');
+      await page.evaluate(()=>window.failCompanion=false);await page.locator('[data-action=pairing-revoke]').click();await page.locator('[data-action=pairing-revoke]').waitFor({state:'detached'});
+      await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();await page.keyboard.press('Escape');
+      await page.locator('.settings-page').waitFor();assert.equal(await page.locator(':focus').getAttribute('data-action'),'companion');
+      await page.waitForFunction(()=>!window.companionState.open,'leaving the pairing page cancels its window');
+      await page.locator('[data-action=companion]').click();await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();
+      await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});
+      await page.waitForFunction(()=>!window.companionBridge);assert.equal(await page.locator('.pairing-qr').count(),0,'backgrounding clears the QR immediately');
+      assert.ok(await page.evaluate(()=>window.companionCalls.some(c=>c.method==='companionLeave')&&window.companionCalls.some(c=>c.action==='bridge-cancel')));
+      await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});
+      await page.locator('[data-action=pairing-open]:enabled').waitFor();
+      await page.evaluate(()=>{window.companionState.supported=false;window.publishCompanion();});await page.locator('[data-action=pairing-open]:disabled').waitFor();
+      assert.equal(await page.locator('.pairing-qr').count(),0);assert.ok(await page.locator('.pairing-controls').innerText());
+      await page.evaluate(()=>{window.companionState.supported=true;window.publishCompanion();});await page.locator('[data-action=pairing-open]:enabled').waitFor();
+      await page.locator('[data-action=pairing-back]').click();
+    }
+    if(process.argv.includes('--remote-only')) {
+      for(const lang of ['ar','en']) {
+        await page.evaluate(lang=>localStorage.setItem('fixture',JSON.stringify({prefs:window.Miqat.prefs({lang}),input:'HDMI_1',startup:{enabled:false}})),lang);
+        await page.reload();await inputRestored();
+        let serial=0;
+        const command=async(id,value='')=>{
+          const request='R'.repeat(42)+(++serial).toString(36);
+          await page.evaluate(command=>window.publishCompanion({command}),{request,id,value});
+          await page.waitForFunction(request=>window.companionCalls.some(call=>call.method==='companionResult'&&call.request===request),request);
+          return page.evaluate(request=>window.companionCalls.find(call=>call.method==='companionResult'&&call.request===request).status,request);
+        };
+        assert.equal(await command('device.home'),'accepted');await page.locator('.home').waitFor();
+        assert.equal(await command('device.inputs'),'accepted');await page.locator('[data-action=select-input]').first().waitFor();
+        assert.equal(await command('device.inputs','HDMI_2'),'accepted');await inputRestored();
+        assert.equal(await command('device.inputs','arbitrary-input'),'unavailable');assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).input),'HDMI_2');
+        assert.equal(await command('radio.play'),'accepted');await page.waitForFunction(()=>JSON.parse(localStorage.getItem('fixture')).media?.event==='playing');
+        assert.equal(await command('device.home'),'busy','navigation does not discard current media/editor ownership');
+        assert.equal(await command('radio.stop'),'accepted');await page.waitForFunction(()=>JSON.parse(localStorage.getItem('fixture')).media?.event==='stopped');
+        assert.equal(await command('tests.adhan-short'),'accepted');await page.locator('.adhan-overlay').waitFor();
+        assert.equal(await command('tests.cancel'),'accepted');await page.waitForFunction(()=>!document.querySelector('.adhan-overlay'));
+        assert.equal(await command('device.home'),'accepted');await page.locator('.home').waitFor();
+        const oldPrefs=await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs);
+        await page.locator('[data-action=settings]').click();await page.locator('[data-action=section][data-value=appearance]').click();
+        assert.equal(await command('device.home'),'busy');assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs),oldPrefs);
+        console.log('PASS: authenticated-command frontend dispatch '+lang+' Home/input validation/radio/adhan preview/Stop and local draft/media guards; native boundaries mocked');
+      }
+      assert.deepEqual(errors,[]);return;
+    }
+    if(process.argv.includes('--pairing-only')) {
+      for(const lang of ['ar','en'])for(const uiScale of [80,100,150]) {
+        await page.evaluate(({lang,uiScale})=>localStorage.setItem('fixture',JSON.stringify({prefs:window.Miqat.prefs({lang,uiScale}),input:'HDMI_1'})),{lang,uiScale});
+        await page.reload();await inputRestored();await page.keyboard.press('Enter');await page.locator('[data-action=home]').click();await page.locator('[data-action=settings]').click();
+        await pairingControls();
+      }
+      for(const theme of ['mihrab','mosaic','brass','rose']) {
+        await page.evaluate(theme=>localStorage.setItem('fixture',JSON.stringify({prefs:window.Miqat.prefs({lang:'en',uiScale:100,theme}),input:'HDMI_1'})),theme);
+        await page.reload();await inputRestored();await page.keyboard.press('Enter');
+        await page.locator('[data-action=home]').click();await page.locator('[data-action=settings]').click();
+        await page.locator('[data-action=section][data-value=device]').click();await page.locator('[data-action=companion]').click();
+        await page.waitForSelector('[data-action=pairing-open]:enabled');await page.locator('[data-action=pairing-open]').click();await page.waitForSelector('.pairing-symbol svg');
+        const binding=await page.locator('.pairing-symbol svg').evaluate((el,theme)=>{
+          const d=window.MiqatData,expected=window.mihrabQr.palette(d.palettes[theme],d.qrStyle,d.palettes.mihrab['plaster-100']);
+          return {paper:el.querySelector(':scope > rect').getAttribute('fill'),expected:expected.paper,rim:el.querySelector('#miqat-qr-rim stop').getAttribute('stop-color'),expectedRim:expected.rim[0]};
+        },theme);
+        assert.equal(binding.paper,binding.expected,'pairing paper follows '+theme);assert.equal(binding.rim,binding.expectedRim,'finder colour follows '+theme);
+        await page.screenshot({path:path.join(shots,'companion-approved-'+theme+'-en.png')});
+      }
+      assert.deepEqual(errors,[]);console.log('PASS: LG bilingual pairing QR, default Reject, approve/complete/revoke/failure, Back/background cleanup and unsupported state at 80/100/150%; actual theme binding in Mihrab/Mosaic/Brass/Rose. Luna/media are mocked.');return;
+    }
     await page.evaluate(() => { window.originalVideo = document.getElementById('input-video'); });
     // Magic Remote OK becomes a click while its pointer is visible.
     await page.mouse.click(960, 540);
@@ -294,6 +483,13 @@ const server = http.createServer((req, res) => {
         await page.locator('[data-action=section][data-value=' + section + ']').click();
         await collect(section);
       }
+      await pairingControls(async()=>{
+        const controls=await page.locator('[data-ui^="pairing."]').evaluateAll(items=>items.map(el=>({id:el.dataset.ui,kind:el.dataset.uiKind,text:el.textContent})));
+        for(const item of controls){
+          const expected=await page.evaluate(({id,kind})=>{const c=window['tv.miqat:core'].tv.miqat.core.UiContract.bind(id,kind);return window.MiqatData.strings[c.labelKey][document.documentElement.lang];},item);
+          assert.ok(item.text.includes(expected),'actual pairing control uses canonical bilingual label');seen.add(item.id);
+        }
+      });
       await page.locator('[data-action=section][data-value=appearance]').click();
       const countdown = page.locator('[data-action=carousel][data-value=homeLayout]');
       const rtl = await page.locator('html').getAttribute('dir') === 'rtl';
@@ -1213,5 +1409,11 @@ const server = http.createServer((req, res) => {
     assert.deepEqual(errors, []);
     console.log('PASS: Arabic/English controls, grouped settings, offsets and cancel, prayer bells, overlays preserving HDMI, audio stop/end/error recovery, radio, theme/layout, persistence and global sizing. Decoder and Luna boundaries are mocked; actual LG tests remain separate.');
     console.log('Preview screenshots: ' + shots);
+  } catch(error) {
+    if(page&&!page.isClosed()) {
+      await page.screenshot({path:path.join(shots,'browser-failure.png')});
+      fs.writeFileSync(path.join(shots,'browser-failure.json'),JSON.stringify(await page.evaluate(()=>({body:document.body.innerText,fixture:localStorage.getItem('fixture'),companion:window.companionState,calls:window.companionCalls?.slice(-8)})),null,2));
+    }
+    throw error;
   } finally { if (browser) await browser.close(); server.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -17,6 +17,7 @@ import { uiPercent } from '../lib/ui-scale';
 
 const onlineControl = portable.tv.miqat.core.UiContract.bind('prayer.online', 'action');
 const sizeControl = portable.tv.miqat.core.UiContract.bind('display.size', 'number');
+const companionControl = portable.tv.miqat.core.UiContract.bind('device.companion', 'action');
 const uiContract = portable.tv.miqat.core.UiContract;
 
 export const PRAYER = 0, REMINDERS = 1, RADIO = 2, DISPLAY = 3, APPEARANCE = 4, NETWORK = 5, DEVICE = 6, SECTIONS = 7;
@@ -135,6 +136,7 @@ export function rowsFor(c: Ctx, section: number, radioOn = false, offsetsPage = 
     default: return [
       { id: 'device', kind: 'value', label: t.s('deviceRow'), help: t.s('deviceHelp'), value: '' },
       ...['homeSettings', 'inputsTitle', 'screensaver', 'remoteButtons', 'serviceHealth'].map(id => ({ id, kind: 'value' as Kind, label: t.s(id), help: id === 'serviceHealth' ? t.s('serviceHelp') : '', value: '' })),
+      { id: companionControl.id, kind: 'value', label: t.s(companionControl.labelKey), help: '', value: '' },
       { id: 'repairService', kind: 'toggle', label: t.s('repairService'), help: t.s('repairHelp'), on: p.repairService ?? false },
     ];
   }
@@ -199,7 +201,7 @@ const chevron = '<svg class="chev" width="22" height="22" viewBox="0 0 24 24" fi
 export function rowHtml(t: Text, r: Row, i: number, editing = false, top = 'var(--layout-settings-rows-top)') {
   const choiceId = ({ school: 'prayer.asr', dark: 'radio.screen-off', lang: 'display.language',
     digits: 'display.digits', clock: 'display.clock', dockPosition: 'display.bar-position' } as Record<string, string>)[r.id];
-  const contract = r.id === onlineControl.id ? onlineControl : r.id === sizeControl.id ? sizeControl : choiceId ? uiContract.bind(choiceId, 'choice') : null;
+  const contract = r.id === onlineControl.id ? onlineControl : r.id === sizeControl.id ? sizeControl : r.id === companionControl.id ? companionControl : choiceId ? uiContract.bind(choiceId, 'choice') : null;
   if (choiceId && (r.kind !== 'seg' || uiContract.choiceEditor(choiceId) !== 'segments')) throw new Error('Wrong choice editor: ' + choiceId);
   const binding = contract ? ` data-ui="${contract.id}" data-ui-kind="${contract.kind}"` : '';
   let control = '';

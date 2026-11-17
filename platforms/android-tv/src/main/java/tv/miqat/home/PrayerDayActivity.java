@@ -23,6 +23,7 @@ import tv.miqat.core.UiContract;
  * button opens a picker (with a how-to tip) for the way the viewer faces, so the dial can point from the sofa.
  */
 public class PrayerDayActivity extends Screen {
+    @Override boolean companionEditing() { return picker != null; }
 
     private static final int ROWS = 6, HOME = ROWS, ROOM = ROWS + 1;
     private static final float ROW_TOP = 236, ROW_H = 104, ROW_GAP = 12;

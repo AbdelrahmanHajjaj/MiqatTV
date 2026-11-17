@@ -35,6 +35,10 @@ android {
     }
 
     sourceSets.main {
+        java.srcDir file('../../companion/android-shared/src/main/java')
+        assets.srcDir file('../../companion/android-shared/src/main/assets')
+        assets.srcDir file('../../companion/protocol')
+        assets.srcDir layout.buildDirectory.dir('generated/companion')
         java.srcDir generatedAdhan
         res.srcDir file('../../shared/design/resources')
         assets.srcDir file('../../shared/design/assets')
@@ -45,6 +49,7 @@ android {
 
 dependencies {
     implementation 'tv.miqat:core'
+    implementation 'com.google.zxing:core:3.5.4'
     add(adhanSources.name, 'com.batoulapps.adhan:adhan:1.2.1:sources')
 }
 
@@ -54,7 +59,16 @@ def checkAdhanMedia = tasks.register('checkAdhanMedia', Exec) {
     onlyIf { file('../../state/media/adhan').isDirectory() }
     commandLine 'node', file('../../tools/prepare-adhans.mjs'), '--check'
 }
-tasks.named('preBuild') { dependsOn(checkAdhanMedia) }
+def generateCompanion = tasks.register('generateCompanion', Exec) {
+    inputs.files file('../../companion/generate.mjs'), file('../../companion/icons.mjs'), file('../../companion/protocol/lan.json'), file('../../companion/contract.json'), file('../../companion/strings.json'), file('../../tools/ui-contract.mjs')
+    inputs.dir file('../../shared/data')
+    inputs.dir file('../../shared/design')
+    inputs.file file('../../shared/design/mihrab/tokens.json')
+    inputs.files file('src/androidTest/assets/ui-gaps.json'), file('src/androidTest/assets/ui-choice-gaps.json')
+    outputs.file layout.buildDirectory.file('generated/companion/catalog.json')
+    commandLine 'node', file('../../companion/generate.mjs'), '--android-tv'
+}
+tasks.named('preBuild') { dependsOn(checkAdhanMedia, generateCompanion) }
 
 // The distributed launcher must stay below 25 MB (decimal), including bundled audio.
 def verifyApkSize = tasks.register('verifyApkSize') {

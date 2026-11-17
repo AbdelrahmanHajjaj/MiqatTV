@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Port the Android phone companion and foreground TV pairing/settings controls to
+  Miqat, using its shared artwork, geometry, palettes and tv.miqat identities.
+- Add themed local pairing QR codes, physical TV approval, phone appearance
+  preview with Apply/Cancel, and Home/input/radio/adhan-preview controls.
 - Establish Miqat as an independent project with Android TV and LG applications,
   a portable Kotlin JVM/ES5 core, canonical data/design and a browser preview.
 - Use Miqat names and tv.miqat.* identities throughout apps, services, setup

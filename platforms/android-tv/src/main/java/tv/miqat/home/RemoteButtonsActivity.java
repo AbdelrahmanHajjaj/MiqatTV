@@ -55,6 +55,10 @@ public final class RemoteButtonsActivity extends Activity {
     }
 
     private String buttonName(int code) {
+        return buttonName(this,t,code);
+    }
+
+    static String buttonName(android.content.Context context,Text t,int code) {
         switch (code) {
             case KeyEvent.KEYCODE_PROG_RED: return t.colourButtons()[0];
             case KeyEvent.KEYCODE_PROG_GREEN: return t.colourButtons()[1];
@@ -67,7 +71,7 @@ public final class RemoteButtonsActivity extends Activity {
             case KeyEvent.KEYCODE_ALL_APPS: return t.buttonActions()[2];
             case KeyEvent.KEYCODE_INFO: return t.buttonNames()[3];
             default:
-                if (getPackageManager().hasSystemFeature("com.tcl.software.tinput_shortcut_config")) {
+                if (context.getPackageManager().hasSystemFeature("com.tcl.software.tinput_shortcut_config")) {
                     if (code == 4062) return "Netflix";
                     if (code == 4065) return "YouTube";
                     if (code == 4159) return t.buttonNames()[4];

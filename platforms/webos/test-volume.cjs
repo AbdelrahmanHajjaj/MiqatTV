@@ -41,7 +41,7 @@ function host(sdk = '2.2.0', previous) {
     renameSync(from, to) { env.files[to] = env.files[from]; delete env.files[from]; }
   };
   vm.runInNewContext(source, {
-    require: name => name === 'fs' ? fakeFs : name === 'webos-service' ? Service : core,
+    require: name => name === 'fs' ? fakeFs : name === 'webos-service' ? Service : name === './companion-session' ? require('./build/service/companion-session') : core,
     process: {getuid: () => 5901}, Date, setTimeout, clearTimeout
   });
   env.state = () => JSON.parse(env.files[settingsPath]);

@@ -5,6 +5,9 @@ covers Miqat contributions. The components below have their own notices.
 
 | What | Where | Licence |
 |---|---|---|
+| [ZXing core 3.5.4](https://github.com/zxing/zxing/tree/zxing-3.5.4) by ZXing authors | Companion pairing QR codec in the Android TV and phone shells | Apache 2.0; upstream full text under `assets/licenses/zxing/` |
+| [Forge 1.4.3](https://github.com/digitalbazaar/forge/tree/v1.4.3) by Digital Bazaar and contributors | LG companion certificate creation/validation only; TLS uses Node's native implementation | BSD-3-Clause option; unabridged upstream licence in LG `service/licenses/node-forge.txt` |
+| [QR Code Generator 2.0.4](https://github.com/kazuhikoarase/qrcode-generator/tree/master/js) by Kazuhiko Arase | Local LG pairing and inert browser-demo QR encoding | MIT; upstream full text in `shared/design/assets/licenses/qrcode-generator.txt`, copied into LG and preview packages |
 | [adhan-java 1.2.1](https://github.com/batoulapps/adhan-java/tree/eefc4ed1b910ec144dff247f45b2b23a16c7d0c2) by Batoul Apps | Android TV compiles pinned sources; only minute rounding delegates to the shared rule | MIT; full text/source reference in `assets/licenses/adhan-java-{LICENSE,SOURCE}.txt` |
 | [Kotlin standard library 2.2.10](https://github.com/JetBrains/kotlin/tree/v2.2.10) by JetBrains and contributors | Shared JVM/JS core runtime, bundled in Android, LG app/service and preview | Apache 2.0 and the upstream standard-library third-party notices; full texts packaged under Android `assets/licenses/kotlin/`, LG app/service `licenses/kotlin/` and preview `licenses/kotlin/` |
 | [JetBrains annotations 13.0](https://repo1.maven.org/maven2/org/jetbrains/annotations/13.0/annotations-13.0.pom) | Transitive Kotlin JVM runtime dependency | Apache 2.0; license and source attribution under `assets/licenses/kotlin/` |

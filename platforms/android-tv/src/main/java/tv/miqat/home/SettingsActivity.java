@@ -111,6 +111,7 @@ public class SettingsActivity extends Screen {
     }
 
     private int section = PRAYER;
+    @Override boolean companionEditing() { return editing != null || chooser != null || section == APPEARANCE; }
     private boolean onNav = true;
     private int rowIndex;
     private boolean prayerOffsetsPage;
@@ -698,6 +699,10 @@ public class SettingsActivity extends Screen {
                     void open() { SystemScreens.open(SettingsActivity.this, Settings.ACTION_WIFI_SETTINGS); }
                 });
             default: return Arrays.asList(
+                new Row("device.companion", VALUE) {
+                    String label() { return t.companionPhones(); }
+                    void open() { startSafely(new Intent(c, PairingActivity.class)); }
+                },
                 new Row("device.settings", VALUE) {
                     String label() { return t.deviceRow(); }
                     String help() { return t.deviceHelp(); }

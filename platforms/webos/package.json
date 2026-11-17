@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node build.cjs",
-    "test": "node ../../tools/validate-shared.test.mjs && node test-build.cjs && node test.cjs && node test-volume.cjs && node test-online.cjs",
+    "test": "node ../../companion/qr.test.cjs && node ../../tools/validate-shared.test.mjs && node test-build.cjs && node test.cjs && node test-volume.cjs && node test-online.cjs && node test-companion-pairing.cjs && node test-companion-wire.cjs && node test-companion-files.cjs && node test-companion-identity.cjs && node test-companion-server.cjs && node test-companion-session.cjs",
     "test:browser": "node browser-test.cjs"
   },
   "devDependencies": {
@@ -12,6 +12,8 @@
     "@babel/preset-env": "^7.28.0",
     "acorn": "^8.15.0",
     "adhan": "4.4.6",
-    "playwright": "^1.56.0"
+    "node-forge": "1.4.3",
+    "playwright": "^1.56.0",
+    "qrcode-generator": "2.0.4"
   }
 }

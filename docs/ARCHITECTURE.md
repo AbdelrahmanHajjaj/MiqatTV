@@ -59,3 +59,9 @@ See [build instructions](BUILD.md), [core API](CORE.md), [data](DATA.md),
 Companion work is outside this repository foundation. Samsung/Tizen is unimplemented;
 Sony Android/Google TV uses the Android shell. Current hardware limits are in
 [validation evidence](EVIDENCE.md).
+
+## Phone companion
+
+`companion/core` owns portable settings drafts/session contracts; native phone and
+TV shells own rendering, persistence and LAN transport. See [protocol boundaries](COMPANION-LAN.md)
+and [separate companion scope/evidence](COMPANION-WORK.md).

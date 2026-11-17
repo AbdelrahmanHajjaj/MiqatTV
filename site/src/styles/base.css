@@ -46,6 +46,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: var(--display-weight); li
   width: 1920px;
   height: 1080px;
   overflow: hidden;
+  overflow: clip;
   transform-origin: 0 0;
   transform: scale(var(--k, 0.5));
   background: var(--color-lapis-900);

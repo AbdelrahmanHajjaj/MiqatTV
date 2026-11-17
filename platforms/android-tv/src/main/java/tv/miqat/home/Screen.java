@@ -69,6 +69,8 @@ abstract class Screen extends Activity {
     /** Once a second while the screen is in front. */
     abstract void onTick();
 
+    boolean companionEditing() { return false; }
+
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);

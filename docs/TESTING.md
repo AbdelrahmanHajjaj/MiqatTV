@@ -119,3 +119,10 @@ hardware acceptance requires separate watched tests.
 Use the [PR template](../.github/pull_request_template.md). Record commands, outcomes,
 evidence type, skipped checks and remaining risk. Keep raw private logs under state/
 and concise results in [EVIDENCE.md](EVIDENCE.md).
+
+## Companion
+
+Run [phone checks](../companion/README.md), shared core and affected shell/preview
+checks. Native UI/LAN suites use owned emulators. QR validation uses
+`node companion/check-qr.cjs <cached-zxing-core-jar>`. Physical Miqat TV
+approval/camera/picture/sound acceptance remains separate.

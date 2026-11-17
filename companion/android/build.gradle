@@ -1,0 +1,50 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'tv.miqat.companion'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'tv.miqat.companion'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1.0'
+        testInstrumentationRunner 'tv.miqat.companion.CompanionCheck'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // The in-app language choice must remain available offline.
+    bundle { language { enableSplit = false } }
+    sourceSets.main {
+        java.srcDir file('../android-shared/src/main/java')
+        assets.srcDir file('../android-shared/src/main/assets')
+        assets.srcDir file('../protocol')
+        assets.srcDir layout.buildDirectory.dir('generated/companion')
+        assets.srcDir file('../../shared/design/assets')
+        assets.srcDir file('../../state/media')
+        res.srcDir file('../../shared/design/resources')
+        res.srcDir layout.buildDirectory.dir('generated/companion-res')
+    }
+}
+dependencies {
+    implementation 'tv.miqat:companion-core'
+    implementation 'tv.miqat:core'
+    implementation 'com.google.zxing:core:3.5.4'
+}
+def generateCompanion = tasks.register('generateCompanion', Exec) {
+    inputs.files(file('../generate.mjs'), file('../icons.mjs'), file('../contract.json'), file('../strings.json'), file('../protocol/lan.json'), file('../../tools/ui-contract.mjs'))
+    inputs.dir file('../../shared/data')
+    inputs.dir file('../../shared/design')
+    inputs.file file('../../shared/design/mihrab/tokens.json')
+    inputs.files file('../../platforms/android-tv/src/androidTest/assets/ui-gaps.json'), file('../../platforms/android-tv/src/androidTest/assets/ui-choice-gaps.json'), file('../../platforms/webos/ui-gaps.json'), file('../../platforms/webos/ui-choice-gaps.json')
+    outputs.file layout.buildDirectory.file('generated/companion/catalog.json')
+    outputs.dir layout.buildDirectory.dir('generated/companion-res')
+    commandLine 'node', file('../generate.mjs')
+}
+def checkCompanionMedia = tasks.register('checkCompanionMedia', Exec) {
+    onlyIf { file('../../state/media/adhan').isDirectory() }
+    commandLine 'node', file('../../tools/prepare-adhans.mjs'), '--check'
+}
+tasks.named('preBuild') { dependsOn(generateCompanion, checkCompanionMedia) }

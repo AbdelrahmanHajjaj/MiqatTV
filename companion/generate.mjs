@@ -1,0 +1,116 @@
+import {readFileSync, writeFileSync, mkdirSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {uiChoices, validateUiContract} from '../tools/ui-contract.mjs';
+import {vectorIcon} from './icons.mjs';
+
+const root = new URL('../', import.meta.url);
+const read = path => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
+export function generate(platforms = ['android','lg']) {
+  const controls = read('shared/data/ui-contract.json'), strings = read('shared/data/strings.json');
+  const contract = read('companion/contract.json');
+  validateUiContract(controls, strings);
+  const pair = (ar, en) => ({ar, en});
+  const label = key => {
+    const [name, index] = key.split(':');
+    const source = strings[name];
+    if (!source) throw new Error('Unknown label: ' + key);
+    return pair(index === undefined ? source.ar : source.ar[Number(index)], index === undefined ? source.en : source.en[Number(index)]);
+  };
+  const indexed = (key, index) => pair(strings[key].ar[index], strings[key].en[index]);
+  const cities = read('shared/data/cities.json'), methods = read('shared/data/methods.json');
+  const voices = read('shared/data/voices.json'), stations = read('shared/data/stations.json');
+  const themes = read('shared/design/themes.json');
+  const choiceArrays = {'prayer.asr':'asrSchools','reminders.before':'remindChoices','reminders.close':'callCloseChoices',
+    'radio.screen-off':'radioDarkChoices','display.clock':'clocks','display.bar-mode':'dockModes','display.bar-position':'dockPositions',
+    'appearance.countdown':'homeCountdowns','appearance.prayers':'homePrayerModes','appearance.favourites':'homeLayouts','appearance.cycle':'appearanceCycleChoices'};
+  function option(c, value, index) {
+    let item;
+    if (c.choices === 'cities') { item = cities.find(x => x.id === value); return pair(item.ar + ' · ' + item.countryAr, item.en + ' · ' + item.countryEn); }
+    if (['methods','voices','stations'].includes(c.choices)) {
+      if (value === 'city-default') return pair('حسب المدينة','City default');
+      item = ({methods,voices,stations})[c.choices].find(x => x.id === value);
+      return pair(item.ar + (item.whereAr ? ' · ' + item.whereAr : ''), item.en + (item.whereEn ? ' · ' + item.whereEn : ''));
+    }
+    if (c.choices === 'themes') return indexed('themeNames', index);
+    if (c.choices === 'backgrounds') return indexed('backgroundNames', index);
+    if (choiceArrays[c.id]) return indexed(choiceArrays[c.id], index);
+    if (c.id === 'appearance.position') return index < 3 ? indexed('homeSides', index) : indexed('homeBars', index - 3);
+    if (c.id === 'display.language') return [pair('لغة التلفاز','TV language'),pair('العربية','Arabic'),pair('الإنجليزية','English')][index];
+    if (c.id === 'display.digits') return [pair('تلقائي','Automatic'),pair('0123456789','0123456789'),pair('٠١٢٣٤٥٦٧٨٩','٠١٢٣٤٥٦٧٨٩')][index];
+    if (c.id === 'display.bar-timeout') return value === '0' ? pair('دائماً','Always') : pair(value + ' ثانية', value + ' seconds');
+    if (c.id === 'tests.prayer') return indexed('prayerNames', Number(value));
+    if (c.choices === 'zones') {
+      if (value === 'system') return pair('توقيت التلفاز','TV timezone');
+      const n = Number(value), text = 'UTC' + (n < 0 ? '−' : '+') + String(Math.floor(Math.abs(n)/60)).padStart(2,'0') + ':' + String(Math.abs(n)%60).padStart(2,'0');
+      return pair(text,text);
+    }
+    throw new Error('Unlabelled option: ' + c.id);
+  }
+  const all = controls.map(c => ({...c, title:label(c.label), options:uiChoices(c).map((value,i) => ({value,...option(c,value,i)})), route:contract.actionRoutes[c.id] || ''}));
+  const defaults = {'prayer.location':'cairo','prayer.method':'EGYPTIAN','prayer.asr':'shafi','prayer.zone':'system',
+    'reminders.before':'15','reminders.close':'0','reminders.voice':'alafasy','reminders.fajr-voice':'chebae_fajr','reminders.volume':'60',
+    'radio.station':'cairo','radio.screen-off':'0','display.language':'system','display.digits':'western','display.clock':'24',
+    'display.size':'100','display.bar-mode':'hidden','display.bar-position':'top','display.bar-timeout':'20',
+    'appearance.countdown':'mihrab','appearance.position':'auto','appearance.prayers':'all','appearance.favourites':'two_rows',
+    'appearance.theme':'mihrab','appearance.background':'theme','appearance.lighting':'35','appearance.cycle':'0','tests.prayer':'0'};
+  const trueIds = ['reminders.adhan','reminders.announce','radio.resume',...controls.filter(c=>c.section==='prayer-day').map(c=>c.id)];
+  const appOptions = [pair('القرآن','Quran'),pair('الفيديو','Video'),pair('الموسيقى','Music'),pair('المتصفح','Browser')].map((x,i)=>({value:['quran','video','music','browser'][i],...x}));
+  const extras = contract.extraSettings.map(c=>({...c, title:pair(c.ar,c.en), save:c.section === 'appearance' ? 'appearance':'immediate',
+    options:c.choiceSource ? all.find(x=>x.id===c.choiceSource).options.filter(x=>c.values.includes(x.value)) : c.kind === 'list' ? appOptions:[], route:''}));
+  const buttons = contract.remoteButtons.map(c=>({id:'remote.'+c.id,section:'remote',kind:'choice',save:'immediate',title:pair(c.ar,c.en),default:'@default',route:'',
+    options:['@default','@home','@apps','@inputs','@settings','@dock'].map((value,i)=>({value,...indexed('buttonActions',i)})).concat(appOptions)}));
+  const profiles = {};
+  for (const platform of platforms) {
+    const gapPath = platform === 'android' ? 'platforms/android-tv/src/androidTest/assets/' : 'platforms/webos/';
+    const gaps = read(gapPath + 'ui-gaps.json'), choiceGaps = read(gapPath + 'ui-choice-gaps.json');
+    const unsupported = new Set(gaps.map(x=>x.id));
+    // These Android features exist behind Home or a combined control, despite missing catalog shortcuts.
+    if (platform === 'android') ['prayer.today','reminders.per-prayer','device.apps','tests.prayer','radio.play','radio.stop'].forEach(id=>unsupported.delete(id));
+    const entries = all.map(c=>{
+      const missing = choiceGaps.find(x=>x.id===c.id)?.values || [];
+      let options = c.options.filter(x=>!missing.includes(x.value));
+      // The phone exposes the two independently persisted positions as separate editors.
+      if(c.id==='appearance.position')options=options.filter(x=>!['top','bottom'].includes(x.value));
+      const def = platform==='lg' && c.id==='appearance.background' ? 'solid' : platform==='lg' && c.id==='display.language' ? 'ar' : defaults[c.id];
+      return {...c, options, default:def ?? (c.kind==='toggle' ? String(trueIds.includes(c.id)) : c.kind==='number' ? '0' : options[0]?.value || ''),
+        available:!unsupported.has(c.id), reason:gaps.find(x=>x.id===c.id)?.reason || ''};
+    });
+    entries.push(...extras.filter(x=>x.profiles?.includes(platform)||!x.profiles&&platform==='android').map(x=>({...x,available:true})));
+    if (platform === 'android') entries.push(...buttons.map(x=>({...x,available:true})));
+    profiles[platform] = entries;
+  }
+  const tokens=read('shared/design/mihrab/tokens.json');
+  const colors=Object.fromEntries(Object.entries(tokens.color).filter(([,v])=>v.$type==='color' && /^#[0-9a-f]{6}$/i.test(v.$value)).map(([k,v])=>[k,v.$value]));
+  const themeData={mihrab:{version:1,colors}};
+  for(const id of themes.filter(x=>!['mihrab','custom'].includes(x))) themeData[id]=read('shared/design/assets/themes/'+id+'.json');
+  const sections={prayer:label('sectionPrayer'),reminders:label('sectionReminders'),radio:label('sectionRadio'),display:label('sectionDisplay'),appearance:label('sectionAppearance'),
+    network:pair('الشبكة','Network'),device:label('sectionDevice'),tests:pair('اختبارات التلفاز','TV tests'),offsets:label('prayerOffsets'),'prayer-day':pair('الأذان لكل صلاة','Adhan per prayer'),
+    favourites:pair('التطبيقات المفضلة','Favourite apps'),apps:pair('التطبيقات','Apps'),remote:pair('أزرار الريموت','Remote buttons'),pairing:label('companionPhones')};
+  const commands=read('companion/protocol/lan.json').commands;
+  for(const id of commands)if(!all.some(c=>c.id===id&&c.kind==='action'))throw Error('Unknown canonical command: '+id);
+  return {version:1,commands,profiles,demoSystemLanguage:'ar',sections,colors,themeKeys:read('shared/design/appearance.json').colors,themeSurfaces:read('shared/design/appearance.json').surfaces,themes:themeData,appOptions,prayerNames:strings.prayerNames,text:read('companion/strings.json'), cities:cities.map(c=>({id:c.id,method:c.method,asr:c.hanafi?'hanafi':'shafi'}))};
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if(process.argv[2]==='--android-tv') {
+    const output=new URL('platforms/android-tv/build/generated/companion/',root);mkdirSync(output,{recursive:true});
+    writeFileSync(new URL('catalog.json',output),JSON.stringify(generate(['android'])));process.exit(0);
+  }
+  if(process.argv[2]==='--lg-tv') {
+    const output=new URL('platforms/webos/build/service/',root);mkdirSync(output,{recursive:true});
+    writeFileSync(new URL('companion-catalog.json',output),JSON.stringify(generate(['lg']).profiles.lg));process.exit(0);
+  }
+  const output = new URL('android/build/generated/companion/',import.meta.url);
+  mkdirSync(output,{recursive:true});
+  writeFileSync(new URL('catalog.json',output),JSON.stringify(generate()));
+  const res = new URL('android/build/generated/companion-res/',import.meta.url);
+  mkdirSync(new URL('drawable/',res),{recursive:true});
+  mkdirSync(new URL('values/',res),{recursive:true});
+  mkdirSync(new URL('drawable-nodpi/',res),{recursive:true});
+  writeFileSync(new URL('drawable-nodpi/miqat_icon.png',res),readFileSync(new URL('shared/design/artwork/icon.png',root)));
+  for(const [id,svg] of Object.entries(read('shared/design/icons.json')))writeFileSync(new URL('drawable/companion_icon_'+id+'.xml',res),vectorIcon(svg,id==='back'));
+  const colors=generate().colors;
+  writeFileSync(new URL('values/companion_colors.xml',res),'<resources>'+['lapis-900','gold-400'].map(id=>'<color name="companion_'+id.replaceAll('-','_')+'">'+colors[id]+'</color>').join('')+'</resources>');
+  console.log('Generated companion catalog from canonical product sources');
+}

@@ -93,6 +93,7 @@ final class UiContractDeviceCheck {
                 key(test, active[0], KeyEvent.KEYCODE_BACK);
                 bound.addAll(PrayerUiDeviceCheck.run(test, active[0]));
                 bound.addAll(FavouriteUiDeviceCheck.run(test));
+                bound.addAll(CompanionDeviceCheck.bindings(test));
                 UiContract.INSTANCE.validateCoverage(bound.toArray(new String[0]), gaps);
                 for (Map.Entry<String, Set<String>> entry : offered.entrySet()) {
                     UiContract.INSTANCE.validateChoiceCoverage(entry.getKey(), entry.getValue().toArray(new String[0]),

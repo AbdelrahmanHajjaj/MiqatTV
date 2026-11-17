@@ -136,5 +136,11 @@ function verifyIslamicTVCore(core) {
   try { ui.adjustNumber('reminders.volume', NaN, 1); } catch (invalidNumber) { rejected++; }
   try { ui.numberEditor('appearance.theme'); } catch (wrongEditor) { rejected++; }
   check(rejected === 2, 'invalid numeric editor input rejected');
+  var settingChanges = core.tv.miqat.core.SettingChanges;
+  var settingIds = ['display.size', 'appearance.theme', 'appearance.background'];
+  var settingGroups = ['', 'appearance', 'appearance'];
+  check(settingChanges.conflicts(settingIds, settingGroups, ['100', 'new', 'solid'], ['100', 'old', 'lattice'], ['display.size']).length === 0, 'unrelated settings edits are preserved');
+  check(settingChanges.conflicts(settingIds, settingGroups, ['100', 'new', 'solid'], ['100', 'old', 'lattice'], ['appearance.background']).join(',') === 'appearance.theme,appearance.background', 'appearance group conflicts');
+  check(settingChanges.conflicts(settingIds, settingGroups, ['100', 'new', 'solid'], [null, 'new', 'solid'], ['appearance.background']).length === 0, 'unrelated baseline is optional');
   return {checks: checks};
 }

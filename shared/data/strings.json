@@ -1104,6 +1104,21 @@
     "ar": "كل الشاشات وشريط الصلاة",
     "en": "All screens and the prayer bar"
   },
+  "companionPhones":{"ar":"الهواتف المقترنة","en":"Paired phones"},
+  "pairPhone":{"ar":"إقران هاتف","en":"Pair phone"},
+  "approvePhone":{"ar":"السماح للهاتف","en":"Approve phone"},
+  "rejectPhone":{"ar":"رفض الهاتف","en":"Reject phone"},
+  "revokePhone":{"ar":"إلغاء الوصول","en":"Revoke access"},
+  "pairingLoading":{"ar":"جارٍ تجهيز الاتصال الآمن…","en":"Preparing secure connection…"},
+  "pairingUnavailable":{"ar":"الاتصال الآمن غير متاح على هذا التلفاز","en":"Secure connection unavailable on this TV"},
+  "pairingNetwork":{"ar":"وصّل الهاتف والتلفاز بالشبكة المنزلية نفسها","en":"Connect phone and TV to the same home network"},
+  "pairingScan":{"ar":"امسح الرمز من تطبيق الهاتف","en":"Scan with the phone companion"},
+  "pairingConfirm":{"ar":"تحقّق من تطابق الرمز على الهاتف ثم وافق بريموت التلفاز","en":"Check the code matches the phone, then approve with the TV remote"},
+  "pairingWaiting":{"ar":"بانتظار إكمال الهاتف للإقران…","en":"Waiting for the phone to complete pairing…"},
+  "pairingExpired":{"ar":"انتهت صلاحية الرمز","en":"Pairing code expired"},
+  "pairingEmpty":{"ar":"لا توجد هواتف مقترنة","en":"No paired phones"},
+  "pairingForeground":{"ar":"يبقى الاتصال متاحاً أثناء فتح التطبيق","en":"Connection is available while the app is open"},
+  "pairingFailed":{"ar":"تعذّر حفظ التغيير. حاول مجدداً.","en":"Could not save the change. Try again."},
   "onlineAdvisory": {
     "ar": "مقارنة استرشادية. الحساب المحلي يتضمن تعديلاتك المحفوظة؛ مواقيت AlAdhan لا تتضمنها. قد يختلف التقريب أو العرف المحلي.",
     "en": "Advisory comparison. Calculated times include your saved offsets; AlAdhan values do not. Rounding and local conventions may differ."
