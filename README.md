@@ -11,6 +11,18 @@ A TV home screen with prayer times, adhan and Quran radio, in Arabic and English
 - Themes, Home customization and adjustable interface size.
 - Controls designed for a TV remote, with Arabic and English layouts.
 
+## Screenshots
+
+Android TV app running in a 1920 × 1080 Android emulator.
+
+**English Home**
+
+![Miqat Android TV Home in English, with prayer times, countdown and favourite apps](docs/screenshots/android-home-en.png)
+
+**الرئيسية بالعربية**
+
+![شاشة ميقات الرئيسية بالعربية مع مواقيت الصلاة والعد التنازلي والتطبيقات المفضلة](docs/screenshots/android-home-ar.png)
+
 ## Platforms
 
 | Platform | Status |

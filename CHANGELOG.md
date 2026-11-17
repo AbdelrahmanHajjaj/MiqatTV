@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Show English and Arabic Android launcher Home screenshots in the README.
 - Establish Miqat as an independent project with Android TV and LG applications,
   a portable Kotlin JVM/ES5 core, canonical data/design and a browser preview.
 - Use Miqat names and tv.miqat.* identities throughout apps, services, setup
