@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ميقات</string>
+    <string name="remote_keys">أزرار جهاز التحكم لميقات</string>
+    <string name="remote_keys_description">تشغيل أزرار التطبيقات والإعدادات والمداخل وكل التطبيقات مع ميقات كشاشة رئيسية.</string>
+</resources>

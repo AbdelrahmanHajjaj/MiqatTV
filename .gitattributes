@@ -1,0 +1,12 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.ttf binary
+*.jar binary
+*.mp3 binary
+site/** linguist-documentation
+site/package-lock.json linguist-generated
+
+# Preserve empty final TSV fields and verbatim third-party licence spacing.
+tools/clean-catalog.tsv whitespace=-blank-at-eol
+installer/src/main/assets/licenses/conscrypt/boringssl/LICENSE whitespace=-blank-at-eol

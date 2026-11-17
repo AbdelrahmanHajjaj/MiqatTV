@@ -1,0 +1,473 @@
+package tv.miqat.home;
+
+// Generated from shared/design/mihrab/tokens.json by site/scripts/tokens.mjs. Do not edit: run `npm run tokens` in site/.
+
+/** Design tokens in px at 1920×1080. Multiply lengths by {@link Ui#px}. */
+final class Tokens {
+    private Tokens() {}
+
+    /** color.lapis-950: Settings sidebar, below the ground */
+    static final int LAPIS_950 = 0xFF032A31;
+    /** color.lapis-900: Ground / page background */
+    static final int LAPIS_900 = 0xFF033B44;
+    /** color.lapis-800: Surface: arch fill, tiles, cells, panels */
+    static final int LAPIS_800 = 0xFF094650;
+    /** color.lapis-700: Raised: badges, stepper buttons, toggle off track */
+    static final int LAPIS_700 = 0xFF155763;
+    /** color.gold-400: Accent, sacred text, focus fill, next prayer · 7.5:1 on ground */
+    static final int GOLD_400 = 0xFFEBC678;
+    /** color.gold-200: Approaching-prayer glow, pressed state */
+    static final int GOLD_200 = 0xFFFFE0A0;
+    /** color.plaster-100: Primary text, focus ring, current prayer · 10.6:1 on ground */
+    static final int PLASTER_100 = 0xFFF5EEDC;
+    /** color.mist-400: Secondary text, past prayers · 6.7:1 on ground */
+    static final int MIST_400 = 0xFFAAC4C7;
+    /** color.disabled-text */
+    static final int DISABLED_TEXT = 0xFF79999E;
+    /** color.lapis-800-60: Past prayer cells (lapis-800 at 60%) */
+    static final int LAPIS_800_60 = 0x99094650;
+    /** color.gold-400-60: Arch foot button border at rest */
+    static final int GOLD_400_60 = 0x99EBC678;
+    /** color.line-soft: Chip borders, Qibla outer ring */
+    static final int LINE_SOFT = 0x40F5EEDC;
+    /** color.line-dash: Dashed "All apps" border */
+    static final int LINE_DASH = 0x4DF5EEDC;
+    /** color.arch-inner: Inner arch line */
+    static final int ARCH_INNER = 0x73EBC678;
+    /** color.bell-off-border: Prayer Day: reminder bell when off (mist-400 at 40%) */
+    static final int BELL_OFF_BORDER = 0x66AAC4C7;
+    /** color.banner-track: Reminder banner: time-left track (gold-400 at 25%) */
+    static final int BANNER_TRACK = 0x40EBC678;
+    /** color.seg-track-focused: Settings: segmented control track on a focused gold row (lapis-900 at 15%) */
+    static final int SEG_TRACK_FOCUSED = 0x26033B44;
+    /** color.qibla-ring: Qibla inner ring (plaster-100 at 10%) */
+    static final int QIBLA_RING = 0x1AF5EEDC;
+    /** color.qibla-tick: Qibla cardinal ticks (plaster-100 at 50%) */
+    static final int QIBLA_TICK = 0x80F5EEDC;
+    /** color.scrim: Prayer-time-now overlay (no blur) */
+    static final int SCRIM = 0xF0081224;
+    /** color.scrim-menu: Behind menus, pickers and choosers (lapis-900 at 92%) */
+    static final int SCRIM_MENU = 0xEB033B44;
+    /** color.scrim-panel: Behind side panels (Inputs) */
+    static final int SCRIM_PANEL = 0xB8060D1A;
+    /** color.pattern-line: Miqat arch lattice lines (gold-400 at 7%) */
+    static final int PATTERN_LINE = 0x12EBC678;
+    /** color.on-plaster.label: Approaching card: caps label on plaster */
+    static final int ON_PLASTER_LABEL = 0xFF56431E;
+    /** color.on-plaster.secondary: Approaching card: secondary text on plaster */
+    static final int ON_PLASTER_SECONDARY = 0xFF31545C;
+    /** color.on-plaster.border: Approaching card border (lapis-900 at 60%) */
+    static final int ON_PLASTER_BORDER = 0x99033B44;
+    /** color.on-plaster.button-border: Approaching card: outlined button border (lapis-900 at 35%) */
+    static final int ON_PLASTER_BUTTON_BORDER = 0x59033B44;
+    /** color.screensaver.ground: Screensaver and Audio Only ground */
+    static final int SCREENSAVER_GROUND = 0xFF000000;
+    /** color.screensaver.text */
+    static final int SCREENSAVER_TEXT = 0xFFA69F90;
+    /** color.screensaver.text-dim */
+    static final int SCREENSAVER_TEXT_DIM = 0xFF7D7769;
+    /** color.screensaver.next */
+    static final int SCREENSAVER_NEXT = 0xFFB8A578;
+    /** color.screensaver.arch-line */
+    static final int SCREENSAVER_ARCH_LINE = 0x59EBC678;
+    /** font.size.compact-tag */
+    static final float FONT_SIZE_COMPACT_TAG = 14f;
+    /** font.size.compact-label */
+    static final float FONT_SIZE_COMPACT_LABEL = 18f;
+    /** font.size.control */
+    static final float FONT_SIZE_CONTROL = 24f;
+    /** font.size.quick-heading */
+    static final float FONT_SIZE_QUICK_HEADING = 28f;
+    /** font.size.appearance-title */
+    static final float FONT_SIZE_APPEARANCE_TITLE = 42f;
+    /** font.size.display-xl: Countdown */
+    static final float FONT_SIZE_DISPLAY_XL = 150f;
+    /** font.size.display-xl-hours: Countdown when it has hours */
+    static final float FONT_SIZE_DISPLAY_XL_HOURS = 120f;
+    /** font.size.display-l: Clock */
+    static final float FONT_SIZE_DISPLAY_L = 96f;
+    /** font.size.display-m: Next prayer name */
+    static final float FONT_SIZE_DISPLAY_M = 88f;
+    /** font.size.display-s: Settings chooser title */
+    static final float FONT_SIZE_DISPLAY_S = 44f;
+    /** font.size.display-xs: Settings Asr preview time */
+    static final float FONT_SIZE_DISPLAY_XS = 36f;
+    /** font.size.title-l */
+    static final float FONT_SIZE_TITLE_L = 64f;
+    /** font.size.title */
+    static final float FONT_SIZE_TITLE = 52f;
+    /** font.size.heading */
+    static final float FONT_SIZE_HEADING = 40f;
+    /** font.size.body-l */
+    static final float FONT_SIZE_BODY_L = 30f;
+    /** font.size.body */
+    static final float FONT_SIZE_BODY = 26f;
+    /** font.size.label */
+    static final float FONT_SIZE_LABEL = 22f;
+    /** font.size.caption: Minimum size on screen */
+    static final float FONT_SIZE_CAPTION = 20f;
+    /** font.size.sacred */
+    static final float FONT_SIZE_SACRED = 32f;
+    /** font.lineHeight.display */
+    static final float FONT_LINEHEIGHT_DISPLAY = 1f;
+    /** font.lineHeight.title */
+    static final float FONT_LINEHEIGHT_TITLE = 1.15f;
+    /** font.lineHeight.body */
+    static final float FONT_LINEHEIGHT_BODY = 1.5f;
+    /** font.lineHeight.sacred */
+    static final float FONT_LINEHEIGHT_SACRED = 1.55f;
+    /** font.letterSpacing.caps-en: English caps labels only */
+    static final float FONT_LETTERSPACING_CAPS_EN = 0.2f;
+    /** font.letterSpacing.ar: Arabic is never letter-spaced */
+    static final float FONT_LETTERSPACING_AR = 0f;
+    /** space.1 */
+    static final float SPACE_1 = 8f;
+    /** space.2 */
+    static final float SPACE_2 = 12f;
+    /** space.3 */
+    static final float SPACE_3 = 16f;
+    /** space.4 */
+    static final float SPACE_4 = 24f;
+    /** space.5 */
+    static final float SPACE_5 = 32f;
+    /** space.6 */
+    static final float SPACE_6 = 48f;
+    /** space.7 */
+    static final float SPACE_7 = 64f;
+    /** space.8 */
+    static final float SPACE_8 = 96f;
+    /** space.safe-inline */
+    static final float SPACE_SAFE_INLINE = 96f;
+    /** space.safe-block */
+    static final float SPACE_SAFE_BLOCK = 56f;
+    /** layout.home.width */
+    static final float LAYOUT_HOME_WIDTH = 1920f;
+    /** layout.home.top */
+    static final float LAYOUT_HOME_TOP = 248f;
+    /** layout.home.bottom */
+    static final float LAYOUT_HOME_BOTTOM = 1008f;
+    /** layout.home.gap */
+    static final float LAYOUT_HOME_GAP = 24f;
+    /** layout.home.mihrab-width */
+    static final float LAYOUT_HOME_MIHRAB_WIDTH = 600f;
+    /** layout.home.mihrab-height */
+    static final float LAYOUT_HOME_MIHRAB_HEIGHT = 900f;
+    /** layout.home.panel-gap */
+    static final float LAYOUT_HOME_PANEL_GAP = 64f;
+    /** layout.home.mihrab-content-top */
+    static final float LAYOUT_HOME_MIHRAB_CONTENT_TOP = 290f;
+    /** layout.home.labelled-controls-top */
+    static final float LAYOUT_HOME_LABELLED_CONTROLS_TOP = 260f;
+    /** layout.home.bar-height */
+    static final float LAYOUT_HOME_BAR_HEIGHT = 100f;
+    /** layout.home.table-height */
+    static final float LAYOUT_HOME_TABLE_HEIGHT = 128f;
+    /** layout.home.cell-name-size */
+    static final float LAYOUT_HOME_CELL_NAME_SIZE = 28f;
+    /** layout.home.cell-time-size */
+    static final float LAYOUT_HOME_CELL_TIME_SIZE = 36f;
+    /** layout.home.header-clock-share */
+    static final float LAYOUT_HOME_HEADER_CLOCK_SHARE = 0.42f;
+    /** layout.home.quick-label-height */
+    static final float LAYOUT_HOME_QUICK_LABEL_HEIGHT = 152f;
+    /** layout.home.label-height */
+    static final float LAYOUT_HOME_LABEL_HEIGHT = 56f;
+    /** layout.home.tile-max-width */
+    static final float LAYOUT_HOME_TILE_MAX_WIDTH = 640f;
+    /** layout.home.tile-max-height */
+    static final float LAYOUT_HOME_TILE_MAX_HEIGHT = 156f;
+    /** layout.home.tile-classic-height */
+    static final float LAYOUT_HOME_TILE_CLASSIC_HEIGHT = 196f;
+    /** layout.home.more-min-width */
+    static final float LAYOUT_HOME_MORE_MIN_WIDTH = 160f;
+    /** layout.home.mihrab-min-width */
+    static final float LAYOUT_HOME_MIHRAB_MIN_WIDTH = 520f;
+    /** layout.home.app-icon-size */
+    static final float LAYOUT_HOME_APP_ICON_SIZE = 72f;
+    /** layout.home.app-icon-classic-size */
+    static final float LAYOUT_HOME_APP_ICON_CLASSIC_SIZE = 88f;
+    /** layout.home.app-inset-inline */
+    static final float LAYOUT_HOME_APP_INSET_INLINE = 20f;
+    /** layout.home.app-inset-block */
+    static final float LAYOUT_HOME_APP_INSET_BLOCK = 18f;
+    /** layout.home.app-icon-gap */
+    static final float LAYOUT_HOME_APP_ICON_GAP = 8f;
+    /** layout.home.recent-height */
+    static final float LAYOUT_HOME_RECENT_HEIGHT = 94f;
+    /** layout.home.countdown-size */
+    static final float LAYOUT_HOME_COUNTDOWN_SIZE = 150f;
+    /** layout.home.compact-countdown-size */
+    static final float LAYOUT_HOME_COMPACT_COUNTDOWN_SIZE = 56f;
+    /** layout.home.prayer-name-size */
+    static final float LAYOUT_HOME_PRAYER_NAME_SIZE = 88f;
+    /** layout.home.panel-inset */
+    static final float LAYOUT_HOME_PANEL_INSET = 32f;
+    /** layout.home.verse-top */
+    static final float LAYOUT_HOME_VERSE_TOP = 124f;
+    /** layout.home.reference-top */
+    static final float LAYOUT_HOME_REFERENCE_TOP = 290f;
+    /** layout.home.info-top */
+    static final float LAYOUT_HOME_INFO_TOP = 368f;
+    /** layout.home.cell-inset */
+    static final float LAYOUT_HOME_CELL_INSET = 10f;
+    /** layout.home.cell-padding */
+    static final float LAYOUT_HOME_CELL_PADDING = 10f;
+    /** layout.arch.width */
+    static final float ARCH_W = 600f;
+    /** layout.arch.height */
+    static final float ARCH_H = 900f;
+    /** layout.arch.inset-inline-start */
+    static final float ARCH_X = 96f;
+    /** layout.arch.top */
+    static final float ARCH_Y = 120f;
+    /** layout.arch.crown-height */
+    static final float LAYOUT_ARCH_CROWN_HEIGHT = 380f;
+    /** layout.courtyard.inset-inline-start */
+    static final float COURT_X = 760f;
+    /** layout.courtyard.width */
+    static final float COURT_W = 1064f;
+    /** layout.quick-menu.width */
+    static final float LAYOUT_QUICK_MENU_WIDTH = 640f;
+    /** layout.quick-menu.max-height */
+    static final float LAYOUT_QUICK_MENU_MAX_HEIGHT = 760f;
+    /** layout.quick-menu.top */
+    static final float LAYOUT_QUICK_MENU_TOP = 152f;
+    /** layout.quick-menu.padding-inline */
+    static final float LAYOUT_QUICK_MENU_PADDING_INLINE = 28f;
+    /** layout.quick-menu.heading-inset */
+    static final float LAYOUT_QUICK_MENU_HEADING_INSET = 10f;
+    /** layout.quick-menu.heading-gap */
+    static final float LAYOUT_QUICK_MENU_HEADING_GAP = 18f;
+    /** layout.quick-menu.row-height */
+    static final float LAYOUT_QUICK_MENU_ROW_HEIGHT = 78f;
+    /** layout.quick-menu.row-gap */
+    static final float LAYOUT_QUICK_MENU_ROW_GAP = 4f;
+    /** layout.quick-menu.button-padding */
+    static final float LAYOUT_QUICK_MENU_BUTTON_PADDING = 22f;
+    /** layout.quick-menu.icon-size */
+    static final float LAYOUT_QUICK_MENU_ICON_SIZE = 30f;
+    /** layout.prayer-dock.width */
+    static final float LAYOUT_PRAYER_DOCK_WIDTH = 1920f;
+    /** layout.prayer-dock.padding-block */
+    static final float LAYOUT_PRAYER_DOCK_PADDING_BLOCK = 10f;
+    /** layout.prayer-dock.cell-padding-block */
+    static final float LAYOUT_PRAYER_DOCK_CELL_PADDING_BLOCK = 6f;
+    /** layout.prayer-dock.button-size */
+    static final float LAYOUT_PRAYER_DOCK_BUTTON_SIZE = 60f;
+    /** layout.gap-favourites */
+    static final float LAYOUT_GAP_FAVOURITES = 24f;
+    /** layout.gap-more */
+    static final float LAYOUT_GAP_MORE = 20f;
+    /** layout.gap-prayer-cells */
+    static final float LAYOUT_GAP_PRAYER_CELLS = 12f;
+    /** layout.all-apps.icon-size */
+    static final float LAYOUT_ALL_APPS_ICON_SIZE = 72f;
+    /** layout.tile-favourite.width */
+    static final float LAYOUT_TILE_FAVOURITE_WIDTH = 248f;
+    /** layout.tile-favourite.height */
+    static final float LAYOUT_TILE_FAVOURITE_HEIGHT = 150f;
+    /** layout.tile-more.height */
+    static final float LAYOUT_TILE_MORE_HEIGHT = 112f;
+    /** layout.prayer-cell.height */
+    static final float LAYOUT_PRAYER_CELL_HEIGHT = 146f;
+    /** layout.day-row.width */
+    static final float LAYOUT_DAY_ROW_WIDTH = 620f;
+    /** layout.day-row.height */
+    static final float LAYOUT_DAY_ROW_HEIGHT = 104f;
+    /** layout.button-height */
+    static final float LAYOUT_BUTTON_HEIGHT = 72f;
+    /** layout.toast-width */
+    static final float LAYOUT_TOAST_WIDTH = 680f;
+    /** layout.banner-width */
+    static final float LAYOUT_BANNER_WIDTH = 640f;
+    /** layout.side-panel-width */
+    static final float LAYOUT_SIDE_PANEL_WIDTH = 600f;
+    /** layout.settings.home-choice-width */
+    static final float LAYOUT_SETTINGS_HOME_CHOICE_WIDTH = 320f;
+    /** layout.settings.home-arrow-width */
+    static final float LAYOUT_SETTINGS_HOME_ARROW_WIDTH = 56f;
+    /** layout.settings.sidebar-width */
+    static final float LAYOUT_SETTINGS_SIDEBAR_WIDTH = 560f;
+    /** layout.settings.row-width */
+    static final float LAYOUT_SETTINGS_ROW_WIDTH = 1184f;
+    /** layout.settings.offset-time-width */
+    static final float LAYOUT_SETTINGS_OFFSET_TIME_WIDTH = 280f;
+    /** layout.settings.content-start */
+    static final float LAYOUT_SETTINGS_CONTENT_START = 640f;
+    /** layout.settings.rows-top */
+    static final float LAYOUT_SETTINGS_ROWS_TOP = 112f;
+    /** layout.settings.row-height */
+    static final float LAYOUT_SETTINGS_ROW_HEIGHT = 88f;
+    /** layout.settings.row-gap */
+    static final float LAYOUT_SETTINGS_ROW_GAP = 10f;
+    /** layout.settings.row-padding */
+    static final float LAYOUT_SETTINGS_ROW_PADDING = 28f;
+    /** layout.settings.toggle-width */
+    static final float LAYOUT_SETTINGS_TOGGLE_WIDTH = 88f;
+    /** layout.settings.toggle-height */
+    static final float LAYOUT_SETTINGS_TOGGLE_HEIGHT = 48f;
+    /** layout.settings.toggle-inset */
+    static final float LAYOUT_SETTINGS_TOGGLE_INSET = 6f;
+    /** layout.settings.toggle-knob */
+    static final float LAYOUT_SETTINGS_TOGGLE_KNOB = 36f;
+    /** layout.settings.step-size */
+    static final float LAYOUT_SETTINGS_STEP_SIZE = 48f;
+    /** layout.settings.appearance-top */
+    static final float LAYOUT_SETTINGS_APPEARANCE_TOP = 410f;
+    /** layout.settings.appearance-rows-height */
+    static final float LAYOUT_SETTINGS_APPEARANCE_ROWS_HEIGHT = 632f;
+    /** layout.settings.scroll-padding */
+    static final float LAYOUT_SETTINGS_SCROLL_PADDING = 24f;
+    /** layout.settings.appearance-caption-width */
+    static final float LAYOUT_SETTINGS_APPEARANCE_CAPTION_WIDTH = 500f;
+    /** layout.settings.preview-width */
+    static final float LAYOUT_SETTINGS_PREVIEW_WIDTH = 480f;
+    /** layout.settings.preview-height */
+    static final float LAYOUT_SETTINGS_PREVIEW_HEIGHT = 270f;
+    /** layout.settings.swatch-gap */
+    static final float LAYOUT_SETTINGS_SWATCH_GAP = 14f;
+    /** layout.settings.carousel-width */
+    static final float LAYOUT_SETTINGS_CAROUSEL_WIDTH = 190f;
+    /** layout.settings.carousel-height */
+    static final float LAYOUT_SETTINGS_CAROUSEL_HEIGHT = 52f;
+    /** layout.settings.layout-chooser-width */
+    static final float LAYOUT_SETTINGS_LAYOUT_CHOOSER_WIDTH = 1200f;
+    /** layout.settings.layout-card-width */
+    static final float LAYOUT_SETTINGS_LAYOUT_CARD_WIDTH = 640f;
+    /** layout.settings.layout-card-height */
+    static final float LAYOUT_SETTINGS_LAYOUT_CARD_HEIGHT = 400f;
+    /** layout.settings.layout-preview-height */
+    static final float LAYOUT_SETTINGS_LAYOUT_PREVIEW_HEIGHT = 302f;
+    /** background.max-width */
+    static final float BACKGROUND_MAX_WIDTH = 1920f;
+    /** background.max-height */
+    static final float BACKGROUND_MAX_HEIGHT = 1080f;
+    /** background.preview-width */
+    static final float BACKGROUND_PREVIEW_WIDTH = 480f;
+    /** background.preview-height */
+    static final float BACKGROUND_PREVIEW_HEIGHT = 270f;
+    /** radius.quick-button */
+    static final float RADIUS_QUICK_BUTTON = 22f;
+    /** radius.icon-button */
+    static final float RADIUS_ICON_BUTTON = 36f;
+    /** radius.badge */
+    static final float RADIUS_BADGE = 8f;
+    /** radius.cell */
+    static final float RADIUS_CELL = 14f;
+    /** radius.row */
+    static final float RADIUS_ROW = 16f;
+    /** radius.tile */
+    static final float RADIUS_TILE = 18f;
+    /** radius.panel */
+    static final float RADIUS_PANEL = 24f;
+    /** radius.pill */
+    static final float RADIUS_PILL = 999f;
+    /** focus.fill */
+    static final int FOCUS_FILL = 0xFFEBC678;
+    /** focus.text */
+    static final int FOCUS_TEXT = 0xFF033B44;
+    /** focus.ring-color */
+    static final int FOCUS_RING_COLOR = 0xFFF5EEDC;
+    /** focus.ring-width */
+    static final float FOCUS_RING_WIDTH = 4f;
+    /** focus.ring-offset */
+    static final float FOCUS_RING_OFFSET = 6f;
+    /** focus.scale */
+    static final float FOCUS_SCALE = 1.06f;
+    /** focus.scale-row */
+    static final float FOCUS_SCALE_ROW = 1.04f;
+    /** focus.scale-settings-row: Settings rows, which are wide */
+    static final float FOCUS_SCALE_SETTINGS_ROW = 1.02f;
+    /** focus.on-light.fill */
+    static final int FOCUS_ON_LIGHT_FILL = 0xFF033B44;
+    /** focus.on-light.text */
+    static final int FOCUS_ON_LIGHT_TEXT = 0xFFF5EEDC;
+    /** focus.on-light.ring-color */
+    static final int FOCUS_ON_LIGHT_RING_COLOR = 0xFFEBC678;
+    /** focus.on-light.ring-offset */
+    static final float FOCUS_ON_LIGHT_RING_OFFSET = 4f;
+    /** focus.pressed.fill */
+    static final int FOCUS_PRESSED_FILL = 0xFFFFE0A0;
+    /** focus.pressed.scale */
+    static final float FOCUS_PRESSED_SCALE = 1.02f;
+    /** focus.pressed.ring-offset */
+    static final float FOCUS_PRESSED_RING_OFFSET = 4f;
+    /** border.thin */
+    static final float BORDER_THIN = 1f;
+    /** border.arch-rest.color */
+    static final int BORDER_ARCH_REST_COLOR = 0xFFEBC678;
+    /** border.arch-rest.width */
+    static final float BORDER_ARCH_REST_WIDTH = 3f;
+    /** border.arch-focused.color */
+    static final int BORDER_ARCH_FOCUSED_COLOR = 0xFFF5EEDC;
+    /** border.arch-focused.width */
+    static final float BORDER_ARCH_FOCUSED_WIDTH = 5f;
+    /** border.arch-approaching.color */
+    static final int BORDER_ARCH_APPROACHING_COLOR = 0xFFFFE0A0;
+    /** border.arch-approaching.width */
+    static final float BORDER_ARCH_APPROACHING_WIDTH = 6f;
+    /** border.next-prayer.color */
+    static final int BORDER_NEXT_PRAYER_COLOR = 0xFFEBC678;
+    /** border.next-prayer.width */
+    static final float BORDER_NEXT_PRAYER_WIDTH = 3f;
+    /** border.chip.color */
+    static final int BORDER_CHIP_COLOR = 0x40F5EEDC;
+    /** border.chip.width */
+    static final float BORDER_CHIP_WIDTH = 2f;
+    /** surface.prayer-radius-max */
+    static final float SURFACE_PRAYER_RADIUS_MAX = 28f;
+    /** surface.modern-countdown-scale */
+    static final float SURFACE_MODERN_COUNTDOWN_SCALE = 0.86f;
+    /** surface.glass.radius */
+    static final float SURFACE_GLASS_RADIUS = 32f;
+    /** surface.glass.stroke */
+    static final float SURFACE_GLASS_STROKE = 2f;
+    /** surface.glass.opacity */
+    static final float SURFACE_GLASS_OPACITY = 0.86f;
+    /** surface.glass.edge */
+    static final float SURFACE_GLASS_EDGE = 0.38f;
+    /** surface.cinema.radius */
+    static final float SURFACE_CINEMA_RADIUS = 12f;
+    /** surface.outline.radius */
+    static final float SURFACE_OUTLINE_RADIUS = 10f;
+    /** surface.outline.stroke */
+    static final float SURFACE_OUTLINE_STROKE = 2f;
+    /** surface.blocks.radius */
+    static final float SURFACE_BLOCKS_RADIUS = 12f;
+    /** surface.blocks.stripe */
+    static final float SURFACE_BLOCKS_STRIPE = 4f;
+    /** surface.soft.radius */
+    static final float SURFACE_SOFT_RADIUS = 42f;
+    /** surface.frame.radius */
+    static final float SURFACE_FRAME_RADIUS = 12f;
+    /** surface.frame.stroke */
+    static final float SURFACE_FRAME_STROKE = 3f;
+    /** surface.arch-stroke */
+    static final float SURFACE_ARCH_STROKE = 3f;
+    /** surface.arch-inner */
+    static final float SURFACE_ARCH_INNER = 1.5f;
+    /** motion.focus */
+    static final long DUR_FOCUS_MS = 120;
+    /** motion.panel-slide */
+    static final long MOTION_PANEL_SLIDE_MS = 240;
+    /** motion.overlay-fade: linear */
+    static final long MOTION_OVERLAY_FADE_MS = 200;
+    /** motion.screensaver-fade: As MiqatDream.FADE_MS */
+    static final long MOTION_SCREENSAVER_FADE_MS = 800;
+    /** motion.screensaver-drift-interval */
+    static final long MOTION_SCREENSAVER_DRIFT_INTERVAL_MS = 60000;
+    /** motion.banner-lifetime */
+    static final long MOTION_BANNER_LIFETIME_MS = 12000;
+    /** motion.saved-lifetime: Settings: how long ✓ Saved shows after a change */
+    static final long MOTION_SAVED_LIFETIME_MS = 2000;
+    /** motion.call-auto-dismiss: The call screen closes by itself: the default of Settings → Reminders → Close the call screen */
+    static final long MOTION_CALL_AUTO_DISMISS_MS = 600000;
+    /** motion.call-silent-dismiss: The call screen set to close when the adhan ends, with no adhan playing */
+    static final long MOTION_CALL_SILENT_DISMISS_MS = 60000;
+    /** timing.appearance-short */
+    static final int APPEARANCE_CYCLE_SHORT_MIN = 15;
+    /** timing.appearance-long */
+    static final int APPEARANCE_CYCLE_LONG_MIN = 30;
+    /** timing.approach: Before a prayer, the arch switches to its approaching outline */
+    static final int APPROACH_MIN = 15;
+}

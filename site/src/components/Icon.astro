@@ -1,0 +1,9 @@
+---
+// Shared SVG geometry, rendered in currentColor on the existing 24×24 grid.
+import ICONS from '../../../shared/design/icons.json';
+interface Props { name: keyof typeof ICONS; size?: number; stroke?: number; class?: string }
+
+const { name, size = 30, stroke = 1.8, class: cls } = Astro.props;
+---
+<svg class={cls} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={stroke}
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={ICONS[name]} />

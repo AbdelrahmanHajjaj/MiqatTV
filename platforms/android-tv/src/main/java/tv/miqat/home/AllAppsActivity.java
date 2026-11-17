@@ -1,0 +1,490 @@
+package tv.miqat.home;
+
+import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import tv.miqat.core.UiContract;
+import tv.miqat.core.UiControl;
+import tv.miqat.core.AllAppsNavigation;
+
+/**
+ * All apps (design/AllApps.dc.html): five columns, four rows in view, paging a row at a time.
+ * Hold OK arranges favourites: a favourite moves earlier or
+ * later; any other app can take a favourite's place (Home supports four to nine). The chip shows the next prayer and
+ * opens Prayer day; Back returns Home.
+ */
+public class AllAppsActivity extends Screen {
+
+    private static final int COLS = AllAppsNavigation.COLUMNS, VISIBLE_ROWS = 4;
+    private static final float GRID_TOP = 200, TILE_H = 168, GAP = 32;
+    private static final int BACK_BTN = AllAppsNavigation.BACK, CHIP = AllAppsNavigation.PRAYER,
+        SETTINGS = AllAppsNavigation.SETTINGS, NONE = AllAppsNavigation.NONE;
+
+    private final List<FocusTile> tiles = new ArrayList<>();
+    private List<String> apps = new ArrayList<>();
+    private List<String> favs = new ArrayList<>();
+    private FocusTile backButton, chip, settingsButton;
+    private TextView chipLabel, chipTime, count;
+    private boolean resumed;
+    private int topRow;
+    private PrayerDay day;
+    private long lastMinute = -1;
+    /** The app to focus after a rebuild. */
+    private String focusPkg;
+    private final Map<String, String> labels = new HashMap<>();
+    private final Map<String, ImageView> icons = new HashMap<>();
+    private final ExecutorService appLoader = Executors.newSingleThreadExecutor();
+    private volatile int loadGeneration;
+
+    // Hold-OK handling and the arrange menu.
+    private boolean okDown, okLong;
+    private FrameLayout menu;
+    private final List<FocusTile> menuItems = new ArrayList<>();
+    private final List<MenuAction> menuActions = new ArrayList<>();
+    /** The OK release that ends the long press which opened the menu must not pick its first item. */
+    private boolean swallowOkUp;
+    /** The tile the menu was opened from, focused again when it closes without a change. */
+    private int menuFrom;
+
+    private static final class MenuAction {
+        final UiControl control;
+        final String label;
+        final Runnable action;
+
+        MenuAction(String id, String label, Runnable action) {
+            this.control = UiContract.INSTANCE.bind(id, "action");
+            this.label = label;
+            this.action = action;
+        }
+    }
+
+    @Override protected void onResume() {
+        if (resumed) Apps.invalidate();
+        int generation = loadGeneration;
+        super.onResume();
+        if (resumed && generation == loadGeneration) build();
+        resumed = true;
+    }
+
+    @Override
+    void build() {
+        int selected = current();
+        if (focusPkg == null && selected >= 0) focusPkg = apps.get(selected);
+        loadGeneration++;
+        newRoot();
+        apps = new ArrayList<>();
+        tiles.clear();
+        icons.clear();
+        menu = null;
+
+        backButton = new FocusTile(this, 36);
+        backButton.setRest(Palette.LAPIS_800, Palette.LINE_SOFT, 2);
+        Icon back = new Icon(this, Icon.BACK, 2f);
+        backButton.addView(back, new FrameLayout.LayoutParams(Ui.ipx(32), Ui.ipx(32), Gravity.CENTER));
+        backButton.setLook(f -> back.setColor(f ? Palette.LAPIS_900 : Palette.PLASTER_100));
+        backButton.setContentDescription(t.back());
+        backButton.setOnClickListener(v -> finish());
+        placeTile(backButton, 96, 56, 72, 72);
+
+        LinearLayout head = new LinearLayout(this);
+        head.setGravity(Gravity.CENTER_VERTICAL);
+        TextView title = text(displayBold, 64, Palette.PLASTER_100);
+        title.setText(t.allTitle());
+        count = text(ui400, 26, Palette.MIST_400);
+
+        head.addView(title);
+        LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(-2, -2);
+        clp.setMarginStart(Ui.ipx(28));
+        head.addView(count, clp);
+        // Amiri's tall letters reach above a 64px line box; let them draw past the 72px row instead of clipping.
+        lineHeight(title, 1f);
+        head.setClipChildren(false);
+        head.setClipToPadding(false);
+        place(head, 96 + 72 + 28, 56, ViewGroup.LayoutParams.WRAP_CONTENT, 72);
+
+        chip = new FocusTile(this, 36);
+        chip.setRest(0, Palette.GOLD_400, 2);
+        LinearLayout cr = new LinearLayout(this);
+        cr.setGravity(Gravity.CENTER_VERTICAL);
+        cr.setPadding(Ui.ipx(28), 0, Ui.ipx(28), 0);
+        chipLabel = text(ui400, 26, Palette.GOLD_400);
+        chipTime = text(display, 32, Palette.PLASTER_100);
+        chipTime.setTextDirection(View.TEXT_DIRECTION_LTR);
+        chipTime.setIncludeFontPadding(false);
+        LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(-2, -2);
+        cr.addView(chipLabel, lp1);
+        LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(-2, -2);
+        lp2.setMarginStart(Ui.ipx(16));
+        cr.addView(chipTime, lp2);
+        chip.addView(cr, new FrameLayout.LayoutParams(-2, -1));
+        chip.setLook(f -> {
+            chipLabel.setTextColor(f ? Palette.LAPIS_900 : Palette.GOLD_400);
+            chipTime.setTextColor(f ? Palette.LAPIS_900 : Palette.PLASTER_100);
+        });
+        chip.setOnClickListener(v -> startActivity(new Intent(this, PrayerDayActivity.class)));
+        placeEnd(chip, 188, 56, ViewGroup.LayoutParams.WRAP_CONTENT, 72);
+        settingsButton = new FocusTile(this, 36);
+        settingsButton.setRest(Palette.LAPIS_800, Palette.LINE_SOFT, 2);
+        Icon gear = new Icon(this, Icon.GEAR, 1.8f);
+        settingsButton.addView(gear, new FrameLayout.LayoutParams(Ui.ipx(34), Ui.ipx(34), Gravity.CENTER));
+        settingsButton.setLook(f -> gear.setColor(f ? Palette.LAPIS_900 : Palette.PLASTER_100));
+        settingsButton.setContentDescription(t.settings());
+        settingsButton.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
+        placeEnd(settingsButton, 96, 56, 72, 72);
+
+        setContentView(root);
+        lastMinute = -1;
+        onTick();
+        if (selected == CHIP) chip.requestFocus();
+        else if (selected == SETTINGS) settingsButton.requestFocus();
+        else backButton.requestFocus();
+        loadApps();
+    }
+
+    private FocusTile appTile(String pkg) {
+        FocusTile tile = new FocusTile(this, Tokens.RADIUS_TILE);
+        ImageView icon = new ImageView(this);
+        icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        icons.put(pkg, icon);
+        GradientDrawable iconBackground = new GradientDrawable();
+        iconBackground.setCornerRadius(Ui.px(14));
+        icon.setBackground(iconBackground);
+        FrameLayout.LayoutParams ip = new FrameLayout.LayoutParams(Ui.ipx(Tokens.LAYOUT_ALL_APPS_ICON_SIZE), Ui.ipx(Tokens.LAYOUT_ALL_APPS_ICON_SIZE), Gravity.START | Gravity.TOP);
+        ip.setMarginStart(Ui.ipx(24)); ip.topMargin = Ui.ipx(22);
+        tile.addView(icon, ip);
+
+        Icon star = favs.contains(pkg) ? new Icon(this, Icon.STAR, 2f) : null;
+        if (star != null) {
+            star.setContentDescription(t.favourite());
+            FrameLayout.LayoutParams sp = new FrameLayout.LayoutParams(Ui.ipx(26), Ui.ipx(26), Gravity.END | Gravity.TOP);
+            sp.setMarginEnd(Ui.ipx(24)); sp.topMargin = Ui.ipx(22);
+            tile.addView(star, sp);
+        }
+        String name = labels.get(pkg);
+        TextView label = text(ui500, 26, Palette.PLASTER_100);
+        label.setText(name);
+        label.setGravity(Gravity.START);
+        label.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        label.setTextDirection(Apps.isLatin(name) ? View.TEXT_DIRECTION_LTR : View.TEXT_DIRECTION_RTL);
+        label.setSingleLine(true);
+        label.setEllipsize(TextUtils.TruncateAt.END);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM | Gravity.START);
+        lp.setMarginStart(Ui.ipx(24)); lp.setMarginEnd(Ui.ipx(24)); lp.bottomMargin = Ui.ipx(22);
+        tile.addView(label, lp);
+        tile.setLook(f -> {
+            label.setTextColor(f ? Palette.LAPIS_900 : Palette.PLASTER_100);
+            if (star != null) star.setColor(f ? Palette.LAPIS_900 : Palette.GOLD_400);
+            iconBackground.setColor(f ? Palette.LAPIS_900 : Palette.LAPIS_700);
+        });
+        tile.setOnClickListener(v -> Apps.launch(this, pkg));
+        return tile;
+    }
+
+    /** Package queries and labels must not delay the first frame or remote input. */
+    private void loadApps() {
+        int generation = loadGeneration;
+        Text language = t;
+        appLoader.execute(() -> {
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+            if (generation != loadGeneration) return;
+            android.content.Context app = getApplicationContext();
+            List<String> loadedApps = Apps.allApps(app, language);
+            List<String> loadedFavs = Apps.slots(app, language);
+            Map<String, String> loadedLabels = new HashMap<>();
+            for (String pkg : loadedApps) {
+                if (generation != loadGeneration) return;
+                loadedLabels.put(pkg, Apps.name(app, language, pkg));
+            }
+            runOnUiThread(() -> {
+                if (generation != loadGeneration || isDestroyed()) return;
+                boolean focusApps = getCurrentFocus() == backButton;
+                apps = loadedApps;
+                favs = loadedFavs;
+                labels.clear();
+                labels.putAll(loadedLabels);
+                count.setText(t.d(String.valueOf(apps.size())));
+                for (int i = 0; i < apps.size(); i++) tiles.add(null);
+                int start = focusPkg != null && apps.contains(focusPkg) ? apps.indexOf(focusPkg) : 0;
+                focusPkg = null;
+                topRow = 0;
+                View headerFocus = getCurrentFocus();
+                focusTile(start);
+                if (!focusApps && headerFocus != null) headerFocus.requestFocus();
+            });
+        });
+    }
+
+    /** Decode at most one row per batch; publish only completed rows to the UI. */
+    private void loadIcons(List<String> packages) {
+        if (packages.isEmpty()) return;
+        int generation = loadGeneration;
+        List<ImageView> targets = new ArrayList<>();
+        for (String pkg : packages) targets.add(icons.get(pkg));
+        appLoader.execute(() -> {
+            for (int start = 0; start < packages.size(); start += COLS) {
+                int first = start;
+                Drawable[] images = new Drawable[Math.min(COLS, packages.size() - first)];
+                for (int j = 0; j < images.length; j++) {
+                    if (generation != loadGeneration) return;
+                    images[j] = Apps.icon(getApplicationContext(), packages.get(first + j));
+                }
+                runOnUiThread(() -> {
+                    if (generation != loadGeneration || isDestroyed()) return;
+                    for (int j = 0; j < images.length; j++) targets.get(first + j).setImageDrawable(images[j]);
+                });
+            }
+        });
+    }
+
+    @Override protected void onDestroy() {
+        loadGeneration++;
+        appLoader.shutdownNow();
+        super.onDestroy();
+    }
+
+    // ---------------------------------------------------------------- live chip
+
+    @Override
+    void onTick() {
+        Date now = new Date();
+        long minute = now.getTime() / 60000;
+        if (day == null || minute != lastMinute || secondsUntil(day.nextTime, now) == 0) {
+            lastMinute = minute;
+            boolean arrived = day != null && secondsUntil(day.nextTime, now) == 0;
+            day = new PrayerDay(this, arrived ? new Date(now.getTime() + 1000) : now);
+            String[] names = t.prayerNames();
+            if (day.friday) names[PrayerDay.DHUHR] = t.jumuah();
+            PrayerIcon.set(chipLabel, day.nextIndex, t.chip(names[day.nextIndex]));
+        }
+        chipTime.setText(t.d(duration(secondsUntil(day.nextTime, now), false)));
+    }
+
+    // ---------------------------------------------------------------- focus and paging
+
+    private void focusTile(int i) {
+        if (i < 0 || i >= tiles.size()) return;
+        int row = i / COLS;
+        if (row < topRow) topRow = row;
+        else if (row >= topRow + VISIBLE_ROWS) topRow = row - VISIBLE_ROWS + 1;
+        float shift = -Ui.px(topRow * (TILE_H + GAP));
+        List<String> pendingIcons = new ArrayList<>();
+        for (int j = 0; j < tiles.size(); j++) {
+            int r = j / COLS;
+            boolean visible = r >= topRow && r < topRow + VISIBLE_ROWS;
+            FocusTile tile = tiles.get(j);
+            if (visible && tile == null) {
+                tile = appTile(apps.get(j));
+                pendingIcons.add(apps.get(j));
+                tiles.set(j, tile);
+                float margin = Ui.safeInline(this), w = (1920 - 2 * margin - (COLS - 1) * GAP) / COLS;
+                placeTile(tile, margin + (j % COLS) * (w + GAP), GRID_TOP + r * (TILE_H + GAP), w, TILE_H);
+            }
+            if (tile != null) {
+                tile.setTranslationY(shift);
+                tile.setVisibility(visible ? View.VISIBLE : View.GONE);
+            }
+        }
+        tiles.get(i).requestFocus();
+        loadIcons(pendingIcons);
+    }
+
+    private int current() {
+        View f = getCurrentFocus();
+        if (f == null) return NONE;
+        if (f == backButton) return BACK_BTN;
+        if (f == chip) return CHIP;
+        if (f == settingsButton) return SETTINGS;
+        return tiles.indexOf(f);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (menu != null) return menuKey(e);
+        int k = e.getKeyCode();
+        boolean down = e.getAction() == KeyEvent.ACTION_DOWN;
+        if (k == KeyEvent.KEYCODE_BACK) {
+            if (!down) finish();
+            return true;
+        }
+        if (isOk(k)) return okKey(e);
+        boolean nav = k == KeyEvent.KEYCODE_DPAD_UP || k == KeyEvent.KEYCODE_DPAD_DOWN
+            || k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_DPAD_RIGHT;
+        if (!nav) return super.dispatchKeyEvent(e);
+        if (!down) return true;
+        // Written for LTR; in Arabic Left/Right swap.
+        if (rtl && k == KeyEvent.KEYCODE_DPAD_LEFT) k = KeyEvent.KEYCODE_DPAD_RIGHT;
+        else if (rtl && k == KeyEvent.KEYCODE_DPAD_RIGHT) k = KeyEvent.KEYCODE_DPAD_LEFT;
+        int dx = k == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : k == KeyEvent.KEYCODE_DPAD_RIGHT ? 1 : 0;
+        int dy = k == KeyEvent.KEYCODE_DPAD_UP ? -1 : k == KeyEvent.KEYCODE_DPAD_DOWN ? 1 : 0;
+        int target = AllAppsNavigation.INSTANCE.move(current(), tiles.size(), tiles.isEmpty() ? 0 : topRow * COLS, dx, dy);
+        if (target == BACK_BTN) backButton.requestFocus();
+        else if (target == CHIP) chip.requestFocus();
+        else if (target == SETTINGS) settingsButton.requestFocus();
+        else focusTile(target);
+        return true;
+    }
+
+    private static boolean isOk(int k) {
+        return k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER || k == KeyEvent.KEYCODE_NUMPAD_ENTER;
+    }
+
+    /** A short press clicks; held past the long-press timeout on an app, it opens the arrange menu instead. */
+    private boolean okKey(KeyEvent e) {
+        int at = current();
+        if (e.getAction() == KeyEvent.ACTION_DOWN) {
+            if (e.getRepeatCount() == 0) {
+                okDown = true;
+                okLong = false;
+            } else if (okDown && !okLong && e.isLongPress() && at >= 0) {
+                okLong = true;
+                openMenu(apps.get(at));
+            }
+            return true;
+        }
+        if (okDown && !okLong) {
+            View f = getCurrentFocus();
+            if (f != null) f.performClick();
+        }
+        okDown = false;
+        return true;
+    }
+
+    // ---------------------------------------------------------------- arrange menu
+
+    private void openMenu(String pkg) {
+        menuFrom = apps.indexOf(pkg);
+        menuItems.clear();
+        menuActions.clear();
+        int at = favs.indexOf(pkg);
+        if (at >= 0) {
+            if (favs.size() > 4) {
+                menuActions.add(new MenuAction("favourites.remove", t.removeFavourite(),
+                    () -> { List<String> f = new ArrayList<>(favs); f.remove(pkg); Apps.saveFavourites(this, f); focusPkg = pkg; build(); }));
+            }
+            if (at > 0) menuActions.add(new MenuAction("favourites.move-earlier", t.moveEarlier(), () -> swapFav(at, at - 1, pkg)));
+            if (at < favs.size() - 1) menuActions.add(new MenuAction("favourites.move-later", t.moveLater(), () -> swapFav(at, at + 1, pkg)));
+        } else {
+            if (favs.size() < Apps.FAVOURITE_SLOTS) {
+                menuActions.add(new MenuAction("favourites.add", t.addFavourite(),
+                    () -> { List<String> f = new ArrayList<>(favs); f.add(pkg); Apps.saveFavourites(this, f); focusPkg = pkg; build(); }));
+            }
+            menuActions.add(new MenuAction("favourites.replace", t.replaceFavourite(), () -> {
+                startActivity(new Intent(this, MainActivity.class).putExtra("replace_favourite", pkg));
+                finish();
+            }));
+        }
+        if (Apps.canUninstall(this, pkg)) {
+            menuActions.add(new MenuAction("apps.uninstall", t.uninstall(), () -> {
+                if (Apps.canUninstall(this, pkg)) startSafely(new Intent(Intent.ACTION_UNINSTALL_PACKAGE,
+                    android.net.Uri.fromParts("package", pkg, null)));
+            }));
+        }
+        menuActions.add(new MenuAction("favourites.cancel", t.cancel(), null));
+
+        menu = new FrameLayout(this);
+        menu.setBackgroundColor(Palette.SCRIM_MENU);
+        menu.setClickable(true);
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setClipChildren(false);
+        // The focused item's ring reaches past the card's padding.
+        card.setClipToPadding(false);
+        card.setPadding(Ui.ipx(48), Ui.ipx(40), Ui.ipx(48), Ui.ipx(40));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Palette.LAPIS_800);
+        bg.setCornerRadius(Ui.px(24));
+        bg.setStroke(Ui.ipx(2), Palette.GOLD_400_60);
+        card.setBackground(bg);
+        TextView title = text(displayBold, 48, Palette.GOLD_400);
+        String name = Apps.name(this, t, pkg);
+        title.setText(name);
+        title.setTextDirection(Apps.isLatin(name) ? View.TEXT_DIRECTION_LTR : View.TEXT_DIRECTION_RTL);
+        card.addView(title);
+        lineHeight(title, 1.2f);
+        android.widget.ScrollView scroll = new android.widget.ScrollView(this);
+        scroll.setClipToPadding(false);
+        scroll.setPadding(Ui.ipx(12), Ui.ipx(12), Ui.ipx(12), Ui.ipx(12));
+        LinearLayout choices = new LinearLayout(this);
+        choices.setOrientation(LinearLayout.VERTICAL);
+        scroll.addView(choices);
+        card.addView(scroll, new LinearLayout.LayoutParams(-1, Ui.ipx(Math.min(menuActions.size(), 6) * 90 + 36)));
+        for (int i = 0; i < menuActions.size(); i++) {
+            FocusTile item = new FocusTile(this, 36);
+            item.setTag(menuActions.get(i).control);
+            item.setFocusScale(1.04f);
+            item.setRest(Palette.LAPIS_700, 0, 0);
+            TextView l = text(ui400, 26, Palette.PLASTER_100);
+            l.setText(menuActions.get(i).label);
+            l.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+            l.setPadding(Ui.ipx(32), 0, Ui.ipx(32), 0);
+            item.addView(l, new FrameLayout.LayoutParams(-1, -1));
+            item.setLook(f -> l.setTextColor(f ? Palette.LAPIS_900 : Palette.PLASTER_100));
+            float r = FocusTile.REACH;
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, Ui.ipx(72 + 2 * r));
+            lp.topMargin = Ui.ipx(i == 0 ? 24 - r : 12 - 2 * r);
+            choices.addView(item, lp);
+            menuItems.add(item);
+        }
+        menu.addView(card, new FrameLayout.LayoutParams(Ui.ipx(820), -2, Gravity.CENTER));
+        fullOverlay(menu);
+        swallowOkUp = true;
+        menuItems.get(0).requestFocus();
+    }
+
+    private boolean menuKey(KeyEvent e) {
+        int k = e.getKeyCode();
+        boolean down = e.getAction() == KeyEvent.ACTION_DOWN;
+        if (k == KeyEvent.KEYCODE_BACK) {
+            if (!down) closeMenu(-1);
+            return true;
+        }
+        if (isOk(k)) {
+            if (down) return true;
+            if (swallowOkUp) { swallowOkUp = false; okDown = false; return true; }
+            closeMenu(menuItems.indexOf(getCurrentFocus()));
+            return true;
+        }
+        if (down && (k == KeyEvent.KEYCODE_DPAD_UP || k == KeyEvent.KEYCODE_DPAD_DOWN)) {
+            int i = menuItems.indexOf(getCurrentFocus());
+            int to = Math.max(0, Math.min(menuItems.size() - 1, i + (k == KeyEvent.KEYCODE_DPAD_UP ? -1 : 1)));
+            menuItems.get(to).requestFocus();
+        }
+        return true;
+    }
+
+    /** Runs the chosen action (the last item is Cancel), or just returns focus to the tile. */
+    private void closeMenu(int choice) {
+        root.removeView(menu);
+        menu = null;
+        if (choice >= 0 && choice < menuActions.size() - 1) menuActions.get(choice).action.run();
+        else focusTile(menuFrom);
+    }
+
+    private void swapFav(int a, int b, String pkg) {
+        List<String> f = new ArrayList<>(favs);
+        String x = f.get(a);
+        f.set(a, f.get(b));
+        f.set(b, x);
+        Apps.saveFavourites(this, f);
+        focusPkg = pkg;
+        build();
+    }
+
+}

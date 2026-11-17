@@ -1,0 +1,5 @@
+{
+  "id": "tv.miqat.webos.service",
+  "description": "Miqat inputs, prayer alerts and startup",
+  "services": [{"name":"tv.miqat.webos.service","description":"Miqat prayer scheduling and once-per-boot startup"}]
+}

@@ -1,0 +1,17 @@
+.gradle/
+.kotlin/
+.astro/
+node_modules/
+build/
+dist/
+state/
+__pycache__/
+local.properties
+CLAUDE.local.md
+.idea/
+*.iml
+*.apk
+*.ipk
+*.jks
+*.keystore
+*.key

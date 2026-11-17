@@ -1,0 +1,109 @@
+{
+  "brand": "Miqat",
+  "arabicShortName": "ميقات",
+  "date": "2026-11-17",
+  "status": "Source raster pack integrated by site/scripts/splash.mjs; see docs/MIQAT-REBRAND.md for validation",
+  "generation": "Built-in ImageGen, edited from the owner-selected calligraphic logo; deterministic PNG size exports via System.Drawing",
+  "design": "Selected scalloped mihrab; Arabic primary; English at broken base; separate centered TV. Icon omits English and TV for clarity.",
+  "promptSummary": "Preserve selected lettering and scalloped arch; smooth contours; strengthen frame; gold on petrol. Icon uses Arabic-only emblem with closed base. Splash uses full centered bilingual lockup.",
+  "limits": [
+    "Raster artwork, not vector paths",
+    "Generated sources retain slight tonal variation",
+    "32 px is a recognition mark; full calligraphic detail requires larger sizes",
+    "Physical-device and adaptive-mask acceptance remain pending; see docs/MIQAT-REBRAND.md",
+    "Installed package IDs and saved preferences must remain stable"
+  ],
+  "files": [
+    {
+      "file": "icon-size-review.png",
+      "width": 1000,
+      "height": 370,
+      "bytes": 100388,
+      "sha256": "542E468BF82754877C7489BE16B1958855C7F5A6368DB39511E83CE8A7F82455"
+    },
+    {
+      "file": "miqat-tv-icon-1024.png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 955078,
+      "sha256": "EE1E250FD280899CEB5E50654379E4C91A2C5FC3B8CEC6F768ACF30608A809C1"
+    },
+    {
+      "file": "miqat-tv-icon-130.png",
+      "width": 130,
+      "height": 130,
+      "bytes": 15830,
+      "sha256": "BDD93B896B8955BDA4DC8A87413F8F6766AEA74EE33FEAAB65179D8CDCDB5C4B"
+    },
+    {
+      "file": "miqat-tv-icon-256.png",
+      "width": 256,
+      "height": 256,
+      "bytes": 61204,
+      "sha256": "02C2D6913B0785A9BC2E25130EDA2A461902BCEDE1CB9248752200EB8A7AA83E"
+    },
+    {
+      "file": "miqat-tv-icon-32.png",
+      "width": 32,
+      "height": 32,
+      "bytes": 1712,
+      "sha256": "4CF0BFE9BC0B360A21EF41E3425E363ABD6CF84E404206E690CD958ECCA94575"
+    },
+    {
+      "file": "miqat-tv-icon-48.png",
+      "width": 48,
+      "height": 48,
+      "bytes": 3043,
+      "sha256": "6EBAA07153E0A483CE01B9C9058E8F0BD7EC9DF079B69727170670992DF5E99E"
+    },
+    {
+      "file": "miqat-tv-icon-512.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 253731,
+      "sha256": "3691A0DB2FFB64DC6268F70AD1566795933C391E6432076928581876E06DCF13"
+    },
+    {
+      "file": "miqat-tv-icon-80.png",
+      "width": 80,
+      "height": 80,
+      "bytes": 6802,
+      "sha256": "0F7C96C57C14782C0FAB2E8D2BAC18A23845040B7B6FA3BF54379A950D6FB388"
+    },
+    {
+      "file": "miqat-tv-icon-source.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1267223,
+      "sha256": "03557D10A58B5C15604F30FF61BE8DA631C6D5F88E963BFF53B2484523F2A620"
+    },
+    {
+      "file": "miqat-tv-logo-master.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1285542,
+      "sha256": "56EE0B3D5A4D0BACBC0B40900B2C2BC932564CA449718B14215EDC9DF4286D5D"
+    },
+    {
+      "file": "miqat-tv-selected-concept.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1481058,
+      "sha256": "CD673CE1E50687B236ED574BA1556694B6C3AC8FB8E2A6CAD94F580CFEDCA9A6"
+    },
+    {
+      "file": "miqat-tv-splash-1920x1080.png",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1561676,
+      "sha256": "A6A004E8CBE7991E865FAE4BF7B3654462ABA01C22C73707C0024A9EDF5D3AC6"
+    },
+    {
+      "file": "miqat-tv-splash-source.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1242022,
+      "sha256": "660B5B9E7566C71DAFA382CD307D6F7EB93D7ADAE062DD06249B7CCD082892DD"
+    }
+  ]
+}

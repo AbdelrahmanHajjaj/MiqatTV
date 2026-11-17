@@ -1,0 +1,30 @@
+{
+  "name": "miqat-tv-preview",
+  "private": true,
+  "type": "module",
+  "description": "Miqat browser preview and shared token generator",
+  "scripts": {
+    "test": "npm run gen && node ../tools/catalogs.test.mjs && node ../tools/validate-shared.test.mjs && node scripts/test.mjs",
+    "gen": "node ../tools/catalogs.mjs && node ../shared/core/build-js.cjs && node scripts/tokens.mjs && node scripts/extract.mjs",
+    "dev": "npm run gen && astro dev",
+    "build": "npm run gen && astro build",
+    "preview": "astro preview",
+    "patterns": "node scripts/patterns.mjs",
+    "tokens": "node scripts/tokens.mjs",
+    "tokens:check": "node scripts/tokens.mjs --check",
+    "data:check": "node ../tools/catalogs.mjs --check"
+  },
+  "devDependencies": {
+    "style-dictionary": "^5.7.0"
+  },
+  "overrides": {
+    "glob": "14.0.2"
+  },
+  "dependencies": {
+    "@miqat/core": "file:../shared/core",
+    "@astrojs/sitemap": "^3.7.4",
+    "adhan": "^4.4.6",
+    "astro": "^7.4.2",
+    "spatial-navigation-polyfill": "^1.3.1"
+  }
+}

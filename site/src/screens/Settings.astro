@@ -1,0 +1,586 @@
+---
+// Settings (SettingsActivity): the section sidebar, the open section's rows, and a list
+// chooser over the screen. The rows really change this browser's prefs, so Home and the rest follow them.
+import Icon from '../components/Icon.astro';
+import type { Ctx } from '../lib/ctx';
+import { href } from '../lib/site';
+import { navHtml, rowsHtml, sectionName, PRAYER } from './settings';
+interface Props { ctx: Ctx }
+const { ctx } = Astro.props;
+const { t, lang } = ctx;
+---
+<div class="settings" data-settings>
+  <aside class="side">
+    <div class="head">
+      <Icon name="mihrab" size={40} stroke={2} class="mihrab" />
+      <h2 class="title display-bold">{t.s('settings')}</h2>
+    </div>
+    <div data-navs set:html={navHtml(t, PRAYER)} />
+  </aside>
+  <div class="label caps" data-label>{sectionName(t, PRAYER)}</div>
+  <div class="appearance-preview" data-appearance-preview hidden>
+    <div class="appearance-home" data-home-plan></div>
+    <div class="appearance-caption"><span>{t.s('homeHelp')}</span><h3 data-theme-name></h3><div class="swatches">{['lapis-950','lapis-800','gold-400','plaster-100'].map(c => <i style={`background:var(--color-${c})`}/>)}</div></div>
+  </div>
+  <div class="rows" data-rows set:html={rowsHtml(ctx, PRAYER)} />
+  <div class="saved" data-saved role="status">{t.s('saved')}</div>
+  <div class="chooser" data-chooser hidden></div>
+  <section class="online-check" data-online hidden role="dialog" aria-modal="true" aria-label={t.s('checkOnline')}>
+    <div class="online-heading">
+      <button class="ft online-back" data-online-back type="button" aria-label={t.s('back')}><Icon name="back" size={32} /></button>
+      <h2 class="display-bold">{t.s('checkOnline')}</h2>
+    </div>
+    <div class="online-body" data-online-body role="status" aria-live="polite"></div>
+    <p class="online-note">{t.s('onlineAdvisory')}</p>
+    <button class="ft online-retry" data-online-retry type="button" hidden>{t.s('checkOnline')}</button>
+  </section>
+  <div class="toast" data-toast-out hidden role="status"></div>
+  <a data-home href={href('', lang) + '#tv'} tabindex="-1" hidden>{lang === 'ar' ? 'الرئيسية' : 'Home'}</a>
+  <audio data-audio preload="none"></audio>
+</div>
+
+<script>
+  import { homePreview } from '../lib/home-layout';
+  import { appearance, THEMES }  from '../scripts/appearance';
+  import { armCycle } from '../lib/appearance-cycle';
+  import { live } from '../scripts/live';
+  import { href } from '../lib/site';
+  import { CITIES, METHODS, cityOf, stationOf } from '../lib/data';
+  import { APPS } from './apps';
+  import type { Ctx } from '../lib/ctx';
+  import type { Lang } from '../lib/text';
+  import {fetchComparison, onlineRequest} from '../lib/online-prayer';
+  import {
+    APPEARANCE, DOCK_MODES, REMIND, VOICES, chooserHtml, citiesOf, commit, countries, methodItems, regionOf, moveDraft, pick, rowsFor, rowsHtml,
+    savedDraft, sectionName, stationChoice, stationsOf, onlineHtml, type Edit, type SPrefs,
+  } from './settings';
+
+  const stage = document.querySelector<HTMLElement>('.tv')!;
+  if (stage.dataset.screen === 'settings') {
+    const $ = <T extends HTMLElement = HTMLElement>(s: string) => stage.querySelector<T>(s)!;
+    const root = $('[data-settings]');
+    const rowsEl = $('[data-rows]');
+    const chooserEl = $('[data-chooser]');
+    const toastEl = $('[data-toast-out]');
+    const audio = $<HTMLAudioElement>('[data-audio]');
+    const navs = [...root.querySelectorAll<HTMLElement>('[data-nav]')];
+    const lang = document.documentElement.lang as Lang;
+    const rtl = document.documentElement.dir === 'rtl';
+    const FOCUS = 'miqat-settings-focus';
+
+    let section = 0;
+    let offsetsPage = false;
+    let offsetsParentRow = 0;
+    let appearanceDraft: SPrefs | null = null;
+    const rowCtx = () => appearanceDraft && section === APPEARANCE ? { ...ctx, prefs: appearanceDraft } : ctx;
+    let edit: Edit | null = null;
+    let lastRows = rowsEl.innerHTML;
+    let radioOn = false;
+    let ctx!: Ctx;
+    const onlineEl = $('[data-online]'), onlineBody = $('[data-online-body]');
+    const onlineBack = $('[data-online-back]'), onlineRetry = $('[data-online-retry]');
+    type OnlineView = {row: number; request: AbortController | null};
+    let online: OnlineView | null = null;
+    const onlineBackground = [...root.children].filter(el => el !== onlineEl) as HTMLElement[];
+
+    const rowEls = () => [...rowsEl.querySelectorAll<HTMLElement>('[data-row]')];
+    const focusRow = (i: number) => {
+      const r = rowEls()[Math.max(0, Math.min(rowEls().length - 1, i))];
+      if (!r) return;
+      r.focus({ preventScroll: true });
+      if (rowsEl.classList.contains('scrolling')) {
+        const pad = parseFloat(getComputedStyle(rowsEl).paddingTop);
+        if (r.offsetTop - pad < rowsEl.scrollTop) rowsEl.scrollTop = r.offsetTop - pad;
+        else if (r.offsetTop + r.offsetHeight + pad > rowsEl.scrollTop + rowsEl.clientHeight)
+          rowsEl.scrollTop = r.offsetTop + r.offsetHeight + pad - rowsEl.clientHeight;
+      }
+    };
+    const focusedRow = () => { const a = document.activeElement as HTMLElement | null; return a && rowsEl.contains(a) ? +(a.dataset.row ?? -1) : -1; };
+    const focusNav = () => { if (section === APPEARANCE) { appearanceDraft = { ...ctx.prefs }; edit = null; rerender(); } navs[section].focus({ preventScroll: true }); };
+
+    // The rows are re-rendered only when their HTML changes (a pref, the date), keeping focus on the same row.
+    const rerender = () => {
+      $('[data-appearance-preview]').hidden = section !== APPEARANCE;
+      if (appearanceDraft) appearance($('[data-appearance-preview]'), appearanceDraft);
+      $('[data-theme-name]').textContent = ctx.t.list('themeNames')[Math.max(0, THEMES.indexOf(rowCtx().prefs.theme ?? 'mihrab'))];
+      rowsEl.classList.toggle('scrolling', section === APPEARANCE || (ctx.prefs.uiScale ?? 100) > 110);
+      rowsEl.classList.toggle('appearance', section === APPEARANCE);
+      if (appearanceDraft) $('[data-home-plan]').innerHTML = homePreview(appearanceDraft, rtl);
+      $('[data-label]').textContent = offsetsPage ? ctx.t.s('prayerOffsets') : sectionName(ctx.t, section);
+      const h = rowsHtml(rowCtx(), section, radioOn, edit, offsetsPage);
+      if (h === lastRows) return;
+      const fi = focusedRow();
+      rowsEl.innerHTML = h;
+      lastRows = h;
+      if (fi >= 0) focusRow(fi);
+    };
+    const update = live(() => ({ html: {} }), (c) => { ctx = c; rerender(); });
+    // ✓ Saved at the end of the hint line after every save, as long as motion.saved-lifetime.
+    const savedEl = $('[data-saved]');
+    const lifetime = parseFloat(getComputedStyle(savedEl).getPropertyValue('--motion-saved-lifetime')) * 1000 || 2000;
+    let savedTimer = 0;
+    const showSaved = () => {
+      savedEl.classList.add('on');
+      clearTimeout(savedTimer);
+      savedTimer = window.setTimeout(() => savedEl.classList.remove('on'), lifetime);
+    };
+    const save = (p: SPrefs | null) => {
+      if (!p) return;
+      if (section === APPEARANCE) { appearanceDraft = p; rerender(); }
+      else { update(p); showSaved(); }
+    };
+
+    const setSection = (n: number) => {
+      if (n === section && !offsetsPage) return;
+      offsetsPage = false;
+      rowsEl.scrollTop = 0;
+      section = n;
+      appearanceDraft = n === APPEARANCE ? { ...ctx.prefs } : null;
+      edit = null;
+      navs.forEach((b, i) => {
+        b.classList.toggle('open', i === n);
+        b.toggleAttribute('data-focus-start', i === n);
+      });
+      $('[data-label]').textContent = sectionName(ctx.t, n);
+      rerender();
+    };
+
+    let toastTimer = 0;
+    const toast = (s: string) => {
+      toastEl.textContent = s;
+      toastEl.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => (toastEl.hidden = true), 2600);
+    };
+
+    // ------------------------------------------------------------ radio (the TV's toggle plays the stream)
+    const setRadio = (on: boolean) => {
+      radioOn = on;
+      if (on) { audio.src = stationOf(ctx.prefs).url; audio.play().catch(() => { radioOn = false; rerender(); }); }
+      else { audio.pause(); audio.removeAttribute('src'); audio.load(); }
+      rerender();
+    };
+    audio.addEventListener('error', () => { if (radioOn && audio.getAttribute('src')) { radioOn = false; rerender(); } });
+
+    // ------------------------------------------------------------ chooser
+    let chooser: { back?: () => void; row: number } | null = null;
+    const items = () => [...chooserEl.querySelectorAll<HTMLElement>('[data-item]')];
+    const focusItem = (i: number) => {
+      const all = items();
+      const el = all[Math.max(0, Math.min(all.length - 1, i))];
+      if (!el) return;
+      el.focus({ preventScroll: true });
+      const list = el.parentElement!;
+      if (el.offsetTop < list.scrollTop) list.scrollTop = el.offsetTop - 10;
+      else if (el.offsetTop + el.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = el.offsetTop + el.offsetHeight - list.clientHeight + 10;
+    };
+    let onPick: (i: number) => void = () => {};
+    const open = (title: string, list: { label: string; chosen: boolean }[], picked: (i: number) => void, back?: () => void) => {
+      const row = chooser?.row ?? focusedRow();
+      chooser = { back, row };
+      onPick = picked;
+      chooserEl.innerHTML = chooserHtml(ctx.t, title, list);
+      chooserEl.hidden = false;
+      focusItem(Math.max(0, list.findIndex((x) => x.chosen)));
+    };
+    const close = (runBack: boolean) => {
+      if (!chooser) return;
+      const { back, row } = chooser;
+      if (runBack && back) { back(); return; }
+      chooser = null;
+      chooserEl.hidden = true;
+      chooserEl.innerHTML = '';
+      focusRow(row);
+    };
+    const cancelOnline = () => {
+      if (!online?.request) return;
+      const request = online.request; online.request = null; request.abort();
+      onlineBody.textContent = ctx.t.s('onlineUnavailable'); onlineRetry.hidden = false;
+    };
+    const closeOnline = (restoreFocus = true) => {
+      if (!online) return;
+      const row = online.row; cancelOnline(); online = null; onlineEl.hidden = true;
+      onlineBackground.forEach(el => { el.inert = false; });
+      onlineBody.replaceChildren();
+      if (restoreFocus) focusRow(row);
+    };
+    const checkOnline = async (row: number) => {
+      cancelOnline();
+      const controller = new AbortController(), snapshot = ctx;
+      const owner: OnlineView = {row, request: controller};
+      online = owner; onlineEl.hidden = false; onlineRetry.hidden = true;
+      onlineBackground.forEach(el => { el.inert = true; });
+      onlineBody.textContent = ctx.t.s('onlineLoading'); onlineBack.focus({preventScroll: true});
+      try {
+        const result = await fetchComparison(onlineRequest(snapshot.now, snapshot.prefs), controller.signal);
+        if (online !== owner || !owner.request) return;
+        onlineBody.innerHTML = onlineHtml(snapshot, result); onlineRetry.hidden = false;
+      } catch {
+        if (online !== owner || !owner.request) return;
+        onlineBody.textContent = ctx.t.s('onlineUnavailable'); onlineRetry.hidden = false;
+      } finally { if (online === owner) owner.request = null; }
+    };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) cancelOnline(); });
+    window.addEventListener('pagehide', () => closeOnline(false));
+    const choose = (i: number) => {
+      const before = chooser;
+      onPick(i);
+      if (chooser === before) close(false); // picking may open the next step instead
+    };
+
+    const p = () => ({ ...(rowCtx().prefs as SPrefs) });
+    // Region, then country, then city, as on the TV.
+    const openRegions = () => {
+      const t = ctx.t, mine = regionOf(cityOf(ctx.prefs));
+      open(t.s('region'), t.list('regions').map((r, i) => ({ label: r, chosen: i === mine })), (i) => openCountries(i));
+    };
+    const openCountries = (region: number) => {
+      const t = ctx.t, list = countries(t, region), mine = t.ar ? cityOf(ctx.prefs).countryAr : cityOf(ctx.prefs).countryEn;
+      chooser!.back = undefined;
+      open(t.list('regions')[region], list.map((c) => ({ label: c, chosen: c === mine })), (i) => openCities(list[i], region), openRegions);
+    };
+    // A country with one city takes it at once. Picking a city puts the method and Asr school back to that city's own.
+    const openCities = (country: string, region: number) => {
+      const found = citiesOf(ctx.t, country);
+      const take = (id: string) => save({ ...p(), city: id, method: null, hanafi: CITIES.find((c) => c.id === id)!.hanafi });
+      if (found.length === 1) { take(found[0].id); return; }
+      chooser!.back = undefined;
+      open(country, found.map((c) => ({ label: ctx.t.ar ? c.ar : c.en, chosen: c.id === ctx.prefs.city })), (i) => take(found[i].id), () => openCountries(region));
+    };
+    const openStationGroups = () => {
+      const t = ctx.t, st = stationOf(ctx.prefs);
+      open(t.s('stationRow'), t.list('stationGroups').map((g, i) => ({ label: g, chosen: i === (st.reciter ? 1 : 0) })),
+        (i) => openStations(i === 1));
+    };
+    const openStations = (reciters: boolean) => {
+      const found = stationsOf(reciters), cur = ctx.prefs.station;
+      open(ctx.t.list('stationGroups')[reciters ? 1 : 0], found.map((s) => ({ label: stationChoice(ctx.t, s), chosen: s.id === cur })), (i) => {
+        save({ ...p(), station: found[i].id });
+        if (radioOn) setRadio(true); // playing radio moves to the pick
+      }, openStationGroups);
+    };
+    const openVoices = (fajr: boolean) => {
+      const key = fajr ? 'voiceFajr' : 'voice', cur = (ctx.prefs as SPrefs)[key] ?? (fajr ? 'chebae_fajr' : 'alafasy');
+      open(ctx.t.s(fajr ? 'fajrVoiceRow' : 'voiceRow'), VOICES.map((v) => ({ label: ctx.t.ar ? v.ar : v.en, chosen: v.id === cur })),
+        (i) => save({ ...p(), [key]: VOICES[i].id }));
+    };
+
+    // Example assignments stay in this browser. Android uses the TV's installed-app list.
+    const remoteDefaults: Record<string, string> = { youtube: 'app:0', netflix: 'app:1', web: 'app:3', settings: '@settings', inputs: '@inputs', apps: '@apps', red: '@default', green: '@default', yellow: '@default', blue: '@default' };
+    const remoteKeys = Object.keys(remoteDefaults);
+    const remoteLabel = (key: string) => ({ youtube: 'YouTube', netflix: 'Netflix', web: ctx.t.list('buttonNames')[4],
+      settings: ctx.t.list('buttonNames')[0], inputs: ctx.t.s('inputsTitle'), apps: ctx.t.list('buttonActions')[2], red: ctx.t.list('colourButtons')[0], green: ctx.t.list('colourButtons')[1], yellow: ctx.t.list('colourButtons')[2], blue: ctx.t.list('colourButtons')[3] })[key] ?? key;
+    const remoteValues = ['@default', '@home', '@apps', '@inputs', '@settings', '@dock'];
+    const assignmentLabel = (value: string) => value.startsWith('app:')
+      ? APPS[Number(value.slice(4))]?.[ctx.t.ar ? 'ar' : 'en'] ?? value
+      : ctx.t.list('buttonActions')[remoteValues.indexOf(value)] ?? value;
+    const openRemoteButtons = () => {
+      const bindings = ctx.prefs.remoteButtons ?? remoteDefaults;
+      const labels = [ctx.t.s('pressButton'), ...remoteKeys.map(key => `${remoteLabel(key)} · ${assignmentLabel(bindings[key] ?? '@default')}`), ctx.t.s('restoreButtons')];
+      open(ctx.t.s('remoteButtons'), labels.map(label => ({ label, chosen: false })), i => {
+        if (i === 0) open(ctx.t.s('pressButton'), [{ label: ctx.t.s('buttonPreviewHelp'), chosen: false }], openRemoteButtons, openRemoteButtons);
+        else if (i <= remoteKeys.length) openRemoteApps(remoteKeys[i - 1]);
+        else { save({ ...p(), remoteButtons: Object.fromEntries(remoteKeys.map(key => [key, '@default'])) }); openRemoteButtons(); }
+      });
+    };
+    const openRemoteApps = (key: string) => {
+      const values = [...remoteValues, ...APPS.map((_, i) => `app:${i}`)];
+      const current = (ctx.prefs.remoteButtons ?? remoteDefaults)[key] ?? '@default';
+      open(remoteLabel(key), values.map(value => ({ label: assignmentLabel(value), chosen: current === value })), i => {
+        save({ ...p(), remoteButtons: { ...(ctx.prefs.remoteButtons ?? remoteDefaults), [key]: values[i] } });
+        openRemoteButtons();
+      }, openRemoteButtons);
+    };
+
+    // ------------------------------------------------------------ rows
+    const W = lang === 'ar' ? 'على التلفاز يفتح هذا' : 'On the TV this opens';
+    const goLang = (i: number) => {
+      const to: Lang = i === 0 ? (navigator.language.toLowerCase().startsWith('ar') ? 'ar' : 'en') : i === 1 ? 'ar' : 'en';
+      if (to === lang) return;
+      try { sessionStorage.setItem(FOCUS, JSON.stringify({ section, row: focusedRow() })); } catch { /* fine */ }
+      location.href = href('settings', to) + '#tv';
+    };
+    // Editing a seg or step row: OK starts it, ◀▶ move the draft, OK saves, Back cancels.
+    const setEdit = (e: Edit | null) => { edit = e; rerender(); };
+    const endEdit = (keep: boolean) => {
+      if (!edit) return;
+      const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[edit.row], draft = edit.draft;
+      setEdit(null);
+      if (!keep) return;
+      if (r.id === 'lang') { if (draft !== r.selected) goLang(draft); }
+      else save(commit(rowCtx(), r, draft));
+    };
+
+    /** OK opens or edits a row; carousels preview directly with Left/Right. */
+    const act = (i: number) => {
+      const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[i];
+      if (!r) return;
+      if (r.id === 'prayer.online') { void checkOnline(i); return; }
+      if (r.id === 'homeReset' && appearanceDraft) save({ ...appearanceDraft, homeCountdown: 0, homeSide: 0, homeBar: 0, homePrayers: 0, homeLayout: 'two_rows' });
+      else if (r.id === 'apply' && appearanceDraft) { appearanceDraft = armCycle(appearanceDraft, Date.now()); update(appearanceDraft); showSaved(); }
+      else if (r.kind === 'carousel') return;
+      else if (r.kind === 'seg' || r.kind === 'step') setEdit({ row: i, draft: savedDraft(rowCtx(), r) });
+      else if (r.id === 'radio') setRadio(!radioOn);
+      else if (r.id === 'resume') save({ ...p(), radioResume: p().radioResume === false });
+      else if (r.id === 'quickLabels') save({ ...p(), quickLabels: !p().quickLabels });
+      else if (r.id === 'reduceMotion') save({ ...p(), reduceMotion: !p().reduceMotion });
+      else if (r.id === 'repairService') save({ ...p(), repairService: !ctx.prefs.repairService });
+      else if (r.id === 'adhan') save({ ...p(), adhan: !ctx.prefs.adhan });
+      else if (r.kind === 'value') {
+        if (r.id === 'offsets') { offsetsPage = true; offsetsParentRow = i; rerender(); focusRow(0); }
+        else if (r.id === 'remoteButtons') openRemoteButtons();
+        else if (r.id === 'dockMode') open(ctx.t.s('prayerDock'), ctx.t.list('dockModes').map((label, k) => ({ label, chosen: DOCK_MODES[k] === (ctx.prefs.dockMode ?? 'hidden') })), k => save({ ...p(), dockMode: DOCK_MODES[k] }));
+        else if (r.id === 'city') openRegions();
+        else if (r.id === 'method') {
+          open(ctx.t.s('method'), methodItems(ctx.t, ctx.prefs), (k) => save({ ...p(), method: METHODS[k] }));
+        } else if (r.id === 'remind') {
+          open(ctx.t.s('remind'), ctx.t.list('remindChoices').map((s, k) => ({ label: ctx.t.d(s), chosen: k === r.selected })),
+            (k) => save({ ...p(), remind: REMIND[k] }));
+        } else if (r.id === 'station') openStationGroups();
+        else if (r.id === 'voice' || r.id === 'voiceFajr') openVoices(r.id === 'voiceFajr');
+        else if (r.id === 'room') location.href = href('prayer-day', lang) + '#tv';
+        else toast(`${W} ${r.label}`);
+      }
+    };
+
+    // ------------------------------------------------------------ keys: the D-pad map of SettingsActivity
+    root.addEventListener('keydown', (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey && e.key !== 'Tab') return;
+      const k = e.key;
+      const a = document.activeElement as HTMLElement;
+      const ok = k === 'Enter' || k === ' ';
+      const back = k === 'Escape' || k === 'Backspace';
+      const vert = k === 'ArrowUp' ? -1 : k === 'ArrowDown' ? 1 : 0;
+      const horiz = k === 'ArrowRight' ? 1 : k === 'ArrowLeft' ? -1 : 0;
+      const toEnd = rtl ? -horiz : horiz; // +1 toward the end of the line, mirrored in RTL
+      const handled = () => { e.preventDefault(); e.stopPropagation(); };
+
+      if (online) {
+        if (!ok && !back && !vert && !horiz && k !== 'Tab') return;
+        handled();
+        if (back) closeOnline();
+        else if (ok && (a === onlineBack || a === onlineRetry)) a.click();
+        else if (vert || k === 'Tab') {
+          const retry = !onlineRetry.hidden && (vert > 0 || k === 'Tab' && a === onlineBack);
+          (retry ? onlineRetry : onlineBack).focus({preventScroll: true});
+        }
+        return;
+      }
+      if (!ok && !back && !vert && !horiz) return;
+
+      if (chooser) {
+        handled();
+        const i = items().indexOf(a);
+        if (back) close(true);
+        else if (vert) focusItem(i < 0 ? 0 : i + vert);
+        else if (ok && i >= 0) choose(i);
+        return;
+      }
+      if (a?.dataset.nav != null) {
+        if (back) return; // tv.ts takes Back to [data-home]
+        handled();
+        const i = +a.dataset.nav;
+        if (vert) navs[Math.max(0, Math.min(navs.length - 1, i + vert))].focus({ preventScroll: true });
+        else if (ok || toEnd > 0) focusRow(0);
+        return;
+      }
+      const row = a?.dataset.row;
+      if (row == null) return;
+      handled();
+      if (edit) {
+        // Up/Down stay on the row being edited.
+        if (back) endEdit(false);
+        else if (ok) endEdit(true);
+        else if (horiz) {
+          const draft = moveDraft(rowsFor(rowCtx(), section, radioOn, offsetsPage)[edit.row], edit.draft, toEnd);
+          if (draft !== edit.draft) setEdit({ ...edit, draft });
+        }
+        return;
+      }
+      // Carousels consume Left/Right; other rows return to sections toward the start.
+      if (back && offsetsPage) { offsetsPage = false; rerender(); focusRow(offsetsParentRow); }
+      else if (back) focusNav();
+      else if (vert) focusRow(+row + vert);
+      else if (horiz) {
+        const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[+row];
+        if (r.kind === 'carousel') save(pick(rowCtx(), r.id, Math.max(0, Math.min(r.segs!.length - 1, r.selected! + toEnd))));
+        else if (toEnd < 0) focusNav();
+      }
+      else act(+row);
+    });
+
+    // Focus on a section shows it at once, as on the TV.
+    root.addEventListener('focusin', (e) => {
+      if (online) {
+        if (!onlineEl.contains(e.target as Node)) onlineBack.focus({preventScroll: true});
+        return;
+      }
+      const n = (e.target as HTMLElement).dataset?.nav;
+      if (n != null) setSection(+n);
+    });
+
+    // Pointer: the same actions.
+    root.addEventListener('click', (e) => {
+      const el = e.target as HTMLElement;
+      if (online) {
+        if (el.closest('[data-online-back]')) closeOnline();
+        else if (el.closest('[data-online-retry]')) void checkOnline(online.row);
+        return;
+      }
+      if (chooser) {
+        const item = el.closest<HTMLElement>('[data-item]');
+        if (item) choose(+item.dataset.item!);
+        else if (!el.closest('.ch-card')) close(false);
+        return;
+      }
+      const nav = el.closest<HTMLElement>('[data-nav]');
+      if (nav) { setSection(+nav.dataset.nav!); focusRow(0); return; }
+      const rowEl = el.closest<HTMLElement>('[data-row]');
+      if (edit) setEdit(null);
+      if (!rowEl) return;
+      const i = +rowEl.dataset.row!;
+      const seg = el.closest<HTMLElement>('[data-seg]');
+      const step = el.closest<HTMLElement>('[data-step]');
+      const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[i];
+      if (seg && (r.kind === 'seg' || r.kind === 'carousel')) {
+        if (r.id === 'lang') goLang(+seg.dataset.seg!);
+        else save(pick(rowCtx(), r.id, +seg.dataset.seg!));
+      } else if (step) save(commit(rowCtx(), r, moveDraft(r, savedDraft(rowCtx(), r), +step.dataset.step!)));
+      else act(i);
+    });
+
+    // Back from the other language's page (Language row): the same section and row.
+    try {
+      const f = JSON.parse(sessionStorage.getItem(FOCUS) ?? 'null');
+      sessionStorage.removeItem(FOCUS);
+      if (f) requestAnimationFrame(() => { setSection(f.section); if (f.row >= 0) focusRow(f.row); else focusNav(); });
+    } catch { /* fine */ }
+  }
+</script>
+
+<style is:global>
+  .settings .online-check { position:absolute; inset:0; z-index:2; background:var(--color-lapis-900); padding:var(--space-safe-block) var(--space-safe-inline); display:flex; flex-direction:column; align-items:flex-start; gap:var(--space-4); }
+  .settings .online-check[hidden], .settings .online-check [hidden] { display:none; }
+  .settings .online-heading { display:flex; align-items:center; gap:var(--space-6); width:100%; }
+  .settings .online-heading h2 { margin:0; font-size:var(--font-size-title); line-height:1.3; }
+  .settings .online-back { position:relative; display:grid; place-items:center; flex:none; width:72px; height:72px; border-radius:var(--radius-pill); }
+  [dir=rtl] .settings .online-back svg { transform:scaleX(-1); }
+  .settings .online-body { width:100%; font-size:var(--font-size-body-l); line-height:1.6; }
+  .settings .online-context, .settings .online-note { margin:0; font-size:var(--font-size-caption); line-height:1.6; }
+  .settings .online-context { margin-bottom:var(--space-4); }
+  .settings .online-check table { width:100%; border-collapse:collapse; }
+  .settings .online-check th, .settings .online-check td { padding:12px var(--space-4); text-align:center; border-bottom:1px solid var(--color-lapis-700); }
+  .settings .online-check thead { font-size:var(--font-size-label); color:var(--color-mist-400); }
+  .settings .online-check tbody th { font-weight:500; }
+  .settings .online-retry { position:relative; display:flex; align-items:center; justify-content:center; width:580px; height:72px; font-size:var(--font-size-body); border-radius:var(--radius-cell); }
+  .settings .slide { width: var(--layout-settings-carousel-width); height: var(--layout-settings-carousel-height); padding: 0 12px; display: grid; place-items: center; overflow: hidden; white-space: nowrap; font-size: var(--font-size-label); opacity: .65; }
+  .settings .slide.home-choice { width:var(--layout-settings-home-arrow-width); }
+  .settings .slide.home-choice.on { width:var(--layout-settings-home-choice-width); }
+  .settings .slide.on { border-radius: 26px; background: var(--color-lapis-700); color: var(--color-plaster-100); opacity: 1; }
+
+  .settings .appearance-preview { position: absolute; inset-inline-start: var(--layout-settings-content-start); top: var(--layout-settings-rows-top); width: var(--layout-settings-row-width); height: var(--layout-settings-preview-height); display: flex; align-items: center; gap: calc(var(--layout-settings-row-width) - var(--layout-settings-preview-width) - var(--layout-settings-appearance-caption-width)); }
+  .settings .appearance-preview[hidden] { display: none; }
+  .settings .appearance-home { width: var(--layout-settings-preview-width); height: var(--layout-settings-preview-height); flex: none; background: var(--scene-image); background-color: var(--color-lapis-900); background-size: cover; }
+  .settings .appearance-caption { font-size: var(--font-size-label); color: var(--color-mist-400); }
+  .settings .appearance-home svg { display: block; width: 100%; height: 100%; }
+  .settings .appearance-caption { width: var(--layout-settings-appearance-caption-width); }
+  .settings .appearance-caption h3 { font-size: var(--font-size-appearance-title); color: var(--color-plaster-100); margin: 12px 0 24px; }
+  .settings .swatches { display: flex; gap: var(--layout-settings-swatch-gap); }
+  .settings .swatches i { width: var(--space-6); height: var(--space-6); border-radius: 50%; }
+
+  .settings { position: absolute; inset: 0; }
+  .settings .side { position: absolute; inset-block: 0; inset-inline-start: 0; width: var(--layout-settings-sidebar-width); background: var(--color-lapis-950); }
+  .settings .head { position: absolute; inset-inline-start: 96px; top: 56px; display: flex; align-items: center; gap: var(--space-3); }
+  .settings .mihrab { color: var(--color-gold-400); }
+  .settings .title { font-size: var(--font-size-title); color: var(--color-plaster-100); line-height: 1.2; }
+  .settings .nav {
+    inset-inline-start: 96px; width: 424px; height: 76px; align-items: center; padding: 0 var(--space-4);
+    border-radius: var(--radius-cell); font-size: var(--font-size-body); color: var(--color-mist-400); --rest-fill: transparent;
+  }
+  .settings .nav.open { --rest-fill: var(--surface-fill, var(--color-lapis-800)); --rest-border: var(--color-gold-400); --rest-border-width: 2px; color: var(--color-plaster-100); }
+  .settings .nav:focus, .tv:not(:focus-within) .settings .nav[data-focus-start] { color: var(--focus-text); }
+  .settings .label { position: absolute; inset-inline-start: var(--layout-settings-content-start); top: 56px; font-size: var(--font-size-label); color: var(--color-mist-400); }
+  .settings .hints { inset-inline-start: var(--layout-settings-content-start); top: 976px; }
+  .settings .saved {
+    position: absolute; inset-inline-end: 96px; top: 976px; font-size: var(--font-size-label); font-weight: 500; color: var(--color-gold-400);
+    opacity: 0; transition: opacity var(--motion-overlay-fade) linear; pointer-events: none;
+  }
+  .settings .saved.on { opacity: 1; }
+
+  .settings .rows.scrolling { position:absolute; inset-inline-start:calc(var(--layout-settings-content-start) - var(--layout-settings-scroll-padding)); top:calc(var(--layout-settings-appearance-top) - var(--layout-settings-scroll-padding)); width:calc(var(--layout-settings-row-width) + 2 * var(--layout-settings-scroll-padding)); height:calc(var(--layout-settings-appearance-rows-height) - var(--focus-ring-offset) - var(--focus-ring-width)); overflow-y:auto; overflow-x:hidden; padding:var(--layout-settings-scroll-padding); display:flex; flex-direction:column; gap:var(--layout-settings-row-gap); }
+  .settings .rows.scrolling .srow { position:relative; inset-inline-start:auto; top:auto !important; flex:none; }
+  .tv[data-large-ui='true'] .settings .side { width:calc(var(--large-side-start) + 464px); }
+  .tv[data-large-ui='true'] .settings .head { inset-inline-start:var(--large-side-start); top:var(--large-top); }
+  .tv[data-large-ui='true'] .settings .nav { inset-inline-start:var(--large-side-start); top:calc(var(--large-rows-top) + var(--nav-index) * 74px) !important; height:64px; }
+  .tv[data-large-ui='true'] .settings .label { inset-inline-start:var(--large-content-start); top:var(--large-top); max-width:var(--large-content-width); }
+  .tv[data-large-ui='true'] .settings .rows.scrolling {
+    inset-inline-start:calc(var(--large-content-start) - var(--layout-settings-scroll-padding));
+    top:calc(var(--large-rows-top) - var(--layout-settings-scroll-padding));
+    width:calc(var(--large-content-width) + 2 * var(--layout-settings-scroll-padding));
+    height:calc(1080px - var(--large-top) - var(--large-rows-top) + var(--layout-settings-scroll-padding));
+  }
+  .tv[data-large-ui='true'] .settings .rows.appearance { top:calc(var(--large-rows-top) + 224px - var(--layout-settings-scroll-padding)); height:calc(1080px - var(--large-top) - var(--large-rows-top) - 224px + var(--layout-settings-scroll-padding)); }
+  .tv[data-large-ui='true'] .settings .rows .srow { width:100%; height:auto; min-height:var(--layout-settings-row-height); flex-direction:column; align-items:flex-start; padding:12px var(--layout-settings-row-padding); gap:12px; }
+  .tv[data-large-ui='true'] .settings .words { width:100%; }
+  .tv[data-large-ui='true'] .settings .rh { white-space:normal; overflow:visible; }
+  .tv[data-large-ui='true'] .settings .offset-time { position:static; transform:none; width:auto; }
+  .tv[data-large-ui='true'] .settings .appearance-preview { inset-inline-start:var(--large-content-start); top:var(--large-rows-top); width:var(--large-content-width); height:200px; gap:24px; }
+  .tv[data-large-ui='true'] .settings .appearance-home { width:45%; height:auto; aspect-ratio:16/9; }
+  .tv[data-large-ui='true'] .settings .appearance-caption { width:calc(55% - 24px); }
+  .tv[data-large-ui='true'] .settings .appearance-caption h3 { margin:8px 0 12px; }
+  .tv[data-large-ui='true'] .settings .swatches { gap:var(--space-2); }
+  .tv[data-large-ui='true'] .settings .hints { display:none; }
+  .tv[data-large-ui='true'] .settings .ch-list { max-height:calc(1080px / var(--ui-size) - 240px); }
+  .tv[data-large-ui='true'] .settings .online-body { min-height:0; overflow-y:auto; }
+  .tv[data-large-ui='true'] .settings .online-heading, .tv[data-large-ui='true'] .settings .online-note, .tv[data-large-ui='true'] .settings .online-retry { flex-shrink:0; }
+  /* Rows: label and help at the start, the control at the end. */
+  .settings .srow {
+    inset-inline-start: var(--layout-settings-content-start); width: var(--layout-settings-row-width); height: var(--layout-settings-row-height); padding: 0 var(--layout-settings-row-padding); align-items: center; justify-content: space-between;
+    gap: var(--space-4); border-radius: var(--radius-row); text-align: start;
+  }
+  .settings .srow:focus { transform: scale(var(--focus-scale-settings-row)); }
+  .settings .words { display: flex; flex-direction: column; min-width: 0; }
+  .settings .rl { font-size: var(--font-size-body); font-weight: 500; line-height: 1.3; }
+  .settings .rh { font-size: var(--font-size-caption); opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.35; }
+  .settings .offset-time { position:absolute; left:50%; transform:translateX(-50%); width:var(--layout-settings-offset-time-width); text-align:center; font-size:var(--font-size-body-l); font-weight:500; white-space:nowrap; }
+
+  .settings .ctl { display: flex; align-items: center; flex: none; }
+  /* Editing: a lapis ring around the control on the gold row. */
+  .settings .srow.editing .ctl { padding: 6px; border-radius: var(--radius-pill); box-shadow: inset 0 0 0 3px var(--color-lapis-900); }
+  .settings .val { font-size: 24px; margin-inline-end: var(--space-2); }
+  .settings .chev { flex: none; }
+  [dir='rtl'] .settings .chev { transform: scaleX(-1); }
+
+  .settings .track { display: flex; padding: 6px; border-radius: var(--radius-pill); background: var(--color-lapis-900); }
+  .settings .srow:focus .track { background: var(--color-seg-track-focused); }
+  .settings .seg { height: var(--layout-settings-carousel-height); padding: 0 var(--space-4); display: flex; align-items: center; border-radius: var(--radius-pill); font-size: var(--font-size-label); color: var(--color-mist-400); }
+  .settings .seg.on { background: var(--color-plaster-100); color: var(--color-lapis-900); }
+  .settings .srow:focus .seg { color: var(--color-lapis-900); }
+  .settings .srow:focus .seg.on { background: var(--color-lapis-900); color: var(--color-plaster-100); box-shadow: inset 0 0 0 3px var(--color-plaster-100); }
+
+  .settings .stepb { width: var(--space-6); height: var(--space-6); border-radius: var(--radius-pill); background: var(--color-lapis-700); color: var(--color-plaster-100); display: grid; place-items: center; font-size: var(--font-size-body); }
+  .settings .stepv { min-width: 150px; margin: 0 18px; text-align: center; font-size: var(--font-size-body); }
+
+  .settings .switch { width: var(--layout-settings-row-height); height: var(--space-6); border-radius: var(--radius-pill); background: var(--color-lapis-700); display: flex; align-items: center; padding: 0 6px; }
+  .settings .switch i { width: 36px; height: 36px; border-radius: 50%; background: var(--color-mist-400); }
+  .settings .switch.on { background: var(--color-gold-400); justify-content: flex-end; }
+  .settings .switch.on i { background: var(--color-lapis-900); }
+  .settings .srow:focus .switch.on { background: var(--color-lapis-900); }
+  .settings .srow:focus .switch.on i { background: var(--color-gold-400); }
+
+  /* The list chooser over the screen. */
+  .settings .chooser { position: absolute; inset: 0; background: var(--color-scrim-menu); display: grid; place-items: center; }
+  .settings .chooser[hidden] { display: none; }
+  .settings .ch-card { width: 900px; padding: 40px var(--space-6) 32px; background: var(--color-lapis-800); border-radius: var(--radius-panel); box-shadow: inset 0 0 0 2px var(--color-gold-400-60); }
+  .settings .ch-title { font-size: var(--font-size-display-s); color: var(--color-gold-400); line-height: 1.2; }
+  .settings .ch-list { position: relative; max-height: calc(8 * 74px + 20px); overflow: hidden; padding: 10px; margin: 0 -10px; display: flex; flex-direction: column; gap: 6px; }
+  .settings .ch-item {
+    position: relative; flex: none; height: 68px; width: 100%; align-items: center; padding: 0 var(--space-4);
+    border-radius: var(--radius-cell); font-size: var(--font-size-body); font-weight: 400; text-align: start; --rest-fill: transparent;
+  }
+  .settings .ch-item.chosen { --rest-fill: var(--surface-fill, var(--color-lapis-800)); color: var(--color-gold-400); font-weight: 500; }
+  .settings .ch-item:focus { transform: none; color: var(--focus-text); }
+
+  .settings .toast { position: absolute; inset-inline-end: var(--space-safe-inline); bottom: var(--space-safe-block); max-width: var(--layout-toast-width); padding: 24px 32px; border-radius: var(--radius-panel); background: var(--color-plaster-100); color: var(--color-lapis-900); font-size: var(--font-size-body); }
+  .settings .toast[hidden] { display: none; }
+</style>

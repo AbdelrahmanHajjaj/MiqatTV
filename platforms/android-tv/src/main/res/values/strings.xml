@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Miqat</string>
+    <string name="remote_keys">Miqat remote buttons</string>
+    <string name="remote_keys_description">Makes the remote\'s app, Settings, Input and All apps buttons work with Miqat as the home screen.</string>
+</resources>

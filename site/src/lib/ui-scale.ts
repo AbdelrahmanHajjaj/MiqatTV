@@ -1,0 +1,16 @@
+import portable from '@miqat/core';
+import tokens from '../../../shared/design/mihrab/tokens.json';
+import type { Prefs } from './data';
+
+const core = portable.tv.miqat.core;
+export const uiPercent = (value: unknown): number => typeof value === 'number' ? core.UiScale.percent(value) : core.UiScale.DEFAULT_PERCENT;
+export const uiFactor = (prefs: Prefs) => uiPercent(prefs.uiScale) / 100;
+
+/** Home/All apps preserve their grid gaps and the largest focused tile when enlarged. */
+export function safeInline(prefs: Prefs) {
+  const factor = uiFactor(prefs), margin = parseFloat(tokens.space['safe-inline'].$value);
+  if (factor <= 1) return margin;
+  const reach = parseFloat(tokens.focus['ring-width'].$value) + parseFloat(tokens.focus['ring-offset'].$value);
+  const width = parseFloat(tokens.layout.home['tile-max-width'].$value), growth = (tokens.focus.scale.$value - 1) / 2;
+  return Math.max(margin, 960 - 960 / factor + reach + (width + 2 * reach) * growth + parseFloat(tokens.space['2'].$value) / factor);
+}

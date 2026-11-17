@@ -1,0 +1,71 @@
+plugins {
+    id 'com.android.application'
+}
+
+def adhanSources = configurations.create('adhanSources') {
+    canBeConsumed = false
+    transitive = false
+}
+def generatedAdhan = layout.buildDirectory.dir('generated/adhan')
+// The pinned binary rounds internally; compile its unchanged sources with our minute-rule adapter.
+def unpackAdhan = tasks.register('unpackAdhanSources', Sync) {
+    from({ zipTree(adhanSources.singleFile) }) {
+        include '**/*.java'
+        exclude 'com/batoulapps/adhan/data/CalendarUtil.java'
+    }
+    into generatedAdhan
+}
+
+android {
+    namespace 'tv.miqat.home'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'tv.miqat.home'
+        minSdk 26
+        targetSdk 34
+        versionCode 11
+        versionName '0.7.0'
+        testInstrumentationRunner 'tv.miqat.home.AppearanceCycleDeviceCheck'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    sourceSets.main {
+        java.srcDir generatedAdhan
+        res.srcDir file('../../shared/design/resources')
+        assets.srcDir file('../../shared/design/assets')
+        assets.srcDir file('../../shared/core/assets')
+        assets.srcDir file('../../state/media')
+    }
+}
+
+dependencies {
+    implementation 'tv.miqat:core'
+    add(adhanSources.name, 'com.batoulapps.adhan:adhan:1.2.1:sources')
+}
+
+tasks.withType(JavaCompile).configureEach { dependsOn(unpackAdhan) }
+
+def checkAdhanMedia = tasks.register('checkAdhanMedia', Exec) {
+    onlyIf { file('../../state/media/adhan').isDirectory() }
+    commandLine 'node', file('../../tools/prepare-adhans.mjs'), '--check'
+}
+tasks.named('preBuild') { dependsOn(checkAdhanMedia) }
+
+// The distributed launcher must stay below 25 MB (decimal), including bundled audio.
+def verifyApkSize = tasks.register('verifyApkSize') {
+    group = 'verification'
+    description = 'Build and enforce the launcher APK size budget.'
+    dependsOn('assembleDebug')
+    def apk = layout.buildDirectory.file('outputs/apk/debug/app-debug.apk')
+    doLast {
+        long size = apk.get().asFile.length()
+        if (size <= 0 || size >= 25_000_000) throw new GradleException("Launcher APK must be under 25 MB; got ${size} bytes")
+        logger.lifecycle("Launcher APK: ${size} / 25,000,000 bytes")
+    }
+}
+tasks.named('check') { dependsOn(verifyApkSize) }

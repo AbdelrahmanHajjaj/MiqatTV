@@ -1,0 +1,127 @@
+package tv.miqat.home;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.widget.FrameLayout;
+
+/**
+ * A focusable surface: app tiles, pill buttons and the arch's foot button.
+ *
+ * <p>The view is larger than the design rect by the focus ring's reach (6px gap + 4px ring) on every side, so the
+ * ring is drawn inside its own bounds. Place it with {@link #REACH} subtracted from x and y and added twice to w
+ * and h. Focused: gold-400 fill, plaster-100 ring, scale 1.06, all in 120ms (tokens.json focus.*).
+ */
+class FocusTile extends FrameLayout {
+    static final float REACH = Tokens.FOCUS_RING_OFFSET + Tokens.FOCUS_RING_WIDTH;
+
+    interface Look {
+        /** Recolour the tile's content for the focused or resting state. */
+        void apply(boolean focused);
+    }
+
+    private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint border = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ring = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF box = new RectF();
+    private final RectF ringBox = new RectF();
+    private final float radius;
+    private final ThemeSurface surface;
+    private int restFill;
+    private int restBorder;
+    private float restBorderWidth;
+    private Look look;
+    private float focusScale = Tokens.FOCUS_SCALE;
+
+    FocusTile(Context c, float radiusDesignPx) {
+        super(c);
+        surface = Appearance.surface();
+        // Circular quick controls and pills keep their intended shape.
+        radius = Ui.px(radiusDesignPx <= Tokens.RADIUS_PANEL ? surface.radius(radiusDesignPx) : radiusDesignPx);
+        int reach = Ui.ipx(REACH);
+        setPadding(reach, reach, reach, reach);
+        setWillNotDraw(false);
+        setFocusable(true);
+        setClickable(true);
+        setClipChildren(false);
+        border.setStyle(Paint.Style.STROKE);
+        ring.setStyle(Paint.Style.STROKE);
+        ring.setColor(Palette.PLASTER_100);
+        ring.setStrokeWidth(Ui.px(Tokens.FOCUS_RING_WIDTH));
+        setRest(Palette.LAPIS_800, 0, 0);
+    }
+
+    /** Resting fill (0 for none) and border (width 0 for none). */
+    FocusTile setRest(int fillColor, int borderColor, float borderWidthDesignPx) {
+        restFill = surface.fill(fillColor);
+        boolean themed = !surface.classic() && surface.isPanel(fillColor) && borderWidthDesignPx == 0;
+        restBorder = themed ? surface.edge : borderColor;
+        restBorderWidth = Ui.px(themed ? surface.stroke : borderWidthDesignPx);
+        invalidate();
+        return this;
+    }
+
+    /** The "All apps" tile: a dashed border instead of a fill. */
+    FocusTile setDashed() {
+        border.setPathEffect(new DashPathEffect(new float[] {Ui.px(8), Ui.px(6)}, 0));
+        return this;
+    }
+
+    /** Rows scale less than tiles (tokens.json focus.scale-row, 1.04). */
+    FocusTile setFocusScale(float s) {
+        focusScale = s;
+        return this;
+    }
+
+    float focusedScale() { return focusScale; }
+
+    FocusTile setLook(Look l) {
+        look = l;
+        l.apply(isFocused());
+        return this;
+    }
+
+    @Override
+    protected void onFocusChanged(boolean gained, int direction, android.graphics.Rect previous) {
+        super.onFocusChanged(gained, direction, previous);
+        float s = gained ? focusScale : 1f;
+        animate().cancel();
+        if (Appearance.reduced(getContext())) { setScaleX(1f); setScaleY(1f); }
+        else animate().scaleX(s).scaleY(s).setDuration(Appearance.motion(Tokens.DUR_FOCUS_MS)).setInterpolator(Ui.EASE).start();
+        if (look != null) look.apply(gained);
+        invalidate();
+    }
+
+    @Override
+    protected void onDraw(Canvas c) {
+        float reach = Ui.px(REACH);
+        box.set(reach, reach, getWidth() - reach, getHeight() - reach);
+        boolean focused = isFocused();
+        int f = focused ? Palette.GOLD_400 : restFill;
+        if (f != 0) {
+            fill.setColor(f);
+            c.drawRoundRect(box, radius, radius, fill);
+        }
+        if (!focused && restFill != 0 && "blocks".equals(surface.name)) {
+            fill.setColor(surface.edge);
+            float line = Ui.px(Tokens.SURFACE_BLOCKS_STRIPE);
+            c.drawRect(box.left + radius, box.bottom - line, box.right - radius, box.bottom, fill);
+        }
+        if (!focused && restBorderWidth > 0) {
+            border.setColor(restBorder);
+            border.setStrokeWidth(restBorderWidth);
+            float h = restBorderWidth / 2;
+            box.inset(h, h);
+            c.drawRoundRect(box, radius - h, radius - h, border);
+            box.inset(-h, -h);
+        }
+        if (focused) {
+            float w = Ui.px(Tokens.FOCUS_RING_WIDTH);
+            float out = Ui.px(Tokens.FOCUS_RING_OFFSET) + w / 2;
+            ringBox.set(box.left - out, box.top - out, box.right + out, box.bottom + out);
+            c.drawRoundRect(ringBox, radius + out, radius + out, ring);
+        }
+    }
+}

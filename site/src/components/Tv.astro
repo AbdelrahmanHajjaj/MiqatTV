@@ -1,0 +1,40 @@
+---
+// The 1920×1080 TV stage with the star lattice ground (Ui.starLattice), scaled into a 16:9 frame by the inline script below
+// (inline so the TV still fits when a cached page outlives its script bundle after a deploy).
+import mihrab from '../../../shared/design/mihrab.json';
+interface Props { mode?: string; screen: string; ground?: 'lattice' | 'black' }
+const { mode, screen, ground = 'lattice' } = Astro.props;
+---
+<div class="tv-frame">
+  <div class="tv" data-mode={mode} data-screen={screen} data-ground={ground}>
+    <svg class="ambient-ridge" aria-hidden="true" width="1920" height="1080" viewBox="0 0 480 270">
+      <path d="M0 225 C110 160 160 265 280 215 C360 180 400 210 480 155 L480 270 L0 270 Z" />
+    </svg>
+    {ground === 'lattice' && (
+      <svg class="lattice" aria-hidden="true" width="1920" height="1080">
+        <defs>
+          <pattern id="miqat-tile" width="96" height="96" patternUnits="userSpaceOnUse">
+            <g fill="none" stroke="var(--color-pattern-line)" stroke-width="1.5">
+              <path d={mihrab.inner} transform="translate(12 2) scale(.12 .1024)" vector-effect="non-scaling-stroke" />
+            </g>
+          </pattern>
+        </defs>
+        <rect width="1920" height="1080" fill="url(#miqat-tile)" />
+      </svg>
+    )}
+    <div class="tv-ui"><slot /></div>
+  </div>
+</div>
+<script is:inline>
+  (() => {
+    const frame = document.currentScript.previousElementSibling, stage = frame.firstElementChild;
+    const fit = () => stage.style.setProperty('--k', String(frame.clientWidth / 1920));
+    new ResizeObserver(fit).observe(frame);
+    fit();
+  })();
+</script>
+
+<style>
+  .lattice { position: absolute; inset: 0; pointer-events: none; }
+  .tv[data-ground='black'] { background: var(--color-screensaver-ground); }
+</style>

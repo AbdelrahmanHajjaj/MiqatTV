@@ -1,0 +1,52 @@
+---
+// The mihrab on the start side (Screen.buildArch + ArchView): crown verse, reference, rule, then the info
+// column at infoTop: label, prayer name, countdown and two sub lines. Values are bound by key (data-k).
+import type { Ctx } from '../lib/ctx';
+import { archModel } from '../screens/home';
+import mihrab from '../../../shared/design/mihrab.json';
+import sacred from '../../../shared/data/sacred-text.json';
+
+type ArchModel = ReturnType<typeof archModel>;
+// `model` lets a screen supply its own label, name and sub lines (Prayer day); Home uses archModel.
+interface Props { ctx: Ctx; infoTop: number; subSize: number; subGap: number; sub2Color: string; sub2Gap: number; model?: ArchModel }
+const { ctx, infoTop, subSize, subGap, sub2Color, sub2Gap, model } = Astro.props;
+const m = model ?? archModel(ctx);
+---
+<svg class="arch" data-a="arch" data-state={m.attr.arch['data-state']} aria-hidden="true" width="600" height="900" viewBox="0 0 600 900" preserveAspectRatio="none">
+  <path class="outer" d={mihrab.outer} />
+  <path class="inner" d={mihrab.inner} />
+</svg>
+<div class="verse"><p class="sacred" lang="ar" dir="rtl">{sacred.prayerVerse.map((line, i) => <Fragment>{i > 0 && <br />}{line}</Fragment>)}</p></div>
+<p class="ref">{ctx.t.s('ref')}</p>
+<div class="rule" aria-hidden="true"></div>
+<div class="info" style={`top:${infoTop}px`}>
+  <div class="label caps" data-k="archLabel" set:html={m.html.archLabel} />
+  <div class="name display-bold" data-k="archName" set:html={m.html.archName} />
+  <slot name="time" />
+  <div class="count display num" dir="ltr" data-k="archCount" data-a="archCount" data-long={m.attr.archCount['data-long']} set:html={m.html.archCount} />
+  <div class="sub" style={`font-size:${subSize}px;margin-top:${subGap}px`} data-k="archSub" set:html={m.html.archSub} />
+  <div class="sub2" style={`color:${sub2Color};margin-top:${sub2Gap}px`} data-k="archSub2" set:html={m.html.archSub2} />
+</div>
+
+<style>
+  .arch { position: absolute; inset-inline-start: var(--layout-arch-inset-inline-start); top: var(--layout-arch-top); overflow: visible; }
+  .outer { fill: var(--surface-fill, var(--color-lapis-800)); stroke: var(--surface-edge, var(--border-arch-rest-color)); stroke-width: var(--surface-arch-stroke, var(--border-arch-rest-width)); transition: stroke var(--motion-focus); }
+  .inner { fill: none; stroke: var(--color-arch-inner); stroke-width: 1.5; }
+  :global(.tv[data-surface]:not([data-surface="classic"]):not([data-surface="frame"])) .inner { display: none; }
+  /* Focused while its button has focus (or is the default focus on arrival); approaching wins. */
+  :global(.tv:has(.arch-btn:focus)) .outer,
+  :global(.tv:has(.arch-btn[data-focus-start]):not(:focus-within)) .outer { stroke: var(--border-arch-focused-color); stroke-width: var(--border-arch-focused-width); }
+  .arch[data-state='approaching'] .outer { stroke: var(--border-arch-approaching-color) !important; stroke-width: var(--border-arch-approaching-width) !important; }
+  .verse { position: absolute; inset-inline-start: 156px; top: 262px; width: 480px; }
+  .verse p { margin: 0; text-align: center; font-size: var(--font-size-sacred); line-height: var(--font-line-height-sacred); }
+  .ref { position: absolute; inset-inline-start: 156px; top: 410px; width: 480px; margin: 0; text-align: center; font-size: var(--font-size-caption); color: var(--color-mist-400); }
+  .rule { position: absolute; inset-inline-start: 336px; top: 460px; width: 120px; height: 2px; background: var(--color-gold-400); opacity: 0.6; }
+  .info { position: absolute; inset-inline-start: 136px; width: 520px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .label { font-size: var(--font-size-label); color: var(--color-mist-400); }
+  .name { font-size: var(--font-size-display-m); line-height: var(--font-line-height-title); color: var(--color-gold-400); }
+  .count { font-size: var(--font-size-display-xl); line-height: var(--font-line-height-display); }
+  .count[data-long='true'] { font-size: var(--font-size-display-xl-hours); }
+  .sub { color: var(--color-mist-400); }
+  .sub2 { font-size: 24px; }
+  .sub2:empty { display: none; }
+</style>

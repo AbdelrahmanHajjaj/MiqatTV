@@ -1,0 +1,17 @@
+{
+  "name": "miqat-tv-webos",
+  "version": "0.2.23",
+  "private": true,
+  "scripts": {
+    "build": "node build.cjs",
+    "test": "node ../../tools/validate-shared.test.mjs && node test-build.cjs && node test.cjs && node test-volume.cjs && node test-online.cjs",
+    "test:browser": "node browser-test.cjs"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "acorn": "^8.15.0",
+    "adhan": "4.4.6",
+    "playwright": "^1.56.0"
+  }
+}

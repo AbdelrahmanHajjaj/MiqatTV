@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Miqat’s lapis and gold (shared/design/mihrab/tokens.json), on the platform's dark Material theme. -->
+    <style name="Theme.Installer" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/lapis</item>
+        <item name="android:colorPrimary">@color/lapis</item>
+        <item name="android:colorPrimaryDark">@color/lapis</item>
+        <item name="android:colorAccent">@color/gold</item>
+    </style>
+    <color name="lapis">#033B44</color>
+    <color name="gold">#EBC678</color>
+</resources>

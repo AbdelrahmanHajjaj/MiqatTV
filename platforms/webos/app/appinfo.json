@@ -1,0 +1,15 @@
+{
+  "id": "tv.miqat.webos",
+  "version": "0.2.23",
+  "vendor": "Miqat",
+  "type": "web",
+  "main": "index.html",
+  "title": "Miqat",
+  "icon": "icon.png",
+  "largeIcon": "icon-large.png",
+  "splashBackground": "splash.png",
+  "bgImage": "splash.png",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "handlesRelaunch": false
+}

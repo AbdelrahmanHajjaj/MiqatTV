@@ -1,0 +1,47 @@
+// Canonical catalogs are shared directly; remaining native data is extracted at build time.
+import citiesJson from '../../../shared/data/cities.json';
+import methodsJson from '../../../shared/data/methods.json';
+import regionsJson from '../../../shared/data/regions.json';
+import stationsJson from '../../../shared/data/stations.json';
+
+export type City = (typeof citiesJson)[number];
+export type Station = (typeof stationsJson)[number];
+
+export const CITIES: City[] = citiesJson;
+export const METHOD_DEFINITIONS = methodsJson;
+export const METHODS: string[] = methodsJson.map(method => method.id);
+/** Each region's countries (English names), in the order of the regions string list. */
+export const REGIONS: string[][] = regionsJson;
+export const STATIONS: Station[] = stationsJson;
+
+/** Viewer preferences, as Miqat Settings keeps them on the TV. Saved in this browser only. */
+export type Prefs = {
+  theme?: string; background?: string; lighting?: number; reduceMotion?: boolean; repairService?: boolean;
+  appearanceCycle?: number; appearanceCycleAt?: number;
+  uiScale?: number;
+  quickLabels?: boolean; homeLayout?: 'two_rows' | 'classic';
+  homeCountdown?: number; homeSide?: number; homeBar?: number; homePrayers?: number;
+  dockMode?: 'hidden' | 'tab' | 'off'; dockPosition?: 'top' | 'bottom';
+  remoteButtons?: Record<string, string>;
+  city: string;
+  method: string | null; // null: the city's own method
+  hanafi: boolean;
+  hijriOffset: number;
+  prayerOffsets?: number[];
+  clock: 'system' | '12' | '24';
+  digits: 'auto' | 'eastern' | 'western';
+  remind: number;
+  adhan: boolean;
+  station: string;
+  voice?: string; voiceFajr?: string; // adhan voices (Adhans ids); unset: the app's defaults
+  radioResume?: boolean; radioDark?: number; // Settings' radio rows
+};
+
+export const DEFAULT_PREFS: Prefs = {
+  city: 'cairo', method: null, hanafi: false, hijriOffset: 0, clock: 'system', digits: 'auto',
+  remind: 15, adhan: true, station: 'cairo',
+};
+
+export const cityOf = (p: Prefs) => CITIES.find((c) => c.id === p.city) ?? CITIES[0];
+export const methodOf = (p: Prefs) => p.method ?? cityOf(p).method;
+export const stationOf = (p: Prefs) => STATIONS.find((s) => s.id === p.station) ?? STATIONS[0];

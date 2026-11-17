@@ -1,0 +1,434 @@
+---
+// Home (MainActivity): arch, clock and dates, Radio / Wi-Fi / Settings, prayer cells, favourites, more apps,
+// key hints, plus the reminder card (Reminders) and the Quran Radio card.
+import Arch from '../components/Arch.astro';
+import Icon from '../components/Icon.astro';
+import type { Ctx } from '../lib/ctx';
+import { stationOf, STATIONS } from '../lib/data';
+import { href } from '../lib/site';
+import { homeModel, archModel } from './home';
+import { HOME } from '../lib/home-layout';
+
+interface Props { ctx: Ctx }
+const { ctx } = Astro.props;
+const { t, lang } = ctx;
+const m = homeModel(ctx);
+const arch = archModel(ctx);
+Object.assign(arch.html, m.html);
+const ar = t.ar;
+const station = stationOf(ctx.prefs);
+const cardHidden = ctx.mode !== 'reminder';
+
+// Example apps: on the TV these are your own.
+const favs: { label: string; icon: 'tv' | 'film' | 'book' | 'globe' }[] = [
+  { label: ar ? 'يوتيوب' : 'YouTube', icon: 'tv' },
+  { label: ar ? 'شاهد' : 'Shahid', icon: 'film' },
+  { label: ar ? 'القرآن الكريم' : 'Quran', icon: 'book' },
+  { label: ar ? 'المتصفح' : 'Browser', icon: 'globe' },
+  { label: 'Netflix', icon: 'film' },
+  { label: ar ? 'مشغل الوسائط' : 'Media Player', icon: 'tv' },
+];
+const more = ar ? ['يوتيوب ميوزك', 'متجر Play', 'مشغل الوسائط', 'مدير الملفات'] : ['YouTube Music', 'Play Store', 'Media Player', 'File Manager'];
+const allCount = 14;
+const W = { site: ar ? 'على التلفاز يفتح هذا' : 'On the TV this opens' };
+---
+<div class="home-scroll"><div class="home-canvas" dir={ar ? 'rtl' : 'ltr'}>
+<div class="home-header"><div class="when">
+  <div class="clock display num" data-k="clock" set:html={m.html.clock} />
+  <div class="hdate" data-k="hdate" set:html={m.html.hdate} />
+  <div class="gdate" data-k="gdate" set:html={m.html.gdate} />
+</div>
+<div class="home-controls">
+<div class:list={["pills", {"icons-only": !ctx.prefs.quickLabels}]}>
+  <a class="ft pill" data-qibla href={href('prayer-day', lang) + '#tv'} aria-label={t.s('today')}><Icon name="compass" /><span class="pill-label">{t.s('today')}</span></a>
+  <button class="ft pill" data-open-inputs aria-label={t.s('inputsTitle')}><Icon name="input" stroke={2} /> <span class="pill-label">{t.s('inputsTitle')}</span></button>
+  <button class="ft pill radio-pill" data-open-radio aria-label={t.s('radio')}>
+    <span class="radio-off"><Icon name="radio" stroke={2} /></span>
+    <span class="bars mini" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="radio-label pill-label">{t.s('radio')}</span>
+  </button>
+
+  <button class="ft pill" data-open-wifi data-toast={`${W.site} Wi-Fi`} aria-label="Wi-Fi">
+    <Icon name="wifi" stroke={2} /> <span class="pill-label" dir="ltr">Wi-Fi</span>
+  </button>
+</div>
+<a class="ft gear" href={href('settings', lang) + '#tv'} aria-label={t.s('settings')}>
+  <Icon name="gear" size={34} />
+</a>
+</div>
+</div>
+<div class="home-body"><div class="home-countdown">
+  <Arch ctx={ctx} model={arch} infoTop={340} subSize={20} subGap={0} sub2Color="var(--color-gold-200)" sub2Gap={0}>
+    <div slot="time" class="prayer-time num" data-k="homePrayerTime" set:html={m.html.homePrayerTime} />
+  </Arch>
+</div>
+
+<div class="home-column"><div class="home-countdown-top" />
+
+<div class="cells" data-k="cells" set:html={m.html.cells} />
+
+<div class="label fav-label caps">{t.s('fav')}</div>
+<div class="home-favourites">
+{favs.map((f, i) => (
+  <button class="ft fav" {...(cardHidden && i === 0 ? { 'data-focus-start': '' } : {})} data-extra={i >= 4 ? "true" : undefined} style={`--slot:${i};--column:${i % 3};--row:${Math.floor(i / 3)}`} data-toast={`${W.site} ${f.label}`}>
+    <Icon name={f.icon} class="app-icon" size={HOME['app-icon-size']} />
+    <span>{f.label}</span>
+  </button>
+))}
+</div>
+
+<div class="label more-label caps">{t.s('recentApps')}</div>
+<div class="home-recent"><div class="recent-strip">
+{[...more, t.s('settings')].map((label, i) => {
+  const style = `inset-inline-start:calc(var(--layout-courtyard-inset-inline-start) + ${i} * ((var(--layout-courtyard-width) - 5 * var(--layout-gap-more)) / 6 + var(--layout-gap-more)))`;
+  return label === t.s('settings')
+    ? <a class="ft more" style={style} href={href('settings', lang) + '#tv'}>{label}</a>
+    : <button class="ft more" style={style} data-toast={`${W.site} ${label}`}>{label}</button>;
+})}
+<a class="ft more all" href={href('apps', lang) + '#tv'} style="inset-inline-start:calc(var(--layout-courtyard-inset-inline-start) + 5 * ((var(--layout-courtyard-width) - 5 * var(--layout-gap-more)) / 6 + var(--layout-gap-more)))">{t.all(allCount)}</a>
+</div></div>
+<div class="home-countdown-bottom" />
+</div></div></div></div>
+
+
+<!-- The reminder before a prayer (MainActivity.showReminder). -->
+<div class="card" data-card data-a="card" data-for={m.attr!.card['data-for']} hidden={cardHidden} role="alertdialog" aria-label={t.s('apLabel')}>
+  <div class="card-label caps"><Icon name="clock" size={26} stroke={2} /> {t.s('apLabel')}</div>
+  <div class="card-title display-bold" data-k="cardTitle" set:html={m.html.cardTitle} />
+  <div class="card-sub" data-k="cardSub" set:html={m.html.cardSub} />
+  <div class="card-buttons">
+    <button class="ft card-btn filled" data-card-ok data-back {...(cardHidden ? {} : { 'data-focus-start': '' })}>{t.s('apOk')}</button>
+    <a class="ft card-btn" href={href('prayer-day', lang) + '#tv'}>{t.s('dayTitle')}</a>
+  </div>
+</div>
+
+<div class="quick-card" data-quick="inputs" hidden role="dialog" aria-label={t.s('inputsTitle')}>
+  <div class="quick-head"><div class="quick-title">{t.s('inputsTitle')}</div><button class="ft quick-more" aria-label={t.s('advancedInputs')} data-toast={`${W.site} ${t.s('inputsSystem')}`}><Icon name="more"/></button></div>
+  <button class="ft quick-item" data-quick-home>{t.s('home')}</button>
+  {['HDMI 1', 'HDMI 2', 'HDMI 3', t.s('liveTv')].map(name =>
+    <button class="ft quick-item" data-toast={`${W.site} ${name}`}>{name}</button>)}
+  <button class="visually-hidden" data-back data-quick-close tabindex="-1">{t.s('back')}</button>
+</div>
+<div class="radio-card" data-radio-card hidden>
+  <div class="rc-head">
+    <div>
+      <div class="rc-label caps">{t.s('radio')}</div>
+      <div class="rc-name display-bold" data-station-name>{t.station(station)}</div>
+      <div class="rc-where" data-station-where>{t.stationWhere(station) + t.sep() + t.radioStatus(false)}</div>
+    </div>
+    <span class="bars big" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+  </div>
+  <div class="rc-buttons">
+    <button class="ft rc-btn play" data-radio-toggle>
+      <span data-radio-play-label>{t.s('radioPlay')}</span> <Icon name="play" size={24} />
+    </button>
+    <button class="ft rc-btn dark" data-screen-off>
+      {t.s('screenOff')} <Icon name="moon" size={24} />
+    </button>
+    <button class="visually-hidden" data-back data-radio-close tabindex="-1">{t.s('dismiss')}</button>
+  </div>
+</div>
+
+<div class="screen-off" data-screen-off-view hidden tabindex="-1">
+  <span class="bars big" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+  <p data-screen-off-note>{t.station(station)}</p>
+</div>
+
+<div class="toast" data-toast-out hidden role="status"></div>
+<audio data-audio preload="none"></audio>
+
+<script>
+  import { live, loadPrefs } from '../scripts/live';
+  import { homeModel, archModel } from './home';
+  import { homeLayout, homePrayers, HOME } from '../lib/home-layout';
+  import { stationOf } from '../lib/data';
+  import { makeText, type Lang } from '../lib/text';
+
+  const stage = document.querySelector<HTMLElement>('.tv')!;
+  if (stage.dataset.screen === 'home') {
+    const $ = <T extends HTMLElement = HTMLElement>(s: string) => stage.querySelector<T>(s)!;
+    const card = $('[data-card]');
+    const forced = stage.dataset.mode === 'reminder';
+    let dismissedFor = '';
+    const prefs = loadPrefs();
+    const t = makeText(document.documentElement.lang as Lang, prefs.digits === 'auto' ? document.documentElement.lang === 'ar' : prefs.digits === 'eastern');
+
+    const showCard = (show: boolean) => {
+      if (card.hidden === !show) return;
+      card.hidden = !show;
+      // The card takes the default focus while it shows, as on the TV.
+      $(show ? '.fav' : '[data-card-ok]').removeAttribute('data-focus-start');
+      $(show ? '[data-card-ok]' : '.fav').setAttribute('data-focus-start', '');
+      if (show && stage.contains(document.activeElement)) $('[data-card-ok]').focus({ preventScroll: true });
+    };
+    live(homeModel, (c) => {
+      $('.pills').classList.toggle('icons-only', !c.prefs.quickLabels);
+      stage.dataset.homeLayout = c.prefs.homeLayout === 'classic' ? 'classic' : 'two_rows';
+      const h = homeLayout(c.prefs, stage.querySelectorAll('.fav').length, c.t.ar);
+      const header = $('.home-header');
+      header.style.marginInlineStart = `${h.margin}px`; header.style.width = `${h.full}px`;
+      header.style.setProperty('--home-meta-width', `${h.full * HOME['header-clock-share']}px`);
+      const column = $('.home-column');
+      column.style.marginInlineStart = `${h.x}px`; column.style.width = `${h.width}px`;
+      $('.home-favourites').style.gridTemplateColumns = `repeat(${h.columns}, minmax(0, 1fr))`;
+      stage.dataset.countdown = String(h.mode);
+      const rect = (el: HTMLElement, x: number, y: number, w?: number, height?: number) => {
+        el.style.insetInlineStart = `${x}px`; el.style.top = `${y}px`;
+        if (w !== undefined) el.style.width = `${w}px`;
+        if (height !== undefined) el.style.height = `${height}px`;
+      };
+      rect($('.when'), h.x, 56, h.width);
+      rect($('.pills'), h.x, h.quickY, h.width - 72 - HOME.gap);
+      rect($('.gear'), h.x + h.width - 72, h.quickY);
+      const panel = $('.home-countdown'); panel.hidden = h.mode === 2;
+      const large = (c.prefs.uiScale ?? 100) > 110;
+      $('.home-scroll').classList.toggle('scrolling', large);
+      const countdownOwner = large && h.mode === 1 ? $(c.prefs.homeBar === 1 ? '.home-countdown-bottom' : '.home-countdown-top') : $('.home-canvas');
+      if (panel.parentElement !== countdownOwner) countdownOwner.append(panel);
+      rect(panel, h.mode === 0 ? h.panelX : h.x, h.panelY, h.mode === 0 ? h.panelWidth : h.width, h.mode === 0 ? HOME['mihrab-height'] : HOME['bar-height']);
+      const cells = $('.cells'), slots = homePrayers(h.table, -1, 0).length;
+      cells.hidden = slots === 0;
+      const columns = large ? Math.max(1, Math.min(3, slots)) : Math.max(1, slots);
+      const cw = Math.min(HOME['tile-max-width'], (h.width - (columns - 1) * 12) / columns);
+      rect(cells, h.x, h.tableY, slots * cw + Math.max(0, slots - 1) * 12);
+      cells.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
+      rect($('.fav-label'), h.x, h.labelY); $('.fav-label').hidden = h.count === 0;
+      stage.querySelectorAll<HTMLElement>('.fav').forEach((tile, i) => {
+        tile.hidden = i >= h.count;
+        rect(tile, h.x + i % h.columns * (h.tileWidth + HOME.gap), h.favouritesY + Math.floor(i / h.columns) * (h.tileHeight + HOME.gap), h.tileWidth, h.tileHeight);
+      });
+      rect($('.more-label'), h.x, h.recentLabelY);
+      stage.querySelectorAll<HTMLElement>('.more').forEach((tile, i) => rect(tile, h.x + i * (h.width + 20) / 6, h.recentY, (h.width - 100) / 6));
+      const left = Math.ceil((c.day.nextTime.getTime() - c.now.getTime()) / 1000);
+      const remind = c.prefs.remind * 60;
+      const due = (forced || (remind > 0 && left > 0 && left <= remind)) && card.dataset.for !== dismissedFor;
+      showCard(due);
+    });
+    stage.addEventListener('focusin', (event) => {
+      const item = event.target as HTMLElement;
+      const scroll = item.closest<HTMLElement>('.home-scroll');
+      if (stage.dataset.largeUi !== 'true' || !scroll) return;
+      item.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      scroll.scrollLeft = 0;
+    });
+    $('[data-card-ok]').addEventListener('click', () => {
+      dismissedFor = card.dataset.for ?? '';
+      showCard(false);
+      $('.fav').focus({ preventScroll: true });
+    });
+
+    // Toasts stand in for launching apps.
+    const toast = $('[data-toast-out]');
+    let toastTimer = 0;
+    stage.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-toast]');
+      if (!b) return;
+      toast.textContent = b.dataset.toast!;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => (toast.hidden = true), 2600);
+    });
+
+    // Quran Radio: the chosen station's live stream.
+    const audio = $<HTMLAudioElement>('[data-audio]');
+    let quickTrigger: HTMLElement | null = null;
+    const closeQuick = () => {
+      stage.querySelectorAll<HTMLElement>('[data-quick]').forEach(panel => panel.hidden = true);
+      quickTrigger?.focus({ preventScroll: true });
+    };
+    for (const name of ['inputs']) {
+      const trigger = $(`[data-open-${name}]`), panel = $(`[data-quick="${name}"]`);
+      trigger.addEventListener('click', () => {
+        closeQuick(); $('[data-radio-card]').hidden = true;
+        quickTrigger = trigger; panel.hidden = false;
+        panel.querySelector<HTMLElement>('.quick-item')?.focus({ preventScroll: true });
+      });
+      panel.querySelector('[data-quick-close]')?.addEventListener('click', closeQuick);
+      panel.querySelector('[data-quick-home]')?.addEventListener('click', closeQuick);
+      panel.addEventListener('keydown', (event) => {
+        if (['Escape','Backspace'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); closeQuick(); }
+        if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key)) {
+          event.preventDefault(); event.stopPropagation();
+          const rows = [...panel.querySelectorAll<HTMLElement>('.quick-more, .quick-item')];
+          const at = rows.indexOf(document.activeElement as HTMLElement);
+          const step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+          rows[Math.max(0, Math.min(rows.length - 1, at + step))]?.focus({ preventScroll: true });
+        }
+      });
+    }
+    const rc = $('[data-radio-card]');
+    const st = stationOf(prefs);
+    const status = () => {
+      const on = !audio.paused;
+      stage.classList.toggle('radio-on', on);
+      $('[data-station-where]').textContent = t.stationWhere(st) + t.sep() + t.radioStatus(on);
+      $('[data-radio-play-label]').textContent = on ? t.s('radioStop') : t.s('radioPlay');
+      $('.radio-label').textContent = on ? t.radioStatus(true) : t.s('radio');
+    };
+    audio.addEventListener('playing', status);
+    audio.addEventListener('pause', status);
+    $('[data-station-name]').textContent = t.station(st);
+    $('[data-screen-off-note]').innerHTML = `${t.station(st)}`;
+    $('[data-open-radio]').addEventListener('click', () => {
+      rc.hidden = false;
+      $('[data-radio-toggle]').focus({ preventScroll: true });
+    });
+    $('[data-radio-close]').addEventListener('click', () => {
+      rc.hidden = true;
+      $('[data-open-radio]').focus({ preventScroll: true });
+    });
+    $('[data-radio-toggle]').addEventListener('click', () => {
+      if (audio.paused) { audio.src = st.url; audio.play().catch(() => status()); }
+      else { audio.pause(); audio.removeAttribute('src'); audio.load(); }
+    });
+    const off = $('[data-screen-off-view]');
+    $('[data-screen-off]').addEventListener('click', () => {
+      if (audio.paused) { audio.src = st.url; audio.play().catch(() => status()); }
+      off.hidden = false;
+      off.focus({ preventScroll: true });
+    });
+    const wake = () => { off.hidden = true; $('[data-screen-off]').focus({ preventScroll: true }); };
+    off.addEventListener('keydown', (e) => { e.preventDefault(); e.stopPropagation(); wake(); });
+    off.addEventListener('click', wake);
+  }
+</script>
+
+<style>
+  .home-scroll, .home-canvas, .home-header, .home-body, .home-column, .home-controls, .home-favourites, .home-recent, .recent-strip, .home-countdown-top, .home-countdown-bottom { display:contents; }
+  :global(.tv[data-large-ui='true']) .home-scroll { display:block; position:absolute; left:calc(960px - 960px / var(--ui-size)); top:calc(540px - 540px / var(--ui-size)); width:calc(1920px / var(--ui-size)); height:calc(1080px / var(--ui-size)); overflow-y:auto; overflow-x:hidden; direction:ltr; scroll-padding:16px; scrollbar-width:none; }
+  :global(.tv[data-large-ui='true']) .home-canvas { display:block; position:relative; left:calc(960px / var(--ui-size) - 960px); width:1920px; min-height:1080px; padding:56px 0; }
+  :global(.tv[data-large-ui='true']) .home-column { display:flex; position:relative; flex-direction:column; gap:var(--layout-home-gap); }
+  :global(.tv[data-large-ui='true']) .home-header { display:flex; position:relative; align-items:center; gap:var(--layout-home-gap); }
+  :global(.tv[data-large-ui='true']) .home-header .when { position:relative; inset-inline-start:auto !important; top:auto !important; width:var(--home-meta-width) !important; flex:none; }
+  :global(.tv[data-large-ui='true']) .home-controls { display:flex; position:relative; align-items:center; min-width:0; padding:12px; gap:var(--layout-home-gap); flex:1; }
+  :global(.tv[data-large-ui='true']) .home-header .pills { display:contents; }
+  :global(.tv[data-large-ui='true']) .home-controls .pill { flex:none; height:72px; }
+  :global(.tv[data-large-ui='true']) .pills:not(.icons-only) .pill { flex:1; min-width:0; padding:8px; flex-direction:column; gap:8px; height:var(--layout-home-quick-label-height); }
+  :global(.tv[data-large-ui='true']) .pill-label { white-space:normal; max-width:100%; text-align:center; line-height:1.2; overflow-wrap:break-word; }
+  :global(.tv[data-large-ui='true']) .home-header .gear { position:relative; inset-inline-start:auto !important; top:auto !important; flex:none; }
+  :global(.tv[data-large-ui='true']) .home-body { display:block; position:relative; width:1920px; margin-top:var(--layout-home-gap); }
+  :global(.tv[data-large-ui='true'][data-countdown='0']) .home-body { min-height:var(--layout-home-mihrab-height); }
+  :global(.tv[data-large-ui='true']) .home-body > .home-countdown { top:0 !important; }
+  :global(.tv[data-large-ui='true']) .home-column :is(.cells,.label) { position:relative; inset-inline-start:auto !important; top:auto !important; width:100% !important; }
+  :global(.tv[data-large-ui='true']) .cells { height:auto; grid-auto-rows:var(--layout-home-table-height); gap:12px; }
+  :global(.tv[data-large-ui='true']) .cells:not([hidden]) + .fav-label { margin-top:calc(-1 * var(--layout-home-gap) / 2); }
+  :global(.tv[data-large-ui='true']) .home-favourites { display:grid; gap:var(--layout-home-gap); }
+  :global(.tv[data-large-ui='true']) .home-favourites .fav { position:relative; inset-inline-start:auto !important; top:auto !important; width:auto !important; }
+  :global(.tv[data-large-ui='true']) .home-recent { display:block; overflow-x:auto; padding:24px; margin:-24px; scroll-padding:24px; scrollbar-width:none; }
+  :global(.tv[data-large-ui='true']) .recent-strip { display:flex; width:max-content; gap:20px; }
+  :global(.tv[data-large-ui='true']) .recent-strip .more { position:relative; inset-inline-start:auto !important; top:auto !important; width:var(--layout-home-more-min-width) !important; min-height:94px; height:auto; flex:none; }
+  :global(.tv[data-large-ui='true']) .home-column .home-countdown { position:relative; inset-inline-start:auto !important; top:auto !important; width:100% !important; }
+  .clock, .home-countdown :global(.display), .home-countdown :global(.display-bold) { font-family:var(--home-display, var(--display)); }
+  .home-countdown :global(.display-bold) { font-weight:var(--home-display-weight, var(--display-weight)); }
+  .quick-card { position:absolute; inset-inline-end:96px; top:152px; width:640px; padding:24px 28px; border:2px solid var(--color-gold-400-60); border-radius:24px; background:var(--color-lapis-900); display:flex; flex-direction:column; gap:8px; }
+  .quick-card[hidden] { display:none; }
+  .quick-head { display:flex; align-items:center; justify-content:space-between; }
+  .quick-more { position:relative; width:72px; height:72px; border-radius:36px; justify-content:center; align-items:center; --rest-fill:var(--surface-fill, var(--color-lapis-800)); }
+  .quick-title { color:var(--color-gold-400); font-size:28px; margin-bottom:12px; }
+  .quick-card p { font-size:24px; }
+  .quick-item { position:relative; width:100%; min-height:68px; padding:16px 22px; font-size:24px; border-radius:22px; --rest-fill:var(--surface-fill, var(--color-lapis-800)); }
+
+  .home-countdown { position:absolute; }
+  .home-countdown[hidden], .cells[hidden], .fav[hidden] { display:none; }
+  .home-countdown :global(.arch) { inset-inline-start:0; top:0; width:100%; height:100%; }
+  .home-countdown :global(.verse), .home-countdown :global(.ref), .home-countdown :global(.info) { inset-inline-start:var(--layout-home-panel-inset); width:calc(100% - 2 * var(--layout-home-panel-inset)); }
+  .home-countdown :global(.verse) { top:var(--layout-home-verse-top); }
+  .home-countdown :global(.ref) { top:var(--layout-home-reference-top); }
+  .home-countdown :global(.rule) { display:none; }
+  .home-countdown :global(.info) { top:var(--layout-home-info-top) !important; height:calc(100% - var(--layout-home-info-top) - var(--layout-home-panel-inset)); }
+  .home-countdown :global(.label), .home-countdown :global(.sub2) { font-size:var(--font-size-caption); }
+  .home-countdown :global(.name) { font-size:var(--layout-home-prayer-name-size); }
+  .home-countdown :global(.count) { flex:1; display:grid; place-items:center; font-size:calc(var(--layout-home-countdown-size) * var(--home-countdown-scale, 1)); }
+  .home-countdown :global(.count[data-long='true']) { font-size:calc(var(--font-size-display-xl-hours) * var(--home-countdown-scale, 1)); }
+  .home-countdown :global(.count[data-very-long='true']) { font-size:calc(var(--font-size-display-l) * var(--home-countdown-scale, 1)); }
+  .prayer-time { font-size:var(--font-size-sacred); margin-bottom:var(--space-3); }
+  :global(.tv[data-countdown="1"]) .home-countdown { border-radius:var(--radius-cell); background:var(--surface-fill, var(--color-lapis-800)); box-shadow:inset 0 0 0 var(--surface-stroke, 0px) var(--surface-edge, transparent); }
+  :global(.tv[data-countdown="1"]) .home-countdown :global(.arch), :global(.tv[data-countdown="1"]) .home-countdown :global(.verse), :global(.tv[data-countdown="1"]) .home-countdown :global(.ref) { display:none; }
+  :global(.tv[data-countdown="1"]) .home-countdown :global(.info) { top:0 !important; height:100%; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); grid-template-rows:repeat(3, 1fr); }
+  :global(.tv[data-countdown="1"]) .home-countdown :global(.label) { grid-area:1 / 1; align-self:end; }
+  :global(.tv[data-countdown="1"]) .home-countdown :global(.name) { grid-area:2 / 1 / 4; align-self:start; font-size:var(--font-size-heading); }
+  :global(.tv[data-countdown="1"]) .home-countdown :global(.count) { grid-area:1 / 2 / 4; font-size:calc(var(--layout-home-compact-countdown-size) * var(--home-countdown-scale, 1)); }
+  :global(.tv[data-countdown="1"]) .home-countdown :global(.sub) { grid-area:2 / 3; align-self:center; }
+  :global(.tv[data-countdown="1"]) .home-countdown :global(.sub2) { grid-area:3 / 3; align-self:start; }
+  :global(.tv[data-countdown="1"]) .prayer-time { grid-area:1 / 3; align-self:end; margin:0; font-size:var(--font-size-body); }
+  .when { position: absolute; inset-inline-start: var(--space-safe-inline); top: 56px; display: flex; flex-direction: column; gap: 6px; }
+  .clock { font-size: var(--font-size-display-l); line-height: var(--font-line-height-display); }
+  /* Dates stay beside the Mihrab; location belongs under its countdown. */
+  .hdate { font-size: var(--font-size-body); margin-top: 4px; }
+  .gdate { font-size: 24px; color: var(--color-mist-400); margin-top: 0; }
+
+  .pills { justify-content:flex-end; position: absolute; top: 56px; display: flex; gap: var(--layout-home-gap); }
+  .pill { position: relative; height: 72px; padding: 0 28px; border-radius: 36px; align-items: center; gap: 14px; font-size: 24px; --rest-border: var(--color-line-soft); --rest-border-width: var(--border-chip-width); }
+  .pills:not(.icons-only) .pill { padding-inline:var(--space-3); gap:var(--space-2); white-space:nowrap; flex-shrink:0; }
+  .gear { inset-inline-start: calc(var(--layout-courtyard-inset-inline-start) + var(--layout-courtyard-width) - 72px); top: 56px; width: 72px; height: 72px; border-radius: 36px; align-items: center; justify-content: center; --rest-border: var(--color-line-soft); --rest-border-width: var(--border-chip-width); }
+  .icons-only .pill-label { display: none; }
+  .radio-pill .bars { display: none; }
+  :global(.tv.radio-on) .radio-pill .bars { display: inline-flex; }
+  :global(.tv.radio-on) .radio-pill .radio-off { display: none; }
+  :global(.tv.radio-on) .radio-pill:not(:focus) { --rest-border: var(--color-gold-400); }
+
+  .cells { position: absolute; inset-inline-start: var(--layout-courtyard-inset-inline-start); top: 290px; width: var(--layout-courtyard-width); display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--layout-gap-prayer-cells); }
+  .cells :global(.cell) { height: var(--layout-home-table-height); border-radius: min(var(--radius-cell), var(--surface-prayer-radius-max)); padding: var(--layout-home-cell-padding) var(--layout-home-cell-inset); display: flex; flex-direction: column; text-align:start; background: var(--surface-fill, var(--color-lapis-800)); box-shadow:inset 0 0 0 var(--surface-stroke, 0px) var(--surface-edge, transparent); }
+  .cells :global(.prayer-head) { display:flex; justify-content:space-between; align-items:flex-start; flex:1; }
+  .cells :global(.prayer-symbol) { font-size:var(--font-size-caption); line-height:1; }
+  .cells :global(.prayer-symbol .prayer-icon) { margin-inline-end:0; }
+  .cells :global(.tag) { text-align:end; font-size: var(--font-size-caption); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cells :global(.name) { white-space:nowrap; font-size: var(--layout-home-cell-name-size); line-height: 1.1; }
+  .cells :global(.time) { font-size: var(--layout-home-cell-time-size); line-height: 1.1; white-space: nowrap; }
+  :global(:lang(en)) .cells :global(.time) { font-size: var(--layout-home-cell-time-size); }
+  .cells :global(.cell[data-state='now']) { background: var(--color-plaster-100); color: var(--color-lapis-900); box-shadow:none; }
+  .cells :global(.cell[data-state='next']) { background: transparent; color: var(--color-gold-400); box-shadow: inset 0 0 0 var(--border-next-prayer-width) var(--border-next-prayer-color); }
+  .cells :global(.cell[data-state='past']) { background: color-mix(in srgb, var(--surface-fill, var(--color-lapis-800)) 60%, transparent); color: var(--color-mist-400); }
+  .cells :global(.cell:is([data-state='now'], [data-state='next']) :is(.name, .time)) { font-weight: 600; }
+
+  .label { position: absolute; inset-inline-start: var(--layout-courtyard-inset-inline-start); font-size: var(--font-size-label); color: var(--color-mist-400); }
+  .fav-label { top: 478px; }
+  .more-label { top: 842px; }
+  .fav { inset-inline-start:calc(var(--layout-courtyard-inset-inline-start) + var(--column) * ((var(--layout-courtyard-width) - 40px) / 3 + 20px)); top:calc(516px + var(--row) * 156px); width:calc((var(--layout-courtyard-width) - 40px) / 3); height:132px; padding: var(--layout-home-app-inset-block) var(--layout-home-app-inset-inline); gap:var(--layout-home-app-icon-gap); flex-direction: column; justify-content: space-between; align-items: flex-start; font-size: var(--font-size-control); font-weight: 500; text-align: start; }
+  .fav :global(.app-icon) { width:var(--layout-home-app-icon-size); height:var(--layout-home-app-icon-size); min-height:0; flex-shrink:1; }
+  .fav > span { flex-shrink:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  :global([data-home-layout='classic']) .fav :global(.app-icon) { width:var(--layout-home-app-icon-classic-size); height:var(--layout-home-app-icon-classic-size); }
+  .more { top: 890px; width: calc((var(--layout-courtyard-width) - 5 * var(--layout-gap-more)) / 6); height:94px; border-radius: var(--radius-cell); padding: 18px; align-items: flex-end; font-size: var(--font-size-label); text-align: start; }
+  .all { white-space: pre-line; padding: 12px calc(var(--space-1) / 2); --rest-fill: transparent; --rest-border: var(--color-line-dash); --rest-border-width: 0; border: 2px dashed var(--color-line-dash); }
+  .all:focus { border-color: transparent; }
+
+  .card { position: absolute; inset-inline-end: var(--space-safe-inline); bottom: var(--space-safe-block); width: var(--layout-toast-width); padding: 32px 36px; border-radius: var(--radius-panel); background: var(--color-lapis-900); color: var(--color-plaster-100); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 0 2px var(--color-gold-400); --spatial-navigation-contain: contain; }
+  .card[hidden] { display: none; }
+  .card-label { display: flex; align-items: center; gap: 12px; font-size: var(--font-size-caption); color: var(--color-gold-400); }
+  .card-title { font-size: var(--font-size-title); line-height: var(--font-line-height-title); }
+  .card-sub { font-size: 24px; color: var(--color-mist-400); }
+  .card-buttons { display: flex; gap: 16px; margin-top: 14px; }
+  .card-btn { position: relative; height: 68px; padding: 0 32px; border-radius: 34px; align-items: center; font-size: 24px; --rest-fill: transparent; --rest-border: var(--color-line-soft); --rest-border-width: 2px; color: var(--color-plaster-100); }
+  .card-btn.filled { --rest-fill: var(--surface-fill, var(--color-lapis-800)); --rest-border-width: 0; color: var(--color-plaster-100); }
+  .card .card-btn:focus { background: var(--focus-fill); color: var(--focus-text); outline-color: var(--focus-ring-color); outline-offset: var(--focus-ring-offset); }
+
+  .radio-card { position: absolute; inset-inline-end: calc(1920px - var(--layout-courtyard-inset-inline-start) - var(--layout-courtyard-width)); top: 152px; width: 720px; padding: 32px 36px 28px; border-radius: var(--radius-panel); background: var(--color-lapis-800); box-shadow: inset 0 0 0 var(--border-chip-width) var(--color-line-dash); display: flex; flex-direction: column; gap: 20px; --spatial-navigation-contain: contain; }
+  .radio-card[hidden] { display: none; }
+  .rc-head { display: flex; justify-content: space-between; align-items: center; }
+  .rc-label { font-size: var(--font-size-label); color: var(--color-mist-400); }
+  .rc-name { font-size: var(--font-size-title); line-height: var(--font-line-height-title); }
+  .rc-where { font-size: var(--font-size-body); color: var(--color-gold-400); }
+  .rc-buttons { display: flex; gap: 16px; }
+  .rc-btn { position: relative; height: 68px; padding: 0 32px; border-radius: 34px; align-items: center; gap: 14px; font-size: var(--font-size-body); }
+  .rc-btn.dark { --rest-fill: var(--color-lapis-900); }
+  .rc-note { margin: 0; font-size: var(--font-size-label); color: var(--color-mist-400); }
+
+  .bars { display: inline-flex; align-items: flex-end; gap: 6px; height: 48px; color: var(--color-gold-400); }
+  .bars i { display: block; width: 9px; height: 30%; border-radius: 5px; background: currentColor; }
+  .bars.mini { height: 24px; gap: 4px; }
+  .bars.mini i { width: 6px; }
+  :global(.tv.radio-on) .bars i { animation: bar 0.9s var(--motion-easing-standard) infinite alternate; }
+  .bars i:nth-child(2) { animation-delay: -0.3s !important; }
+  .bars i:nth-child(3) { animation-delay: -0.6s !important; }
+  .bars i:nth-child(4) { animation-delay: -0.15s !important; }
+  .bars i:nth-child(5) { animation-delay: -0.45s !important; }
+  @keyframes bar { from { transform: scaleY(0.35); } to { transform: scaleY(3); } }
+  .bars i { transform-origin: bottom; }
+
+  .screen-off { position: absolute; inset: 0; background: var(--color-screensaver-ground); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; color: var(--color-screensaver-text); font-size: 24px; text-align: center; outline: none; }
+  .screen-off[hidden] { display: none; }
+  .screen-off .bars { color: var(--color-screensaver-text-dim); }
+
+  .toast { position: absolute; inset-inline-end: var(--space-safe-inline); bottom: var(--space-safe-block); max-width: var(--layout-toast-width); padding: 24px 32px; border-radius: var(--radius-panel); background: var(--color-plaster-100); color: var(--color-lapis-900); font-size: var(--font-size-body); }
+  .toast[hidden] { display: none; }
+</style>

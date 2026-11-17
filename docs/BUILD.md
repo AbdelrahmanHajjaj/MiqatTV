@@ -1,0 +1,72 @@
+# Build and install Miqat
+
+Use JDK 17 and Node 24. Android builds also need SDK 34 and ANDROID_HOME or an
+ignored local.properties. Run commands from the repository root. On Windows use
+gradlew.bat and npm.cmd in place of ./gradlew and npm.
+
+## Android TV
+
+```sh
+./gradlew -p platforms/android-tv verifyApkSize lintDebug --no-daemon
+```
+
+Output: platforms/android-tv/build/outputs/apk/debug/app-debug.apk.
+Follow [Android setup](ANDROID-SETUP.md) to install and configure Home, prayer
+service and permissions. Keep the stock Home available until setup works.
+
+For installation from an Android phone, build both apps:
+
+```sh
+./gradlew :app:assembleDebug :installer:assembleDebug --no-daemon
+```
+
+Install installer/build/outputs/apk/debug/installer-debug.apk on the phone, copy
+the TV APK to it, then choose **Install a local launcher APK**. The installer is
+an ADB setup/recovery tool; it is separate from the companion app. Online download
+requires a future stable release with a matching miqat.apk asset.
+
+## LG webOS
+
+Prepare the local audio files below, then follow the [LG guide](WEBOS.md).
+The output is an IPK, not an Android APK. The new app ID is tv.miqat.webos and
+its service is tv.miqat.webos.service. Developer Mode and CLI device pairing
+are required for the documented installation path.
+
+## Browser preview
+
+```sh
+npm --prefix shared/core ci --ignore-scripts
+npm --prefix site ci
+npm --prefix site run dev
+```
+
+The preview simulates TV integrations. Run core, preview and LG builds sequentially
+because they generate the same shared JavaScript files.
+
+## Audio assets
+
+Recordings stay outside Git under state/media/{adhan,announce}/. For personal
+builds, bash tools/fetch-adhans.sh downloads the 14 adhan recordings and prepares
+reviewed ending cuts with Node and FFmpeg. For an existing cache, run
+node tools/prepare-adhans.mjs once. Originals remain under state/media-originals/.
+Spoken clips use bash tools/fetch-announce.sh and edge-tts.
+
+Android builds without recordings but cannot play recorded adhan or announcements.
+LG builds require all 14 adhan and 12 spoken clips. Do not publish recordings
+without redistribution permission. See the [audio audit](AUDIO-AUDIT.md) and
+[third-party notices](THIRD-PARTY.md).
+
+## Fresh installation
+
+Miqat uses new identities: tv.miqat.home, tv.miqat.installer and tv.miqat.webos.
+They install separately from earlier builds. Before removing a previous launcher,
+record its prayer, appearance, input and startup choices and disable its scheduled
+alerts/startup. On Android, restore a working stock Home before removing it.
+
+The installer exports a device setup/recovery record. That record restores Android
+system setup; it does not export Miqat prayer or appearance preferences. A portable
+settings export/import feature is not included in this foundation. Re-enter those
+choices after installation and check the prayer schedule before enabling alerts.
+
+No physical TV is changed by building this checkout. Hardware installation and
+watched picture/sound/remote checks need a separate authorized session.

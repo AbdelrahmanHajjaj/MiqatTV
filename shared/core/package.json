@@ -1,0 +1,11 @@
+{
+  "name": "@miqat/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "build/compileSync/js/main/productionExecutable/kotlin/Miqat-core.js",
+  "types": "build/compileSync/js/main/productionExecutable/kotlin/Miqat-core.d.ts",
+  "devDependencies": {
+    "acorn": "8.19.0"
+  }
+}

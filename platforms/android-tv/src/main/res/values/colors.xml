@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from shared/design/mihrab/tokens.json by site/scripts/tokens.mjs. Do not edit: run `npm run tokens` in site/. -->
+<resources>
+    <color name="lapis_950">#ff032a31</color>
+    <color name="lapis_900">#ff033b44</color>
+    <color name="lapis_800">#ff094650</color>
+    <color name="lapis_700">#ff155763</color>
+    <color name="gold_400">#ffebc678</color>
+    <color name="gold_200">#ffffe0a0</color>
+    <color name="plaster_100">#fff5eedc</color>
+    <color name="mist_400">#ffaac4c7</color>
+    <color name="disabled_text">#ff79999e</color>
+    <color name="lapis_800_60">#99094650</color>
+    <color name="gold_400_60">#99ebc678</color>
+    <color name="line_soft">#40f5eedc</color>
+    <color name="line_dash">#4df5eedc</color>
+    <color name="arch_inner">#73ebc678</color>
+    <color name="bell_off_border">#66aac4c7</color>
+    <color name="banner_track">#40ebc678</color>
+    <color name="seg_track_focused">#26033b44</color>
+    <color name="qibla_ring">#1af5eedc</color>
+    <color name="qibla_tick">#80f5eedc</color>
+    <color name="scrim">#f0081224</color>
+    <color name="scrim_menu">#eb033b44</color>
+    <color name="scrim_panel">#b8060d1a</color>
+    <color name="pattern_line">#12ebc678</color>
+    <color name="on_plaster_label">#ff56431e</color>
+    <color name="on_plaster_secondary">#ff31545c</color>
+    <color name="on_plaster_border">#99033b44</color>
+    <color name="on_plaster_button_border">#59033b44</color>
+    <color name="screensaver_ground">#ff000000</color>
+    <color name="screensaver_text">#ffa69f90</color>
+    <color name="screensaver_text_dim">#ff7d7769</color>
+    <color name="screensaver_next">#ffb8a578</color>
+    <color name="screensaver_arch_line">#59ebc678</color>
+</resources>
