@@ -81,3 +81,15 @@ Physical new-identity TV/phone camera, remote, picture/sound and background beha
 remain untested. Legacy RSA lacks forward secrecy. The foundation's existing nine
 high preview-toolchain npm findings remain separate remediation; no site is deployed.
 See [TESTING.md](TESTING.md) and [protocol](COMPANION-LAN.md).
+
+## Delivery
+
+Published to `AbdelrahmanHajjaj/MiqatTV` branch `feature/companion-app`.
+Commit `6387f04` cherry-picks source `1c88e6f` directly onto main `e07a609`;
+old source history is not ancestry. Original checkouts/README work were preserved.
+All task-owned emulators were shut down after checks.
+
+Draft PR creation was denied by both the connected GitHub integration and the
+local CLI token (repository permission). The branch push succeeded; open the
+[comparison](https://github.com/AbdelrahmanHajjaj/MiqatTV/compare/main...feature/companion-app?expand=1)
+to create the PR with the repository template. No merge or release is authorized.
