@@ -93,3 +93,25 @@ Draft PR creation was denied by both the connected GitHub integration and the
 local CLI token (repository permission). The branch push succeeded; open the
 [comparison](https://github.com/AbdelrahmanHajjaj/MiqatTV/compare/main...feature/companion-app?expand=1)
 to create the PR with the repository template. No merge or release is authorized.
+
+## Centre QR exploration and companion naming
+
+Owner requested a central Miqat mihrab/icon exploration on 18 November 2026.
+Keep the approved runtime QR unchanged until a variant is selected. Compare the
+current code with shared-outline and compact/larger official-artwork centre
+badges; preserve the canonical lettering. Synthetic previews and decoder evidence
+stay in ignored state/companion/qr-centre-exploration/.
+
+Companion product name: `miqatTv`; Android launcher label: `miqat`.
+Keep its `tv.miqat.companion` application identity stable.
+
+Exploration result: A retains the current 37x37/M symbol; B uses the official
+Miqat icon in an 11-module badge and C a 13-module badge, both 49x49/H. Each passes
+144 exact independent ZXing decodes (eight synthetic payloads, 220/280/400 px,
+four rotations, blur and lower contrast): 432 checks total. A shared-outline-only
+badge and a lighter Q variant failed small samples and were excluded. This is
+one-palette desktop raster evidence, not all-theme or physical-camera acceptance.
+No runtime QR renderer, pairing wire format or TV integration was changed.
+
+Naming check: `:companion:assembleDebug :companion:lintDebug` pass; Android aapt
+reports application label `miqat` and unchanged package `tv.miqat.companion`.
