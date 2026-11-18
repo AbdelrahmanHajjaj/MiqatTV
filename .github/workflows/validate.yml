@@ -161,8 +161,8 @@ jobs:
         run: |
           sha256sum --check shared/media/SHA256SUMS
           npm --prefix platforms/webos test
-      - name: Install Edge for the existing browser suite
-        run: node platforms/webos/node_modules/playwright/cli.js install --with-deps msedge
+      - name: Check runner Edge for the existing browser suite
+        run: microsoft-edge --version
       - run: npm --prefix platforms/webos run test:browser
       - name: Package full-audio LG app and service
         run: |
