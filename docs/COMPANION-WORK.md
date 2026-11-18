@@ -131,3 +131,16 @@ state/companion/. No QR credentials or generated packages are committed.
 Physical phone-camera/TV scanning and legacy LG image/filter rendering remain
 pending owner acceptance. Generic inert browser-demo QR is outside this renderer
 change. No installation on a physical TV, merge or release is included.
+
+
+## Quieter pattern exploration
+
+Owner requested less visual noise after approving the centre. Compare A (current),
+B (same rounded geometry, all data cells painted as one compound path to remove
+anti-alias seams) and C (compound path plus less-rounded cells). QR payload, module
+count, high correction, eyes and approved half-gap centre are identical.
+Each passes 576 independent decodes across four themes (1,728 combined; same
+size/rotation/degradation matrix). Recommend B to remove the fine grid while
+retaining the approved rounded style. Preview/scripts/evidence are private under
+state/companion/qr-patterns/. Runtime pattern is unchanged pending selection;
+native and physical acceptance of these alternatives has not been performed.
