@@ -2,11 +2,19 @@
 
 ## Unreleased
 
+- Expand the phone app into standalone Miqat prayer (0.2.0): independent offline daily
+  times, tomorrow's Fajr, city/custom location and timezone, Hijri display,
+  per-prayer voices/modes/adjustments/reminders, native scheduled alerts and
+  foreground adhan with Stop. Add permission repair and local recovery/duplicate
+  protection, shared phone themes/artwork and phone display preferences.
+  Preserve Android/LG installation and authenticated TV controls.
+
 - Add LG Developer Mode installation/update from the phone, with explicit SSH
   identity approval, local Miqat IPK checks, downgrade protection and installed
   version verification. Keep setup credentials in memory for the session.
 - Match Android setup to the companion's canonical palette, Alexandria headings,
-  filled cards and compact hero; avoid idle decorative animation.
+  filled cards and compact hero; avoid idle decorative animation. Respect OS
+  reduced motion and the embedded phone preference (standalone installer 1.1.1).
 
 - Add Set up Android TV inside the Miqat phone companion (0.1.4), reusing the
   standalone installer's guarded installation, cleanup and recovery. Follow the

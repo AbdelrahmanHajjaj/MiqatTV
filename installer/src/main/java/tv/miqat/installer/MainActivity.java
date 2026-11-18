@@ -65,6 +65,9 @@ public class MainActivity extends Activity {
     private LinearLayout tvList;
     private View help;
 
+    /** Embedded hosts may also honor their own reduced-motion preference. */
+    public boolean motionEnabled(){return android.animation.ValueAnimator.areAnimatorsEnabled();}
+
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -195,9 +198,9 @@ public class MainActivity extends Activity {
         // Help only once a search has had time to turn something up.
         main.postDelayed(() -> {
             if (g == gen && help != null && tvList != null && tvList.getChildCount() == 0) {
-                help.setAlpha(0f);
+                help.setAlpha(motionEnabled()?0f:1f);
                 help.setVisibility(View.VISIBLE);
-                help.animate().alpha(1f).setDuration(300).start();
+                if(motionEnabled())help.animate().alpha(1f).setDuration(300).start();
             }
         }, 8000);
         if (search) finder.start();
@@ -911,9 +914,8 @@ public class MainActivity extends Activity {
         leadView = Ui.lead(this, lead);
         content.addView(leadView, Ui.wide(this, 10));
         scroll.scrollTo(0, 0);
-        content.setAlpha(0f);
-        content.setTranslationY(dp(8));
-        content.animate().alpha(1f).translationY(0).setDuration(220).start();
+        content.animate().cancel();content.setAlpha(1f);content.setTranslationY(0);
+        if(motionEnabled()){content.setAlpha(0f);content.setTranslationY(dp(8));content.animate().alpha(1f).translationY(0).setDuration(220).start();}
     }
 
     void add(View v, int topDp) {

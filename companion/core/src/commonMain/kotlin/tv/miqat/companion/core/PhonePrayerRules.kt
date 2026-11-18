@@ -2,6 +2,7 @@ package tv.miqat.companion.core
 
 import tv.miqat.core.PrayerRules
 import tv.miqat.core.ReminderEvent
+import tv.miqat.core.PrayerSelection
 
 /** Phone policy only; shells supply astronomy, civil days, clocks and durable claims. */
 object PhonePrayerRules {
@@ -38,6 +39,13 @@ object PhonePrayerRules {
             }
         }
         return next
+    }
+
+    fun nextPrayer(today: DoubleArray?, tomorrow: DoubleArray?, now: Double): PrayerSelection? {
+        require(now.isFinite())
+        val times = today ?: tomorrow ?: return null
+        val next = PrayerRules.select(times, tomorrow?.get(0) ?: now, now)
+        return next.takeIf { it.nextTime > now }
     }
 
     fun due(time: Double, now: Double): Boolean {

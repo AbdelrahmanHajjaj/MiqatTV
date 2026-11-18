@@ -17,12 +17,15 @@ import java.util.*;
 
 /** Run only on an explicitly selected owned phone emulator; no TV/device integration. */
 public final class CompanionCheck extends Instrumentation {
-    boolean lan,live,camera,lg,captures,lgInstall,phoneRuntime;
-    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");phoneRuntime=suite.equals("phone-runtime");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
+    boolean lan,live,camera,lg,captures,lgInstall,phoneRuntime,phoneUi,phoneDenied,phoneSize;
+    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");phoneSize=suite.equals("phone-size");phoneDenied=suite.equals("phone-denied");phoneUi=suite.equals("phone-ui");phoneRuntime=suite.equals("phone-runtime");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
     static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
     @Override public void onStart() {
         Bundle result=new Bundle(); int count=0;
         try {
+            if(phoneSize){PhoneSizeCheck.run(this,captures);result.putString("stream","PASS: bilingual phone sizing 80-150, navigation geometry and digit selection\n");finish(-1,result);return;}
+            if(phoneDenied){PhoneRuntimeCheck.denied(this);result.putString("stream","PASS: denied prayer permissions keep alarms and playback off; components private and direct-boot aware\n");finish(-1,result);return;}
+            if(phoneUi){PhoneUiCheck.run(this,captures);result.putString("stream","PASS: independent bilingual phone prayer UI, location confirmation, numeric Save/Cancel, per-prayer persistence and themes\n");finish(-1,result);return;}
             if(phoneRuntime){PhoneRuntimeCheck.run(this);result.putString("stream","PASS: phone actual alarm delivery, foreground audio/notification, duplicate/early/expired rejection, Stop, audio focus interruption and disabled-alarm cleanup\n");finish(-1,result);return;}
             if(lgInstall){LgInstallCheck.run(this);result.putString("stream","PASS: LG SSH identity rejection, passphrase, IPK upload/hash, failed install, explicit retry, version verification and launch against local fixture\n");finish(-1,result);return;}
             if(camera){CameraCheck.run(this);result.putString("stream","PASS: scanner opens and releases the owned emulator virtual camera; no physical-camera acceptance\n");finish(-1,result);return;}
@@ -67,7 +70,7 @@ public final class CompanionCheck extends Instrumentation {
         for(String destination:new String[]{"tvs","overview","settings","preferences","pair"}){
             a.page=destination;a.section="";a.render();
             View nav=a.getWindow().getDecorView().findViewWithTag("navigation");check(nav!=null,"Persistent navigation missing on "+destination);
-            String selected=destination.equals("settings")?"settings":destination.equals("overview")?"overview":"tvs";
+            String selected=destination.equals("settings")?"settings":destination.equals("overview")?"overview":destination.equals("preferences")?"phone-settings":"tvs";
             check(a.getWindow().getDecorView().findViewWithTag("nav."+selected).isSelected(),"Wrong selected navigation destination");
         }
         a.page="overview";a.networkBusy=true;a.render();

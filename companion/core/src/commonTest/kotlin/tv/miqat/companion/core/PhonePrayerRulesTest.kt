@@ -7,6 +7,15 @@ class PhonePrayerRulesTest {
     private val none = IntArray(6)
     private val times = doubleArrayOf(600000.0, 900000.0, 1200000.0, 1800000.0, 2400000.0, 3000000.0)
 
+    @Test fun nextPrayerSkipsSunriseAndUsesTomorrowWithoutInventingPolarTimes() {
+        val tomorrow=times.map { it+86400000 }.toDoubleArray()
+        assertEquals(2,PhonePrayerRules.nextPrayer(times,tomorrow,600000.0)!!.next)
+        assertEquals(tomorrow[0],PhonePrayerRules.nextPrayer(times,tomorrow,3000000.0)!!.nextTime)
+        assertNull(PhonePrayerRules.nextPrayer(times,null,3000000.0))
+        assertNull(PhonePrayerRules.nextPrayer(null,null,0.0))
+        assertEquals(tomorrow[0],PhonePrayerRules.nextPrayer(null,tomorrow,0.0)!!.nextTime)
+    }
+
     @Test fun remindersStayIndependentAndSunriseNeverAlerts() {
         val before = intArrayOf(5, 0, 0, 0, 0, 0)
         val event = PhonePrayerRules.nextEvent(arrayOf(times), 0.0, modes, before, none, emptyArray())!!

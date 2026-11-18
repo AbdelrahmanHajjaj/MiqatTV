@@ -118,7 +118,7 @@ class SettingsDraft(val base: SettingsSnapshot) {
 object CompanionContract {
     val appearanceLayoutControls = listOf("appearance.countdown", "appearance.position", "appearance.compact-position",
         "appearance.prayers", "appearance.favourites")
-    val screens = listOf("tvs", "pair", "overview", "settings", "editor", "appearance", "updates", "preferences", "lg-setup")
+    val screens = listOf("prayers", "phone-settings", "tvs", "pair", "overview", "settings", "editor", "appearance", "updates", "preferences", "lg-setup")
     val actions = listOf("connect", "open-settings", "save-edit", "apply-appearance", "cancel-appearance", "scan-pairing-code",
         "preview-audio", "stop-audio", "choose-language", "simulate-pairing", "simulate-update")
     val connectionStates = listOf("connected", "disconnected")

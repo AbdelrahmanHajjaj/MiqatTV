@@ -22,6 +22,7 @@ final class InstallationCheck {
         boolean hadKey = key.exists();
         MainActivity phone = (MainActivity)test.startActivitySync(new Intent(test.getTargetContext(), MainActivity.class)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        test.runOnMainSync(()->phone.tab("tvs"));test.waitForIdleSync();
         Activity installer = open(test, phone);
         CompanionCheck.check(language.equals(installer.getResources().getConfiguration().getLocales().get(0).getLanguage()),
             "Installer did not follow companion language");

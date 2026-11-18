@@ -73,3 +73,18 @@ from ordinary companion LAN credentials; the two installed apps do not share
 private files. LG phone setup uses its own foreground SSH transport, explicit
 host-key approval and local IPK verification; keys/passphrases remain session-only.
 Phone prayer/iOS work is sequenced in [WORK.md](WORK.md).
+
+### Independent phone prayer runtime
+
+Phone-only metadata is canonical in `shared/data/phone-ui-contract.json`, with
+portable reminder/next-prayer policy in `companion/core`. `PhoneSchedule` adapts
+the pinned TV Adhan source using explicit civil timezone inputs. `PhoneStore`
+validates and persists phone-only preferences/claims in device-protected storage;
+backup and transfer exclude it. TV credentials stay in their encrypted store.
+`PhoneAlarms` keeps one next exact event plus an inexact daily recovery check when
+needed. The private receiver reschedules after boot/time changes and durably
+claims eligible events before output. `PhonePlayback` is a private, non-sticky
+foreground service only during approved local playback, with focus loss, Stop,
+timeout and permission/settings cleanup. `PhoneUi` owns native rendering and
+permission repair; neither phone settings nor alarm recovery connect to a TV.
+See [phone guide and limits](PHONE.md) and [delivery ledger](PHONE-WORK.md).

@@ -427,3 +427,27 @@ snapshots/restores phone prayer preferences; it does not touch TV credentials.
 Private receiver/service are direct-boot aware; boot/time changes only reschedule.
 Packaged audio playback lifecycle is checked; audible output, manufacturer power
 management and physical reboot acceptance await the owner's combined test.
+
+### Standalone phone screens (2026-11-19)
+
+Owned phone emulator: standalone Prayer landing and phone settings work without
+a paired TV. Arabic/English native checks pass for location confirmation,
+inline numeric Save/Cancel, Arabic digits, numeric step rejection, independent
+per-prayer notification mode, timezone reconfirmation, theme palette application,
+every declared phone control and reopen persistence. Existing bilingual TV
+settings/Remote and embedded installer cancellation/incomplete/success handoff
+checks pass after the navigation change. Captured portrait Prayer/audio/location/
+settings screens were inspected; joined Arabic, RTL and corrected Umm al-Qura
+month names are present. Screen-size/large-text matrix is still pending.
+Denied exact-alarm permission produces an honest status with no scheduled event
+or audio; receiver/service are private and direct-boot aware. Physical delivery,
+sound and manufacturer power behavior remain awaiting the combined owner review.
+
+Phone portrait sizing passes at every 10% step from 80–150 in both languages,
+including combined resource font scale, complete native navigation geometry,
+48dp targets and explicit western/eastern digit conversion. The private recovery
+broadcast rebuilds an alarm without directly playing audio; actual alarm delivery
+and Stop/focus/disabled cleanup pass again. Canonical generation checks, eight
+companion generator tests, QR/LAN helper checks and all 47 Python/Java regressions
+pass. Shared installer also respects OS/host reduced motion. Final localized-date
+formatter build/lint passes without touched-code warnings.

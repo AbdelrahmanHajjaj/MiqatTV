@@ -13,15 +13,13 @@ prayer app sequentially, without stopping for intermediate physical-device
 feedback. Deliver one combined build for the owner's complete review. The durable
 scope, decisions, ordered checklist and resume point are in [PHONE-WORK.md](PHONE-WORK.md).
 
-Next in the installation phase: LG Developer Mode installation, its manual
-prerequisites/session limits and appropriate recovery. Do not advertise LG
-installation or Android-style cleanup on LG before implementing and validating
-it. Review owner-supplied LG feedback when available; Android parity is unverified.
-
-Then finish independent offline prayer calculations/settings, native scheduled
-reminders/adhan, permission/reboot/time-change recovery and phone appearance,
-retaining existing TV control. Android first; iOS runtime is later. Keep this
-file short and update the detailed ledger after each validated milestone.
+Android and LG installation, independent prayer storage/calculation and actual
+native alarm/audio delivery are implemented. The standalone prayer Home/settings
+and appearance now run in both languages; finish their full UI regression,
+permission denial/recovery and screen-size checks, then complete CI, docs and the
+single review APK export. See PHONE-WORK.md for the exact resume point.
+Review owner-supplied LG feedback when available; physical acceptance is pending.
+Android first; iOS runtime remains later.
 
 Use gh and the PR template. Preserve commits with a normal merge after required
 checks pass. Physical TV deployment and release publication need specific scope.

@@ -71,7 +71,7 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
    renders inspected, 46 Python/Java regressions and generator checks pass.
 4. [x] Standalone phone prayer storage/calculation/settings and portable reminder
    policy. Phone-only metadata is canonical in shared/data/phone-ui-contract.json.
-   Five portable policy tests pass for modes, before/after reminders, duplicate
+   Six portable policy tests pass for modes, before/after reminders, duplicate
    claims, exact late boundaries and simultaneous events. The native adapter uses
    the same Adhan 1.2.1 source and minute-flooring adapter as TV; JVM checks pass
    for the frozen Cairo vector, all methods/offsets, explicit civil zone, 23-hour
@@ -84,8 +84,13 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
    early/expired rejection pass. Private receiver recovers on
    boot/time changes; CI runs the same actual-delivery suite. Permission,
    reboot/time changes, duplicates, stale events and Stop/interruption regressions.
-6. [ ] Independent prayer Home/phone settings/appearance with existing TV areas;
-   no TV dependency; bilingual rendered/native behavior checks and persistence.
+6. [x] Independent prayer Home/phone settings/appearance with existing TV areas;
+   no TV dependency. Bilingual rendered/native tests pass for location confirmation,
+   Arabic numeric Save/Cancel and step rejection, every canonical phone control,
+   independent per-prayer modes, theme changes and persistence. Existing TV/setup
+   native regressions pass. Hijri month symbols corrected after rendered review.
+   Permission denial and private/direct-boot component checks pass; final matrix
+   and CI remain in step 7.
 7. [ ] Complete affected tests/CI and final bilingual portrait/landscape/large-text
    UI checks, inspect packaged media/notices and private-data
    staged review, rewrite PR for final scope, export fixed `Miqat-latest.apk`.
@@ -93,10 +98,16 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
 
 ## Current resume point
 
-Steps 4�5 foundation and native delivery are validated locally. Continue step 6:
-independent prayer Home/settings/appearance, permission repair and root navigation,
-while preserving nested TV remote/settings behavior. Native runtime log:
-state/phone-runtime-native.log; build/lint: state/phone-runtime-build.log.
+Steps 1–6 are implemented. Finish step 7: screen-size/large-text matrix, native
+permission recovery suite, full affected checks and CI, optional bounded Apple
+core compilation, final docs/version/PR and fixed review APK export. Do not stop
+for intermediate physical feedback. Current UI evidence: state/phone-independent-ui-3.log
+and state/phone-ui-regression-2.log; denial: state/phone-permission-denied.log.
+Build/lint: state/phone-ui-final-lint.log (localized date cleanup included).
+Recovery broadcast + actual delivery: state/phone-runtime-recovery.log. Portrait
+80–150% both languages passes; landscape with larger OS text is running.
+All 47 Python/Java regressions and canonical/catalog/QR/LAN helper checks pass.
+Version now phone 0.2.0/code 6, installer 1.1.1/code 4; final rebuild/export pending.
 
 Chosen Android approach: user-authorized prayer alarms, a service only during
 audio, packaged approved clips, relative alarm volume (never change global volume

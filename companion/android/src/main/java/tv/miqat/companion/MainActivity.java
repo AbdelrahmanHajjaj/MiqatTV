@@ -2,14 +2,11 @@ package tv.miqat.companion;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.res.AssetFileDescriptor;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.content.res.ColorStateList;
-import android.media.AudioAttributes;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
@@ -29,6 +26,7 @@ import java.util.function.Consumer;
 public final class MainActivity extends Activity {
     Catalog catalog;
     LgSetup lgSetup;
+    PhoneUi phoneUi;
     final DemoTv[] tvs = new DemoTv[2];
     final List<LanTv> lanTvs=new ArrayList<>();
     final ExecutorService io=Executors.newFixedThreadPool(2);
@@ -50,13 +48,12 @@ public final class MainActivity extends Activity {
     }
     int selected;
     boolean ar;
-    String page="tvs", section="", query="";
+    String page="prayers", section="", query="";
     SettingsSnapshot snapshot;
     SettingsDraft appearance;
     LinearLayout body, content;
     ScrollView scroll;
     String renderedLocation="";
-    MediaPlayer player;
     Toast toast;
     Typeface regular, heading;
     int ground, surface, accent, ink, muted;
@@ -69,10 +66,10 @@ public final class MainActivity extends Activity {
     }
     static android.content.Context localized(android.content.Context base) {
         String language=base.getSharedPreferences("companion",MODE_PRIVATE).getString("language","system");
-        if(!language.equals("system")) {
-            android.content.res.Configuration config=new android.content.res.Configuration(base.getResources().getConfiguration());
-            Locale locale=new Locale(language);config.setLocale(locale);config.setLayoutDirection(locale);base=base.createConfigurationContext(config);
-        }
+        android.content.res.Configuration config=new android.content.res.Configuration(base.getResources().getConfiguration());
+        if(!language.equals("system")) {Locale locale=new Locale(language);config.setLocale(locale);config.setLayoutDirection(locale);}
+        try{config.fontScale*=PhoneStore.read(base).number("display.size")/100f;}catch(Exception unavailable){/* TV access survives invalid prayer preferences. */}
+        base=base.createConfigurationContext(config);
         return base;
     }
 
@@ -90,10 +87,11 @@ public final class MainActivity extends Activity {
                 tvs[i]=catalog.demo(i==0?"android":"lg",decode(prefs().getString("demo-"+i,"{}")));
                 tvs[i].setOnline(prefs().getBoolean("online-"+i,true));
             }
+            phoneUi=new PhoneUi(this);if(state!=null)phoneUi.restore(state);
             phones=new Phones(this);
             try{for(Phones.Phone phone:phones.read())addPhone(phone);}catch(Exception unavailable){vaultFailed=true;}
             if(state!=null) {
-                selected=state.getInt("selected"); page=state.getString("page","tvs"); section=state.getString("section",""); query=state.getString("query","");
+                selected=state.getInt("selected"); page=state.getString("page","prayers"); section=state.getString("section",""); query=state.getString("query","");
                 if(selected>=2) {
                     String pin=state.getString("selected-pin","");selected=-1;
                     for(int i=0;i<lanTvs.size();i++)if(lanTvs.get(i).phone.pin.equals(pin))selected=i+2;
@@ -109,6 +107,7 @@ public final class MainActivity extends Activity {
                 pendingId=state.getString("pending-id",""); pendingValue=state.getString("pending-value","");
                 if(state.containsKey("pending-base")) pendingBase=decode(state.getString("pending-base"));
             }
+            if(getIntent().getBooleanExtra("prayer-home",false)){page="prayers";section="";}
             render();
             Object retained=getLastNonConfigurationInstance();
             if(retained instanceof PairResume && page.equals("pair")) {
@@ -223,7 +222,7 @@ public final class MainActivity extends Activity {
     void tab(String target){
         if(networkBusy)return;
         if(page.equals(target)&&(!target.equals("settings")||section.isEmpty()))return;
-        Runnable change=()->{stopAudio();if(lgSetup!=null)lgSetup.close();cancelPairing();clearPending();appearance=null;section="";query="";page=target;
+        Runnable change=()->{if(phoneUi!=null)phoneUi.pending="";stopAudio();if(lgSetup!=null)lgSetup.close();cancelPairing();clearPending();appearance=null;section="";query="";page=target;
             if(target.equals("settings"))readSettings();else if(target.equals("overview"))readRemote();render();};
         if(appearance!=null&&!appearance.getChanges().isEmpty())confirmDiscard(change);else change.run();
     }
@@ -232,9 +231,11 @@ public final class MainActivity extends Activity {
         nav.setPadding(dp(6),dp(6),dp(6),dp(6));nav.setTag("navigation");nav.setElevation(dp(8));
         GradientDrawable material=background(surface,40);material.setStroke(dp(1),(muted&0x00ffffff)|0x33000000);nav.setBackground(material);
         LinearLayout.LayoutParams bar=new LinearLayout.LayoutParams(-1,-2);bar.setMargins(dp(16),dp(8),dp(16),dp(14));shell.addView(nav,bar);
-        boolean hasTv=real()!=null||prefs().getBoolean("show-demo",false)||page.equals("overview")||page.equals("settings");
-        String active=page.equals("settings")?"settings":page.equals("overview")||page.equals("updates")?"overview":"tvs";
-        String[] targets={"overview","settings","tvs"},icons={"remote","gear","tv"},labels={t("remote_title"),t("settings"),t("tvs")};
+        boolean tvArea=Arrays.asList("overview","settings","updates").contains(page);
+        String active=tvArea?(page.equals("settings")?"settings":"overview"):page.equals("prayers")?"prayers":Arrays.asList("phone-settings","preferences").contains(page)?"phone-settings":"tvs";
+        String[] targets=tvArea?new String[]{"overview","settings","tvs"}:new String[]{"prayers","tvs","phone-settings"};
+        String[] icons=tvArea?new String[]{"remote","gear","tv"}:new String[]{"mihrab","tv","gear"};
+        String[] labels=tvArea?new String[]{t("remote_title"),t("settings"),t("tvs")}:new String[]{t("phone_home"),t("tvs"),t("phone_settings")};
         for(int i=0;i<targets.length;i++){
             final String target=targets[i];boolean selected=target.equals(active);int tint=selected?ground:muted;
             Button item=button(nav,labels[i],()->tab(target));flex(item);item.setMinHeight(dp(56));item.setTextSize(11);item.setPadding(dp(4),dp(4),dp(4),dp(4));
@@ -242,9 +243,10 @@ public final class MainActivity extends Activity {
             item.setContentDescription(labels[i]);item.setSelected(selected);item.setTypeface(regular,selected?Typeface.BOLD:Typeface.NORMAL);
             item.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x33000000),background(selected?accent:Color.TRANSPARENT,32),null));
             item.setTextColor(tint);if(target.equals("settings"))bindAction(item,"open-settings");
-            item.setEnabled(!networkBusy&&(target.equals("tvs")||hasTv));item.setAlpha(item.isEnabled()?1f:0.45f);
+            item.setEnabled(!networkBusy);item.setAlpha(item.isEnabled()?1f:0.45f);
         }
     }
+    boolean motionEnabled(){return android.animation.ValueAnimator.areAnimatorsEnabled()&&(phoneUi==null||phoneUi.settings==null||!phoneUi.settings.value("display.reduce-motion").equals("true"));}
     void disableContent(View view){
         view.setEnabled(false);
         if(view instanceof ViewGroup)for(int i=0;i<((ViewGroup)view).getChildCount();i++)disableContent(((ViewGroup)view).getChildAt(i));
@@ -254,18 +256,19 @@ public final class MainActivity extends Activity {
     void navigate(String target) { stopAudio();if(lgSetup!=null&&!target.equals("lg-setup"))lgSetup.close(); page=target; query=""; render(); }
 
     void render() {
+        if(phoneUi!=null)phoneUi.palette();
         String location=page+":"+section;
         int previousY=scroll!=null&&location.equals(renderedLocation)?scroll.getScrollY():0;renderedLocation=location;
         LinearLayout shell=column();shell.setBackgroundColor(ground);shell.setLayoutDirection(ar?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);
         LinearLayout toolbar=horizontal(shell);toolbar.setPadding(dp(12),dp(6),dp(12),dp(6));toolbar.setMinimumHeight(dp(64));
-        if(page.equals("pair")||page.equals("lg-setup")||page.equals("preferences")||page.equals("updates")||page.equals("settings")&&!section.isEmpty())iconButton(toolbar,"back",t("back"),this::back).setEnabled(!networkBusy||page.equals("pair"));
+        if(page.equals("pair")||page.equals("lg-setup")||page.equals("preferences")||page.equals("updates")||page.equals("settings")&&!section.isEmpty()||page.equals("phone-settings")&&!section.isEmpty())iconButton(toolbar,"back",t("back"),this::back).setEnabled(!networkBusy||page.equals("pair"));
         if(page.equals("tvs")) {
             ImageView brand=new ImageView(this);brand.setImageResource(R.drawable.miqat_icon);brand.setContentDescription(ar?"ميقات":"Miqat");
             LinearLayout.LayoutParams mark=new LinearLayout.LayoutParams(dp(40),dp(40));mark.setMarginEnd(dp(12));toolbar.addView(brand,mark);
         }
         LinearLayout titles=column();toolbar.addView(titles,new LinearLayout.LayoutParams(0,-2,1));
-        String pageTitle=page.equals("tvs")?(ar?"ميقات":"Miqat"):page.equals("overview")?t("remote_title"):page.equals("settings")?(section.isEmpty()?t("settings"):section.equals("appearance")?t("appearance_title"):sectionTitle(section)):t(page);
-        TextView title=text(pageTitle,page.equals("settings")&&!section.isEmpty()?22:26,ink);title.setPadding(0,0,0,0);title.setTypeface(heading);title.setMaxLines(1);title.setEllipsize(android.text.TextUtils.TruncateAt.END);titles.addView(title);
+        String pageTitle=page.equals("prayers")?t("phone_home"):page.equals("phone-settings")?phoneUi.sectionTitle():page.equals("tvs")?(ar?"ميقات":"Miqat"):page.equals("overview")?t("remote_title"):page.equals("settings")?(section.isEmpty()?t("settings"):section.equals("appearance")?t("appearance_title"):sectionTitle(section)):t(page);
+        TextView title=text(pageTitle,page.equals("settings")&&!section.isEmpty()?22:26,ink);title.setPadding(0,0,0,0);title.setTypeface(heading);title.setMaxLines(page.equals("phone-settings")?2:1);title.setEllipsize(android.text.TextUtils.TruncateAt.END);titles.addView(title);
         String subtitle=page.equals("tvs")?t("tvs"):Arrays.asList("overview","settings","updates").contains(page)?name(selected)+" · "+t(online()?"connected":"disconnected"):"";
         if(!subtitle.isEmpty()){TextView secondary=text(subtitle,11,muted);secondary.setPadding(0,dp(2),0,0);titles.addView(secondary);}
         if(page.equals("tvs"))iconButton(toolbar,"gear",t("preferences"),()->navigate("preferences"));
@@ -278,6 +281,7 @@ public final class MainActivity extends Activity {
         scroll=new ScrollView(this); scroll.setVerticalScrollBarEnabled(false);scroll.setFillViewport(true); scroll.addView(body);shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));setContentView(shell);
         ScrollView current=scroll;current.post(()->current.scrollTo(0,previousY));
         switch(page) {
+            case "prayers": case "phone-settings": phoneUi.render();break;
             case "lg-setup": if(lgSetup==null)lgSetup=new LgSetup(this);lgSetup.render(body);break;
             case "tvs": renderTvs(); break;
             case "overview": renderOverview(); break;
@@ -294,7 +298,7 @@ public final class MainActivity extends Activity {
         }
         if(networkBusy&&!page.equals("pair")){
             disableContent(body);
-            ProgressBar progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);progress.setIndeterminate(true);progress.setIndeterminateTintList(ColorStateList.valueOf(accent));progress.setContentDescription(t(networkMessage));progress.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);shell.addView(progress,new LinearLayout.LayoutParams(-1,dp(3)));
+            ProgressBar progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);progress.setIndeterminate(motionEnabled());if(!motionEnabled())progress.setProgress(50);progress.setIndeterminateTintList(ColorStateList.valueOf(accent));progress.setContentDescription(t(networkMessage));progress.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);shell.addView(progress,new LinearLayout.LayoutParams(-1,dp(3)));
         }
         bottomNavigation(shell);
     }
@@ -607,7 +611,7 @@ public final class MainActivity extends Activity {
         input.addTextChangedListener(watcher(v->pendingValue=v));return input;
     }
     interface Changed {void accept(String value);}
-    TextWatcher watcher(Changed changed) {return new TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int c,int a){}public void onTextChanged(CharSequence s,int st,int b,int c){changed.accept(s.toString());}public void afterTextChanged(Editable e){}};}
+    static TextWatcher watcher(Changed changed) {return new TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int c,int a){}public void onTextChanged(CharSequence s,int st,int b,int c){changed.accept(s.toString());}public void afterTextChanged(Editable e){}};}
     void adjust(SettingSpec s,EditText input,int direction) {try{input.setText(s.adjust(input.getText().toString(),direction));}catch(IllegalArgumentException e){input.setError(t("invalid"));}}
     void clearPending() {pendingId="";pendingValue="";pendingBase=null;}
 
@@ -837,7 +841,7 @@ public final class MainActivity extends Activity {
     }
     void pairStep(LinearLayout parent,String label,boolean complete,boolean active){
         LinearLayout row=horizontal(parent);row.setMinimumHeight(dp(56));
-        if(active){ProgressBar spinner=new ProgressBar(this);spinner.setIndeterminateTintList(ColorStateList.valueOf(accent));spinner.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);row.addView(spinner,new LinearLayout.LayoutParams(dp(24),dp(24)));}
+        if(active&&motionEnabled()){ProgressBar spinner=new ProgressBar(this);spinner.setIndeterminateTintList(ColorStateList.valueOf(accent));spinner.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);row.addView(spinner,new LinearLayout.LayoutParams(dp(24),dp(24)));}
         else{ImageView glyph=new ImageView(this);glyph.setImageDrawable(Icons.get(this,complete?"check":"tv",complete?accent:muted));glyph.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);row.addView(glyph,new LinearLayout.LayoutParams(dp(24),dp(24)));}
         TextView title=text(label,15,complete||active?ink:muted);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1);lp.setMarginStart(dp(16));row.addView(title,lp);
     }
@@ -885,23 +889,26 @@ public final class MainActivity extends Activity {
     }
 
     void playAudio(String voice) {
-        stopAudio();MediaPlayer next=new MediaPlayer();
-        try(AssetFileDescriptor fd=getAssets().openFd("adhan/"+voice+".mp3")) {
-            next.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build());
-            next.setDataSource(fd.getFileDescriptor(),fd.getStartOffset(),fd.getLength());
-            next.setOnPreparedListener(MediaPlayer::start);
-            next.setOnCompletionListener(v->stopAudio());
-            next.setOnErrorListener((v,what,extra)->{stopAudio();notice("audio_failed");return true;});player=next;next.prepareAsync();
-        } catch(Exception e){next.release();player=null;notice("audio_missing");}
+        stopAudio();
+        if(PhonePlayback.playing()){notice("phone_stop_first");return;}
+        if(!PhoneAlarms.notifications(this)){phoneUi.open("permissions");return;}
+        startForegroundService(PhonePlayback.intent(this,0,voice,true,"preview:"+System.nanoTime()));
     }
-    void stopAudio() {if(player!=null){player.release();player=null;}}
+    void stopAudio() {PhonePlayback.stopPreview(this);}
+    @Override protected void onNewIntent(android.content.Intent intent){super.onNewIntent(intent);setIntent(intent);if(intent.getBooleanExtra("prayer-home",false))tab("prayers");}
+    @Override protected void onResume(){super.onResume();if(phoneUi!=null){PhoneAlarms.rebuild(this);if(page.equals("prayers")||page.equals("phone-settings"))render();phoneUi.start();}}
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==75){PhoneAlarms.rebuild(this);render();}}
     @Override protected void onStart(){super.onStart();phoneForeground=true;schedulePoll();if(lgSetup!=null&&page.equals("lg-setup"))render();}
-    @Override protected void onStop(){phoneForeground=false;polling.removeCallbacksAndMessages(null);stopAudio();if(lgSetup!=null)lgSetup.close();if(toast!=null)toast.cancel();super.onStop();}
+    @Override protected void onStop(){phoneForeground=false;if(phoneUi!=null)phoneUi.stop();polling.removeCallbacksAndMessages(null);stopAudio();if(lgSetup!=null)lgSetup.close();if(toast!=null)toast.cancel();super.onStop();}
     @Override protected void onDestroy(){cancelPairing();if(lgSetup!=null)lgSetup.close();io.shutdownNow();super.onDestroy();}
     void confirmDiscard(Runnable next) {new AlertDialog.Builder(this).setMessage(t("discard")).setNegativeButton(t("cancel"),null).setPositiveButton(t("discard_yes"),(d,w)->next.run()).show();}
     void back() {
         if(networkBusy&&!page.equals("pair"))return;
         stopAudio();
+        if(page.equals("phone-settings")&&!section.isEmpty()){phoneUi.pending="";section="";render();return;}
+        if(page.equals("phone-settings")||page.equals("tvs")){tab("prayers");return;}
+        if(page.equals("prayers")){finish();return;}
+        if(page.equals("preferences")){navigate("phone-settings");return;}
         if(page.equals("pair")){cancelPairing();navigate("tvs");return;}
         if(!pendingId.isEmpty()&&editor==null){clearPending();render();return;}
         if(page.equals("settings")&&appearance!=null&&!appearance.getChanges().isEmpty()){confirmDiscard(()->{appearance=null;section="";render();});return;}
@@ -911,7 +918,7 @@ public final class MainActivity extends Activity {
     }
     @Override public void onBackPressed(){back();}
     @Override protected void onSaveInstanceState(Bundle state) {
-        super.onSaveInstanceState(state);state.putInt("selected",selected);state.putString("page",page);state.putString("section",section);state.putString("query",query);
+        super.onSaveInstanceState(state);if(phoneUi!=null)phoneUi.save(state);state.putInt("selected",selected);state.putString("page",page);state.putString("section",section);state.putString("query",query);
         if(real()!=null)state.putString("selected-pin",real().phone.pin);
         if(snapshot!=null)state.putString("snapshot",encode(snapshot.getValues()));
         if(appearance!=null){state.putString("draft-base",encode(appearance.getBase().getValues()));state.putString("draft-edits",encode(appearance.getChanges()));}

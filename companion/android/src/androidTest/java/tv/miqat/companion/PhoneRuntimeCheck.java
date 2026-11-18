@@ -9,6 +9,19 @@ import tv.miqat.core.ReminderEvent;
 
 /** Explicit owned-emulator suite. Grant notification/exact-alarm access first; audio output is muted. */
 final class PhoneRuntimeCheck {
+    static void denied(Instrumentation test)throws Exception {
+        Context c=test.getTargetContext();PhoneStore original=PhoneStore.read(c);
+        CompanionCheck.check(!PhoneAlarms.exact(c)||!PhoneAlarms.notifications(c),"Revoke a prayer permission before the denial fixture");
+        try {
+            Map<String,String> changes=new LinkedHashMap<>();changes.put("reminders.enabled","true");changes.put("prayer.location-ready","true");
+            original.changed(changes).save(c);
+            CompanionCheck.check(PhoneAlarms.rebuild(c).equals("phone_permission_missing"),"Permission denial must be visible");
+            CompanionCheck.check(!PhoneStore.preferences(c).contains("next-event")&&!PhonePlayback.playing(),"Denied alerts scheduled or played");
+            android.content.pm.ActivityInfo receiver=c.getPackageManager().getReceiverInfo(new ComponentName(c,PrayerAlarm.class),0);
+            android.content.pm.ServiceInfo service=c.getPackageManager().getServiceInfo(new ComponentName(c,PhonePlayback.class),0);
+            CompanionCheck.check(!receiver.exported&&receiver.directBootAware&&!service.exported&&service.directBootAware,"Prayer components must stay private and recover before unlock");
+        }finally{original.save(c);PhoneAlarms.rebuild(c);}
+    }
     static void run(Instrumentation test)throws Exception {
         Context c=test.getTargetContext();SharedPreferences preferences=PhoneStore.preferences(c);
         Map<String,?> original=new HashMap<>(preferences.getAll());
@@ -24,6 +37,9 @@ final class PhoneRuntimeCheck {
             // Keep real calculated Fajr away from this fixture's three-second alarm.
             base=base.changed(Collections.singletonMap("call.fajr.offset",base.day(System.currentTimeMillis(),0).times[0]>=System.currentTimeMillis()?"30":"-30"));
             base.save(c);PhoneAlarms.channels(c);
+            c.sendBroadcast(new Intent(c,PrayerAlarm.class).setAction(PhoneAlarms.REFRESH));
+            await(test,()->preferences.contains("next-event"),10000,"Recovery broadcast did not rebuild the next alarm");
+            CompanionCheck.check(!PhonePlayback.playing(),"Recovery must not start audio directly");
             CompanionCheck.check(preferences.edit().putString("handled","[]").remove("audio-error").commit(),"Cannot initialize alarm fixture");
             long now=System.currentTimeMillis(),time=now+3000;
             ReminderEvent event=new ReminderEvent("phone:call:0:"+time,"call",0,time,time);

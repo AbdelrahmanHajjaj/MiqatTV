@@ -51,6 +51,13 @@ jobs:
             adb shell am instrument -r -w -e suite lan tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee companion-lan-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' companion-lan-result.log
             grep -q 'PASS: pinned TLS' companion-lan-result.log
+            adb shell am instrument -r -w -e suite phone-ui tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-ui-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-ui-result.log
+            grep -q 'PASS: independent bilingual' phone-ui-result.log
+            adb shell appops set tv.miqat.companion SCHEDULE_EXACT_ALARM deny
+            adb shell am instrument -r -w -e suite phone-denied tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-denied-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-denied-result.log
+            grep -q 'PASS: denied prayer permissions' phone-denied-result.log
             adb shell pm grant tv.miqat.companion android.permission.POST_NOTIFICATIONS
             adb shell appops set tv.miqat.companion SCHEDULE_EXACT_ALARM allow
             adb shell am instrument -r -w -e suite phone-runtime tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-runtime-result.log

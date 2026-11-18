@@ -1,7 +1,8 @@
 # Miqat
 
-Android companion with launcher label `Miqat` and integrated Android TV setup.
-Native phone UI plus portable settings workflow.
+Standalone Android prayer app with launcher label `Miqat`, independent offline
+prayer alerts and integrated Android/LG TV setup and control. See
+[phone first use, settings and limits](../docs/PHONE.md).
 See [scope and evidence](../docs/COMPANION-WORK.md) and the
 [foreground LAN protocol](../docs/COMPANION-LAN.md).
 
@@ -23,7 +24,8 @@ Revoking phone access on the TV still requires the TV remote.
 `core/` contains Kotlin settings/draft rules; `android/` owns Views, camera and
 encrypted persistence; `android-shared/` owns LAN/QR helpers. `contract.json`
 extends canonical TV controls, and `generate.mjs` produces ignored profiles and
-Android resources from shared sources. There is no second product catalog.
+Android resources from shared sources. Phone-only controls live in `shared/data/phone-ui-contract.json`; TV controls
+retain their existing shared contract.
 
 **Your TVs → Set up Android TV** opens the shared installer inside this app:
 local APK/download, guarded ADB setup, optional reviewed cleanup and recovery.
@@ -37,7 +39,7 @@ See [setup and recovery](../docs/ANDROID-SETUP.md).
 
 Miqat uses tv.miqat packages and its own QR prefix. Install/pair fresh; old-app
 credentials are not migrated. No cloud, account, Bluetooth/Wi-Fi Direct,
-background listener, unattended updates or iOS implementation is included.
+background TV listener, unattended updates or iOS implementation is included.
 
 With JDK 17, Node 24 and Android SDK 34:
 
@@ -56,7 +58,9 @@ the latest export; do not create per-task evidence folders or duplicate outputs.
 Verification still runs, with concise results in chat.
 
 Native suites use `tv.miqat.companion.test/tv.miqat.companion.CompanionCheck`,
-optionally with `-e suite lan`, `camera`, `live` or `live-lg`. Owned-emulator live
+optionally with `-e suite lan`, `camera`, `live`, `live-lg`, `phone-ui`, `phone-denied` or `phone-runtime`.
+The runtime suite needs explicitly granted notification/exact-alarm access on
+an owned muted emulator; the denied suite requires one of those permissions denied. Owned-emulator live
 fixtures run via `companion/check-live.ps1` and `companion/check-lg.cjs` (historical
 Node executable supplied as its final argument). These are not physical-TV passes.
 

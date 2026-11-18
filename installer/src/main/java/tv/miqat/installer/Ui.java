@@ -20,6 +20,7 @@ import android.widget.TextView;
  */
 final class Ui {
     private Ui() {}
+    static boolean motion(Context c){return c instanceof MainActivity?((MainActivity)c).motionEnabled():android.animation.ValueAnimator.areAnimatorsEnabled();}
 
     static final int LAPIS_900 = InstallerColors.LAPIS_900, LAPIS_800 = InstallerColors.LAPIS_800, LAPIS_700 = InstallerColors.LAPIS_700,
             GOLD_400 = InstallerColors.GOLD_400, GOLD_200 = InstallerColors.GOLD_200, PLASTER = InstallerColors.PLASTER_100, MIST = InstallerColors.MIST_400,

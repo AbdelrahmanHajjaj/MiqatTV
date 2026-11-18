@@ -28,7 +28,7 @@ final class PhoneAlarms {
         try{return PhoneData.get(c).text(key,arabic(c));}catch(Exception unavailable){return "Miqat";}
     }
     static PendingIntent open(Context c) {
-        return PendingIntent.getActivity(c,41700,new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+        return PendingIntent.getActivity(c,41700,new Intent(c,MainActivity.class).putExtra("prayer-home",true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
     }
     private static PendingIntent pending(Context c,String action,int code,String id) {
         return PendingIntent.getBroadcast(c,code,new Intent(c,PrayerAlarm.class).setAction(action).putExtra("event",id),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);

@@ -124,7 +124,7 @@ final class Timeline extends LinearLayout {
 
         void set(State s) {
             state = s;
-            if (s == State.WORKING) {
+            if (s == State.WORKING && Ui.motion(getContext())) {
                 if (!spin.isStarted()) spin.start();
             } else {
                 spin.cancel();

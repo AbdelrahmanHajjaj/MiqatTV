@@ -84,7 +84,7 @@ final class Hero extends View {
 
     private void animateIfNeeded() {
         boolean moving=mode==Mode.SEARCH || mode==Mode.PROGRESS&&progress<0;
-        if(isAttachedToWindow()&&ValueAnimator.areAnimatorsEnabled()&&moving){if(!clock.isStarted())clock.start();}
+        if(isAttachedToWindow()&&Ui.motion(getContext())&&moving){if(!clock.isStarted())clock.start();}
         else clock.cancel();
     }
 
