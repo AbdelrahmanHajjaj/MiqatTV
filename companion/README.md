@@ -35,7 +35,13 @@ node companion/qr.test.cjs
 node companion/android-shared/check.mjs
 ./gradlew -p companion/core check jvmJar --no-daemon
 ./gradlew :companion:assembleDebug :companion:lintDebug :companion:assembleDebugAndroidTest --no-daemon
+pwsh -File companion/export-apk.ps1
 ```
+
+Always export a phone build before sharing it. The export writes verified copies
+to `state/builds/companion/` in the primary repository checkout, even when building
+from a worktree: `Miqat-latest.apk` and `Miqat-VERSION-debug.apk`. The folder is
+ignored; test evidence stays in its task folder.
 
 Native suites use `tv.miqat.companion.test/tv.miqat.companion.CompanionCheck`,
 optionally with `-e suite lan`, `camera`, `live` or `live-lg`. Owned-emulator live

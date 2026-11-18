@@ -39,6 +39,11 @@ prefix. Keep the four package/version declarations aligned. --no-minify keeps
 the prebuilt ES5 files checked by the suite. The browser suite uses installed
 Microsoft Edge and mocks Luna/media; its captures are not TV screenshots.
 
+Share tested packages from the primary checkout's ignored `state/builds/webos/`
+folder: `Miqat-latest.ipk` plus `Miqat-VERSION.ipk`. Copy the validated package
+there and verify its SHA-256 matches before sharing. Keep the location stable
+across worktrees; private test receipts remain in their task folders.
+
 ## Controls and settings
 
 OK on input opens the compact prayer bar. Home exposes Prayer, radio, Settings,

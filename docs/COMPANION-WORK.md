@@ -1,5 +1,9 @@
 # Miqat companion work
 
+Build delivery: run `companion/export-apk.ps1` after each phone build and share
+the primary checkout's `state/builds/companion/Miqat-latest.apk`. Keep versioned
+copies there; task-specific evidence folders are not the app delivery location.
+
 Updated: 2026-11-18. Branch: feature/companion-app; main synchronized at 9aaf542.
 
 ## Scope and decisions
