@@ -140,7 +140,8 @@ B (same rounded geometry, all data cells painted as one compound path to remove
 anti-alias seams) and C (compound path plus less-rounded cells). QR payload, module
 count, high correction, eyes and approved half-gap centre are identical.
 Each passes 576 independent decodes across four themes (1,728 combined; same
-size/rotation/degradation matrix). Recommend B to remove the fine grid while
-retaining the approved rounded style. Preview/scripts/evidence are private under
-state/companion/qr-patterns/. Runtime pattern is unchanged pending selection;
-native and physical acceptance of these alternatives has not been performed.
+size/rotation/degradation matrix). The owner selected A on 18 November 2026: keep
+the current rounded pattern with the implemented theme-filled, half-gap centre.
+B/C are not applied. Preview/scripts/evidence remain private under
+state/companion/qr-patterns/. This decision changes documentation only; runtime
+checks were not repeated. Physical TV/camera acceptance remains pending.
