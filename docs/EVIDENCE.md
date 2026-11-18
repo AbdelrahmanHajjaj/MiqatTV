@@ -451,3 +451,8 @@ and Stop/focus/disabled cleanup pass again. Canonical generation checks, eight
 companion generator tests, QR/LAN helper checks and all 47 Python/Java regressions
 pass. Shared installer also respects OS/host reduced motion. Final localized-date
 formatter build/lint passes without touched-code warnings.
+
+Landscape with 1.3× Android text also passes every 80–150% app scale in both
+languages. Inspected largest Arabic landscape and English portrait captures:
+root navigation stays visible, labels wrap, and content scrolls within the
+remaining viewport. Owned-session display size and font scale were restored.

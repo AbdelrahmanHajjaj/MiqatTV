@@ -157,3 +157,25 @@ the emulator/AVD identity, and exercises native SSH/key/install behavior with
 ephemeral keys and a real local package. It never contacts a physical TV. Do not
 reuse these fixture credentials for a TV. Physical LG installation remains a
 separate owner acceptance step.
+
+Standalone phone suites: `-e suite phone-ui` checks actual bilingual prayer views,
+Save/Cancel, location confirmation and persistence. `phone-size` checks every
+80–150% app size in both languages; run in each owned-emulator orientation and
+with enlarged OS text, restoring the session's prior display settings afterwards.
+`phone-denied` requires exact-alarm or notification access denied and proves no
+scheduling/playback. `phone-runtime` requires both permissions granted on an owned
+muted emulator; it exercises actual AlarmManager delivery, foreground output,
+Stop/focus loss, disabled cleanup, recovery and early/expired/duplicate rejection.
+The fixture saves/restores phone settings; it does not operate a TV. Companion CI
+runs UI, denial and actual-delivery suites in addition to existing TV UI/LAN checks.
+
+## Apple portability boundary
+
+On Apple-silicon macOS with Xcode 16.4, use `-PmiqatApple=true` for the two core
+builds and run `macosArm64Test compileKotlinIosArm64 compileKotlinIosSimulatorArm64`.
+The opt-in targets keep Windows/Android/ES5 builds independent of Apple tooling.
+The bounded **Apple core** workflow runs common rule tests as native macOS code
+and compiles both iOS library variants. It boots no iOS simulator and does not
+establish an iPhone application, signed installation or background-audio result.
+Target declarations follow [Kotlin's hierarchy documentation](https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-hierarchy.html).
+The runner/toolchain is recorded in [GitHub's macOS 15 ARM64 image](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md).

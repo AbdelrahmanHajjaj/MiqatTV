@@ -105,7 +105,7 @@ for intermediate physical feedback. Current UI evidence: state/phone-independent
 and state/phone-ui-regression-2.log; denial: state/phone-permission-denied.log.
 Build/lint: state/phone-ui-final-lint.log (localized date cleanup included).
 Recovery broadcast + actual delivery: state/phone-runtime-recovery.log. Portrait
-80–150% both languages passes; landscape with larger OS text is running.
+80–150% both languages passes; landscape with 1.3× OS text also passes, including native navigation geometry.
 All 47 Python/Java regressions and canonical/catalog/QR/LAN helper checks pass.
 Version now phone 0.2.0/code 6, installer 1.1.1/code 4; final rebuild/export pending.
 
@@ -115,7 +115,9 @@ or DND), and phone-only device-protected settings/claims for direct-boot recover
 Pairing credentials remain credential-protected/encrypted; never copy them into
 the phone prayer store. Device-protected preferences are excluded from transfer.
 Sources checked: Android official alarms, background-FGS restrictions, Direct Boot
-and Auto Backup documentation. No Mac/iOS runtime work has started.
+and Auto Backup documentation. An opt-in Apple-core workflow is being added: macOS ARM64 native rule tests and
+iOS device/simulator library compilation only, bounded to 20 minutes. No iOS UI,
+notification/audio adapter or signed build is included. Apple CI result pending.
 
 CI ordering issue: a later license-only run still caught the setup fixture opening
 the next activity before the previous finish completed. Local native checks now
