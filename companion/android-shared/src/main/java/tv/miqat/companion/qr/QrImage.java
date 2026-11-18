@@ -22,7 +22,7 @@ public final class QrImage {
         }
         int[][] palette=palette(colors,style.getJSONObject("palette"));int paper=palette[3][0],accent=palette[4][0];
         Path pupil=path(style.getJSONArray("pupil"));float r=(float)style.getDouble("cornerRadius"),stroke=(float)style.getDouble("inlayWidth");
-        ByteMatrix matrix=Encoder.encode(text,ErrorCorrectionLevel.M,Collections.singletonMap(EncodeHintType.CHARACTER_SET,"UTF-8")).getMatrix();
+        ByteMatrix matrix=Encoder.encode(text,ErrorCorrectionLevel.valueOf(style.getString("errorCorrection")),Collections.singletonMap(EncodeHintType.CHARACTER_SET,"UTF-8")).getMatrix();
         int n=matrix.getWidth(),margin=style.getInt("quietZone");Bitmap bitmap=Bitmap.createBitmap(size,size,Bitmap.Config.ARGB_8888);
         Canvas canvas=new Canvas(bitmap);canvas.drawColor(paper);canvas.scale(size/(n+2f*margin),size/(n+2f*margin));canvas.translate(margin,margin);
         Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);paint.setShader(gradient(0,0,n,n,palette[0]));Path cell=new Path();
@@ -41,7 +41,33 @@ public final class QrImage {
             paint.setShader(null);paint.setColor(accent);paint.setStyle(Paint.Style.STROKE);paint.setStrokeJoin(Paint.Join.ROUND);paint.setStrokeWidth(stroke);
             round(canvas,paint,style.getJSONArray("inlay"));canvas.drawPath(pupil,paint);canvas.restore();
         }
+        drawCentre(context,canvas,paint,style.getJSONObject("centre"),n,paper,colors[2],palette[0],size/(n+2f*margin));
         return bitmap;
+    }
+    private static void drawCentre(Context context,Canvas canvas,Paint paint,JSONObject centre,int n,int paper,int accent,int[] body,float pixelsPerModule)throws Exception {
+        float span=(float)centre.getDouble("size"),gap=(float)centre.getDouble("clearance"),radius=(float)centre.getDouble("radius"),left=(n-span)/2f;
+        paint.setStyle(Paint.Style.FILL);paint.setShader(null);paint.setColor(paper);
+        canvas.drawRoundRect(left-gap,left-gap,left+span+gap,left+span+gap,radius+gap,radius+gap,paint);
+        paint.setShader(gradient(0,0,n,n,body));canvas.drawRoundRect(left,left,left+span,left+span,radius,radius,paint);paint.setShader(null);
+        Bitmap mark;
+        try(java.io.InputStream input=context.getAssets().open(centre.getString("asset"))){mark=BitmapFactory.decodeStream(input);}
+        if(mark==null)throw new IllegalStateException("Missing QR mark");
+        try {
+            JSONArray box=centre.getJSONArray("viewBox"),art=centre.getJSONArray("artwork");
+            int originalWidth=mark.getWidth(),originalHeight=mark.getHeight();
+            if(box.getInt(0)+box.getInt(2)>originalWidth||box.getInt(1)+box.getInt(3)>originalHeight)throw new IllegalStateException("Invalid QR mark bounds");
+            float width=(float)art.getDouble(2),height=(float)art.getDouble(3),target=width*pixelsPerModule*originalWidth/box.getInt(2);
+            // Halve before the final draw so fine alpha edges do not become speckled at QR sizes.
+            while(mark.getWidth()>target*2) {
+                Bitmap smaller=Bitmap.createScaledBitmap(mark,mark.getWidth()/2,mark.getHeight()/2,true);mark.recycle();mark=smaller;
+            }
+            float sx=mark.getWidth()/(float)originalWidth,sy=mark.getHeight()/(float)originalHeight;
+            Rect source=new Rect(Math.round(box.getInt(0)*sx),Math.round(box.getInt(1)*sy),Math.round((box.getInt(0)+box.getInt(2))*sx),Math.round((box.getInt(1)+box.getInt(3))*sy));
+            float scale=Math.min(width/source.width(),height/source.height());
+            float w=source.width()*scale,h=source.height()*scale,x=left+(float)art.getDouble(0)+(width-w)/2,y=left+(float)art.getDouble(1)+(height-h)/2;
+            paint.setFilterBitmap(true);paint.setColorFilter(new PorterDuffColorFilter(accent,PorterDuff.Mode.SRC_IN));
+            canvas.drawBitmap(mark,source,new RectF(x,y,x+w,y+h),paint);
+        } finally {paint.setColorFilter(null);mark.recycle();}
     }
     private static boolean dark(ByteMatrix m,int x,int y){int n=m.getWidth();return x>=0&&y>=0&&x<n&&y<n&&!(x<7&&y<7||x>=n-7&&y<7||x<7&&y>=n-7)&&m.get(x,y)==1;}
     private static LinearGradient gradient(float x,float y,float right,float bottom,int[] colors){return new LinearGradient(x,y,right,bottom,colors[0],colors[1],Shader.TileMode.CLAMP);}

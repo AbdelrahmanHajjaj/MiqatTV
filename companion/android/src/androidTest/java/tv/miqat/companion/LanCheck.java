@@ -122,19 +122,27 @@ final class LanCheck {
             pairing.revoke(pending.id);check(!adapter.connect());
         }
     }
-    static void checkStyledQr(Context context,String qr)throws Exception {
+    static void checkStyledQr(Context context,String actualQr)throws Exception {
+        List<String> samples=new ArrayList<>();samples.add(actualQr);
+        for(int i=0;i<8;i++) {
+            byte[] pin=java.security.MessageDigest.getInstance("SHA-256").digest(("pin"+i).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            byte[] token=java.security.MessageDigest.getInstance("SHA-256").digest(("token"+i).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex=new StringBuilder();for(byte b:pin)hex.append(String.format(java.util.Locale.ROOT,"%02x",b&255));
+            samples.add(PairingQr.encode("https://192.168.50."+(i+1)+":45761",hex.toString(),java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(token)));
+        }
         JSONObject themes=new Catalog(context).data.getJSONObject("themes");
-        for(String theme:new String[]{"mihrab","mosaic","brass","rose","cinema"})for(int size:new int[]{220,280,400}) {
+        for(String qr:samples)for(String theme:new String[]{"mihrab","mosaic","brass","rose","cinema"})for(int size:new int[]{220,280,400}) {
             JSONObject colors=themes.getJSONObject(theme).getJSONObject("colors");
             int[] palette=new int[5];String[] keys={"lapis-900","lapis-700","gold-400","plaster-100"};
-            for(int i=0;i<4;i++)palette[i]=android.graphics.Color.parseColor(colors.getString(keys[i]));palette[4]=0xffefe7d6;
+            for(int i=0;i<4;i++)palette[i]=android.graphics.Color.parseColor(colors.getString(keys[i]));palette[4]=android.graphics.Color.parseColor(themes.getJSONObject("mihrab").getJSONObject("colors").getString("plaster-100"));
             android.graphics.Bitmap image=tv.miqat.companion.qr.QrImage.create(context,qr,size,palette);
+            if(qr.equals(actualQr)&&size==400)try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(context.getExternalFilesDir(null),"qr-"+theme+".png"))){image.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}
             int[] pixels=new int[size*size];image.getPixels(pixels,0,size,0,0,size,size);image.recycle();
             byte[] frame=new byte[size*size*3/2];java.util.Arrays.fill(frame,(byte)128);
             for(int i=0;i<pixels.length;i++){int c=pixels[i];frame[i]=(byte)((android.graphics.Color.red(c)*299+android.graphics.Color.green(c)*587+android.graphics.Color.blue(c)*114)/1000);}
             com.google.zxing.MultiFormatReader decoder=ScanActivity.qrReader();
             for(int turn=0;turn<4;turn++) {
-                check(qr.equals(ScanActivity.decode(decoder,frame,size,size)));byte[] rotated=frame.clone();
+                if(!qr.equals(ScanActivity.decode(decoder,frame,size,size)))throw new AssertionError("Styled QR "+theme+"/"+size+"/"+turn+" sample "+samples.indexOf(qr));byte[] rotated=frame.clone();
                 for(int y=0;y<size;y++)for(int x=0;x<size;x++)rotated[x*size+size-1-y]=frame[y*size+x];frame=rotated;
             }
         }

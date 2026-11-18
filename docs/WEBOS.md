@@ -98,3 +98,8 @@ remote approval/revocation. Its listener follows the foreground app subscription
 See [protocol and legacy TLS limits](COMPANION-LAN.md) and
 [current companion evidence](COMPANION-WORK.md). Physical Miqat installation and
 pairing acceptance remain pending; old app observations are not Miqat passes.
+
+The approved pairing QR now uses the shared Miqat centre mark, theme body fill
+and accent tint, no border and half-width (0.35-module) centre clearance with
+high error correction. Automated SVG and mocked browser checks are not evidence
+of SVG image/filter rendering or camera recognition on physical legacy LG hardware.

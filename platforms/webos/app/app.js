@@ -172,9 +172,9 @@
       companion.failure ? s('pairingNetwork') : pairingMessage;
     var content = '', qr = companion.qr;
     if (qr && companion.open) {
-      var code = window.qrcode(0, 'M'); code.addData(window.PairingQr.encode(qr), 'Alphanumeric'); code.make();
+      var code = window.qrcode(0, D.qrStyle.errorCorrection); code.addData(window.PairingQr.encode(qr), 'Alphanumeric'); code.make();
       content = '<div class="pairing-qr" role="img" aria-label="' + escape(s('pairingScan')) + '"><div class="pairing-symbol">' +
-        window.mihrabQr(code, D.qrStyle, D.palettes[prefs.theme] || D.palettes.mihrab, D.palettes.mihrab['plaster-100']) + '</div></div>';
+        window.mihrabQr(code, D.qrStyle, D.palettes[prefs.theme] || D.palettes.mihrab, D.palettes.mihrab['plaster-100'], D.qrMark) + '</div></div>';
     }
     var actions = '';
     if (companion.open && companion.ownsPairing) {

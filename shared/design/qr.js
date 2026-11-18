@@ -25,7 +25,8 @@
   }
   function path(commands) { return commands.map(function (p) { return p[0] + p.slice(1).join(' '); }).join(''); }
   function rect(r, fill, stroke, width) { return '<rect x="' + r[0] + '" y="' + r[1] + '" width="' + r[2] + '" height="' + r[3] + '" rx="' + r[4] + '" fill="' + fill + '"' + (stroke ? ' stroke="' + stroke + '" stroke-width="' + width + '"' : '') + '/>'; }
-  function svg(code, style, colors, fallback) {
+  function svg(code, style, colors, fallback, logo) {
+    if (typeof logo !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(logo)) throw new Error('Local QR mark required');
     var n = code.getModuleCount(), m = style.quietZone, size = n + 2 * m, body = '', x, y, p = palette(colors, style, fallback), defs = '', pupils = path(style.pupil);
     function finder(x, y) { return x < 7 && y < 7 || x >= n - 7 && y < 7 || x < 7 && y >= n - 7; }
     function dark(x, y) { return x >= 0 && y >= 0 && x < n && y < n && !finder(x, y) && code.isDark(y, x); }
@@ -49,7 +50,13 @@
         '<path d="' + pupils + '" fill="url(#miqat-qr-centre)"/>' + rect(style.inlay, 'none', p.inlay, style.inlayWidth) +
         '<path d="' + pupils + '" fill="none" stroke="' + p.inlay + '" stroke-width="' + style.inlayWidth + '" stroke-linejoin="round"/></g>';
     });
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true"><defs>' + defs + '</defs><rect width="' + size + '" height="' + size + '" fill="' + p.paper + '"/><g fill="url(#miqat-qr-body)">' + body + '</g>' + eyes + '</svg>';
+    var centre = style.centre, span = centre.size, left = m + (n - span) / 2, top = left, gap = centre.clearance, art = centre.artwork;
+    defs += '<filter id="miqat-qr-logo-tint" color-interpolation-filters="sRGB"><feFlood flood-color="' + colors['gold-400'] + '"/><feComposite in2="SourceAlpha" operator="in"/></filter>';
+    var mark = '<g class="qr-mark" data-clearance="' + gap + '">' + rect([left - gap, top - gap, span + 2 * gap, span + 2 * gap, centre.radius + gap], p.paper) +
+      rect([left, top, span, span, centre.radius], 'url(#miqat-qr-body)') +
+      '<svg x="' + (left + art[0]) + '" y="' + (top + art[1]) + '" width="' + art[2] + '" height="' + art[3] + '" viewBox="' + centre.viewBox.join(' ') + '">' +
+      '<image width="1254" height="1254" xlink:href="' + logo + '" filter="url(#miqat-qr-logo-tint)"/></svg></g>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="400" viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true"><defs>' + defs + '</defs><rect width="' + size + '" height="' + size + '" fill="' + p.paper + '"/><g fill="url(#miqat-qr-body)">' + body + '</g>' + eyes + mark + '</svg>';
   }
   svg.palette = palette;
   if (typeof module === 'object' && module.exports) module.exports = svg; else root.mihrabQr = svg;

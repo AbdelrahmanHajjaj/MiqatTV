@@ -92,5 +92,24 @@
     ],
     "darken": 0.92,
     "minInlayContrast": 3
+  },
+  "errorCorrection": "H",
+  "centre": {
+    "asset": "qr-mark.png",
+    "size": 11,
+    "clearance": 0.35,
+    "radius": 2.1,
+    "viewBox": [
+      217,
+      105,
+      817,
+      922
+    ],
+    "artwork": [
+      1.2,
+      0.9,
+      8.6,
+      9.2
+    ]
   }
 }

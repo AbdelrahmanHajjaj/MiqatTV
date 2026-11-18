@@ -50,6 +50,7 @@ assert.deepEqual(fs.readFileSync(path.join(out,'app/qrcode.js')),fs.readFileSync
 assert.deepEqual(fs.readFileSync(path.join(out,'app/licenses/qrcode-generator.txt')),fs.readFileSync(path.join(__dirname,'../../shared/design/assets/licenses/qrcode-generator.txt')));
 assert.ok(fs.readdirSync(path.join(out,'service/vendor/forge')).every(name=>name.endsWith('.js')),'only Forge library sources ship; no upstream examples/test keys');
 const data = require('node:vm').runInNewContext(fs.readFileSync(path.join(out, 'app/data.js'), 'utf8') + ';MiqatData;');
+assert.equal(data.qrMark, 'data:image/png;base64,' + fs.readFileSync(path.join(__dirname, '../../shared/design/assets/qr-mark.png')).toString('base64'), 'package the approved alpha mark unchanged');
 const root = path.resolve(__dirname, '../..');
 for (const theme of data.themes) {
   const preset = theme === 'mihrab' ? {} : JSON.parse(fs.readFileSync(path.join(root, 'shared/design/assets/themes', theme + '.json')));

@@ -311,7 +311,7 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 .brand img { vertical-align: middle; margin: 0 12px; }
 .pairing-body { position:absolute;left:96px;right:96px;top:190px;bottom:64px;overflow:auto;padding:12px 24px 28px; }
 .pairing-qr { position:relative;float:left;width:400px;height:400px;margin:0 36px 24px 0;color:{{color.gold-400}}; }
-.pairing-symbol, .pairing-symbol svg { display:block;width:400px;height:400px;background:#fff; }
+.pairing-symbol, .pairing-symbol > svg { display:block;width:400px;height:400px;background:#fff; }
 .has-qr .pairing-controls { margin-left:456px; }
 [dir=rtl] .pairing-qr { float:right;margin:0 0 24px 36px; }
 [dir=rtl] .has-qr .pairing-controls { margin-left:0;margin-right:456px; }

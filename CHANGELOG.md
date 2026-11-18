@@ -2,8 +2,9 @@
 
 ## Unreleased
 
+- Add the approved theme-matched Miqat centre mark with half-gap clearance and
+  stronger error correction to Android TV and LG pairing QR codes.
 - Use `miqat` as the Android companion launcher label (product name `miqatTv`).
-
 - Port the Android phone companion and foreground TV pairing/settings controls to
   Miqat, using its shared artwork, geometry, palettes and tv.miqat identities.
 - Add themed local pairing QR codes, physical TV approval, phone appearance

@@ -226,10 +226,12 @@ const server = http.createServer((req, res) => {
       await page.locator('[data-action=section][data-value=device]').click();
       await page.locator('[data-action=companion]').click(); await page.waitForSelector('[data-action=pairing-open]:enabled');
       await collect();
-      await page.locator('[data-action=pairing-open]').click(); await page.waitForSelector('.pairing-symbol svg');
-      assert.deepEqual(await page.locator('.pairing-symbol svg').evaluate(el=>[el.getAttribute('width'),el.getAttribute('height'),!!el.getAttribute('viewBox')]),['400','400',true],'old WebKit gets explicit compact QR dimensions');
-      assert.equal(await page.locator('.pairing-symbol svg > g[transform]').count(),3,'three original styled finder eyes');
-      assert.ok(await page.locator('.pairing-symbol svg path').count()>300,'actual data modules use canonical mihrab paths');
+      await page.locator('[data-action=pairing-open]').click(); await page.waitForSelector('.pairing-symbol > svg');
+      assert.deepEqual(await page.locator('.pairing-symbol > svg').evaluate(el=>[el.getAttribute('width'),el.getAttribute('height'),!!el.getAttribute('viewBox')]),['400','400',true],'old WebKit gets explicit compact QR dimensions');
+      assert.equal(await page.locator('.pairing-symbol > svg > g[transform]').count(),3,'three original styled finder eyes');
+      assert.equal(await page.locator('.pairing-symbol .qr-mark').getAttribute('data-clearance'),'0.35','approved half-gap clearance');
+      assert.match(await page.locator('.pairing-symbol .qr-mark image').getAttribute('xlink:href'),/^data:image\/png;base64,/,'local alpha mark ships in the real pairing DOM');
+      assert.ok(await page.locator('.pairing-symbol > svg path').count()>300,'actual data modules use canonical mihrab paths');
       const assertQrVisible=async()=>assert.ok(await page.locator('.pairing-symbol').evaluate(el=>{const qr=el.getBoundingClientRect(),body=el.closest('.pairing-body').getBoundingClientRect();return qr.left>=body.left&&qr.right<=body.right&&qr.top>=body.top&&qr.bottom<=body.bottom;}),'complete QR and quiet zone stay visible at the chosen UI size');
       await assertQrVisible();
       assert.equal(await page.locator('.pairing-qr').getAttribute('role'),'img');await collect();
@@ -309,12 +311,12 @@ const server = http.createServer((req, res) => {
         await page.reload();await inputRestored();await page.keyboard.press('Enter');
         await page.locator('[data-action=home]').click();await page.locator('[data-action=settings]').click();
         await page.locator('[data-action=section][data-value=device]').click();await page.locator('[data-action=companion]').click();
-        await page.waitForSelector('[data-action=pairing-open]:enabled');await page.locator('[data-action=pairing-open]').click();await page.waitForSelector('.pairing-symbol svg');
-        const binding=await page.locator('.pairing-symbol svg').evaluate((el,theme)=>{
+        await page.waitForSelector('[data-action=pairing-open]:enabled');await page.locator('[data-action=pairing-open]').click();await page.waitForSelector('.pairing-symbol > svg');
+        const binding=await page.locator('.pairing-symbol > svg').evaluate((el,theme)=>{
           const d=window.MiqatData,expected=window.mihrabQr.palette(d.palettes[theme],d.qrStyle,d.palettes.mihrab['plaster-100']);
-          return {paper:el.querySelector(':scope > rect').getAttribute('fill'),expected:expected.paper,rim:el.querySelector('#miqat-qr-rim stop').getAttribute('stop-color'),expectedRim:expected.rim[0]};
+          return {paper:el.querySelector(':scope > rect').getAttribute('fill'),expected:expected.paper,rim:el.querySelector('#miqat-qr-rim stop').getAttribute('stop-color'),expectedRim:expected.rim[0],logo:el.querySelector('#miqat-qr-logo-tint feFlood').getAttribute('flood-color'),expectedLogo:d.palettes[theme]['gold-400']};
         },theme);
-        assert.equal(binding.paper,binding.expected,'pairing paper follows '+theme);assert.equal(binding.rim,binding.expectedRim,'finder colour follows '+theme);
+        assert.equal(binding.logo,binding.expectedLogo,'centre mark follows '+theme);assert.equal(binding.paper,binding.expected,'pairing paper follows '+theme);assert.equal(binding.rim,binding.expectedRim,'finder colour follows '+theme);
         await page.screenshot({path:path.join(shots,'companion-approved-'+theme+'-en.png')});
       }
       assert.deepEqual(errors,[]);console.log('PASS: LG bilingual pairing QR, default Reject, approve/complete/revoke/failure, Back/background cleanup and unsupported state at 80/100/150%; actual theme binding in Mihrab/Mosaic/Brass/Rose. Luna/media are mocked.');return;

@@ -39,6 +39,7 @@ write(path.join(out, 'app/qr-style.js'), read('shared/design/qr.js'));
 write(path.join(out, 'app/pairing-qr.js'), read('companion/qr.js'));
   const data = {
     qrStyle: json('shared/design/assets/qr-style.json'),
+    qrMark: 'data:image/png;base64,' + fs.readFileSync(path.join(root, 'shared/design/assets/qr-mark.png')).toString('base64'),
     companionCommands: JSON.parse(read('companion/protocol/lan.json')).commands,
   cities: json('shared/data/cities.json'), methods: methods.map(method => method.id),
   presets: Object.fromEntries(methods.filter(method => method.preset).map(method => [method.id, {...method.preset, ...(method.methodAdjustments ? {methodAdjustments: method.methodAdjustments} : {})}])),

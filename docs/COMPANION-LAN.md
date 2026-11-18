@@ -83,10 +83,13 @@ Miqat uses its own `miqat-tv-pair` type and `MIQ3:` prefix. JSON schemas 1 and 2
 remain accepted only with the Miqat type. Previous app identities, QR codes and
 paired credentials are not imported; Miqat requires a fresh installation/pairing.
 
-Both TV shells render the canonical medallion eyes, mihrab centres and connected
-rounded modules, with a five-module light quiet zone. Colours follow the active
+Both TV shells render the canonical medallion eyes, connected rounded modules
+and the approved Miqat centre mark. The 11-module centre tile uses the QR body
+fill, app accent lettering, no border and 0.35-module (half-width) paper clearance.
+High error correction H accommodates the mark; compact schema-3 symbols are
+49x49 modules. The five-module outer quiet zone is unchanged. Colours follow the active
 TV theme automatically. Shared geometry/contrast thresholds live in
-`shared/design/assets/qr-style.json`; renderers keep data/frame/centre gradient
+`shared/design/assets/qr-style.json`; renderers keep data and finder-gradient
 endpoints at least 6:1 and thin decorative inlays at least 3:1 against the paper.
 An unsuitable dark custom paper falls back to the canonical light paper. These
 rendering adjustments do not change encoded bit values or approval permissions.

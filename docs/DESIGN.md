@@ -70,3 +70,14 @@ its adapters; this resource extraction does not replace native drawing APIs.
 Tokens and SVG patterns still come from `shared/design/mihrab/`; do not duplicate or
 hand-edit their generated Java/XML/CSS outputs. Remaining asset extraction and
 the migration queue are recorded only in `docs/WORK.md`.
+
+## Pairing QR mark
+
+`shared/design/assets/qr-mark.png` is the approved transparent derivative of the
+shared Miqat icon. Original masters remain intact. Both TV renderers tint this
+alpha mark to the active app accent over the QR's theme-derived body fill.
+`assets/qr-style.json` owns high error correction, centre size/crop, borderless
+fill and 0.35-module half-gap clearance; do not duplicate these design values.
+The SVG renderer uses embedded local PNG data and SVG 1.1 image/filter attributes;
+Android draws the same crop and alpha tint with native Canvas. QR/frame decoding
+and rendered shell checks remain separate from physical TV/camera acceptance.

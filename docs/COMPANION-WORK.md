@@ -94,33 +94,40 @@ local CLI token (repository permission). The branch push succeeded; open the
 [comparison](https://github.com/AbdelrahmanHajjaj/MiqatTV/compare/main...feature/companion-app?expand=1)
 to create the PR with the repository template. No merge or release is authorized.
 
-## Companion naming and centre QR exploration
+## Approved centre QR and companion naming
 
 Companion product: `miqatTv`; Android launcher label: `miqat`. Package remains
-`tv.miqat.companion`. Android build/lint pass; aapt confirms the actual APK label.
+`tv.miqat.companion`. Build/lint and aapt label verification pass.
 
-The owner is exploring a central mark before changing the runtime QR. The
-canonical branding master, runtime renderers and pairing wire format are unchanged.
-A transparent gold Arabic/mihrab cutout was made with the built-in image-editing
-tool; the source artwork remains intact. It is used only in ignored previews.
+The owner selected the half-gap treatment on 18 November 2026. Android TV and LG
+now render the transparent Miqat mark with theme body fill, app-accent lettering,
+no border and 0.35-module clearance around an 11-module tile. High error correction
+H produces a 49x49 compact pairing symbol; outer quiet zone and pairing data,
+credentials and approval rules are unchanged. Shared style/asset owns geometry
+and crop; Android uses native alpha tint and LG embedded SVG 1.1 image/filter.
+The original branding master remains intact. Native downsampling preserves smooth
+alpha edges at small QR sizes.
 
-Current direction: borderless centre fill follows the QR's contrast-adjusted
-body; lettering/arch use the app accent. There is no fixed-colour logo tile or
-inset ring. Compare A (previous 0.7-module clearance), B (half-width, 0.35 modules)
-and C (no clearance), all using the same 11-module tile and 49x49/H symbol.
-A larger filled tile was previously rejected after rotated exact-payload failures.
+Integration checks:
 
-A and B each pass 576 independent exact-payload ZXing decodes across Mihrab,
-Aurora, Rose and Brass. Matrix: eight synthetic payloads, 220/280/400 px, four
-rotations, blur and reduced contrast. C fails exact-payload checks at 280 px / 180°
-for one synthetic payload in Mihrab, Aurora and Rose; Brass passes. Zero clearance
-is excluded from recommendation. Recommend B, subject to owner selection.
-Actual browser output was inspected; per-symbol SVG IDs isolate theme palettes.
+- Shared SVG: all 2,880 exact decodes pass across 20 themes, eight payloads,
+  220/280/400 px, four rotations, blur and reduced contrast.
+- Native Android: 540 exact frame decodes pass (actual pairing payload plus eight
+  seeded payloads, five themes, three sizes, four rotations); final raster inspected.
+  Native LAN suite and actual TV pairing UI/TLS/settings/lifecycle checks pass
+  on the verified isolated read-only emulator. No physical device was used.
+- Phone/TV debug and instrumentation builds and lint pass. Populated TV APK:
+  22,151,813 bytes, below 25 MB. Required root Python regressions: 41 pass.
+- LG npm test, targeted bilingual pairing DOM/theme/half-gap checks at 80/100/150%
+  and full mocked-browser suite pass. Packaged alpha mark matches canonical bytes;
+  rendered page inspected. Shared catalog and isolated-source validation pass.
 
-Prior icon, gold-only and matching-ring previews were reviewed but not applied.
-Shared-outline and lighter-correction variants failed small samples and were
-excluded. Scripts, PNG/SVG/HTML previews, transparent asset and raw pass/failure
-evidence remain in ignored state/companion/qr-centre-{exploration,transparent,rings,fill,clearance}/.
+Prior 0.7/0.35/zero-clearance comparisons are private evidence. Half-gap passed
+576 exploration decodes; zero clearance failed rotated exact-payload checks in
+three themes and was excluded. Earlier outline/light-correction candidates were
+also rejected. Raw previews, logs and native raster captures remain in ignored
+state/companion/. No QR credentials or generated packages are committed.
 
-Selection, full-theme and physical phone-camera/TV acceptance remain pending.
-No runtime QR or physical-device change is included in this exploration.
+Physical phone-camera/TV scanning and legacy LG image/filter rendering remain
+pending owner acceptance. Generic inert browser-demo QR is outside this renderer
+change. No installation on a physical TV, merge or release is included.
