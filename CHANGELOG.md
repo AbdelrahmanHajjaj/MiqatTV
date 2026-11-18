@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refresh the README with current Miqat Android screenshots and remove its header icon.
+
 - Keep FFmpeg audio-processing tests local; CI retains approved media checksum checks.
 
 - Refresh the bilingual website with Miqat branding, current artwork and themes.

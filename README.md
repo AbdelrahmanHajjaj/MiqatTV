@@ -1,8 +1,6 @@
 # Miqat · ميقات
 
-<p align="center"><img src="shared/design/branding/miqat-tv-v1/miqat-tv-logo-master.png" width="240" alt="Miqat · ميقات"></p>
-
-A TV home screen with prayer times, adhan and Quran radio, in Arabic and English.
+Prayer times, adhan and Quran radio for the TV at home, in Arabic and English.
 
 [Try the interactive preview](https://abdelrahmanhajjaj.github.io/MiqatTV/) · [English](https://abdelrahmanhajjaj.github.io/MiqatTV/en/)
 
@@ -10,12 +8,13 @@ A TV home screen with prayer times, adhan and Quran radio, in Arabic and English
 
 - Prayer times work offline, with city, calculation method and individual adjustments.
 - Adhan, reminders, Qibla, Friday and Ramadan displays.
-- Themes, Home customization and adjustable interface size.
+- Theme presets, original artwork, Home layouts and adjustable interface size.
 - Controls designed for a TV remote, with Arabic and English layouts.
 
 ## Screenshots
 
-Android TV app running in a 1920 × 1080 Android emulator.
+Android TV app with the default Miqat signature artwork and petrol/gold palette.
+1920 × 1080 Android emulator captures.
 
 **English Home**
 

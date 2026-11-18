@@ -71,7 +71,7 @@ Tokens and SVG patterns still come from `shared/design/mihrab/`; do not duplicat
 hand-edit their generated Java/XML/CSS outputs. Remaining asset extraction and
 the migration queue are recorded only in `docs/WORK.md`.
 
-## Palette/background refinement (review draft)
+## Palette and background refinement
 
 The default uses deeper petrol, warm gold and ivory. Built-in palettes keep their IDs, with six landscape presets gaining paired
 artwork, names, palettes and surface styles. The others retain distinct mineral/earth/night colors and calmer
@@ -93,14 +93,8 @@ using full-screen proportions on Home and in its appearance preview. This avoids
 the former bright white, densely repeated LG masks. Source SVGs remain white
 alpha masks for Android; never bake a particular theme into their canonical files.
 
-The review gallery compares actual browser renders in Arabic/English, with the
-previous English appearance available for comparison. It is not physical-TV
-acceptance. This draft is intentionally uncommitted pending the owner's review.
-
 Base pattern opacity is 14%, with the existing lighting adjustment; the default repeating tile uses 9% ink. Solid is explicitly
-plain, while Halo/Daylight are light-field styles. The gallery's optional artwork
-detail view uses stronger lines for inspection and is labelled as such; its normal
-view always shows actual app opacity.
+plain, while Halo/Daylight are light-field styles.
 
 Neutral landscape choices use the six local JPEGs in
 `shared/design/assets/backgrounds/`, selected by `appearance.json.scenes`.
@@ -161,11 +155,11 @@ to 85%. The inline editor previews its draft; numeric Back restores that draft,
 and outer Cancel discards it. Apply persists it. A different preset restores 85%;
 clamped selection preserves manual changes.
 
-`shared/design/prayer-icons.json` owns all six symbols. The revised proposal uses
+`shared/design/prayer-icons.json` owns all six symbols. The symbols use
 familiar sun/horizon, rising/setting arrows, an afternoon shadow and a crescent,
 with a consistent 2-unit stroke. Decorative diamond rays were removed after owner
 feedback. Android vectors, browser SVG and LG SVG use the same paths; labels,
-order, accessibility and prayer behavior stay intact. This remains a review draft.
+order, accessibility and prayer behavior stay intact.
 
 ### Second Miqat scene and next-prayer contrast
 
