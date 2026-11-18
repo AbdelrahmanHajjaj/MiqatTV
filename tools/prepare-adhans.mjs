@@ -14,12 +14,14 @@ export function prepareAdhans(root = project, check = false) {
   const originals = join(root, 'state/media-originals/adhan');
   for (const [id, edit] of Object.entries(edits)) {
     if (!/^[a-z0-9_]+$/.test(id) || !voices.has(id) || !/^[a-f0-9]{64}$/.test(edit.sourceSha256) ||
+        (edit.outputSha256 !== undefined && !/^[a-f0-9]{64}$/.test(edit.outputSha256)) ||
         !Number.isFinite(edit.endSeconds) || edit.endSeconds <= 0) throw new Error('Invalid adhan edit: ' + id);
-    const input = join(root, 'state/media/adhan', id + '.mp3');
-    if (!existsSync(input)) continue; // Android permits builds without optional recordings.
+    const input = join(root, 'shared/media/adhan', id + '.mp3');
+    if (!existsSync(input)) continue; // Regeneration may begin with missing files; CI checks the complete checksum manifest.
     const original = join(originals, id + '.mp3');
     const stamp = join(originals, id + '.json');
     const currentHash = sha256(input);
+    if (edit.outputSha256 === currentHash) continue; // Reviewed packaged bytes need no private preparation stamp.
     if (existsSync(stamp)) {
       const saved = json(stamp);
       if (saved.sourceSha256 === edit.sourceSha256 && saved.endSeconds === edit.endSeconds && saved.outputSha256 === currentHash) continue;

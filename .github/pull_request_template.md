@@ -1,12 +1,15 @@
 ## Change
 
-Describe the problem and the resulting behavior. Name affected projects.
+<!-- Problem, resulting behavior and affected modules/platforms. Include shared control IDs when relevant. -->
 
 ## Validation
 
-List commands and outcomes from docs/TESTING.md. Label visual evidence as browser,
-emulator or physical TV. Include languages/sizes checked where relevant.
+- CI run:
+- Local commands and results:
+- UI/device evidence, when affected:
+
+<!-- Follow docs/TESTING.md. Shared changes need affected Android, LG and preview checks. Label browser, emulator and physical-TV captures. -->
 
 ## Remaining limits
 
-State skipped checks, pending device acceptance and user-visible risks.
+<!-- Skipped checks, pending hardware acceptance and any setup, media or signing impact. -->

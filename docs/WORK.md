@@ -1,29 +1,34 @@
 # Current work
 
-Updated: 2026-11-17. Checkout: D:/Dev/MiqatTv. Branch: main.
+Updated: 2026-11-18. Delivery: [PR #1](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/1).
 
 ## Approved scope
 
-Set up the independent MiqatTV repository from the platform-core implementation.
-Use Miqat / ميقات and tv.miqat.* identities, with fresh installation. Retain MIT
-and third-party notices. Remove legacy branding, links, workflows, obsolete
-prototypes and migration diaries. Keep README short and technical guides in docs/.
+Configure main protection, the PR template, validation Actions and build publication
+for MiqatTV. The owner approved including the current 14 adhan and 12 announcement
+clips in public builds. Approved media lives in shared/media/; private originals,
+stamps, credentials and device state remain ignored.
 
-## Completed
+## Delivery and receipts
 
-Source import, namespace/design-path renaming, new docs/agent rules and PR template
-are complete. Shared core, Android/installer, LG and preview checks pass; bilingual
-rendered output was inspected. See [EVIDENCE.md](EVIDENCE.md) for commands/results
-and remaining limits. No inherited Actions or companion implementation is included.
-The old checkouts are clean. Private test media and evidence stay ignored.
+Main requires a PR, passing GitHub Actions Required checks, an up-to-date branch
+and resolved conversations. Force pushes/deletion and bypasses are blocked. No
+approving reviewer is required for the solo maintainer. Preserve branch commits
+with normal merges; squash/rebase merging is disabled. Actions requires full SHA
+pins and uses a read-only default token without PR approval permission.
 
-## Publication and remaining work
+PR #1 supplies full-audio Android/LG artifacts, core/preview/native emulator checks
+and manual draft prereleases. The owner authorized its normal merge after required
+checks pass, followed by one draft-publication verification. PR #1 and the linked
+[Actions runs](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions) own the final
+merge, validation and draft receipts; concise local evidence is in EVIDENCE.md.
+Edge is authorized because API credentials lack admin/PR access. Do not create
+credentials, change token scopes, publish a stable release or touch TVs.
 
-The owner approved the initial main commit and push on 17 November 2026. This
-foundation starts a fresh Git history in AbdelrahmanHajjaj/MiqatTV. No release
-or TV deployment is part of that publication. Bootstrap implementation and
-validation are complete; no further bootstrap changes are queued.
+## Further work
 
-Physical new-identity installation, full phone-installer acceptance, portable
-settings transfer, companion integration and preview dependency remediation remain
-separate work. No new platform framework, cloud/accounts, feeds or analytics.
+No additional product work is approved by this setup. Physical new-identity
+acceptance, full phone-installer testing, portable settings transfer and companion
+integration remain separate. CI APKs use temporary debug keys; configure persistent
+release signing before stable updates. Preview dependency advisories remain in
+EVIDENCE.md. No new platform or cloud framework.

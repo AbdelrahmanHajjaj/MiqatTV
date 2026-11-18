@@ -1,0 +1,236 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: shared/core/package-lock.json
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Lint workflow definitions
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+      - run: npm --prefix shared/core ci --ignore-scripts
+      - name: Check canonical sources and complete media
+        run: |
+          node tools/catalogs.mjs --check
+          node tools/catalogs.test.mjs
+          node tools/validate-shared.test.mjs
+          sha256sum --check shared/media/SHA256SUMS
+          node tools/prepare-adhans.mjs --check
+      - name: Test JVM, Java and ES5 core
+        run: ./gradlew -p shared/core check jvmJar --no-daemon
+
+  android:
+    name: Android build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Build and lint standalone Android TV
+        run: ./gradlew -p platforms/android-tv verifyApkSize lintDebug assembleDebugAndroidTest --no-daemon
+      - name: Build and lint the phone installer
+        run: ./gradlew :installer:assembleDebug :installer:lintDebug --no-daemon
+      - name: Run Java and setup/recovery regressions
+        run: python3 -S -B -m unittest discover -s tests -v
+      - name: Install audio test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+      - name: Check audio preparation regressions
+        run: node tools/prepare-adhans.test.mjs
+      - name: Collect full-audio APKs
+        run: |
+          mkdir -p state/builds/android
+          cp platforms/android-tv/build/outputs/apk/debug/app-debug.apk state/builds/android/miqat.apk
+          cp installer/build/outputs/apk/debug/installer-debug.apk state/builds/android/miqat-installer.apk
+          cp platforms/android-tv/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk state/builds/android/miqat-android-test.apk
+          python3 tools/check_apk_media.py state/builds/android/miqat.apk
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-builds
+          path: state/builds/android/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: android-reports
+          path: |
+            platforms/android-tv/build/reports/
+            installer/build/reports/
+          retention-days: 7
+
+  emulator:
+    name: Android emulator
+    needs: android
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: android-builds
+          path: state/apks
+      - name: Allow the runner to use KVM
+        run: sudo setfacl -m "u:$(id -un):rw" /dev/kvm
+      - uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu software -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: |
+            adb shell wm size 1920x1080
+            adb shell wm density 160
+            adb install -r state/apks/miqat.apk
+            adb install -r -t state/apks/miqat-android-test.apk
+            adb shell am instrument -w -e check prayer tv.miqat.home.test/tv.miqat.home.AppearanceCycleDeviceCheck | tee state/native-prayer.log
+            grep -Fq 'Native prayer regression, core/reminder linkage' state/native-prayer.log
+            adb shell am instrument -w -e check ui tv.miqat.home.test/tv.miqat.home.AppearanceCycleDeviceCheck | tee state/native-ui.log
+            grep -Fq 'Native UI contract passed:' state/native-ui.log
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: native-emulator-results
+          path: state/native-*.log
+          retention-days: 7
+
+  webos:
+    name: LG build and tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            shared/core/package-lock.json
+            platforms/webos/package-lock.json
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - run: npm --prefix shared/core ci --ignore-scripts
+      - run: npm --prefix platforms/webos ci --ignore-scripts
+      - name: Check all media and LG ES5/service behavior
+        run: |
+          sha256sum --check shared/media/SHA256SUMS
+          npm --prefix platforms/webos test
+      - name: Check runner Edge for the existing browser suite
+        run: microsoft-edge --version
+      - run: npm --prefix platforms/webos run test:browser
+      - name: Package full-audio LG app and service
+        run: |
+          mkdir -p state/builds/webos
+          npm exec --yes --package=@webos-tools/cli@3.2.6 -- ares-package platforms/webos/build/app platforms/webos/build/service --outdir state/builds/webos --no-minify
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: webos-build
+          path: state/builds/webos/*.ipk
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: lg-browser-evidence
+          path: state/webos-port/
+          retention-days: 7
+
+  preview:
+    name: Preview
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            shared/core/package-lock.json
+            site/package-lock.json
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - run: npm --prefix shared/core ci --ignore-scripts
+      - run: npm --prefix site ci --ignore-scripts
+      - name: Check projections before generators can rewrite them
+        run: |
+          npm --prefix site run data:check
+          npm --prefix site run tokens:check
+      - run: npm --prefix site test
+      - run: npm --prefix site run build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: browser-preview
+          path: site/dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  required:
+    name: Required checks
+    if: always()
+    needs: [core, android, emulator, webos, preview]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every validation job to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          failed = [name for name, job in json.loads(os.environ['RESULTS']).items() if job['result'] != 'success']
+          if failed:
+              raise SystemExit('Required jobs did not pass: ' + ', '.join(failed))
+          print('All required checks passed.')
+          PY

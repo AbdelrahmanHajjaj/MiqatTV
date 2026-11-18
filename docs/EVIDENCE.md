@@ -22,7 +22,7 @@ with system animations disabled. A cold-boot SystemUI ANR blocked the first UI
 check; after closing that emulator dialog, the unchanged UI test and full window
 suite passed. Home was visually inspected. This is not Android TV hardware evidence.
 LG screenshots are browser simulations; Luna and decoder boundaries are mocked.
-Raw logs, recordings, HARs and captures remain under ignored state/.
+Raw logs, original/review recordings, HARs and captures remain under ignored state/.
 
 ## Open checks
 
@@ -37,4 +37,39 @@ Raw logs, recordings, HARs and captures remain under ignored state/.
 
 No physical TV was changed. The old platform-core and companion checkouts remain
 clean and unchanged. No companion code, inherited Actions, previous history,
-credentials, private device state or recordings are part of this repository's sources.
+credentials or private device state are part of this repository's sources.
+The maintainer approved publishing the reviewed 26-clip set on 18 November 2026;
+those copies now live under shared/media/, with exact SHA-256 checksums.
+
+## GitHub delivery setup, 18 November 2026
+
+Local core, Android/installer lint and builds, 43 Python/Java regressions, audio
+preparation fixtures, full LG browser/service tests and preview checks passed.
+The TV APK contains all 26 approved recordings byte-for-byte and is below 25 MB;
+LG app/service IPK packaging also passed. No recording was re-encoded in this pass.
+
+The active [Protect main ruleset](https://github.com/AbdelrahmanHajjaj/MiqatTV/settings/rules/27542002)
+requires a PR, the GitHub Actions Required checks result, an up-to-date branch,
+resolved conversations and normal merge commits, as requested by the owner.
+Squash/rebase merging is disabled. It blocks force pushes/deletion, has
+no bypasses and requires zero approving reviewers. Actions requires full SHA pins;
+the default token is read-only and cannot approve PRs.
+
+[PR #1](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/1) contains the validation
+and draft-publication workflows. GitHub-hosted checks must pass before merging;
+manual draft publication can be exercised after the workflows reach main.
+CI APKs use ephemeral debug signing keys; stable update signing is not configured.
+
+API 34 checks exposed split UI observations and an arrange-menu/catalog-refresh
+race. Header navigation and favourite-marker assertions now use coherent UI
+snapshots, with queued-refresh regressions. Android defers catalog rebuilding
+until the menu closes and preserves the originating app's focus. A direct native
+regression failed before the fix; five complete Arabic/English UI runs passed
+afterward on an isolated API 34 emulator. Build/lint, all 43 local regressions and
+the 26-recording APK check passed. Temporary probes were removed.
+
+[Validate run 44296900776](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44296900776)
+passed all six jobs for 0229237: core, Android build, API 34 emulator, LG browser/
+package checks, preview and the required aggregate. Full-audio Android/LG artifacts
+were uploaded successfully. The owner then confirmed normal merges, never squash;
+repository and ruleset merge options now match that preference.

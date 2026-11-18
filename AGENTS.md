@@ -13,6 +13,7 @@ the approved scope. Companion work belongs to its separate project/branch.
 - shared/core/: pure Kotlin rules and semantic UI/input contracts, compiled for JVM and ES5.
 - shared/data/: canonical catalogs, bilingual strings and exact sacred text.
 - shared/design/: canonical tokens, geometry, themes, patterns, artwork and notices.
+- shared/media/: the approved, checksummed recordings packaged by Android and LG.
 - platforms/android-tv/: Java and Android Views; [Android notes](docs/ANDROID-INTEGRATION.md).
 - platforms/webos/: ES5 app and JS service; read its [AGENTS.md](platforms/webos/AGENTS.md).
 - installer/: Android phone installation/recovery tool; separate from the companion.
@@ -34,8 +35,8 @@ the approved scope. Companion work belongs to its separate project/branch.
   Mirror horizontal physical input once at the shell boundary.
 - Keep runtime networking limited to selected radio and manual advisory prayer
   comparison. Installer ADB/downloads are separate. No ads, analytics or feeds.
-- Keep keys, local device configuration, private state, outputs and restricted
-  recordings out of Git. Retain MIT and third-party notices in distributed builds.
+- Keep keys, local device configuration, private state, outputs, unreviewed audio
+  and original recordings out of Git. Only the approved shared/media set is shipped. Retain MIT and third-party notices in distributed builds.
 - Keep the portable core independent of any SDK or renderer. Android stays Java
   Views; LG app/service must run on WebKit 538.2 and Node 0.10.25.
 
@@ -46,6 +47,7 @@ the approved scope. Companion work belongs to its separate project/branch.
 - Browser mocks, emulators, live diagnostics and human TV acceptance are separate
   evidence. Physical remote, picture/sound and power checks need a ready watcher.
 - Use a feature branch and the PR template. Review staged files for private data.
+  Preserve branch commits with a normal merge; never squash.
   Merging, releasing and deploying require the owner's corresponding instruction.
 - Update CHANGELOG.md for visible changes. Keep current support limits accurate.
 - Use Context7 for SDK/library/CLI behavior; prefer official documentation when

@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Downloads the adhan recordings into ignored state/media/adhan/. They come from
-# https://github.com/abodehq/Athan-MP3, which has no licence, so they are not committed to this repo.
-# Without them Miqat still works; the call screen just stays silent.
+# Re-create missing shared adhan recordings from their documented source.
+# Existing reviewed files are preserved; preparation keeps originals under ignored state/.
 set -e
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEST="$ROOT/state/media/adhan"
+DEST="$ROOT/shared/media/adhan"
 BASE="https://raw.githubusercontent.com/abodehq/Athan-MP3/master/Sounds"
 mkdir -p "$DEST"
 while IFS=$'\t' read -r id name; do
