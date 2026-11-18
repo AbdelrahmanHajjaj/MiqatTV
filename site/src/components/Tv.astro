@@ -1,6 +1,5 @@
 ---
-// The 1920×1080 TV stage with the star lattice ground (Ui.starLattice), scaled into a 16:9 frame by the inline script below
-// (inline so the TV still fits when a cached page outlives its script bundle after a deploy).
+// The shared 1920×1080 stage; its mounted controller fits it to the 16:9 frame.
 import tokens from '../../../shared/design/mihrab/tokens.json';
 import tileDesign from '../../../shared/design/background-tile.json';
 interface Props { mode?: string; screen: string; ground?: 'lattice' | 'black' }
@@ -27,14 +26,6 @@ const { mode, screen, ground = 'lattice' } = Astro.props;
     <div class="tv-ui"><slot /></div>
   </div>
 </div>
-<script is:inline>
-  (() => {
-    const frame = document.currentScript.previousElementSibling, stage = frame.firstElementChild;
-    const fit = () => stage.style.setProperty('--k', String(frame.clientWidth / 1920));
-    new ResizeObserver(fit).observe(frame);
-    fit();
-  })();
-</script>
 
 <style>
   .lattice { position: absolute; inset: 0; pointer-events: none; }

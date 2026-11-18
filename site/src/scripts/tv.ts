@@ -1,12 +1,15 @@
-// The TV stage (Tv.astro scales it to its frame), driven by the arrow keys like the D-pad (WICG spatial navigation
+// The TV stage scales to its frame and uses the arrow keys like the D-pad (WICG spatial navigation
 // polyfill, contained in the stage), Enter as OK, Escape/Backspace as Back. Hover focuses, like moving the remote.
 // The key hints along the bottom follow focus: each focusable (or its container) carries data-hints (JSON).
 import 'spatial-navigation-polyfill';
+import { onScreen } from './lifecycle';
 
-const frame = document.querySelector<HTMLElement>('.tv-frame');
-const stage = document.querySelector<HTMLElement>('.tv');
-
-if (frame && stage) {
+onScreen('*', (stage, signal) => {
+  const frame = stage.closest<HTMLElement>('.tv-frame')!;
+  const fit = () => stage.style.setProperty('--k', String(frame.clientWidth / 1920));
+  const observer = new ResizeObserver(fit);
+  observer.observe(frame); fit();
+  signal.addEventListener('abort', () => observer.disconnect(), {once: true});
   const visible = (e: HTMLElement) => e.getClientRects().length > 0;
   const start = () => stage.querySelector<HTMLElement>('[data-focus-start]')?.focus({ preventScroll: true });
 
@@ -48,7 +51,7 @@ if (frame && stage) {
       const next = from.spatialNavigationSearch?.(dir, { container: stage });
       if (next && stage.contains(next)) next.focus({ preventScroll: true });
     }
-  });
+  }, {signal});
 
   stage.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' || e.key === 'Backspace') {
@@ -65,4 +68,4 @@ if (frame && stage) {
 
   // Arriving from another screen of the TV (links end in #tv): focus lands where the app puts it.
   if (location.hash === '#tv' && !stage.contains(document.activeElement)) start();
-}
+});

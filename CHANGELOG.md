@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Refresh the bilingual website with Miqat branding, current artwork and themes.
+  Switch demo screens in place, keep settings and restore focus without page loads.
+
 - Add Miqat quiet as a second original Miqat background; keep Miqat signature as
   the default. Use 75% surface opacity for the Home next-prayer card while keeping
   its text and gold outline opaque.

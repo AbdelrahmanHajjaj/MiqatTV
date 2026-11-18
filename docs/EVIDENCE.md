@@ -227,3 +227,26 @@ Workflow actionlint and documentation checks passed. The owner authorized a
 normal merge of PR #2 after required checks pass, followed by live publication.
 PR #2 and its Actions runs own the final merge/deployment receipts; initial live
 acceptance follows the successful main run.
+
+
+## Interactive website refresh, 18 November 2026
+
+Based on main 4ccf0ef after the theme-library merge. The bilingual product page
+uses current Miqat tokens/artwork. Nine screens mount locally without URL changes;
+18 static direct-entry routes and separate language URLs remain available.
+Replaced screens abort timers, observers, global listeners, media and online work.
+
+Data/token freshness, the complete preview suite (including route boundaries and
+screen cleanup), Astro static build and documentation checks passed. All 18
+canonical URLs and 828 internal references resolve; no private state, Node
+modules, app binaries or recordings are in the output. Local Node was 26.13.1;
+CI uses the documented Node 24. No dependencies or shared/app sources changed.
+
+Actual Edge checks passed for all nine screens in each language, same-URL screen
+changes, direct Settings entry, selected-screen language switching, browser Back,
+return focus, settings Apply/cancel/re-entry, saved inline size and restored test
+preferences. Arabic is joined; the 390px page has no horizontal overflow. Default
+artwork loads and console errors are absent. Captures are under ignored state/.
+Radio streams and online prayer comparison were not requested in these browser
+checks; their existing deterministic regressions passed. This is browser evidence,
+with no physical-TV operations. The PR owns CI, merge and publication receipts.

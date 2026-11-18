@@ -41,16 +41,17 @@ export function bind(root: ParentNode, m: Model) {
  * Runs `model` every second for this page's language and test mode (`data-mode` on the stage), the clock
  * shifted as the app's test intents do. Returns a function that re-renders at once (after a prefs change).
  */
-export function live(model: (c: Ctx) => Model, onTick?: (c: Ctx) => void) {
-  const stage = document.querySelector<HTMLElement>('.tv')!;
+export function live(stage: HTMLElement, signal: AbortSignal, model: (c: Ctx) => Model, onTick?: (c: Ctx) => void) {
   const lang = document.documentElement.lang as Lang;
   const mode = stage.dataset.mode || undefined;
   let prefs = loadPrefs();
   let shift = mode ? shiftFor(mode, prefs) : 0;
   // New rows and opened panels fit before paint; the fitter's style writes are not observed.
-  new MutationObserver(() => fitUi(stage)).observe(stage.querySelector('.tv-ui')!, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
-  document.fonts.ready.then(() => fitUi(stage));
+  const observer = new MutationObserver(() => fitUi(stage));
+  observer.observe(stage.querySelector('.tv-ui')!, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+  document.fonts.ready.then(() => { if (!signal.aborted) fitUi(stage); });
   const render = () => {
+    if (signal.aborted) return;
     const c = makeCtx(lang, prefs, new Date(Date.now() + shift), mode);
     sizeUi(stage, prefs);
     appearance(stage, prefs);
@@ -64,8 +65,10 @@ export function live(model: (c: Ctx) => Model, onTick?: (c: Ctx) => void) {
     }
   };
   render();
-  setInterval(render, 1000);
+  const timer = setInterval(render, 1000);
+  signal.addEventListener('abort', () => { clearInterval(timer); observer.disconnect(); }, {once: true});
   return (p?: Prefs) => {
+    if (signal.aborted) return;
     if (p) { prefs = p; savePrefs(p); shift = mode ? shiftFor(mode, prefs) : 0; }
     render();
   };

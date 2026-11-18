@@ -81,6 +81,11 @@ emulator. `size-windows` requires an isolated owned API 29+ emulator and tempora
 changes accessibility/screensaver system settings; do not use it as a routine
 physical-TV check. The real-network mode is separate from deterministic fixtures.
 
+For preview navigation, check repeated screen changes without URL changes, browser
+Back and return focus, settings Apply/cancel and re-entry, direct screen links and
+language switching. The preview route/lifecycle regressions check route boundaries
+and cleanup when a screen is replaced. Check the page at a narrow viewport too.
+
 ## Platform and device acceptance
 
 The new Miqat identity uses a fresh installation. Capture the existing TV state,

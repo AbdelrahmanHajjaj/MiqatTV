@@ -37,7 +37,9 @@ as checksum and preparation tests.
 [Miqat's website](https://abdelrahmanhajjaj.github.io/MiqatTV/) serves the existing
 interactive preview, in Arabic at the root and English under /en/. It is a static
 site; the browser calculates prayer times and handles preview settings locally.
-The hosted preview simulates TV integration.
+The hosted preview simulates TV integration. Its screen buttons switch the TV
+preview in place without changing the URL. Existing direct screen links still
+work; language, installation and GitHub links keep their destinations.
 
 Validate deploys the same browser-preview artifact after Required checks succeeds
 on main. Every main push rebuilds it; Run workflow on main can redeploy it. PRs
