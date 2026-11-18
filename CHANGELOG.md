@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep the branded LG splash visible until the first screen is ready.
+
 - Sync companion branding/catalogs with the refreshed main design and expose its
   Home mihrab-opacity setting with shared bounds, drafts and conflict handling.
 
@@ -12,6 +14,13 @@
   Miqat, using its shared artwork, geometry, palettes and tv.miqat identities.
 - Add themed local pairing QR codes, physical TV approval, phone appearance
   preview with Apply/Cancel, and Home/input/radio/adhan-preview controls.
+
+- Refresh the README with current Miqat Android screenshots and remove its header icon.
+
+- Keep FFmpeg audio-processing tests local; CI retains approved media checksum checks.
+
+- Refresh the bilingual website with Miqat branding, current artwork and themes.
+  Switch demo screens in place, keep settings and restore focus without page loads.
 
 - Add Miqat quiet as a second original Miqat background; keep Miqat signature as
   the default. Use 75% surface opacity for the Home next-prayer card while keeping

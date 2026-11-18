@@ -7,6 +7,7 @@
   var prayerRules = window['tv.miqat:core'].tv.miqat.core.PrayerRules;
   var tv = typeof window.PalmServiceBridge !== 'undefined';
   var prefs = A.prefs(), startup = false, loaded = false, busy = false;
+  var splashStarted = Date.now(), splashPending = true;
   var inlineDraft = null;
   var pointerDown = false;
   var settingsConflict = false;
@@ -518,6 +519,10 @@
     Object.keys(appNodes).forEach(function (id) { appNodes[id].setAttribute('data-app-focus', id); });
   }
   function render(focusAction) {
+    if (splashPending) {
+      splashPending = false;
+      setTimeout(function () { document.getElementById("splash").style.display = "none"; }, Math.max(0, 600 - (Date.now() - splashStarted)));
+    }
     document.documentElement.lang = prefs.lang; document.documentElement.dir = prefs.lang === 'ar' ? 'rtl' : 'ltr';
     var stage = document.getElementById('stage'), sheet = prefs.theme === 'mihrab' ? 'style.css' : 'theme-' + prefs.theme + '.css';
     if (document.getElementById('theme-style').getAttribute('href') !== sheet) { document.getElementById('theme-style').setAttribute('href', sheet); }
@@ -1385,7 +1390,7 @@
         if (!retry) { setTimeout(function () { load(true); }, 1000); return; }
         show('home'); notify(t('تعذر تحميل الإعدادات. أعد فتح المشغل للمحاولة.', 'Settings could not be loaded. Reopen the launcher to retry.'), reply.errorText); return;
       }
-      try { prefs = A.prefs(reply.state.prefs); } catch (error) { notify(t('تعذر قراءة الإعدادات المحفوظة.', 'Saved settings could not be read.'), error.message); return; }
+      try { prefs = A.prefs(reply.state.prefs); } catch (error) { show('home'); notify(t('تعذر قراءة الإعدادات المحفوظة.', 'Saved settings could not be read.'), error.message); return; }
       startup = !!(reply.state.startup && reply.state.startup.enabled); loaded = true;
       startCompanion();
       if (reply.state.pendingAlert && !reply.state.pendingAlert.displayedAt) { pendingLaunch = reply.state.pendingAlert.id; coldAlert = true; }

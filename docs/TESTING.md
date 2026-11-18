@@ -53,7 +53,9 @@ files, and inspect `git diff` afterwards.
 Android and LG builds use the 14 adhan and 12 announcement clips in shared/media/.
 Check the complete set with sha256sum --check shared/media/SHA256SUMS and run
 node tools/prepare-adhans.mjs --check. Original/review audio remains private under
-state/. The TV APK must remain below 25,000,000 bytes with all recordings, and
+state/. FFmpeg/ffprobe preparation and decoding tests run locally when media or
+preparation code changes; Actions only check approved hashes and packaged bytes.
+The TV APK must remain below 25,000,000 bytes with all recordings, and
 python3 tools/check_apk_media.py PATH_TO_APK verifies exact packaged media.
 
 ## UI and input acceptance
@@ -80,6 +82,11 @@ documents the existing `prayer`, `ui`, `size`, `size-windows`, `online` and
 emulator. `size-windows` requires an isolated owned API 29+ emulator and temporarily
 changes accessibility/screensaver system settings; do not use it as a routine
 physical-TV check. The real-network mode is separate from deterministic fixtures.
+
+For preview navigation, check repeated screen changes without URL changes, browser
+Back and return focus, settings Apply/cancel and re-entry, direct screen links and
+language switching. The preview route/lifecycle regressions check route boundaries
+and cleanup when a screen is replaced. Check the page at a narrow viewport too.
 
 ## Platform and device acceptance
 
@@ -111,7 +118,7 @@ what the owner saw or heard. A result for one TV/firmware does not certify a bra
 ## Review
 
 The Validate workflow runs core JVM/JS/Java and canonical checks, Android/installer
-builds and lint, Python/Java/media regressions, native prayer/UI checks on an API 34
+builds and lint, Python/Java regressions, native prayer/UI checks on an API 34
 emulator, complete LG ES5/service/browser tests and packaging, and the preview
 suite/build. Required checks fails if any of those jobs fails or is skipped.
 There are no path filters that could leave the required status pending.

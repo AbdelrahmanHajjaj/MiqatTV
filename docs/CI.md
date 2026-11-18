@@ -29,15 +29,18 @@ instrumentation, not household installation. Browser/emulator output is not TV
 picture, sound or physical-remote acceptance.
 
 The approved recordings are checked in under shared/media/; no private originals,
-stamps or device state are uploaded. Changes to audio need content review as well
-as checksum and preparation tests.
+stamps or device state are uploaded. Actions verify approved checksums and packaged
+bytes without installing FFmpeg or processing audio. Run preparation/decoding tests
+and content review locally when recordings or preparation code change.
 
 ## Website
 
 [Miqat's website](https://abdelrahmanhajjaj.github.io/MiqatTV/) serves the existing
 interactive preview, in Arabic at the root and English under /en/. It is a static
 site; the browser calculates prayer times and handles preview settings locally.
-The hosted preview simulates TV integration.
+The hosted preview simulates TV integration. Its screen buttons switch the TV
+preview in place without changing the URL. Existing direct screen links still
+work; language, installation and GitHub links keep their destinations.
 
 Validate deploys the same browser-preview artifact after Required checks succeeds
 on main. Every main push rebuilds it; Run workflow on main can redeploy it. PRs

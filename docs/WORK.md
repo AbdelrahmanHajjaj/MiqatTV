@@ -4,28 +4,25 @@ Updated: 2026-11-18.
 
 ## Approved scope and next action
 
-The owner approved the complete 20-theme/24-background library and authorized
-commit and normal merge of `design/miqat-themes` into MiqatTV main. Preserve Miqat
-signature as default and Miqat quiet as an additional choice, the 75% next-prayer
-fill, simpler prayer icons and 50–100% Home mihrab control (85% recommended).
-The preset carousel precedes the existing customization controls. Changes cover
-Android, LG and preview; no companion or physical-TV deployment is requested.
+Refresh the README for the current Miqat branding. Remove its header icon and
+replace the old Android Home screenshots with the reviewed English/Arabic native
+captures. Keep the README short and identify emulator evidence. Correct the stale
+review-draft claims in the owning design guide; no app or artwork changes.
 
-The design commit is integrated with current main. Resolve integration checks,
-open the PR, wait for required CI and merge normally. Main's existing Pages
-workflow updates the bilingual preview after successful validation. Essential
-verification belongs in EVIDENCE.md; raw captures stay under ignored state/.
+Work is on `feature/readme-current-brand`, based on main c6ad64f. Check screenshot
+provenance, links, paths and copy, then use gh for the PR. Normal-merge after all
+required checks pass and sync main under the owner's standing instruction. The
+PR owns CI/delivery receipts. No TV operation or release is requested.
 
-## Previous delivery and remaining limits
+## Delivered and remaining limits
 
-[PR #1](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/1) was normally merged as
-2bb348f. [Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44301830392)
-passed all six jobs; [draft publication](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44304525540)
-created an unpublished full-audio prerelease with verified checksums.
-[PR #2](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/2) added the approved
-GitHub Pages publication and preview security fixes, merged as 3624b10.
+The [website refresh](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/4) is live.
+[PR #5](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/5) removed FFmpeg processing
+from Actions and recorded the standing gh/merge workflow. It was normally merged
+as c6ad64f, local main was synced, and [post-merge validation/Pages](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44349978626)
+passed all seven jobs. Its PR records the native focus-check intermittency and
+single successful retry.
 
-Physical Miqat installation, complete phone-installer testing, settings transfer
-and companion integration remain separate. Browser mocks and emulator captures
-are not physical-TV acceptance. CI APKs use temporary debug keys. EVIDENCE.md
-records the remaining build-tool dependency advisory. No release is requested.
+Physical Miqat/installer acceptance, settings transfer, companion integration and
+persistent release signing remain separate. Existing build-tool advisories remain
+in EVIDENCE.md. Raw captures and device details stay under ignored state/.

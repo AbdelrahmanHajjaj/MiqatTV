@@ -50,7 +50,9 @@ the approved scope. Companion work belongs to its separate project/branch.
   evidence. Physical remote, picture/sound and power checks need a ready watcher.
 - Use a feature branch and the PR template. Review staged files for private data.
   Preserve branch commits with a normal merge; never squash.
-  Merging, releasing and deploying require the owner's corresponding instruction.
+  Use gh for PR operations. The owner pre-authorizes normal merges of approved
+  task PRs after all required checks pass, followed by syncing local main. Release
+  publication and physical-device deployment still need specific instruction.
 - Update CHANGELOG.md for visible changes. Keep current support limits accurate.
 - Use Context7 for SDK/library/CLI behavior; prefer official documentation when
   it lacks coverage. Ordinary refactoring and product logic need no lookup.

@@ -15,6 +15,8 @@ try {
   await server.ssrLoadModule('/tests/appearance-cycle.ts');
   await server.ssrLoadModule('/tests/online-prayer.ts');
   await server.ssrLoadModule('/tests/pairing.ts');
+
+  await server.ssrLoadModule('/tests/preview-navigation.ts');
 } finally {
   await server.close();
 }

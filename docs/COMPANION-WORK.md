@@ -1,6 +1,6 @@
 # Miqat companion work
 
-Updated: 2026-11-18. Branch: feature/companion-app; main synchronized at 4ccf0ef.
+Updated: 2026-11-18. Branch: feature/companion-app; main synchronized at 9aaf542.
 
 ## Scope and decisions
 
@@ -24,7 +24,9 @@ Legacy LG may use approved TLS 1.2 RSA/AES-GCM; no forward secrecy is an accepte
 compatibility limitation. No plaintext or unverified trust fallback.
 
 No cloud/accounts, background handling, Bluetooth/Wi-Fi Direct, iOS, settings
-copy/import/export, actual remote updates, physical-TV installation or firmware.
+copy/import/export as a product feature, actual remote updates or firmware.
+The owner separately authorized the one-time LG settings transfer, installation
+and removal of the old launcher on 18 November 2026.
 New Miqat installations/pairings are fresh; old identities are not aliases.
 [WORK.md](WORK.md) remains the unchanged historical foundation ledger.
 
@@ -180,3 +182,26 @@ Main and merged preview lockfiles both report 10 high npm audit findings; no
 existing main dependency version was changed. No dependency remediation, physical
 TV deployment, release or merge into main is included. Physical camera/picture/
 sound and legacy LG rendering acceptance remain pending.
+
+
+## LG replacement and latest main (18 November 2026)
+
+Merged main `9aaf542`, moving preview pairing into the new settings controller
+with abort/visibility cleanup. Preview unit/build and bilingual browser checks pass.
+LG unit/service/build checks pass. Raw receipts and settings backups remain in
+ignored state/companion/lg-migration/.
+
+Live LG developer APIs verified a private export of all 31 old preference fields,
+then imported them unchanged into Miqat with the new mihrab-opacity default.
+Input, startup and automatic alerts were restored and read back. Old scheduling
+and startup were disabled before enabling Miqat equivalents. The old launcher
+was then uninstalled at the owner's request. Pairing credentials were not copied.
+This is live service evidence, not human picture/sound acceptance.
+
+The owner reported no visible splash with 0.2.23. Version 0.2.24 adds the canonical
+splash inside the app until its first rendered screen, with a 600 ms minimum.
+Error screens also dismiss the cover. LG unit/service and full bilingual browser
+checks pass, including startup-cover visibility and dismissal. Version 0.2.24 is
+installed and launched; service readback verifies all migrated settings survived
+the update and the old app is absent. Physical splash and fresh Miqat camera,
+pairing, picture/sound and remote acceptance remain pending.

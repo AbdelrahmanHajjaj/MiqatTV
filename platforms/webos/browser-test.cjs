@@ -137,7 +137,9 @@ const server = http.createServer((req, res) => {
       });
     }
     const errors = []; page.on('pageerror', e => errors.push(e.message));
-    await page.goto('http://127.0.0.1:' + server.address().port);
+    await page.goto('http://127.0.0.1:' + server.address().port, {waitUntil: 'domcontentloaded'});
+    assert.equal(await page.locator('#splash').isVisible(), true, 'startup artwork is visible before the first screen');
+    await page.locator('#splash').waitFor({state:'hidden'});
     assert.match(await page.title(), /^Miqat/);
     await page.evaluate(() => document.fonts.ready);
     await inputRestored();

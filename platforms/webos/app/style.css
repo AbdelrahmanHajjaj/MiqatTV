@@ -337,3 +337,6 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 [dir=rtl] .home-prayers .prayer-head .prayer-icon {float:right;}
 [dir=rtl] .home-prayers .prayer-head .prayer-tag {float:left;}
 .home-prayers .prayer-label {display:block;}
+
+/* Keep the canonical launch artwork visible while the first screen loads. */
+#splash { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 100; background: url("splash.png") center center / cover no-repeat; }

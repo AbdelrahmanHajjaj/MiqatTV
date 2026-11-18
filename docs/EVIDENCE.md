@@ -227,3 +227,80 @@ Workflow actionlint and documentation checks passed. The owner authorized a
 normal merge of PR #2 after required checks pass, followed by live publication.
 PR #2 and its Actions runs own the final merge/deployment receipts; initial live
 acceptance follows the successful main run.
+
+
+## Interactive website refresh, 18 November 2026
+
+Based on main 4ccf0ef after the theme-library merge. The bilingual product page
+uses current Miqat tokens/artwork. Nine screens mount locally without URL changes;
+18 static direct-entry routes and separate language URLs remain available.
+Replaced screens abort timers, observers, global listeners, media and online work.
+
+Data/token freshness, the complete preview suite (including route boundaries and
+screen cleanup), Astro static build and documentation checks passed. All 18
+canonical URLs and 828 internal references resolve; no private state, Node
+modules, app binaries or recordings are in the output. Local Node was 26.13.1;
+CI uses the documented Node 24. No dependencies or shared/app sources changed.
+
+Actual Edge checks passed for all nine screens in each language, same-URL screen
+changes, direct Settings entry, selected-screen language switching, browser Back,
+return focus, settings Apply/cancel/re-entry, saved inline size and restored test
+preferences. Arabic is joined; the 390px page has no horizontal overflow. Default
+artwork loads and console errors are absent. Captures are under ignored state/.
+Radio streams and online prayer comparison were not requested in these browser
+checks; their existing deterministic regressions passed. This is browser evidence,
+with no physical-TV operations. The PR owns CI, merge and publication receipts.
+
+
+### Website publication
+
+[PR #4](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/4) was normally merged as
+5d0e1c2 after six successful required jobs. [Main run 44332260024](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44332260024)
+passed all seven jobs, including Pages deployment. Public Arabic/English Home,
+same-URL Settings navigation, language links and Arabic appearance rendering were
+verified in Edge with no console errors. Local verification server was stopped.
+
+### CI audio-processing scope
+
+The owner requested removing FFmpeg from Actions and retained the other Ubuntu
+checks/builds. The workflow no longer installs FFmpeg or runs synthetic audio
+processing. Approved-media hashes, prepared-output hashes and packaged APK byte
+checks remain. FFmpeg preparation/decoding and listening remain local checks for
+changed media/preparation code. No recording or package content was changed.
+
+Workflow actionlint, documentation links/paths, the remaining prepared-output hash
+check and diff checks passed locally. All workflows were scanned to confirm no
+FFmpeg/ffprobe installation, invocation or audio-processing fixture test remains.
+The existing required-job aggregate, build artifacts and publication guards are
+unchanged. The focused PR owns the GitHub validation result.
+
+
+## README branding refresh, 18 November 2026
+
+The README removes its header icon and uses the reviewed PR #3 native Home captures
+in English/Arabic, showing the default Miqat signature scene and current palette.
+These are 1920×1080 API 37 emulator captures, not physical-TV photographs. The
+capture worktree commit a567978 and main c6ad64f have identical Android, installer,
+core, data and design sources. The PNGs are copied unchanged from the reviewed
+captures; no new app build, emulator session or physical-TV operation was needed.
+The design guide's obsolete uncommitted/review-draft claims are removed.
+
+Both PNGs decode, match the reviewed bytes and retain 1920×1080 dimensions.
+Arabic shaping, RTL placement and the current background/prayer symbols were
+visually inspected. Documentation link/path checks and diff checks passed.
+
+
+## Companion LG replacement (18 November 2026)
+
+On the separately authorized companion branch, latest main `9aaf542` is merged.
+Preview generated-data, unit, production build and bilingual navigation/pairing
+checks pass. LG 0.2.24 unit/service/build/ES5 and full mocked bilingual browser
+checks pass, including the added initial splash visibility/dismissal regression.
+
+Live developer-service readback verifies all 31 old preference fields preserved,
+plus the new default mihrab opacity; input, startup and automatic alerts restored.
+Old scheduling was disabled before Miqat scheduling was enabled. Old launcher
+uninstallation and settings preservation through the 0.2.24 update are verified.
+Backups, logs and device configuration stay private under ignored state/.
+Human splash, picture/sound, physical remote and new-identity pairing/camera
+acceptance remain pending; service readback and mocked browsers do not prove them.

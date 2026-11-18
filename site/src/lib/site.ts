@@ -23,19 +23,19 @@ export const PAGES: Page[] = [
   {
     slug: '', screen: 'home',
     nav: { ar: 'الرئيسية', en: 'Home' },
-    title: { ar: 'ميقات · شاشة رئيسية لتلفاز أندرويد حول يوم الصلاة', en: 'Miqat · An Android TV home screen built around the prayer day' },
+    title: { ar: 'ميقات · مواقيت الصلاة على تلفازك', en: 'Miqat · Prayer times, on your TV' },
     description: {
-      ar: 'ميقات شاشة رئيسية مجانية ومفتوحة المصدر لتلفاز أندرويد: مواقيت الصلاة دون إنترنت، عدّ تنازلي للصلاة القادمة داخل محراب، القبلة، الأذان في وقته، وإذاعة القرآن الكريم.',
-      en: 'Miqat is a free, open-source Android TV launcher: offline prayer times, a countdown to the next prayer inside a mihrab arch, Qibla, the adhan on time and Quran radio.',
+      ar: 'ميقات لتلفاز أندرويد وLG webOS: مواقيت الصلاة دون إنترنت، والأذان في وقته، والقبلة وإذاعة القرآن الكريم، بالعربية والإنجليزية.',
+      en: 'Miqat for Android TV and LG webOS: offline prayer times, scheduled adhan, Qibla and Quran radio, in Arabic and English.',
     },
     body: {
       ar: [
-        'تستبدل ميقات الشاشة الرئيسية لتلفاز أندرويد بشاشة واحدة. تظهر الصلاة القادمة وعدّها التنازلي داخل محراب، ومواقيت اليوم في الأعلى، وتطبيقاتك المفضلة تحتها، ويعمل الأذان عند دخول الوقت.',
+        'الصلاة القادمة والعدّ التنازلي داخل المحراب، ومواقيت اليوم وتطبيقاتك المفضلة بجانبه. يعمل ميقات كشاشة رئيسية على أندرويد TV، وكتطبيق مستقل يعرض HDMI على LG.',
         `المواقيت تُحسب على التلفاز نفسه دون إنترنت، لـ ${cityCount} مدينة في ${countryCount} دولة، مع اختيار طريقة الحساب ومذهب العصر وتعديل التاريخ الهجري.`,
         'هذه معاينة تفاعلية للشاشة: استخدم الأسهم ومفتاح Enter كأنها أزرار جهاز التحكم، أو اضغط بالفأرة. المواقيت محسوبة لمدينتك المختارة الآن.',
       ],
       en: [
-        'Miqat replaces the stock launcher on an Android TV with one quiet screen. The next prayer and a live countdown sit inside a mihrab arch, the day’s six times run across the top, your favourite apps sit below, and the call to prayer comes to the TV by itself.',
+        'The next prayer and countdown sit inside the mihrab, with today’s times and your favourite apps alongside. Android TV uses Miqat as Home; LG runs it as a separate app with HDMI.',
         `Times are calculated on the TV, fully offline, for ${cityCount} cities in ${countryCount} countries, with your choice of calculation method, Asr school and Hijri date offset.`,
         'This is a live preview of the screen: use the arrow keys and Enter like the remote, or click. The times are calculated for your chosen city right now.',
       ],

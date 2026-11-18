@@ -8,8 +8,9 @@ arbitrary native apps or wake the TV from standby.
 
 The integration was developed on LG LF6300 / webOS 2.2, WebKit 538.2 and service
 Node 0.10.25. Prior device checks confirmed HDMI picture/sound, physical remote,
-Arabic shaping, sizing, startup, prayer audio and restoration. The new tv.miqat.*
-identities have not been installed on hardware. Newer LG hardware is unverified.
+Arabic shaping, sizing, startup, prayer audio and restoration. Miqat was installed on that TV on 18 November 2026. Live service readback verified
+the one-time settings transfer and the old launcher was uninstalled. Human
+acceptance of the new identity remains pending. Newer LG hardware is unverified.
 
 ## Build and install
 
@@ -96,7 +97,7 @@ and the platform [agent rules](../platforms/webos/AGENTS.md).
 The companion branch adds Settings / Phones with themed local QR and physical
 remote approval/revocation. Its listener follows the foreground app subscription.
 See [protocol and legacy TLS limits](COMPANION-LAN.md) and
-[current companion evidence](COMPANION-WORK.md). Physical Miqat installation and
+[current companion evidence](COMPANION-WORK.md). Physical Miqat installation is complete; camera and
 pairing acceptance remain pending; old app observations are not Miqat passes.
 
 The approved pairing QR now uses the shared Miqat centre mark, theme body fill
@@ -133,3 +134,8 @@ Validation is mocked browser/service testing; physical LG acceptance is pending.
 Miqat quiet is an additional canonical scene; the original Signature stays default.
 Home next-prayer fill is 75% of the selected surface panel color, with opaque gold
 labels/outline. This alpha is independent of the Home mihrab setting and Glass.
+
+
+The app displays the canonical splash artwork while its first screen loads, for
+at least 600 ms, in addition to LG's configured splash image. It does not replay
+on foreground resume. Version 0.2.24's physical splash confirmation is pending.
