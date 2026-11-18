@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 /** Native phone settings and explicit foreground Remote, with optional isolated demo TVs. */
 public final class MainActivity extends Activity {
     Catalog catalog;
+    LgSetup lgSetup;
     final DemoTv[] tvs = new DemoTv[2];
     final List<LanTv> lanTvs=new ArrayList<>();
     final ExecutorService io=Executors.newFixedThreadPool(2);
@@ -222,7 +223,7 @@ public final class MainActivity extends Activity {
     void tab(String target){
         if(networkBusy)return;
         if(page.equals(target)&&(!target.equals("settings")||section.isEmpty()))return;
-        Runnable change=()->{stopAudio();cancelPairing();clearPending();appearance=null;section="";query="";page=target;
+        Runnable change=()->{stopAudio();if(lgSetup!=null)lgSetup.close();cancelPairing();clearPending();appearance=null;section="";query="";page=target;
             if(target.equals("settings"))readSettings();else if(target.equals("overview"))readRemote();render();};
         if(appearance!=null&&!appearance.getChanges().isEmpty())confirmDiscard(change);else change.run();
     }
@@ -250,14 +251,14 @@ public final class MainActivity extends Activity {
     }
     void notice(String key) {if(toast!=null)toast.cancel();toast=Toast.makeText(this,t(key),Toast.LENGTH_LONG);toast.show();}
     void info(String title,String message) { new AlertDialog.Builder(this).setTitle(title).setMessage(message).setPositiveButton(t("done"),null).show(); }
-    void navigate(String target) { stopAudio(); page=target; query=""; render(); }
+    void navigate(String target) { stopAudio();if(lgSetup!=null&&!target.equals("lg-setup"))lgSetup.close(); page=target; query=""; render(); }
 
     void render() {
         String location=page+":"+section;
         int previousY=scroll!=null&&location.equals(renderedLocation)?scroll.getScrollY():0;renderedLocation=location;
         LinearLayout shell=column();shell.setBackgroundColor(ground);shell.setLayoutDirection(ar?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);
         LinearLayout toolbar=horizontal(shell);toolbar.setPadding(dp(12),dp(6),dp(12),dp(6));toolbar.setMinimumHeight(dp(64));
-        if(page.equals("pair")||page.equals("preferences")||page.equals("updates")||page.equals("settings")&&!section.isEmpty())iconButton(toolbar,"back",t("back"),this::back).setEnabled(!networkBusy||page.equals("pair"));
+        if(page.equals("pair")||page.equals("lg-setup")||page.equals("preferences")||page.equals("updates")||page.equals("settings")&&!section.isEmpty())iconButton(toolbar,"back",t("back"),this::back).setEnabled(!networkBusy||page.equals("pair"));
         if(page.equals("tvs")) {
             ImageView brand=new ImageView(this);brand.setImageResource(R.drawable.miqat_icon);brand.setContentDescription(ar?"ميقات":"Miqat");
             LinearLayout.LayoutParams mark=new LinearLayout.LayoutParams(dp(40),dp(40));mark.setMarginEnd(dp(12));toolbar.addView(brand,mark);
@@ -277,6 +278,7 @@ public final class MainActivity extends Activity {
         scroll=new ScrollView(this); scroll.setVerticalScrollBarEnabled(false);scroll.setFillViewport(true); scroll.addView(body);shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));setContentView(shell);
         ScrollView current=scroll;current.post(()->current.scrollTo(0,previousY));
         switch(page) {
+            case "lg-setup": if(lgSetup==null)lgSetup=new LgSetup(this);lgSetup.render(body);break;
             case "tvs": renderTvs(); break;
             case "overview": renderOverview(); break;
             case "settings": renderSettings(); break;
@@ -314,6 +316,7 @@ public final class MainActivity extends Activity {
         Button pair=button(body,t("pair"),()->navigate("pair"));leadingIcon(pair,"add");pair.setTag("pair.open");pair.setEnabled(!vaultFailed);pair.setTextColor(ground);pair.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000),background(accent,28),null));pair.setCompoundDrawableTintList(ColorStateList.valueOf(ground));pair.setMinHeight(dp(56));
         navigationRow(body,"tv",t("install_android"),t("install_android_hint"),()->startActivityForResult(
             new android.content.Intent(this,SetupActivity.class),72)).setTag("install.open");
+        navigationRow(body,"tv",t("lg-setup"),t("lg_setup_hint"),()->navigate("lg-setup")).setTag("lg.open");
         if(!prefs().getBoolean("show-demo",false))return;
         body.addView(text(t("demo"),13,muted));
         for(int i=0;i<tvs.length;i++) {
@@ -842,6 +845,7 @@ public final class MainActivity extends Activity {
         super.onActivityResult(request,result,data);
         if(request==71 && result==RESULT_OK && data!=null){String qr=data.getStringExtra("qr");if(qr!=null)beginPairing(qr);}
         if(request==72 && result==RESULT_OK)navigate("pair");
+        if(request==73 && result==RESULT_OK && data!=null && data.getData()!=null){if(lgSetup==null)lgSetup=new LgSetup(this);lgSetup.select(data.getData());}
     }
     void beginPairing(String qr) {
         cancelPairing();page="pair";
@@ -891,9 +895,9 @@ public final class MainActivity extends Activity {
         } catch(Exception e){next.release();player=null;notice("audio_missing");}
     }
     void stopAudio() {if(player!=null){player.release();player=null;}}
-    @Override protected void onStart(){super.onStart();phoneForeground=true;schedulePoll();}
-    @Override protected void onStop(){phoneForeground=false;polling.removeCallbacksAndMessages(null);stopAudio();if(toast!=null)toast.cancel();super.onStop();}
-    @Override protected void onDestroy(){cancelPairing();io.shutdownNow();super.onDestroy();}
+    @Override protected void onStart(){super.onStart();phoneForeground=true;schedulePoll();if(lgSetup!=null&&page.equals("lg-setup"))render();}
+    @Override protected void onStop(){phoneForeground=false;polling.removeCallbacksAndMessages(null);stopAudio();if(lgSetup!=null)lgSetup.close();if(toast!=null)toast.cancel();super.onStop();}
+    @Override protected void onDestroy(){cancelPairing();if(lgSetup!=null)lgSetup.close();io.shutdownNow();super.onDestroy();}
     void confirmDiscard(Runnable next) {new AlertDialog.Builder(this).setMessage(t("discard")).setNegativeButton(t("cancel"),null).setPositiveButton(t("discard_yes"),(d,w)->next.run()).show();}
     void back() {
         if(networkBusy&&!page.equals("pair"))return;

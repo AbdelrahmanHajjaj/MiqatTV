@@ -52,27 +52,43 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
 
 1. [x] Android installer integration: commit `7415045`; shared runtime, private
    host, bilingual entry/cancel/incomplete/success handoff. Local build/lint,
-   core/43 Python regressions and owned-emulator UI/LAN checks pass. PR CI pending.
-2. [ ] LG installation: research official CLI protocol, choose minimal SSH client,
+   core/43 Python regressions and owned-emulator UI/LAN checks pass. Validate CI
+   passed; companion CI exposed an asynchronous Activity-result test race on API
+   34. The fixture now waits for the actual resumed pairing page with a deadline.
+2. [x] LG installation: research official CLI protocol, choose minimal SSH client,
    implement strict input/package bounds, host-key confirmation/pinning, private
    credentials, local package install/verify/launch and recovery/status guide.
-   Test protocol with a local fixture; no physical TV changes.
-3. [ ] Unify Android/LG setup presentation with phone styling; inspect bilingual
-   portrait/landscape and large text; preserve safe cancellation/recovery.
+   Tested JSch 2.28.8 against the local SSH/HTTP fixture through the owned phone
+   emulator: unknown/changed host key rejection, bad passphrase, real IPK transfer
+   and MD5, failed install with unchanged version, explicit retry, version readback
+   and launch pass. Private keys/passphrases are session-memory only; only the
+   approved host key persists. Three pure-Java/Python archive/version tests pass.
+   No physical TV changes. Sources: LG CLI 3.2.6 install/novacom/luna and its
+   command-service.json; LG official Developer Mode/CLI documentation.
+3. [x] Unify Android/LG setup presentation with phone styling; preserve safe
+   cancellation/recovery. Native
+   bilingual portrait setup/invalid-host/password-state/handoff checks pass;
+   renders inspected, 46 Python/Java regressions and generator checks pass.
 4. [ ] Standalone phone prayer storage/calculation/settings and portable reminder
    policy; focused civil-day/DST/offset/high-latitude regressions.
 5. [ ] Native alarm/notification/audio lifecycle and per-prayer controls; permission,
    reboot/time changes, duplicates, stale events and Stop/interruption regressions.
 6. [ ] Independent prayer Home/phone settings/appearance with existing TV areas;
    no TV dependency; bilingual rendered/native behavior checks and persistence.
-7. [ ] Complete affected tests/CI, inspect packaged media/notices and private-data
+7. [ ] Complete affected tests/CI and final bilingual portrait/landscape/large-text
+   UI checks, inspect packaged media/notices and private-data
    staged review, rewrite PR for final scope, export fixed `Miqat-latest.apk`.
    Record physical acceptance as awaiting owner's combined feedback.
 
 ## Current resume point
 
-Start step 2: inspect LG CLI key acquisition/SSH install/status semantics and
-existing cached dependencies. Step 1 is committed/pushed with a clean worktree.
-Existing screenshot feedback: installer typography/large hero and outlined cards
-differ from companion's compact native style; address in step 3.
+Steps 2–3 are complete for local validation: installer palette projects from canonical tokens via
+tools/catalogs.mjs, headings use Alexandria, cards/buttons match the companion,
+and decorative hero is compact and only animates during active work. Builds/lint
+and native UI/SSH fixtures pass. Continue with step 4: standalone prayer storage,
+calculation, settings and portable reminder policy before native alarm playback.
+Owned read-only emulator details are in ignored state/emulator-session.json.
+Verify the recorded process/command before stopping it; do not adopt another
+session. Local fixture servers exit after each test.
+Current private logs are state/lg-install-wire.log, lg-build.log and catalogs-test.log.
 LG feedback mentioned by owner has not yet been supplied; do not invent its cause.

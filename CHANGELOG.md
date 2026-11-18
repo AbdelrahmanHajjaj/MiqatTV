@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add LG Developer Mode installation/update from the phone, with explicit SSH
+  identity approval, local Miqat IPK checks, downgrade protection and installed
+  version verification. Keep setup credentials in memory for the session.
+- Match Android setup to the companion's canonical palette, Alexandria headings,
+  filled cards and compact hero; avoid idle decorative animation.
+
 - Add Set up Android TV inside the Miqat phone companion (0.1.4), reusing the
   standalone installer's guarded installation, cleanup and recovery. Follow the
   phone language and offer normal pairing after successful setup. Correct the

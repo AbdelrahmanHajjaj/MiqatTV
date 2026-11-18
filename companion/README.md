@@ -30,7 +30,9 @@ local APK/download, guarded ADB setup, optional reviewed cleanup and recovery.
 It follows the phone language. Successful setup offers **Pair TV**; cancelling
 or finishing incomplete setup returns to Your TVs. Installation does not grant
 everyday remote access: normal TV approval is still required. LG can be paired
-after separate installation; phone-based LG installation is not implemented yet.
+through **Your TVs → Set up LG TV**, using Developer Mode, SSH host-key approval
+and a local Miqat IPK. SSH credentials are session-only and independent from
+ordinary remote pairing. See [LG setup and limits](../docs/WEBOS.md).
 See [setup and recovery](../docs/ANDROID-SETUP.md).
 
 Miqat uses tv.miqat packages and its own QR prefix. Install/pair fresh; old-app

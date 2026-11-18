@@ -15,15 +15,15 @@ import android.widget.TextView;
 
 /**
  * Miqat’s Mihrab look (shared/design/mihrab/tokens.json) for a phone: lapis ground, gold accent, plaster text, Alexandria
- * for the interface and Amiri (Arabic) or Marcellus (English) for titles. Small factories, so the screens in
+ * for both interface and headings. Small factories, so the screens in
  * MainActivity read as layout.
  */
 final class Ui {
     private Ui() {}
 
-    static final int LAPIS_900 = 0xff033B44, LAPIS_800 = 0xff094650, LAPIS_700 = 0xff155763,
-            GOLD_400 = 0xffEBC678, GOLD_200 = 0xffFFE0A0, PLASTER = 0xffF5EEDC, MIST = 0xffAAC4C7,
-            LINE_SOFT = 0x40F5EEDC, GOLD_SOFT = 0x26EBC678, CORAL = 0xffe39a86, CORAL_SOFT = 0x26e39a86;
+    static final int LAPIS_900 = InstallerColors.LAPIS_900, LAPIS_800 = InstallerColors.LAPIS_800, LAPIS_700 = InstallerColors.LAPIS_700,
+            GOLD_400 = InstallerColors.GOLD_400, GOLD_200 = InstallerColors.GOLD_200, PLASTER = InstallerColors.PLASTER_100, MIST = InstallerColors.MIST_400,
+            LINE_SOFT = (PLASTER & 0xffffff) | 0x40000000, GOLD_SOFT = (GOLD_400 & 0xffffff) | 0x26000000, CORAL = 0xffe39a86, CORAL_SOFT = 0x26e39a86;
 
     private static Typeface light, regular, medium, semibold, display;
 
@@ -34,7 +34,7 @@ final class Ui {
             medium = c.getResources().getFont(R.font.alexandria_medium);
             semibold = c.getResources().getFont(R.font.alexandria_semibold);
         }
-        display = c.getResources().getFont(arabic(c) ? R.font.amiri_bold : R.font.marcellus_regular);
+        display = Typeface.create(regular, Typeface.BOLD);
     }
 
     /** Whether the Arabic strings are in use (values-ar), which is also what decides the title face. */
@@ -61,15 +61,15 @@ final class Ui {
     }
 
     static TextView title(Context c, CharSequence s) {
-        TextView t = text(c, s, GOLD_400, arabic(c) ? 30 : 28, display);
-        t.setGravity(Gravity.CENTER);
+        TextView t = text(c, s, PLASTER, 24, display);
+        t.setGravity(Gravity.START);
         t.setLineSpacing(0, 1.1f);
         return t;
     }
 
     static TextView lead(Context c, CharSequence s) {
-        TextView t = text(c, s, MIST, 15, light);
-        t.setGravity(Gravity.CENTER);
+        TextView t = text(c, s, MIST, 15, regular);
+        t.setGravity(Gravity.START);
         return t;
     }
 
@@ -94,8 +94,7 @@ final class Ui {
     /** A lapis-800 card with a soft line, radius 18. */
     static LinearLayout card(Context c) {
         LinearLayout l = column(c);
-        GradientDrawable bg = round(LAPIS_800, 18, c);
-        bg.setStroke(dp(c, 1), LINE_SOFT);
+        GradientDrawable bg = round(LAPIS_800, 24, c);
         l.setBackground(bg);
         int p = dp(c, 16);
         l.setPadding(p, p, p, p);
@@ -133,12 +132,11 @@ final class Ui {
     }
 
     static TextView secondary(Context c, CharSequence s, View.OnClickListener click) {
-        TextView b = text(c, s, PLASTER, 15, medium);
+        TextView b = text(c, s, GOLD_400, 15, medium);
         b.setGravity(Gravity.CENTER);
         b.setMinHeight(dp(c, 50));
         b.setPadding(dp(c, 20), dp(c, 12), dp(c, 20), dp(c, 12));
-        GradientDrawable bg = round(0x00000000, 25, c);
-        bg.setStroke(dp(c, 1), LINE_SOFT);
+        GradientDrawable bg = round(LAPIS_800, 24, c);
         pressable(b, bg, 0x33F5EEDC);
         b.setOnClickListener(click);
         return b;

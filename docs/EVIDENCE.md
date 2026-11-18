@@ -1,5 +1,31 @@
 # Validation evidence
 
+## LG phone setup and aligned installers — 18 November 2026
+
+Phone setup now uses JSch 2.28.8, based on official LG CLI 3.2.6's Developer Mode
+key acquisition, SSH transport and public Luna install/list/launch protocol.
+Local SSH/HTTP fixture through the owned phone emulator passes unknown/changed
+host-key rejection, bad-passphrase rejection, real Miqat IPK upload/MD5 verification,
+failed install with unchanged version, explicit retry, installed-version readback,
+launch and removal of only the successful operation's temporary package. No
+physical TV was connected or changed. SSH keys/passphrases stay session-only;
+accepted public host keys persist. Legacy SSH algorithms are scoped to LG setup.
+
+Three new pure-Java/Python checks cover IPK structure/size/truncation, other-app
+and duplicate metadata rejection, and numeric downgrade ordering. Full root
+suite: 46 pass. Canonical/generator/isolated validation passes. Companion and
+standalone installer assemble/lint pass; inherited warnings remain identified.
+Native English/Arabic checks pass for LG entry/invalid-address rejection/private
+password state and Android setup completion/cancellation. Portrait renders of
+both setup flows were inspected after matching canonical palette, Alexandria
+headings, filled cards/buttons and compact static hero. Existing pinned-LAN
+behavior remains separate from privileged installation.
+
+Companion CI initially exposed a fixture race: UI-idle did not imply the Activity
+result had reached the caller. The regression now waits for the actual resumed
+pairing page with a deadline; assertions/result checks remain intact. Final CI
+and combined owner physical acceptance remain open until full phone delivery.
+
 ## Companion installation integration — 18 November 2026
 
 Based on merged companion main `3c5b38e`; phone 0.1.4, standalone installer 1.1.0.

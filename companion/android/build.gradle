@@ -34,6 +34,7 @@ dependencies {
     implementation 'tv.miqat:companion-core'
     implementation 'tv.miqat:core'
     implementation 'com.google.zxing:core:3.5.4'
+    implementation 'com.github.mwiede:jsch:2.28.8'
 }
 def generateCompanion = tasks.register('generateCompanion', Exec) {
     inputs.files(file('../generate.mjs'), file('../icons.mjs'), file('../contract.json'), file('../strings.json'), file('../protocol/lan.json'), file('../../tools/ui-contract.mjs'))

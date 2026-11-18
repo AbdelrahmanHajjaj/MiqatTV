@@ -17,12 +17,13 @@ import java.util.*;
 
 /** Run only on an explicitly selected owned phone emulator; no TV/device integration. */
 public final class CompanionCheck extends Instrumentation {
-    boolean lan,live,camera,lg,captures;
-    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
+    boolean lan,live,camera,lg,captures,lgInstall;
+    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
     static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
     @Override public void onStart() {
         Bundle result=new Bundle(); int count=0;
         try {
+            if(lgInstall){LgInstallCheck.run(this);result.putString("stream","PASS: LG SSH identity rejection, passphrase, IPK upload/hash, failed install, explicit retry, version verification and launch against local fixture\n");finish(-1,result);return;}
             if(camera){CameraCheck.run(this);result.putString("stream","PASS: scanner opens and releases the owned emulator virtual camera; no physical-camera acceptance\n");finish(-1,result);return;}
             if(live){LiveUiCheck.run(this,lg?"lg":"android");result.putString("stream",lg?"PASS: phone UI paired with the native LG TLS/actual settings fixture; capabilities, 5% volume, preview/Apply/Cancel, recreation, reconnect without upload, transport loss and Arabic stale cache\n":"PASS: phone UI paired with the actual TV app in a second owned emulator; real settings, preview/Apply/Cancel, recreation, reconnect without upload, actual transport loss and Arabic stale cache\n");finish(-1,result);return;}
             if(lan) {
@@ -38,6 +39,15 @@ public final class CompanionCheck extends Instrumentation {
                 if(error[0]!=null)throw new AssertionError(lang,error[0]);
                 android.os.SystemClock.sleep(4000);
                 runOnMainSync(()->{activity.page="tvs";activity.render();});waitForIdleSync();capture(activity,lang+"-tvs.png");centeredIcon(activity,"pair.open");
+                runOnMainSync(()->{
+                    activity.getWindow().getDecorView().findViewWithTag("lg.open").performClick();
+                    check(activity.page.equals("lg-setup"),"LG setup entry");
+                    EditText phrase=activity.getWindow().getDecorView().findViewWithTag("lg.passphrase");
+                    check(phrase!=null&&!phrase.isSaveEnabled(),"LG passphrase must not enter saved view state");
+                    EditText address=activity.getWindow().getDecorView().findViewWithTag("lg.host");address.setText("127.0.0.1");
+                    activity.getWindow().getDecorView().findViewWithTag("lg.connect").performClick();
+                    check(!activity.networkBusy,"Invalid LG address must be rejected before networking");
+                });waitForIdleSync();capture(activity,lang+"-lg-setup.png");
                 runOnMainSync(()->{activity.selected=0;activity.readSettings();activity.page="settings";activity.section="appearance";activity.appearance=null;activity.render();});
                 waitForIdleSync();capture(activity,lang+"-appearance.png");
                 runOnMainSync(()->{activity.appearance=null;activity.page="overview";activity.render();});waitForIdleSync();capture(activity,lang+"-remote.png");

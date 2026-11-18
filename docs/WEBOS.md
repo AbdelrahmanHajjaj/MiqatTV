@@ -15,6 +15,27 @@ Detailed physical remote and power/lifecycle acceptance remain pending. Newer LG
 
 ## Build and install
 
+The Android Miqat phone app includes **Your TVs → Set up LG TV**. Enable LG's
+Developer Mode and Key Server on the TV, select a local Miqat IPK on the phone,
+and enter the TV's private IPv4 address. First confirm the SSH identity on your
+trusted home network; then enter LG's case-sensitive passphrase and connect.
+Review the installed/selected version before explicitly installing or updating.
+The phone verifies transfer bytes and the installed version, refuses downgrades,
+and can launch Miqat before ordinary phone pairing. It does not uninstall apps.
+
+Only the accepted SSH public host key persists. The private key and passphrase
+are session-memory only; leaving setup closes SSH. LG's key server uses local
+HTTP for the encrypted private-key file; SSH identity checking remains strict.
+Old Developer Mode servers may require legacy RSA/SHA-1 SSH algorithms, confined
+to this installer. Ordinary companion pairing remains pinned HTTPS.
+
+If interrupted or refused, reconnect to read the installed version before retrying;
+do not uninstall Miqat to recover an update. Keep Developer Mode active and extend
+its session in LG's app before expiry; expiry can remove developer-installed apps.
+An expired session needs Developer Mode setup and installation again. This is not
+root access, system Home replacement, Android-style cleanup or standby wake.
+Current phone-install validation is a local SSH fixture, not physical LG acceptance.
+
 Use JDK 17 and Node 24, and prepare the shared audio inputs in [BUILD.md](BUILD.md).
 Run from the repository root:
 

@@ -58,17 +58,19 @@ final class Hero extends View {
     void set(Mode m) {
         mode = m;
         progress = -1;
+        animateIfNeeded();
         invalidate();
     }
 
     void progress(float p) {
         progress = p;
+        animateIfNeeded();
         invalidate();
     }
 
     @Override protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        clock.start();
+        animateIfNeeded();
     }
 
     @Override protected void onDetachedFromWindow() {
@@ -77,7 +79,13 @@ final class Hero extends View {
     }
 
     @Override protected void onMeasure(int w, int h) {
-        setMeasuredDimension(MeasureSpec.getSize(w), Ui.dp(getContext(), 196));
+        setMeasuredDimension(MeasureSpec.getSize(w), Ui.dp(getContext(), 72));
+    }
+
+    private void animateIfNeeded() {
+        boolean moving=mode==Mode.SEARCH || mode==Mode.PROGRESS&&progress<0;
+        if(isAttachedToWindow()&&ValueAnimator.areAnimatorsEnabled()&&moving){if(!clock.isStarted())clock.start();}
+        else clock.cancel();
     }
 
     @Override protected void onSizeChanged(int w, int h, int ow, int oh) {

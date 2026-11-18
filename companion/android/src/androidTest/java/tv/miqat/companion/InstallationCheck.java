@@ -65,7 +65,15 @@ final class InstallationCheck {
             pair.performClick();
         });
         test.waitForIdleSync();
-        CompanionCheck.check(phone.page.equals("pair"), "Completed setup must open ordinary pairing");
+        // ActivityManager delivers results asynchronously after the UI queue becomes idle.
+        long deadline = android.os.SystemClock.uptimeMillis() + 10000;
+        boolean[] pairedPage = {false};
+        do {
+            test.runOnMainSync(() -> pairedPage[0] = phone.page.equals("pair") && phone.hasWindowFocus());
+            if (pairedPage[0]) break;
+            android.os.SystemClock.sleep(50);
+        } while (android.os.SystemClock.uptimeMillis() < deadline);
+        CompanionCheck.check(pairedPage[0], "Completed setup must open ordinary pairing");
         CompanionCheck.check(phone.pairing == null, "Setup must not automatically approve a phone");
         test.runOnMainSync(phone::finish);
         test.waitForIdleSync();

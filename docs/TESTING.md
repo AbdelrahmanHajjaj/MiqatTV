@@ -147,3 +147,13 @@ setup return without pairing, and exercises the successful setup-to-pairing resu
 Completion is a native UI fixture; this does not perform an ADB installation or
 prove cleanup/restore on a physical TV. The standalone installer must still build
 and lint when changing `installer/runtime` or its shared source directories.
+
+LG phone installation: `tests/test_lg_package.py` exercises bounded IPK metadata
+inspection and downgrade protection on the JVM. With the companion APK/test APK
+on an explicitly owned emulator, run `node companion/check-lg-install.cjs SERIAL
+AVD PATH_TO_INSTALLED_WEBOS_CLI MIQAT_IPK [ADB]`. The CLI dependency supplies its
+existing ssh2 test server. This fixture binds only local ports 9922/9991, verifies
+the emulator/AVD identity, and exercises native SSH/key/install behavior with
+ephemeral keys and a real local package. It never contacts a physical TV. Do not
+reuse these fixture credentials for a TV. Physical LG installation remains a
+separate owner acceptance step.

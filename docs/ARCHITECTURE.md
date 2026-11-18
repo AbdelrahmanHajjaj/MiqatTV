@@ -70,5 +70,6 @@ The Android companion also hosts `installer/runtime` through a private setup
 activity. The standalone installer uses that same implementation. Installation
 credentials/recovery records live in the hosting app's private storage, separately
 from ordinary companion LAN credentials; the two installed apps do not share
-private files. The installer is currently Android TV only. Future standalone
-phone prayer/iOS work is sequenced in [WORK.md](WORK.md).
+private files. LG phone setup uses its own foreground SSH transport, explicit
+host-key approval and local IPK verification; keys/passphrases remain session-only.
+Phone prayer/iOS work is sequenced in [WORK.md](WORK.md).
