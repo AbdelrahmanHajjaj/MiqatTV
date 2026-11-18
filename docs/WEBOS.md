@@ -161,3 +161,9 @@ to Back. Up/Down follow the visible control order, including Reject and Approve.
 With a QR open, the controls scroll independently so the complete code remains
 visible. Version 0.2.26 passes bilingual mocked navigation checks; physical remote
 confirmation of this correction remains pending.
+
+
+Version 0.2.27 preserves the QR element while pending/approval controls update.
+Bilingual DOM-retention and focus regressions pass; physical latency retest is
+pending. This legacy TV profile uses Web Inspector console/timeline diagnostics;
+`ares-log` is not supported for the TV profile.

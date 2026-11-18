@@ -73,6 +73,14 @@ final class Phones {
         if(index<0){if(phones.size()>=64)throw new IllegalStateException("Paired TV limit reached");phones.add(phone);}else phones.set(index,phone);
         write(phones);
     }}
+    void remove(Phone expected)throws Exception {synchronized(LOCK){
+        List<Phone> phones=load();
+        for(int i=0;i<phones.size();i++)if(phones.get(i).pin.equals(expected.pin)) {
+            Phone current=phones.get(i);
+            if(!Pairing.equal(current.id,expected.id)||!Pairing.equal(current.secret,expected.secret))throw new IllegalStateException("TV grant changed");
+            phones.remove(i);write(phones);return;
+        }
+    }}
     Phone update(Phone expected,java.util.function.UnaryOperator<Phone> change)throws Exception {synchronized(LOCK){
         List<Phone> phones=load();
         for(int i=0;i<phones.size();i++)if(phones.get(i).pin.equals(expected.pin)) {

@@ -37,8 +37,8 @@ final class PairRequest {
     }
     /** Rescanning a known identity may repair its address; existing credentials still have to authenticate. */
     Phones.Phone reconnect()throws Exception {
-        ensureClient();
         for(Phones.Phone known:store.read())if(known.pin.equals(endpoint.pin)) {
+            certificate=known.certificate;client=new LanClient(endpoint,config,certificate);
             Phones.Phone moved=new Phones.Phone(endpoint.url,endpoint.pin,certificate,known.id,known.secret,known.name,known.profile,known.pending);
             if(moved.pending)try{return complete(moved,client,store);}catch(java.io.IOException expired){return null;}
             LanClient.Result info=client.call("GET","/v1/info",null,moved.credential());

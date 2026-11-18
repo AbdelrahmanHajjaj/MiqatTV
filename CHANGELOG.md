@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Keep LG QR artwork mounted while phone approval changes, and let the phone
+  finish connecting before optional control discovery completes (LG 0.2.27,
+  phone 0.1.3). Reuse stored pinned certificates when rescanning known TVs.
+- Add Forget TV to the phone's TV-list and Remote menus; remove only that
+  phone's saved TV record/cache. TV-side revocation still uses its remote.
+- Make native/LG test screenshots opt-in instead of creating evidence folders.
+
 - Center the phone pairing-button icons beside their labels (0.1.2), and let
   Up/Down navigate LG pairing from Back through enabled controls while the QR
   stays visible (0.2.26).

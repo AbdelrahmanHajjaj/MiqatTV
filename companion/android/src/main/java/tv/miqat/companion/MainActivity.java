@@ -32,7 +32,9 @@ public final class MainActivity extends Activity {
     final List<LanTv> lanTvs=new ArrayList<>();
     final ExecutorService io=Executors.newFixedThreadPool(2);
     Phones phones;
-    boolean networkBusy,vaultFailed;
+    boolean networkBusy,vaultFailed,remoteLoading;
+    int remoteGeneration;
+    LanTv remoteTarget;
     String networkMessage="working";
     int networkGeneration;
     final JSONObject[] demoRemotes={new JSONObject(),new JSONObject()};
@@ -303,7 +305,11 @@ public final class MainActivity extends Activity {
         }
         for(int i=0;i<lanTvs.size();i++) {
             final int index=i+2;LanTv tv=lanTvs.get(i);
-            navigationRow(body,"tv",tv.phone.name,(tv.phone.profile.equals("android")?"Android TV":"LG webOS")+" · "+t(tv.online?"connected":"disconnected"),()->{selected=index;snapshot=null;appearance=null;section="";clearPending();page="overview";readRemote();render();}).setTag("tv."+tv.key);
+            LinearLayout row=navigationRow(body,"tv",tv.phone.name,(tv.phone.profile.equals("android")?"Android TV":"LG webOS")+" · "+t(tv.online?"connected":"disconnected"),()->{selected=index;snapshot=null;appearance=null;section="";clearPending();page="overview";readRemote();render();});row.setTag("tv."+tv.key);
+            row.removeViewAt(row.getChildCount()-1);
+            Button more=iconButton(row,"more",t("more_actions"),()->{
+                PopupMenu menu=new PopupMenu(this,row);menu.getMenu().add(t("forget_tv")).setOnMenuItemClickListener(item->{confirmForget(tv);return true;});menu.show();
+            });more.setTag(tv.key+".forget");
         }
         Button pair=button(body,t("pair"),()->navigate("pair"));leadingIcon(pair,"add");pair.setTag("pair.open");pair.setEnabled(!vaultFailed);pair.setTextColor(ground);pair.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000),background(accent,28),null));pair.setCompoundDrawableTintList(ColorStateList.valueOf(ground));pair.setMinHeight(dp(56));
         if(!prefs().getBoolean("show-demo",false))return;
@@ -320,7 +326,8 @@ public final class MainActivity extends Activity {
         iconButton(options,"more",t("more_actions"),()->{
             PopupMenu menu=new PopupMenu(this,options);
             menu.getMenu().add(t("rename")).setOnMenuItemClickListener(item->{renameTv();return true;});
-            menu.getMenu().add(t("updates")).setOnMenuItemClickListener(item->{navigate("updates");return true;});menu.show();
+            menu.getMenu().add(t("updates")).setOnMenuItemClickListener(item->{navigate("updates");return true;});
+            if(real()!=null){LanTv target=real();menu.getMenu().add(t("forget_tv")).setOnMenuItemClickListener(item->{confirmForget(target);return true;});}menu.show();
         });
         if(real()!=null||!prefs().getBoolean("show-demo",false))return;
         LinearLayout tools=card(body); tools.addView(text(t("demo_tools"),16,ink));
@@ -329,10 +336,27 @@ public final class MainActivity extends Activity {
         });
         button(tools,t("fail_next"),()->{ tv().setFailNextSave(true); notice("fail_armed"); });
     }
+    void confirmForget(LanTv target){
+        new AlertDialog.Builder(this).setTitle(t("forget_tv")).setMessage(t("forget_tv_info"))
+            .setNegativeButton(t("cancel"),null).setPositiveButton(t("forget_tv"),(dialog,which)->forgetTv(target)).show();
+    }
+    void forgetTv(LanTv target){
+        LanTv selectedTv=real();
+        network(()->{phones.remove(target.phone);return target;},removed->{
+            remoteGeneration++;remoteLoading=false;lanTvs.remove(removed);prefs().edit().remove("cache-"+removed.key).apply();
+            if(selectedTv==removed){cancelPairing();snapshot=null;appearance=null;clearPending();section="";selected=0;page="tvs";}
+            else if(selectedTv!=null)selected=lanTvs.indexOf(selectedTv)+2;
+            render();
+        },()->{render();notice("vault_failed");});
+    }
     void readRemote(){
         if(real()==null){if(!tv().getOnline())tv().setOnline(true);render();return;}
-        LanTv target=real();networkMessage="working";
-        network(()->{if(!target.connect())throw new java.io.IOException();return target.readRemote();},value->render(),()->{render();notice("remote_failed");});
+        LanTv target=real();if(remoteLoading&&remoteTarget==target)return;remoteTarget=target;final int generation=++remoteGeneration;remoteLoading=true;render();
+        io.execute(()->{
+            try{if(!target.online&&!target.connect())throw new java.io.IOException();target.readRemote();
+                runOnUiThread(()->{if(isDestroyed()||generation!=remoteGeneration)return;remoteLoading=false;if(real()==target&&page.equals("overview"))render();});
+            }catch(Exception unavailable){runOnUiThread(()->{if(isDestroyed()||generation!=remoteGeneration)return;remoteLoading=false;if(real()==target&&page.equals("overview")){render();notice("remote_failed");}});}
+        });
     }
     JSONObject remoteData(){
         if(real()!=null)return real().remote;
@@ -366,7 +390,7 @@ public final class MainActivity extends Activity {
         JSONObject state=remoteData();JSONArray offered=state.optJSONArray("commands");
         if(real()!=null&&real().remoteUncertain)body.addView(text(t("remote_uncertain"),14,accent));
         if(!online())body.addView(text(t("disconnected"),14,accent));
-        if(offered==null||offered.length()==0){body.addView(text(t(offered==null?"remote_failed":"remote_unavailable"),15,muted));return;}
+        if(offered==null||offered.length()==0){body.addView(text(t(remoteLoading?"loading_controls":offered==null?"remote_failed":"remote_unavailable"),15,muted));return;}
         LinearLayout navigation=horizontal(body);((LinearLayout.LayoutParams)navigation.getLayoutParams()).bottomMargin=dp(12);
         Button home=commandButton(navigation,"device.home","mihrab",t("tv_home"));flex(home);home.setForeground(null);home.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x22000000),background(surface,24),null));home.setText(t("tv_home"));home.setMinHeight(dp(88));home.setCompoundDrawablesRelative(null,Icons.get(this,"mihrab",accent),null,null);home.setCompoundDrawablePadding(dp(12));home.setPadding(dp(12),dp(8),dp(12),dp(8));
         Button inputs=commandButton(navigation,"device.inputs","input",t("tv_inputs"));flex(inputs);inputs.setForeground(null);inputs.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x22000000),background(surface,24),null));inputs.setText(t("tv_inputs"));inputs.setMinHeight(dp(88));inputs.setCompoundDrawablesRelative(null,Icons.get(this,"input",accent),null,null);inputs.setCompoundDrawablePadding(dp(12));inputs.setPadding(dp(12),dp(8),dp(12),dp(8));
@@ -841,7 +865,7 @@ public final class MainActivity extends Activity {
     void paired(Phones.Phone phone) {
         try {
             addPhone(phone);selected=2;for(int i=0;i<lanTvs.size();i++)if(lanTvs.get(i).phone.pin.equals(phone.pin))selected=i+2;
-            real().online=true;snapshot=null;appearance=null;clearPending();cancelPairing();page="overview";readRemote();render();notice("paired");
+            real().online=true;snapshot=null;appearance=null;clearPending();cancelPairing();page="overview";readRemote();notice("paired");
         }catch(Exception failed){cancelPairing();render();notice("vault_failed");}
     }
     void cancelPairing(){if(pairState.equals("requesting")&&networkBusy){networkGeneration++;networkBusy=false;networkMessage="working";}pairGeneration++;polling.removeCallbacksAndMessages(null);pairing=null;pairState="";pairCode="";}

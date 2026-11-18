@@ -246,3 +246,18 @@ keeps QR artwork visible. The reported Down failure was reproduced before fixing
 bilingual 80/100/150% pairing regressions and LG service/ES5 checks pass. Phone
 assemble/lint and native behavior checks pass. See EVIDENCE.md for receipts.
 Next: owner retest of the corrected APK and physical TV focus.
+
+
+## Connection responsiveness follow-up (18 November 2026)
+
+Owner reports faster QR but slow scan/approval and missing phone-side removal.
+Developer Mode service reports no UI exception; pinned physical TLS/tiny HTTP
+checks take 77–94 ms. Pairing messages are small; QR markup is about 724 KB.
+Phone 0.1.3 loads controls separately from authenticated connection and adds
+Forget TV with protected per-record removal. LG 0.2.27 preserves the QR DOM
+through request/approval updates, avoiding repeated image decoding. Known-TV
+rescans reuse their stored pinned certificate. No settings are fetched on connect.
+Phone build/lint, bilingual UI, delayed-controls navigation, encrypted removal,
+LG service/ES5 and bilingual 80/100/150% pairing regressions pass. Latest files
+are exported; LG is installed with current settings preserved. Physical retest
+is pending while Developer Mode console/timeline monitoring runs in memory.

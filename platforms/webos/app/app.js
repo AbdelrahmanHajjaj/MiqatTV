@@ -13,7 +13,7 @@
   var settingsConflict = false;
   var companionBridge = null, companionSession = '', companionUi = '', companionTimer = null;
   var companion = {supported: null, starting: false, phones: [], open: false}, pairingMessage = '';
-  var lastRemoteRequest = '', pairingSvgKey = '', pairingSvg = '';
+  var lastRemoteRequest = '', pairingSvgKey = '', pairingSvg = '', pairingRenderKey = '';
   var input = null, inputs = [], view = 'input', picker = null, page = 0;
   var screen = document.getElementById('screen'), video = document.getElementById('input-video');
   var bridges = [], instance = String(Date.now()), cachedDay = null, cacheKey = '', noticeTimer;
@@ -169,8 +169,6 @@
     catch (error) { stopCompanion(); companion.failure = 'service'; }
   }
   function pairingMarkup() {
-    var status = companion.starting || companion.supported === null ? s('pairingLoading') : companion.supported === false ? s('pairingUnavailable') :
-      companion.failure ? s('pairingNetwork') : pairingMessage;
     var content = '', qr = companion.qr;
     if (qr && companion.open) {
       var payload = window.PairingQr.encode(qr), key = payload + ':' + prefs.theme;
@@ -181,6 +179,12 @@
       }
       content = '<div class="pairing-qr" role="img" aria-label="' + escape(s('pairingScan')) + '"><div class="pairing-symbol">' + pairingSvg + '</div></div>';
     } else { pairingSvgKey = ''; pairingSvg = ''; }
+    return '<section class="page pairing-page">' + header(s('companionPhones'), 'pairing-back') +
+      '<div class="pairing-body' + (qr && companion.open ? ' has-qr' : '') + '">' + content + '<div class="pairing-controls">' + pairingControlsMarkup() + '</div></div></section>';
+  }
+  function pairingControlsMarkup() {
+    var status = companion.starting || companion.supported === null ? s('pairingLoading') : companion.supported === false ? s('pairingUnavailable') :
+      companion.failure ? s('pairingNetwork') : pairingMessage;
     var actions = '';
     if (companion.open && companion.ownsPairing) {
       if (companion.pending) {
@@ -200,10 +204,9 @@
       });
     }
     if (companion.failure) { actions += button('pairing-retry', t('حاول مجدداً', 'Retry')); }
-    return '<section class="page pairing-page">' + header(s('companionPhones'), 'pairing-back') +
-      '<div class="pairing-body' + (qr && companion.open ? ' has-qr' : '') + '">' + content + '<div class="pairing-controls">' +
-      (status ? '<p role="status">' + escape(status) + '</p>' : '') + actions + '</div></div></section>';
+    return (status ? '<p role="status">' + escape(status) + '</p>' : '') + actions;
   }
+
   function runRemoteCommand(command) {
     if (!command || typeof command.request !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(command.request) ||
         D.companionCommands.indexOf(command.id) < 0 || typeof command.value !== 'string' || command.value.length > 2048 || lastRemoteRequest === command.request) { return; }
@@ -533,6 +536,8 @@
     stage.setAttribute('data-layout', prefs.homeLayout); stage.setAttribute('data-side', prefs.archSide);
     stage.setAttribute('data-pattern', prefs.background); stage.setAttribute('data-prayers', prefs.prayerMode);
     stage.setAttribute('data-home-bar', prefs.homeBar); stage.setAttribute('data-quick-labels', String(prefs.quickLabels));
+    var pairingKey = view === 'pairing' && companion.open && companion.qr ? window.PairingQr.encode(companion.qr) + ':' + prefs.theme + ':' + prefs.lang + ':' + prefs.uiScale : '';
+    var pairingControls = pairingKey && pairingKey === pairingRenderKey && screen.querySelector('.pairing-controls');
     var html = '', now = new Date(), city = A.city(prefs.city);
     try {
       if (view === 'bar') {
@@ -554,7 +559,7 @@
       } else if (view === 'settings') {
         html = settingsMarkup();
       } else if (view === 'pairing') {
-        html = pairingMarkup();
+        html = pairingControls ? pairingControlsMarkup() : pairingMarkup();
       } else if (view === 'prayer-day') {
         dayViewMinute = Math.floor(+now / 60000);
         var today = schedule(now), h = A.hijri(now, prefs), bearing = A.qibla(prefs);
@@ -604,7 +609,9 @@
         }
       }
     } catch (error) { html = '<section class="page">' + header(t('تعذر عرض الصفحة', 'Page unavailable')) + actions(false) + '</section>'; lastError = error.message; }
-    screen.innerHTML = html;
+    if (pairingControls) { pairingControls.innerHTML = html; }
+    else { screen.innerHTML = html; }
+    pairingRenderKey = pairingKey;
     if (view === 'pairing') {
       var open = screen.querySelector('[data-action=pairing-open]');
       if (open) { open.disabled = companion.supported !== true || companion.starting || !!companion.failure; }

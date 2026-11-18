@@ -14,7 +14,8 @@ final class LanCheck {
     static void rejects(Task task)throws Exception {
         try{task.run();}catch(Exception expected){return;}throw new AssertionError("Accepted invalid input");
     }
-    static void run(Context context)throws Exception {
+    static void run(android.app.Instrumentation test)throws Exception {
+        Context context=test.getTargetContext();
         LanConfig config=new LanConfig(context);
         for(String text:new String[]{"{'a':1}","{a:1}","{\"a\":1,\"a\":2}","{\"a\":NaN}","{\"a\":true,}","{} {}","[]"})rejects(()->Json.read(text));
         check(Json.string(Json.read("{\"name\":\"هاتف\"}"),"name").equals("هاتف"));
@@ -31,13 +32,14 @@ final class LanCheck {
             public List<Pairing.Client> read(){return new ArrayList<>(saved);}
             public void write(List<Pairing.Client> clients){saved.clear();saved.addAll(clients);}
         },config.pairWindowMillis,config.maxPhones);
+        java.util.concurrent.CountDownLatch remoteStarted=new java.util.concurrent.CountDownLatch(1),remoteRelease=new java.util.concurrent.CountDownLatch(1);boolean[] delayRemote={false};
         int[] reads={0},writes={0},commands={0};String[] setting={"100"};boolean[] uncertain={false},dropAck={false},dropCommand={false};
         org.json.JSONArray controls=new org.json.JSONArray().put(new JSONObject().put("id","display.size").put("kind","number").put("section","display")
             .put("title",new JSONObject().put("ar","الحجم").put("en","Size")).put("options",new org.json.JSONArray()).put("available",true).put("save","immediate").put("default","100"));
         PairingRoutes routes=new PairingRoutes(pairing,new PairingRoutes.Settings(){
             public JSONObject info()throws Exception{return new JSONObject().put("protocol",1).put("profile","android").put("name","Fixture TV").put("systemLanguage","en");}
             public JSONObject read()throws Exception{reads[0]++;return new JSONObject().put("values",Json.object("display.size",setting[0])).put("controls",controls).put("profile","android").put("systemLanguage","en");}
-            public JSONObject remote()throws Exception{return new JSONObject().put("commands",new org.json.JSONArray(config.commands)).put("inputs",new org.json.JSONArray());}
+            public JSONObject remote()throws Exception{if(delayRemote[0]){remoteStarted.countDown();if(!remoteRelease.await(10,java.util.concurrent.TimeUnit.SECONDS))throw new java.io.IOException("Remote fixture timed out");}return new JSONObject().put("commands",new org.json.JSONArray(config.commands)).put("inputs",new org.json.JSONArray());}
             public JSONObject command(String id,String value)throws Exception{if(!config.commands.contains(id)||!value.isEmpty())throw new IllegalArgumentException();commands[0]++;return Json.object("status","accepted");}
             public JSONObject apply(JSONObject expected,JSONObject changes)throws Exception {
                 if(!Json.string(expected,"display.size").equals(setting[0]))return Json.object("status","conflict");
@@ -98,12 +100,11 @@ final class LanCheck {
             check(ScanActivity.recognizesQr(compact)&&ScanActivity.recognizesQr(qr));check(!ScanActivity.recognizesQr("https://example.invalid")&&!ScanActivity.recognizesQr("{}"));
             int beforeBootstrapReads=reads[0],beforeBootstrapWrites=writes[0];
             PairRequest compactRequest=new PairRequest(compact,context,fixture.store);
-            check(compactRequest.client==null&&compactRequest.reconnect()==null);
-            check(compactRequest.certificate.equals(identity.encodedCertificate()));
+            check(compactRequest.client==null&&compactRequest.reconnect()==null&&compactRequest.client==null);
             check(reads[0]==beforeBootstrapReads&&writes[0]==beforeBootstrapWrites);
             rejects(()->LanClient.certificate(new Endpoint(url,pairing.hash("wrong-identity"),config.port,true),config));
-            PairRequest phoneRequest=new PairRequest(qr,context,fixture.store);check(phoneRequest.reconnect()==null);
-            phoneRequest.request("Phone fixture");check(phoneRequest.poll()==null);check(pairing.clients().isEmpty());
+            new PairRequest(qr,context,fixture.store);PairRequest phoneRequest=compactRequest;check(phoneRequest.reconnect()==null);
+            phoneRequest.request("Phone fixture");check(phoneRequest.certificate.equals(identity.encodedCertificate()));check(phoneRequest.poll()==null);check(pairing.clients().isEmpty());
             pairing.approve(phoneRequest.nonce,SystemClock.elapsedRealtime());dropAck[0]=true;
             requests.clear();
             try{phoneRequest.poll();}catch(Exception lostReply){} // Recover the grant from encrypted storage, never resend settings.
@@ -123,6 +124,25 @@ final class LanCheck {
             check(adapter.connect()&&adapter.needsRefresh&&writes[0]==written);
             check(adapter.read().getValues().get("display.size").equals("110")&&!adapter.needsRefresh&&writes[0]==written);
             check(phoneRequest.reconnect()!=null&&writes[0]==written);
+            MainActivity activity=(MainActivity)test.startActivitySync(new android.content.Intent(context,MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+            Throwable[] uiFailure={null};delayRemote[0]=true;
+            try {
+                test.runOnMainSync(()->{try{activity.phones=fixture.store;activity.lanTvs.clear();activity.addPhone(adapter.phone);activity.selected=2;activity.real().online=true;activity.page="overview";activity.readRemote();}catch(Throwable error){uiFailure[0]=error;}});
+                if(uiFailure[0]!=null)throw new AssertionError(uiFailure[0]);
+                check(remoteStarted.await(5,java.util.concurrent.TimeUnit.SECONDS));
+                test.runOnMainSync(()->{try{
+                    check(activity.remoteLoading&&!activity.networkBusy);
+                    check(activity.getWindow().getDecorView().findViewWithTag("nav.settings").isEnabled());
+                    activity.tab("tvs");check(activity.page.equals("tvs"));
+                    check(activity.body.findViewWithTag(activity.real().key+".forget")!=null);
+                }catch(Throwable error){uiFailure[0]=error;}});
+                if(uiFailure[0]!=null)throw new AssertionError(uiFailure[0]);
+                remoteRelease.countDown();
+                LiveUiCheck.untilUi(test,()->!activity.remoteLoading);
+                test.runOnMainSync(()->activity.forgetTv(activity.real()));
+                LiveUiCheck.untilUi(test,()->!activity.networkBusy&&activity.lanTvs.isEmpty());
+                check(fixture.store.read().isEmpty());
+            } finally {remoteRelease.countDown();test.runOnMainSync(activity::finish);check(activity.io.awaitTermination(10,java.util.concurrent.TimeUnit.SECONDS));}
             pairing.revoke(pending.id);check(!adapter.connect());
         }
     }

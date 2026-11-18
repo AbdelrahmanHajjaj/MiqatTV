@@ -27,7 +27,7 @@ final class PhoneFixture implements AutoCloseable {
         try{LanCheck.rejects(store::read);LanCheck.rejects(()->store.put(phone));}finally{LanCheck.check(file.setReadable(true,true));}
         LanCheck.check(Arrays.equals(second,Files.readAllBytes(file.toPath())));
         byte[] tampered=second.clone();tampered[tampered.length-1]^=1;write(tampered);
-        LanCheck.rejects(store::read);LanCheck.rejects(()->store.put(phone));LanCheck.check(Arrays.equals(tampered,Files.readAllBytes(file.toPath())));
+        LanCheck.rejects(store::read);LanCheck.rejects(()->store.put(phone));LanCheck.rejects(()->store.remove(phone));LanCheck.check(Arrays.equals(tampered,Files.readAllBytes(file.toPath())));
         write(second);LanCheck.check(store.read().get(0).id.equals(phone.id));
         store.update(phone,current->new Phones.Phone(current.url,current.pin,current.certificate,current.id,current.secret,"Renamed TV",current.profile,false));
         store.put(phone);LanCheck.check(!store.read().get(0).pending&&store.read().get(0).name.equals("Renamed TV"));
@@ -47,6 +47,10 @@ final class PhoneFixture implements AutoCloseable {
         File tvFile=new File(directory,"companion-phones.json");LanCheck.check(tvFile.setReadable(false,false));
         try{LanCheck.rejects(tvStore::read);LanCheck.rejects(()->new Pairing(tvStore,300000,16));}finally{LanCheck.check(tvFile.setReadable(true,true));}
         LanCheck.check(tvStore.read().get(0).id.equals(phone.id));
+        LanCheck.rejects(()->store.remove(new Phones.Phone(url,phone.pin,phone.certificate,pairing.token(),phone.secret,"Stale grant","android",false)));
+        LanCheck.check(store.read().size()==3);
+        store.remove(phone);LanCheck.check(store.read().size()==2&&store.read().stream().noneMatch(record->record.pin.equals(phone.pin)));
+        store.remove(phone);LanCheck.check(store.read().size()==2);
         if(!file.delete())throw new IllegalStateException("Fixture cleanup failed");
     }
     private void write(byte[] bytes)throws Exception{try(FileOutputStream out=new FileOutputStream(file)){out.write(bytes);out.getFD().sync();}}

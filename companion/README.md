@@ -17,6 +17,8 @@ reads only on explicit entry; reconnect never uploads cached values. The TV
 validates baseline changes and preserves unrelated edits. Home, discovered
 inputs, radio and a 12-second adhan preview/Stop are explicit foreground commands.
 Uncertain writes/commands are never blindly replayed.
+Use Your TVs → ⋮ → Forget TV to remove a saved TV and its cache from the phone.
+Revoking phone access on the TV still requires the TV remote.
 
 `core/` contains Kotlin settings/draft rules; `android/` owns Views, camera and
 encrypted persistence; `android-shared/` owns LAN/QR helpers. `contract.json`
@@ -47,3 +49,6 @@ Native suites use `tv.miqat.companion.test/tv.miqat.companion.CompanionCheck`,
 optionally with `-e suite lan`, `camera`, `live` or `live-lg`. Owned-emulator live
 fixtures run via `companion/check-live.ps1` and `companion/check-lg.cjs` (historical
 Node executable supplied as its final argument). These are not physical-TV passes.
+
+Native screenshots are opt-in with `-e capture true`; LG browser captures use
+`--capture`. Normal checks print results without creating capture folders.
