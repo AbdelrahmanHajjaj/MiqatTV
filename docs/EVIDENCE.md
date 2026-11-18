@@ -1,5 +1,28 @@
 # Validation evidence
 
+## Standalone phone foundation — 19 November 2026
+
+Phone prayer settings are independent from TV settings/cache and default to alerts
+off until location confirmation. Shared canonical phone metadata declares modes,
+before/after reminders, per-prayer voice/offset/vibration and phone appearance.
+Eight generator tests pass. Native checks persist/reload phone settings, reject
+unknown IDs/types/ranges/steps/timezones and verify companion TV preferences are
+unchanged. Device-protected prayer preferences are excluded from transfer; no TV
+credential moves into this store.
+
+Five portable phone reminder tests pass, covering before/call/after, sunrise/off
+exclusion, handled IDs, simultaneous events, strict 120-second lateness and invalid
+inputs. Native phone astronomy compiles the same pinned Adhan source and minute
+adapter as TV. JVM checks reproduce the frozen 12 November 2026 Cairo vector,
+all methods' exact offsets, explicit Tokyo civil date despite a different device
+zone, New York's 23-hour DST day and unavailable polar results. Existing Java
+regression group passes (15 tests). No fixture/vector was rewritten.
+
+Phone assemble/lint and native metadata/storage plus bilingual companion/setup
+checks pass. The activity fixture now waits for each finished setup's destruction
+and caller resumption before opening the next; final outcome assertions remain.
+Prayer screens, alarms and playback are the next stages, not claimed complete here.
+
 ## LG phone setup and aligned installers — 18 November 2026
 
 Phone setup now uses JSch 2.28.8, based on official LG CLI 3.2.6's Developer Mode

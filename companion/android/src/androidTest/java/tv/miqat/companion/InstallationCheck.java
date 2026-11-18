@@ -44,7 +44,8 @@ final class InstallationCheck {
         }
         CompanionCheck.check(key.exists() == hadKey, "Opening setup must not create ADB credentials");
         test.runOnMainSync(installer::onBackPressed);
-        test.waitForIdleSync();
+        Activity cancelled = installer;
+        await(test, () -> cancelled.isDestroyed() && phone.hasWindowFocus(), "Cancelled setup did not return to its caller");
         CompanionCheck.check(phone.page.equals("tvs"), "Cancelling setup must return to TVs without pairing");
         installer = open(test, phone);
         showDone(test, installer, false);
@@ -54,7 +55,7 @@ final class InstallationCheck {
                 "Incomplete setup must not claim success");
             find(partial.getWindow().getDecorView(), partial.getString(tv.miqat.installer.R.string.finish)).performClick();
         });
-        test.waitForIdleSync();
+        await(test, () -> partial.isDestroyed() && phone.hasWindowFocus(), "Incomplete setup did not return to its caller");
         CompanionCheck.check(phone.page.equals("tvs"), "Incomplete setup must not open pairing");
         installer = open(test, phone);
         showDone(test, installer, true);
@@ -64,16 +65,8 @@ final class InstallationCheck {
             CompanionCheck.check(pair != null, "Successful embedded setup must offer pairing");
             pair.performClick();
         });
-        test.waitForIdleSync();
-        // ActivityManager delivers results asynchronously after the UI queue becomes idle.
-        long deadline = android.os.SystemClock.uptimeMillis() + 10000;
-        boolean[] pairedPage = {false};
-        do {
-            test.runOnMainSync(() -> pairedPage[0] = phone.page.equals("pair") && phone.hasWindowFocus());
-            if (pairedPage[0]) break;
-            android.os.SystemClock.sleep(50);
-        } while (android.os.SystemClock.uptimeMillis() < deadline);
-        CompanionCheck.check(pairedPage[0], "Completed setup must open ordinary pairing");
+        await(test, () -> completed.isDestroyed() && phone.page.equals("pair") && phone.hasWindowFocus(),
+            "Completed setup must open ordinary pairing");
         CompanionCheck.check(phone.pairing == null, "Setup must not automatically approve a phone");
         test.runOnMainSync(phone::finish);
         test.waitForIdleSync();
@@ -91,6 +84,7 @@ final class InstallationCheck {
     }
 
     private static Activity open(Instrumentation test, MainActivity phone) {
+        await(test, phone::hasWindowFocus, "Caller not resumed before opening setup");
         Instrumentation.ActivityMonitor monitor = test.addMonitor(SetupActivity.class.getName(), null, false);
         try {
             test.runOnMainSync(() -> {
@@ -101,6 +95,16 @@ final class InstallationCheck {
             CompanionCheck.check(installer != null, "Setup did not launch inside companion");
             test.waitForIdleSync();return installer;
         } finally { test.removeMonitor(monitor); }
+    }
+
+    private static void await(Instrumentation test, java.util.function.BooleanSupplier condition, String message) {
+        // An idle UI queue can precede ActivityManager's finish/result/resume callbacks.
+        long deadline=android.os.SystemClock.uptimeMillis()+10000;boolean[] ready={false};
+        do {
+            test.runOnMainSync(()->ready[0]=condition.getAsBoolean());if(ready[0])return;
+            android.os.SystemClock.sleep(50);
+        }while(android.os.SystemClock.uptimeMillis()<deadline);
+        CompanionCheck.check(false,message);
     }
 
     private static View find(View view, String text) {

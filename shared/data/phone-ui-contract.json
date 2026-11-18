@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "defaultCity": "cairo",
+  "controls": [
+    {"id":"prayer.method","section":"calculation","kind":"choice","label":"phone_method","choices":"methods","default":"EGYPTIAN"},
+    {"id":"prayer.asr","section":"calculation","kind":"choice","label":"phone_asr","choices":["shafi","hanafi"],"default":"shafi"},
+    {"id":"prayer.zone","section":"calculation","kind":"choice","label":"phone_zone","choices":"timezones","default":"system"},
+    {"id":"prayer.high-latitude","section":"calculation","kind":"choice","label":"phone_high_latitude","choices":["middle","seventh","angle"],"default":"middle"},
+    {"id":"prayer.sunrise-offset","section":"calculation","kind":"number","label":"phone_sunrise_offset","minimum":-30,"maximum":30,"step":1,"default":"0"},
+    {"id":"prayer.hijri-offset","section":"calculation","kind":"number","label":"phone_hijri_offset","minimum":-2,"maximum":2,"step":1,"default":"0"},
+    {"id":"reminders.enabled","section":"audio","kind":"toggle","label":"phone_alerts","default":"false"},
+    {"id":"reminders.voice","section":"audio","kind":"choice","label":"phone_voice","choices":"voices","default":"alafasy"},
+    {"id":"reminders.volume","section":"audio","kind":"number","label":"phone_volume","minimum":0,"maximum":100,"step":5,"default":"70"},
+    {"id":"reminders.duration","section":"audio","kind":"number","label":"phone_duration","minimum":0,"maximum":600,"step":30,"default":"0"},
+    {"id":"display.digits","section":"appearance","kind":"choice","label":"phone_digits","choices":["auto","western","eastern"],"default":"auto"},
+    {"id":"display.clock","section":"appearance","kind":"choice","label":"phone_clock","choices":["24","12"],"default":"24"},
+    {"id":"display.size","section":"appearance","kind":"number","label":"phone_size","minimum":80,"maximum":150,"step":10,"default":"100"},
+    {"id":"display.reduce-motion","section":"appearance","kind":"toggle","label":"phone_reduce_motion","default":"false"},
+    {"id":"appearance.theme","section":"appearance","kind":"choice","label":"phone_theme","choices":"themes","default":"mihrab"},
+    {"id":"appearance.background","section":"appearance","kind":"choice","label":"phone_background","choices":"backgrounds","default":"miqat_signature"}
+  ],
+  "perPrayer": [
+    {"suffix":"mode","kind":"choice","label":"phone_mode","choices":["off","notification","adhan"],"default":"adhan"},
+    {"suffix":"voice","kind":"choice","label":"phone_prayer_voice","choices":"prayerVoices","default":"inherit"},
+    {"suffix":"offset","kind":"number","label":"phone_offset","minimum":-30,"maximum":30,"step":1,"default":"0"},
+    {"suffix":"before","kind":"number","label":"phone_before","minimum":0,"maximum":60,"step":1,"default":"0"},
+    {"suffix":"after","kind":"number","label":"phone_after","minimum":0,"maximum":60,"step":1,"default":"0"},
+    {"suffix":"vibrate","kind":"toggle","label":"phone_vibrate","default":"false"}
+  ]
+}

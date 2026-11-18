@@ -27,7 +27,8 @@ the approved scope. Companion work belongs to its separate project/branch.
   identity uses a fresh installation; do not add legacy aliases.
 - Put deterministic policy in core, with explicit inputs/results. Keep astronomy,
   calendars, persistence, rendering, media, networking and OS APIs in shells.
-- Define controls/choices in shared/data/ui-contract.json and behavior in core.
+- Define TV controls/choices in shared/data/ui-contract.json, phone-only controls
+  in shared/data/phone-ui-contract.json, and behavior in core.
   Reuse shared numeric/choice editors, save/cancel rules, focus and design tokens.
   Declare missing shell capabilities; a catalog entry does not implement a UI.
 - Edit canonical sources and regenerate consumers. Check Android, LG and preview

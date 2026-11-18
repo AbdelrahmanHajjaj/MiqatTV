@@ -6,6 +6,27 @@ import {vectorIcon} from './icons.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
+export function generatePhone() {
+  const contract=read('shared/data/phone-ui-contract.json'),cities=read('shared/data/cities.json'),voices=read('shared/data/voices.json');
+  const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
+  const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:voices.map(x=>x.id),
+    prayerVoices:['inherit',...voices.map(x=>x.id)],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
+  if(contract.version!==1||!cities.some(c=>c.id===contract.defaultCity))throw Error('Invalid phone catalog version/location');
+  const ids=new Set();
+  for(const control of [...contract.controls,...contract.perPrayer]) {
+    const id=control.id??control.suffix;
+    if(typeof id!=='string'||ids.has(id)||!text[control.label]?.en||!text[control.label]?.ar||typeof control.default!=='string')throw Error('Invalid phone control: '+id);
+    ids.add(id);
+    if(control.kind==='number') {
+      if(![control.minimum,control.maximum,control.step].every(Number.isInteger)||control.step<1||control.minimum>control.maximum||
+         !/^-?\d+$/.test(control.default)||+control.default<control.minimum||+control.default>control.maximum||(+control.default-control.minimum)%control.step)throw Error('Invalid phone numeric control: '+id);
+    } else if(control.kind==='choice') {
+      const options=Array.isArray(control.choices)?control.choices:choices[control.choices];
+      if(!options||!options.includes(control.default)||new Set(options).size!==options.length)throw Error('Invalid phone choices: '+id);
+    } else if(control.kind!=='toggle'||!['true','false'].includes(control.default))throw Error('Invalid phone control kind: '+id);
+  }
+  return {contract,cities,voices,backgrounds};
+}
 export function generate(platforms = ['android','lg']) {
   const controls = read('shared/data/ui-contract.json'), strings = read('shared/data/strings.json');
   const contract = read('companion/contract.json');
@@ -104,6 +125,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const output = new URL('android/build/generated/companion/',import.meta.url);
   mkdirSync(output,{recursive:true});
   writeFileSync(new URL('catalog.json',output),JSON.stringify(generate()));
+  writeFileSync(new URL('phone.json',output),JSON.stringify(generatePhone()));
   const res = new URL('android/build/generated/companion-res/',import.meta.url);
   mkdirSync(new URL('drawable/',res),{recursive:true});
   mkdirSync(new URL('values/',res),{recursive:true});

@@ -1,6 +1,6 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-18. Branch `feature/companion-installation`, worktree
+Updated: 2026-11-19. Branch `feature/companion-installation`, worktree
 `state/companion-installation` under the primary Miqat checkout. Base: companion
 merge `3c5b38e`. Draft PR #9 owns this work and must describe the final scope.
 
@@ -69,8 +69,15 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
    cancellation/recovery. Native
    bilingual portrait setup/invalid-host/password-state/handoff checks pass;
    renders inspected, 46 Python/Java regressions and generator checks pass.
-4. [ ] Standalone phone prayer storage/calculation/settings and portable reminder
-   policy; focused civil-day/DST/offset/high-latitude regressions.
+4. [x] Standalone phone prayer storage/calculation/settings and portable reminder
+   policy. Phone-only metadata is canonical in shared/data/phone-ui-contract.json.
+   Five portable policy tests pass for modes, before/after reminders, duplicate
+   claims, exact late boundaries and simultaneous events. The native adapter uses
+   the same Adhan 1.2.1 source and minute-flooring adapter as TV; JVM checks pass
+   for the frozen Cairo vector, all methods/offsets, explicit civil zone, 23-hour
+   DST day and unavailable polar results. Eight generator tests and native
+   independent storage/type/range/TZ validation pass. Phone defaults keep alerts
+   off and require location confirmation. No prayer UI/alarm playback is exposed yet.
 5. [ ] Native alarm/notification/audio lifecycle and per-prayer controls; permission,
    reboot/time changes, duplicates, stale events and Stop/interruption regressions.
 6. [ ] Independent prayer Home/phone settings/appearance with existing TV areas;
@@ -82,11 +89,24 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
 
 ## Current resume point
 
-Steps 2–3 are complete for local validation: installer palette projects from canonical tokens via
-tools/catalogs.mjs, headings use Alexandria, cards/buttons match the companion,
-and decorative hero is compact and only animates during active work. Builds/lint
-and native UI/SSH fixtures pass. Continue with step 4: standalone prayer storage,
-calculation, settings and portable reminder policy before native alarm playback.
+Step 4 foundation is validated locally. Continue step 5: native AlarmManager
+scheduling, permission checks, private receiver/foreground media playback service,
+durable duplicate claims, boot/time/TZ/settings recovery, Stop and audio focus.
+Then step 6 renders independent prayer Home/settings/appearance and updates root
+navigation while preserving nested TV remote/settings behavior.
+
+Chosen Android approach: user-authorized prayer alarms, a service only during
+audio, packaged approved clips, relative alarm volume (never change global volume
+or DND), and phone-only device-protected settings/claims for direct-boot recovery.
+Pairing credentials remain credential-protected/encrypted; never copy them into
+the phone prayer store. Device-protected preferences are excluded from transfer.
+Sources checked: Android official alarms, background-FGS restrictions, Direct Boot
+and Auto Backup documentation. No Mac/iOS runtime work has started.
+
+CI ordering issue: a later license-only run still caught the setup fixture opening
+the next activity before the previous finish completed. Local native checks now
+wait for destroyed setup + resumed caller at *each* transition, not only the final
+result; they pass. Push this checkpoint and check subsequent CI; do not blindly retry.
 Owned read-only emulator details are in ignored state/emulator-session.json.
 Verify the recorded process/command before stopping it; do not adopt another
 session. Local fixture servers exit after each test.

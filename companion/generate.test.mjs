@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
-import {generate} from './generate.mjs';
+import {generate,generatePhone} from './generate.mjs';
 import {vectorIcon} from './icons.mjs';
 const data=generate();
+test('phone controls retain independent defaults, real canonical locations/voices and bilingual metadata',()=>{
+  const phone=generatePhone();
+  assert.equal(phone.contract.controls.find(c=>c.id==='reminders.enabled').default,'false');
+  assert.ok(phone.cities.some(c=>c.id===phone.contract.defaultCity&&Number.isFinite(c.lat)&&Number.isFinite(c.lng)));
+  assert.deepEqual(phone.voices,JSON.parse(readFileSync(new URL('../shared/data/voices.json',import.meta.url))));
+  assert.ok(phone.contract.perPrayer.some(c=>c.suffix==='before'));
+  assert.ok(phone.contract.perPrayer.some(c=>c.suffix==='after'));
+  assert.ok(phone.backgrounds.includes(phone.contract.controls.find(c=>c.id==='appearance.background').default));
+});
 test('native icons reuse canonical geometry, preserve filled dots and reject active SVG',()=>{
   const icons=JSON.parse(readFileSync(new URL('../shared/design/icons.json',import.meta.url)));
   for(const svg of Object.values(icons)){const vector=vectorIcon(svg);assert.match(vector,/viewportWidth="24"/);assert.match(vector,/android:pathData=/);}

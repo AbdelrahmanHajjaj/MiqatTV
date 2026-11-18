@@ -204,6 +204,7 @@ function generate() {
     ]),
     ['platforms/android-tv/src/main/java/tv/miqat/home/CityCatalog.java', source],
     ['platforms/android-tv/src/main/java/tv/miqat/home/PrayerMethod.java', nativeMethods],
+    ['companion/android/src/main/java/tv/miqat/companion/PrayerMethod.java', nativeMethods.replace('package tv.miqat.home;', 'package tv.miqat.companion;')],
     ['platforms/android-tv/src/main/java/tv/miqat/home/RadioCatalog.java', nativeStations],
     ['platforms/android-tv/src/main/java/tv/miqat/home/VoiceCatalog.java', nativeVoices],
     ['tools/adhan-sources.tsv', voiceSources],

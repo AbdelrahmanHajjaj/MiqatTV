@@ -1,5 +1,18 @@
 plugins { id 'com.android.application' }
 
+def adhanSources = configurations.create('adhanSources') {
+    canBeConsumed = false
+    transitive = false
+}
+def generatedAdhan = layout.buildDirectory.dir('generated/adhan')
+def unpackAdhan = tasks.register('unpackAdhanSources', Sync) {
+    from({ zipTree(adhanSources.singleFile) }) {
+        include '**/*.java'
+        exclude 'com/batoulapps/adhan/data/CalendarUtil.java'
+    }
+    into generatedAdhan
+}
+
 android {
     namespace 'tv.miqat.companion'
     compileSdk 34
@@ -19,6 +32,8 @@ android {
     bundle { language { enableSplit = false } }
     packaging.resources.excludes += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF']
     sourceSets.main {
+        java.srcDir generatedAdhan
+        java.srcDir file('../../platforms/android-tv/src/main/java/com/batoulapps/adhan/data')
         java.srcDir file('../android-shared/src/main/java')
         assets.srcDir file('../android-shared/src/main/assets')
         assets.srcDir file('../protocol')
@@ -30,12 +45,14 @@ android {
     }
 }
 dependencies {
+    add(adhanSources.name, 'com.batoulapps.adhan:adhan:1.2.1:sources')
     implementation project(':installer-runtime')
     implementation 'tv.miqat:companion-core'
     implementation 'tv.miqat:core'
     implementation 'com.google.zxing:core:3.5.4'
     implementation 'com.github.mwiede:jsch:2.28.8'
 }
+tasks.withType(JavaCompile).configureEach { dependsOn(unpackAdhan) }
 def generateCompanion = tasks.register('generateCompanion', Exec) {
     inputs.files(file('../generate.mjs'), file('../icons.mjs'), file('../contract.json'), file('../strings.json'), file('../protocol/lan.json'), file('../../tools/ui-contract.mjs'))
     inputs.dir file('../../shared/data')
@@ -43,6 +60,7 @@ def generateCompanion = tasks.register('generateCompanion', Exec) {
     inputs.file file('../../shared/design/mihrab/tokens.json')
     inputs.files file('../../platforms/android-tv/src/androidTest/assets/ui-gaps.json'), file('../../platforms/android-tv/src/androidTest/assets/ui-choice-gaps.json'), file('../../platforms/webos/ui-gaps.json'), file('../../platforms/webos/ui-choice-gaps.json')
     outputs.file layout.buildDirectory.file('generated/companion/catalog.json')
+    outputs.file layout.buildDirectory.file('generated/companion/phone.json')
     outputs.dir layout.buildDirectory.dir('generated/companion-res')
     commandLine 'node', file('../generate.mjs')
 }

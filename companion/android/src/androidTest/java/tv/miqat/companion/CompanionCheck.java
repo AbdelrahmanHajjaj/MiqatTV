@@ -30,6 +30,7 @@ public final class CompanionCheck extends Instrumentation {
                 LanCheck.run(this);result.putString("stream","PASS: pinned TLS, approval/revocation, encrypted credential recovery/tamper rejection, QR camera-frame decoding and uncertain-write refresh without replay\n");
                 finish(-1,result);return;
             }
+            PhoneStoreCheck.run(this);
             for(String lang:new String[]{"en","ar"}) {
                 getTargetContext().getSharedPreferences("companion",0).edit().putString("language",lang).commit();
                 Intent intent=new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
