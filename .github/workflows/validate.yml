@@ -71,6 +71,10 @@ jobs:
         run: ./gradlew :installer:assembleDebug :installer:lintDebug --no-daemon
       - name: Run Java and setup/recovery regressions
         run: python3 -S -B -m unittest discover -s tests -v
+      - name: Install audio test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
       - name: Check audio preparation regressions
         run: node tools/prepare-adhans.test.mjs
       - name: Collect full-audio APKs
