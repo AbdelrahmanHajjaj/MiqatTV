@@ -50,13 +50,11 @@ files, and inspect `git diff` afterwards.
 | Android phone installer / PC recovery | `./gradlew :app:assembleDebug :installer:assembleDebug :installer:lintDebug --no-daemon`, then root Python regressions. Exercise changed setup/recovery paths on an explicitly selected test device. |
 | Media preparation | `node tools/prepare-adhans.test.mjs` (FFmpeg/ffprobe required); `node tools/prepare-adhans.mjs --check`; check the affected platform packages and audition any changed religious wording/cut. |
 
-LG builds require all 14 adhan and 12 announcement clips under ignored
-`state/media/{adhan,announce}/`. Follow the [audio setup](BUILD.md#audio-assets)
-and [audit](AUDIO-AUDIT.md); keep originals outside packaged inputs. Android
-allows an absent media directory, so a media-free CI APK cannot prove audible
-playback or the size of a fully populated package. The complete TV APK must remain
-strictly below **25,000,000 bytes**. Do not commit recordings or download them in
-public CI to avoid a prerequisite.
+Android and LG builds use the 14 adhan and 12 announcement clips in shared/media/.
+Check the complete set with sha256sum --check shared/media/SHA256SUMS and run
+node tools/prepare-adhans.mjs --check. Original/review audio remains private under
+state/. The TV APK must remain below 25,000,000 bytes with all recordings, and
+python3 tools/check_apk_media.py PATH_TO_APK verifies exact packaged media.
 
 ## UI and input acceptance
 
@@ -112,9 +110,16 @@ what the owner saw or heard. A result for one TV/firmware does not certify a bra
 
 ## Review
 
-This repository has no GitHub Actions yet. Run the relevant local checks above;
-do not claim automatic CI coverage. LG/media checks require local inputs and
-hardware acceptance requires separate watched tests.
+The Validate workflow runs core JVM/JS/Java and canonical checks, Android/installer
+builds and lint, Python/Java/media regressions, native prayer/UI checks on an API 34
+emulator, complete LG ES5/service/browser tests and packaging, and the preview
+suite/build. Required checks fails if any of those jobs fails or is skipped.
+There are no path filters that could leave the required status pending.
+
+GitHub jobs use separate workspaces; generators stay sequential within each job.
+CI artifacts contain the reviewed audio and expire after seven days. CI does not
+provide physical-TV acceptance or run all optional instrumentation modes.
+See [CI.md](CI.md) for protection, artifacts and draft publishing.
 
 Use the [PR template](../.github/pull_request_template.md). Record commands, outcomes,
 evidence type, skipped checks and remaining risk. Keep raw private logs under state/

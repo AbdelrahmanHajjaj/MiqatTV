@@ -45,16 +45,24 @@ because they generate the same shared JavaScript files.
 
 ## Audio assets
 
-Recordings stay outside Git under state/media/{adhan,announce}/. For personal
-builds, bash tools/fetch-adhans.sh downloads the 14 adhan recordings and prepares
-reviewed ending cuts with Node and FFmpeg. For an existing cache, run
-node tools/prepare-adhans.mjs once. Originals remain under state/media-originals/.
-Spoken clips use bash tools/fetch-announce.sh and edge-tts.
+The repository includes the reviewed 14 adhan recordings and 12 announcement
+clips under shared/media/. Android and LG package the same bytes. Run
+sha256sum --check shared/media/SHA256SUMS to check the complete set, then
+node tools/prepare-adhans.mjs --check to verify the approved cuts.
 
-Android builds without recordings but cannot play recorded adhan or announcements.
-LG builds require all 14 adhan and 12 spoken clips. Do not publish recordings
-without redistribution permission. See the [audio audit](AUDIO-AUDIT.md) and
-[third-party notices](THIRD-PARTY.md).
+The maintainer approved their inclusion in public builds on 18 November 2026.
+Media retains its own attribution and terms; see [notices](THIRD-PARTY.md).
+Originals and preparation stamps stay under ignored state/media-originals/.
+The fetch scripts are regeneration tools, not build prerequisites. Review changed
+recordings and update checksums before publishing replacements.
+
+## CI builds
+
+[Validate](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/validate.yml)
+produces full-audio APK and LG IPK artifacts after building and testing the source.
+Artifacts expire after seven days. They are test builds; Android uses a CI debug
+signing key that can differ between runs. Stable signing is not configured.
+See [CI and draft publication](CI.md) before distributing an update.
 
 ## Fresh installation
 

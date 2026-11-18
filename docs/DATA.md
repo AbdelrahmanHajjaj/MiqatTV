@@ -29,9 +29,9 @@ stream never starts with Android's MediaPlayer, and its official HLS is video.
 
 `voices.json` owns the ordered adhan IDs/names and original download filenames.
 The generated TSV lets `tools/fetch-adhans.sh` keep working with Bash/curl alone.
-Local assets remain `adhan/<id>.mp3`; regular/Fajr defaults remain `alafasy` and
-`chebae_fajr`. The recordings' rights status is unchanged (see `docs/THIRD-PARTY.md`);
-do not commit the MP3s.
+Packaged assets remain `adhan/<id>.mp3`; regular/Fajr defaults remain `alafasy` and
+`chebae_fajr`. The reviewed recordings are in shared/media/ with maintainer authorization; see
+[third-party notices](THIRD-PARTY.md).
 
 `strings.json` owns the plain bilingual strings/lists shared with native formatting. `{name}` parameters and the optional `d` digit-substitution flag retain
 their existing meanings. Both languages must have the same parameters/list sizes.

@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
-# Records the 12 spoken lines in tools/announce-lines.txt (the reminder before each prayer and "its time has begun")
-# into ignored state/media/announce/<name>.mp3 for Announce.java, with a Microsoft neural Arabic voice through
-# edge-tts (pip install edge-tts; it needs the internet while it runs, the app never does). They are not committed
-# (.gitignore): the voice is for your own use, not ours to redistribute. Without them the reminders still show,
-# silently.
+# Re-create spoken shared clips using the documented voice; review changes before publishing.
 #   bash tools/fetch-announce.sh              # only the missing clips
 #   FORCE=1 bash tools/fetch-announce.sh      # all of them again (after changing the voice or a line)
 #   VOICE=ar-EG-ShakirNeural bash tools/fetch-announce.sh   # another voice: python -m edge_tts --list-voices | grep ^ar-
 set -e
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEST="$ROOT/state/media/announce"
+DEST="$ROOT/shared/media/announce"
 VOICE="${VOICE:-ar-SA-HamedNeural}"
 
 PY=""

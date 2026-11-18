@@ -22,7 +22,7 @@ with system animations disabled. A cold-boot SystemUI ANR blocked the first UI
 check; after closing that emulator dialog, the unchanged UI test and full window
 suite passed. Home was visually inspected. This is not Android TV hardware evidence.
 LG screenshots are browser simulations; Luna and decoder boundaries are mocked.
-Raw logs, recordings, HARs and captures remain under ignored state/.
+Raw logs, original/review recordings, HARs and captures remain under ignored state/.
 
 ## Open checks
 
@@ -37,4 +37,6 @@ Raw logs, recordings, HARs and captures remain under ignored state/.
 
 No physical TV was changed. The old platform-core and companion checkouts remain
 clean and unchanged. No companion code, inherited Actions, previous history,
-credentials, private device state or recordings are part of this repository's sources.
+credentials or private device state are part of this repository's sources.
+The maintainer approved publishing the reviewed 26-clip set on 18 November 2026;
+those copies now live under shared/media/, with exact SHA-256 checksums.

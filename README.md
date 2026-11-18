@@ -36,7 +36,8 @@ are unverified. The companion app is developed separately.
 
 ## Install
 
-Build from source using the [installation and build guide](docs/BUILD.md).
+Build from source or use [CI test builds](docs/CI.md#checks-and-artifacts). See the
+[installation and build guide](docs/BUILD.md).
 Android and LG use different packages. Miqat uses new app identities and installs
 as a new application. No release downloads are published from this repository yet.
 

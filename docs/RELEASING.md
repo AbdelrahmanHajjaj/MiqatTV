@@ -1,25 +1,37 @@
 # Releases
 
-Publish only an approved, validated commit in AbdelrahmanHajjaj/MiqatTV.
-The new repository has no release assets or publishing workflow yet.
+[Validate](CI.md) builds full-audio Android TV/installer APKs and an LG IPK. Each
+main commit must pass its core, native-emulator, LG and preview checks before
+its artifacts can enter the draft publication workflow.
 
-Android TV and the phone installer have separate versions in their build.gradle
-files. LG's version must match its package.json, lockfile, appinfo.json and service
-package.json. Increment version codes/names for distributed builds and retain the
-chosen signing key for later updates within the new Miqat identity.
+## Create a draft
 
-Follow [TESTING.md](TESTING.md), verify package IDs, versions, hashes and signing
-certificates, and record actual hardware limits. Initial Miqat installation is a
-fresh install; see [BUILD.md](BUILD.md). A build or emulator pass is not a TV pass.
+1. Select a successful Validate run for the current main commit.
+2. Run Draft build release on main with that run ID and a unique version tag,
+   for example v0.7.0-preview.1.
+3. Inspect the draft assets and SHA256SUMS, source commit, validation link and
+   stated hardware/signing limits before any public release.
 
-Android outputs are platforms/android-tv/build/outputs/apk/debug/app-debug.apk and
-installer/build/outputs/apk/debug/installer-debug.apk. Use miqat.apk and
-miqat-installer.apk for public assets. The installer's stable-release downloader
-expects miqat.apk. A draft/prerelease cannot satisfy its latest stable-release URL.
-LG packaging follows [WEBOS.md](WEBOS.md) and produces tv.miqat.webos_VERSION_all.ipk.
+The draft contains miqat.apk, miqat-installer.apk, the versioned tv.miqat.webos IPK
+and SHA256SUMS. Instrumentation APKs are excluded. The publisher refuses stale,
+failed, PR/fork or other-workflow runs. It creates a draft prerelease only.
 
-Keep source/third-party notices in each artifact. Recordings require redistribution
-permission; local build inputs alone do not grant it. Exclude keys and private state.
-Create tags/releases only with explicit authorization, verify uploaded hashes,
-and test the intended download before announcing it. Never substitute another
-project's binary or silently replace the contents of a published version.
+## Before stable distribution
+
+CI Android APKs have runner-generated debug signatures, which can change between
+builds. Configure and back up a private persistent signing key before stable
+updates. Never commit it or cache it in a public runner cache.
+
+Android TV and installer versions live in their build.gradle files. LG's version
+must match package.json, its lockfile, appinfo.json and service/package.json.
+Increase version codes for distributed updates, retain the new Miqat identities
+and chosen signing key, and never replace a published version's binaries.
+
+The reviewed media set is included under shared/media/ with maintainer approval
+and its own attribution; see [third-party notices](THIRD-PARTY.md). Private
+originals and device data stay ignored. Follow [TESTING.md](TESTING.md) and record
+actual TV/phone evidence. CI/emulator results do not establish physical acceptance.
+
+The installer's latest-release downloader expects miqat.apk in a stable release.
+Drafts and prereleases do not satisfy it. Stable publication and device deployment
+require separate explicit authorization.

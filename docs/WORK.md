@@ -1,29 +1,27 @@
 # Current work
 
-Updated: 2026-11-17. Checkout: D:/Dev/MiqatTv. Branch: main.
+Updated: 2026-11-18. Branch: feature/github-delivery.
 
 ## Approved scope
 
-Set up the independent MiqatTV repository from the platform-core implementation.
-Use Miqat / ميقات and tv.miqat.* identities, with fresh installation. Retain MIT
-and third-party notices. Remove legacy branding, links, workflows, obsolete
-prototypes and migration diaries. Keep README short and technical guides in docs/.
+Configure main protection, the PR template, validation Actions and build publication
+for MiqatTV. The owner approved including the current 14 adhan and 12 announcement
+clips in public builds. Shared reviewed media now lives in shared/media/; private
+originals, stamps, credentials and device state remain ignored.
 
-## Completed
+## Current action
 
-Source import, namespace/design-path renaming, new docs/agent rules and PR template
-are complete. Shared core, Android/installer, LG and preview checks pass; bilingual
-rendered output was inspected. See [EVIDENCE.md](EVIDENCE.md) for commands/results
-and remaining limits. No inherited Actions or companion implementation is included.
-The old checkouts are clean. Private test media and evidence stay ignored.
+Implement and validate full Android/LG build artifacts, core/preview checks, native
+emulator checks and manually triggered draft publication. Publish the workflows,
+observe actual GitHub runs, then require their stable check on main. Edge is
+authorized for repo settings because the configured API credentials lack admin/PR access.
 
-## Publication and remaining work
+Use PRs with passing checks, linear history, resolved conversations and blocked
+force pushes/deletion. No required approving reviewer for the solo maintainer.
+Do not create credentials, change token scopes, publish a stable release or touch TVs.
 
-The owner approved the initial main commit and push on 17 November 2026. This
-foundation starts a fresh Git history in AbdelrahmanHajjaj/MiqatTV. No release
-or TV deployment is part of that publication. Bootstrap implementation and
-validation are complete; no further bootstrap changes are queued.
+## Retained limits
 
-Physical new-identity installation, full phone-installer acceptance, portable
-settings transfer, companion integration and preview dependency remediation remain
-separate work. No new platform framework, cloud/accounts, feeds or analytics.
+Physical new-identity acceptance, full phone-installer testing, portable settings
+transfer and companion integration remain separate. Existing preview dependency
+advisories remain recorded in EVIDENCE.md. No new platform or cloud framework.
