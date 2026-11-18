@@ -621,7 +621,7 @@
     if (view === 'apps') { bindAppsFocus(); }
     if (view !== 'input') {
       var target = focusAction && screen.querySelector(focusAction.charAt(0) === '[' ? focusAction : '[data-action="' + focusAction + '"]');
-      target = target || (view === 'settings' ? screen.querySelector('.settings-nav .selected') :
+      target = target || (view === 'settings' ? screen.querySelector(section === 'offsets' ? '.settings-rows button' : '.settings-nav .selected') :
         view === 'home' ? homeNodes[homeNavigation.initial(homeAppCount, 0)] :
         view === 'apps' ? screen.querySelector('.app-tile') : screen.querySelector('button')); if (target) { focusControl(target); }
     }
@@ -1159,7 +1159,7 @@
       if (action === 'inputs') { discover(false); } return;
     }
     var next = A.prefs(prefs);
-    if (action === 'section') { if (section !== value) { appearanceDraft = null; } section = value; render('[data-action=section][data-value=' + value + ']'); return; }
+    if (action === 'section') { if (section !== value) { appearanceDraft = null; inlineDraft = null; } section = value; render('[data-action=section][data-value=' + value + ']'); return; }
     if (action === 'tests') { section = 'tests'; show('settings'); return; }
     if (action === 'offsets') { section = 'offsets'; render(); return; }
     if (action === 'reset-offsets') { next.offsets = [0, 0, 0, 0, 0, 0]; savePrefs(next, action); return; }
@@ -1271,6 +1271,10 @@
     if (view === 'home' && id >= homeNavigation.FIRST_APP && id < homeNavigation.FIRST_APP + homeAppCount) { lastHomeApp = id; }
     // Moving a pointer target between mousedown and mouseup loses its click.
     if (pointerDown) { return; }
+    if (view === 'settings' && event.target.getAttribute('data-action') === 'section') {
+      var focusedSection = event.target.getAttribute('data-value');
+      if (focusedSection !== section) { activate('section', focusedSection); return; }
+    }
     var factor = window['tv.miqat:core'].tv.miqat.core.UiScale.percent(prefs.uiScale) / 100;
     if (factor <= 1.1) { return; }
     var page = screen.firstElementChild;

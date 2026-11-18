@@ -264,3 +264,16 @@ phone 0.1.3 / LG 0.2.27 and confirmed much more responsive pairing, quicker wait
 status and satisfaction with the result. Phone controls can appear before the
 TV final status because control discovery is independent. Temporary monitoring
 was held in memory and stopped after acceptance.
+
+
+## Final TV sidebar fix and merge (18 November 2026)
+
+Owner authorized automatic section preview on Android/LG sidebar focus, then a
+normal merge of this companion branch. Android 0.7.1 and LG 0.2.28 keep focus in
+the sidebar while loading the section; the content-direction arrow enters it.
+Native Android focus settles before rebuilding rows, preserving active editors.
+LG dedicated prayer offsets start in their content instead of reopening Prayer.
+Android build/lint/APK bound, 43 Python regressions, bilingual native settings and
+LG service/ES5 and full bilingual browser regressions at 80–150% pass.
+Latest Android TV APK is exported to the primary checkout’s fixed build folder.
+The owner’s physical LG sidebar check and PR CI remain gates before merge.

@@ -149,6 +149,16 @@ const server = http.createServer((req, res) => {
       await page.evaluate(({lang,uiScale}) => localStorage.setItem('fixture', JSON.stringify({prefs:window.Miqat.prefs({lang,uiScale}),input:'HDMI_1'})), {lang,uiScale});
       await page.reload(); await inputRestored(); await page.keyboard.press('Enter');
       await page.locator('[data-action=home]').click(); await page.locator('[data-action=settings]').click();
+      await page.locator('[data-action=section][data-value=prayer]').focus();
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('.settings-nav .selected').getAttribute('data-value'),'reminders','Down previews the focused sidebar section without OK');
+      assert.equal(await page.locator(':focus').getAttribute('data-value'),'reminders','preview retains sidebar focus');
+      assert.ok(await page.locator('.settings-rows [data-ui^="reminders."]').count()>0,'previewed section renders real reminder controls');
+      await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
+      assert.equal(await page.locator(':focus').evaluate(el=>!!el.closest('.settings-rows')),true,'content-direction arrow enters the previewed section');
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('.settings-nav .selected').getAttribute('data-value'),'prayer','Up previews the previous section without OK');
       const spacing = await page.locator('.settings-page').evaluate(el => {
         const box=el.getBoundingClientRect(), scale=box.width/el.offsetWidth, rtl=document.documentElement.dir==='rtl';
         const width=el.querySelector('.settings-sidebar').offsetWidth*scale;
@@ -1191,9 +1201,13 @@ const server = http.createServer((req, res) => {
         const box = panel.getBoundingClientRect(); return (box.left + box.right) / 2;
       });
       assert.ok(centre === null || Math.abs(centre - 960) < 0.5, 'scaled content stays horizontally centred in its physical viewport');
+      const originalSection = await page.evaluate(()=>{const selected=document.querySelector('.settings-nav .selected');return selected?selected.getAttribute('data-value'):null;});
       const items = await page.locator(selector).all();
       assert.ok(items.length, 'expected visible controls: ' + selector);
-      for (const item of items) {
+      const contentItems=[], sidebarItems=[];
+      for(const item of items)(await item.evaluate(el=>!!el.closest('.settings-nav'))?sidebarItems:contentItems).push(item);
+      // Sidebar focus now replaces the content, so check its rows before browsing other sections.
+      for (const item of [...contentItems,...sidebarItems]) {
         await item.evaluate(el => { if (el.matches('button')) { el.focus(); document.getElementById('screen').scrollLeft = document.getElementById('screen').scrollTop = 0; document.getElementById('overlay').scrollLeft = document.getElementById('overlay').scrollTop = 0; } else if (document.getElementById('stage').getAttribute('data-large-ui') === 'true') el.scrollIntoView({block:'center', inline:'nearest'}); });
         const b = await item.boundingBox();
         assert.ok(b && b.x >= -0.1 && b.y >= -0.1 && b.x + b.width <= 1920.1 && b.y + b.height <= 1080.1, selector + ' stays on screen: ' + JSON.stringify(b));
@@ -1204,6 +1218,7 @@ const server = http.createServer((req, res) => {
         });
         assert.ok(b.x - ring >= -0.5 && b.y - ring >= -0.5 && b.x + b.width + ring <= 1920.5 && b.y + b.height + ring <= 1080.5, 'focused outline stays on screen: ' + selector + ' ' + JSON.stringify({box:b,ring}));
       }
+      if(originalSection&&sidebarItems.length)await page.locator('[data-action=section][data-value='+originalSection+']').focus();
     }
     for (const lang of ['ar', 'en']) for (const size of [150, 80, 90, 100, 110, 120, 130, 140]) {
       await page.evaluate(lang => {

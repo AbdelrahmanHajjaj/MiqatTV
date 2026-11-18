@@ -44,6 +44,13 @@ and Up/Down return routes remain unchanged. Home prayer-row height/name/time
 typography comes from shared design tokens at every size; this does not alter the
 compact HDMI prayer bar.
 
+## Settings sidebar
+
+Up/Down loads the focused sidebar section immediately, retaining focus in the
+sidebar. No OK press is required to preview its controls. The arrow toward the
+content enters the section (Right in LTR, Left in RTL). Focus alone never saves
+settings or launches an OS settings panel; existing draft cancellation applies.
+
 ## Home focus
 
 Directions below use logical start/end. A shell translates physical Left/Right

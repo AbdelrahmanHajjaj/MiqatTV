@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Load TV settings sections as sidebar focus moves Up/Down, with no OK press.
+  Keep focus in the sidebar until moving toward the content, in both languages
+  (Android TV 0.7.1 and LG 0.2.28).
+
 - Keep LG QR artwork mounted while phone approval changes, and let the phone
   finish connecting before optional control discovery completes (LG 0.2.27,
   phone 0.1.3). Reuse stored pinned certificates when rescanning known TVs.

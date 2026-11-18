@@ -61,6 +61,24 @@ final class UiContractDeviceCheck {
                 long deadline = SystemClock.uptimeMillis() + 5000;
                 while (!active[0].hasWindowFocus() && SystemClock.uptimeMillis() < deadline) SystemClock.sleep(50);
                 check(active[0].hasWindowFocus(), "Settings has window focus");
+                test.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_DOWN);
+                test.waitForIdleSync();
+                onMain(test, () -> {
+                    FocusTile[] nav = (FocusTile[]) field(active[0], "nav");
+                    check(nav[2].requestFocus(), "Native sidebar accepts remote focus (touch mode=" + nav[2].isInTouchMode() + ")");
+                });
+                test.waitForIdleSync();
+                onMain(test, () -> check((int) field(active[0], "section") == 2 && ((FocusTile[]) field(active[0], "nav"))[2].isFocused(), "Native sidebar focus previews Radio without OK"));
+                Set<String> previewed = new LinkedHashSet<>();
+                collect(test, active[0], previewed, "radio", new LinkedHashMap<>());
+                check(previewed.contains("radio.station"), "Focused Radio section renders its actual controls");
+                key(test, active[0], KeyEvent.KEYCODE_DPAD_UP);
+                onMain(test, () -> check((int) field(active[0], "section") == 1 && (boolean) field(active[0], "onNav"), "Up previews Reminders and retains sidebar focus"));
+                key(test, active[0], language.equals("ar") ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT);
+                onMain(test, () -> check(!(boolean) field(active[0], "onNav"), "Content-direction arrow enters the previewed section"));
+                key(test, active[0], KeyEvent.KEYCODE_BACK);
+                onMain(test, () -> ((FocusTile[]) field(active[0], "nav"))[0].requestFocus());
+                test.waitForIdleSync();
                 Set<String> bound = new LinkedHashSet<>();
                 Map<String, Set<String>> offered = new LinkedHashMap<>();
                 String[] sections = {"prayer", "reminders", "radio", "display", "appearance", "network", "device"};
@@ -132,7 +150,9 @@ final class UiContractDeviceCheck {
             }
             if (!restore.commit() || !prefs.getAll().equals(saved)) {
                 code = Activity.RESULT_CANCELED;
-                result.putString("stream", "UI check did not preserve preferences.\n");
+                Set<String> changed = new LinkedHashSet<>(prefs.getAll().keySet());changed.addAll(saved.keySet());
+                changed.removeIf(key -> java.util.Objects.equals(prefs.getAll().get(key), saved.get(key)));
+                result.putString("stream", result.getString("stream", "") + "UI check did not preserve preferences: " + changed + "\n");
             }
         }
         test.finish(code, result);
