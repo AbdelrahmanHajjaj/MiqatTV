@@ -1,6 +1,6 @@
 # Miqat companion work
 
-Updated: 2026-11-18. Branch: feature/companion-app, based on MiqatTV main e07a609.
+Updated: 2026-11-18. Branch: feature/companion-app; main synchronized at 4ccf0ef.
 
 ## Scope and decisions
 
@@ -145,3 +145,38 @@ the current rounded pattern with the implemented theme-filled, half-gap centre.
 B/C are not applied. Preview/scripts/evidence remain private under
 state/companion/qr-patterns/. This decision changes documentation only; runtime
 checks were not repeated. Physical TV/camera acceptance remains pending.
+
+
+## Main rebranding merge (18 November 2026)
+
+Normal merge of main `4ccf0ef` preserves the complete main and companion histories.
+Conflicts combine the new themes/backgrounds, shared geometry/tile generation,
+preview dependency fixes, delivery workflows and approved shared/media packaging
+with companion routes, numeric bindings and pairing pages. Companion geometry is
+regenerated from the same canonical source. QR pattern A and the approved half-gap
+centre remain unchanged; colours now follow main's refined palettes.
+
+Integration fixes: expose the new 50–100% / 5% mihrab-opacity control in both TV
+adapters, validate steps, include it in appearance conflicts and phone drafts,
+and show its fill alpha in the representative phone preview. Profiles include
+Signature/Quiet choices and main's LG default. The phone packages the approved
+shared media; CI watches that source. Original recordings/private media stay ignored.
+
+Validation: shared core JVM/JS/ES5 and companion core checks; seven generator tests;
+phone/TV/installer builds and lint; 43 Python regressions; exact 26-clip APK media
+checks for TV and phone; preview tokens/test/build/bilingual browser flow; LG
+unit/service, pairing/theme and complete browser suites all pass. Populated TV
+APK is 22,815,303 bytes. Native phone UI/LAN/QR and TV companion/opacity routes pass
+on a verified isolated read-only emulator; phone Arabic preview was inspected.
+
+All 2,880 QR samples pass on the merged palettes. The test decoder is now QR-only,
+matching the phone: unrestricted ZXing had returned a false 8-digit UPC-E for a
+rotated Frost sample while QR-only returned the exact 112-character payload.
+Exact-payload, format, rotation, blur and contrast checks remain enabled. This
+also limits conclusions drawn from earlier unrestricted-decoder negative previews;
+the owner's explicit design selection is unchanged.
+
+Main and merged preview lockfiles both report 10 high npm audit findings; no
+existing main dependency version was changed. No dependency remediation, physical
+TV deployment, release or merge into main is included. Physical camera/picture/
+sound and legacy LG rendering acceptance remain pending.

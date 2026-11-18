@@ -14,6 +14,8 @@ module.exports = function checkPreferences(core) {
   const appearance = core.prefs(baseline), otherAppearance = core.prefs(baseline);
   appearance.theme = 'aurora'; otherAppearance.homeLayout = 'compact';
   assert.deepEqual(Array.from(core.mergePrefs(otherAppearance, baseline, appearance).conflicts), ['homeLayout']);
+  otherAppearance.homeLayout = baseline.homeLayout; otherAppearance.mihrabOpacity = 70;
+  assert.deepEqual(Array.from(core.mergePrefs(otherAppearance, baseline, appearance).conflicts), ['mihrabOpacity'], 'opacity shares the appearance conflict group');
   const offsets = core.prefs(baseline), otherOffsets = core.prefs(baseline);
   offsets.offsets[0] = 4; otherOffsets.offsets[2] = -3; offsets.bells[0] = false; otherOffsets.bells[2] = false;
   const perPrayer = core.mergePrefs(otherOffsets, baseline, offsets);

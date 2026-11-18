@@ -55,3 +55,12 @@ test('companion copy is bilingual and compact/mihrab positions remain independen
   const manifest=readFileSync(new URL('android/src/main/AndroidManifest.xml',import.meta.url),'utf8');
   assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['android.permission.INTERNET','android.permission.CAMERA']);
 });
+
+test('new branding settings reach both profiles with canonical scenes and opacity drafts',()=>{
+  for(const profile of Object.values(data.profiles)) {
+    const opacity=profile.find(c=>c.id==='appearance.mihrab-opacity');
+    assert.ok(opacity.available);assert.equal(opacity.save,'appearance');assert.equal(opacity.default,'85');
+    const choices=profile.find(c=>c.id==='appearance.background').options.map(c=>c.value);
+    assert.ok(choices.includes('miqat_signature')&&choices.includes('miqat_quiet'));
+  }
+});

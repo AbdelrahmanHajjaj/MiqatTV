@@ -1,6 +1,6 @@
 // Browser side: prefs saved in this browser, and a once-a-second loop that re-renders the screen model into
 // the page's [data-k] (innerHTML) and [data-a] (attributes) elements.
-import { appearance } from './appearance';
+import { appearance, mihrabOpacity } from './appearance';
 import { cycleAppearance } from '../lib/appearance-cycle';
 import { DEFAULT_PREFS, type Prefs } from '../lib/data';
 import { makeCtx, type Ctx, type Model } from '../lib/ctx';
@@ -14,13 +14,14 @@ const KEY = 'miqat-prefs';
 export function loadPrefs(): Prefs {
   try {
     const prefs = { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') };
-    return { ...prefs, uiScale: uiPercent(prefs.uiScale) };
+    return { ...prefs, ...(prefs.mihrabOpacity === undefined ? {} : {mihrabOpacity: mihrabOpacity(prefs.mihrabOpacity)}), uiScale: uiPercent(prefs.uiScale) };
   } catch {
     return { ...DEFAULT_PREFS, uiScale: uiPercent(undefined) };
   }
 }
 
 export function savePrefs(p: Prefs) {
+  if (p.mihrabOpacity !== undefined && mihrabOpacity(p.mihrabOpacity) !== p.mihrabOpacity) throw new RangeError('Invalid mihrab opacity');
   if (p.uiScale !== undefined && uiPercent(p.uiScale) !== p.uiScale) throw new RangeError('Invalid interface size');
   try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* private mode: this visit only */ }
 }

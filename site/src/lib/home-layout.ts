@@ -1,3 +1,4 @@
+import mihrab from '../../../shared/design/mihrab.json';
 import tokens from '../../../shared/design/mihrab/tokens.json';
 import type { Prefs } from './data';
 import { safeInline, uiFactor } from './ui-scale';
@@ -40,7 +41,7 @@ export function homePreview(p: Prefs, rtl: boolean) {
   return `<svg viewBox="0 0 1920 1080" aria-hidden="true"><g${rtl ? ' transform="translate(1920 0) scale(-1 1)"' : ''}>`
     + box(h.x, 56, 400, 100, 'plaster-100')
     + Array.from({length: 5}, (_, i) => box(h.x + h.width - 472 + i * 100, h.quickY, 72, 72, i === 0 ? 'gold-400' : 'lapis-700')).join('')
-    + (h.mode === 0 ? box(h.panelX, h.panelY, h.panelWidth, HOME['mihrab-height']) : h.mode === 1 ? box(h.x, h.panelY, h.width, HOME['bar-height']) : '')
+    + (h.mode === 0 ? `<path transform="translate(${h.panelX} ${h.panelY}) scale(${h.panelWidth/mihrab.width} ${HOME['mihrab-height']/mihrab.height})" d="${mihrab.outer}" fill="var(--mihrab-fill)" fill-opacity="var(--mihrab-opacity)" stroke="var(--surface-edge)" stroke-width="3"/>` : h.mode === 1 ? box(h.x, h.panelY, h.width, HOME['bar-height']) : '')
     + Array.from({length: slots}, (_, i) => box(h.x + i * (cw + 12), h.tableY, cw, HOME['table-height'], 'gold-400')).join('')
     + Array.from({length: h.count}, (_, i) => box(h.x + i % h.columns * (h.tileWidth + HOME.gap), h.favouritesY + Math.floor(i / h.columns) * (h.tileHeight + HOME.gap), h.tileWidth, h.tileHeight)).join('')
     + Array.from({length: 6}, (_, i) => box(h.x + i * (h.width + 20) / 6, h.recentY, (h.width - 100) / 6, HOME['recent-height'], 'lapis-800')).join('') + '</g></svg>';

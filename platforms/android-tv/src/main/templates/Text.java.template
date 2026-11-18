@@ -283,7 +283,10 @@ final class Text {
     String[] hijriMonths() { {{STRINGS:hijriMonths}} }
 
     String hijriSuffix() { {{STRINGS:hijriSuffix}} }
+    String mihrabOpacity() { {{STRINGS:mihrabOpacity}} }
+    String mihrabOpacityHelp() { {{STRINGS:mihrabOpacityHelp}} }
     String themeRow() { {{STRINGS:themeRow}} }
+    String customizeAppearance() { {{STRINGS:customizeAppearance}} }
     String backgroundRow() { {{STRINGS:backgroundRow}} }
     String lightingRow() { {{STRINGS:lightingRow}} }
     String appearanceCycle() { {{STRINGS:appearanceCycle}} }

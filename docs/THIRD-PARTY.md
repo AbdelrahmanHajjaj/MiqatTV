@@ -19,8 +19,8 @@ covers Miqat contributions. The components below have their own notices.
 | [Amiri](https://github.com/aliftype/amiri) by Khaled Hosny | `shared/design/resources/font/amiri_*.ttf` | SIL Open Font Licence 1.1 |
 | [Alexandria](https://fonts.google.com/specimen/Alexandria) by Mohamed Gaber and Julieta Ulanovsky | `shared/design/resources/font/alexandria_*.ttf` | SIL Open Font Licence 1.1 |
 | [Marcellus](https://fonts.google.com/specimen/Marcellus) by Astigmatic | `shared/design/resources/font/marcellus_regular.ttf` | SIL Open Font Licence 1.1 |
-| Adhan recordings from [abodehq/Athan-MP3](https://github.com/abodehq/Athan-MP3) | Not in the source. `tools/fetch-adhans.sh` downloads them and applies reviewed promotional-ending cuts from `shared/data/adhan-edits.json`; local builds include them | None stated. Credited here; any recording is removed on request from its rights holder. |
-| Spoken reminder lines (`tools/announce-lines.txt`) voiced by Microsoft's ar-SA-HamedNeural voice through [edge-tts](https://github.com/rany2/edge-tts) | Not in the source. `tools/fetch-announce.sh` records them; release APKs include them | Microsoft's speech service terms. Replaced on request. |
+| Adhan recordings from [abodehq/Athan-MP3](https://github.com/abodehq/Athan-MP3) | The reviewed collection is in shared/media/adhan, with approved ending cuts in shared/data/adhan-edits.json | The maintainer confirmed redistribution and approved inclusion on 18 November 2026. The source does not publish a licence; these recordings are not relicensed under the code's MIT licence. |
+| Spoken reminder lines (tools/announce-lines.txt), generated using Microsoft's ar-SA-HamedNeural voice through [edge-tts](https://github.com/rany2/edge-tts) | The 12 reviewed clips are in shared/media/announce | Microsoft's speech service terms; maintainer approved distribution on 18 November 2026. |
 | Quran radio stations: إذاعة القرآن الكريم in Cairo, Nablus, Qatar (two channels) and Jordan, and Shabab FM Quran (Nablus) | Played from each station's public stream, never stored | Belongs to each station. Miqat is not affiliated with any of them. |
 | Reciter channels from [mp3quran.net](https://mp3quran.net) (`backup.qurango.net`) | Played from the public stream, never stored | Belongs to mp3quran.net and the reciters. Miqat is not affiliated with it. |
 
@@ -31,9 +31,9 @@ The certificate, fingerprint, provenance and Node source notice ship under
 `service/trust/usertrust-rsa.pem` and `service/licenses/online-ca.txt`. This is a
 public CA certificate, with no private key or change to the TV's system trust store.
 
-The local LG webOS development package also copies the existing adhan and spoken
-announcement assets, with the same source and rights status stated above; it does
-not add them to version control. Both platforms read ignored `state/media/` inputs.
+Android and LG packages include the same reviewed shared/media/ recordings.
+Their SHA256SUMS file fixes the distributed bytes. Original downloads, preparation
+stamps and review material stay private under ignored state/.
 Voice metadata comes from `shared/data/voices.json`;
 its radio list comes from `shared/data/stations.json`.
 
@@ -53,3 +53,24 @@ or relicensing is part of this notice audit.
 
 The fonts can be renamed or bundled under the OFL, but not sold on their own. The full text is at
 https://openfontlicense.org.
+
+## Illustrated landscape backgrounds
+
+Six unmodified 1920×1080 JPEG illustrations are reused from Gathin's
+[CleanYourTV](https://github.com/Gathin23/cleanyourtv), source checkout revision
+`f9f0c5353e65c5003d5f2f45784a30c5dee19ecb`, under MIT (copyright 2026 Gathin).
+The complete notice is already shipped as `licenses/CleanYourTV-MIT.txt`.
+Source directory: `themes/scenes/wallpapers/`; generator: `tools/scenes_wallpapers.py`.
+
+| Miqat asset in shared/design/assets/backgrounds/ | CleanYourTV source |
+| --- | --- |
+| dusk_peaks.jpg | 01-dusk-peaks.jpg |
+| golden_coast.jpg | 02-golden-coast.jpg |
+| moon_lake.jpg | 03-moon-lake.jpg |
+| aurora_sky.jpg | 04-aurora.jpg |
+| tea_hills.jpg | 08-tea-hills.jpg |
+| monsoon.jpg | 12-monsoon.jpg |
+
+These are local illustrated scenes, with a 20% black overlay applied by each
+renderer for readability. They do not change color with the theme or lighting
+control. No external image service or runtime image generation is used.

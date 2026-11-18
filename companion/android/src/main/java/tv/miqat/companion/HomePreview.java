@@ -66,7 +66,7 @@ final class HomePreview extends View {
         float panelX=left?24:410, center=panelX+103;
         if(!hidden&&!compact) {
             MiqatShape.set(arch,206,183,false);arch.offset(panelX,77);
-            paint.setColor(color("lapis-800"));c.drawPath(arch,paint);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(2);paint.setColor(color("gold-400"));c.drawPath(arch,paint);paint.setStyle(Paint.Style.FILL);
+            paint.setColor(color("lapis-800"));paint.setAlpha(Math.round(255*tv.miqat.core.UiContract.INSTANCE.mihrabOpacity(Integer.parseInt(values.getOrDefault("appearance.mihrab-opacity",String.valueOf(tv.miqat.core.UiContract.MIHRAB_OPACITY_DEFAULT))))/100f));c.drawPath(arch,paint);paint.setAlpha(255);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(2);paint.setColor(color("gold-400"));c.drawPath(arch,paint);paint.setStyle(Paint.Style.FILL);
             text(c,ar?"العصر":"Asr",center,167,23,"gold-400");text(c,"00:45",center,207,32,"plaster-100");
         }
         if(compact) {float top="bottom".equals(values.get("appearance.compact-position"))?292:76;rect(c,24,top,592,42,"lapis-800");text(c,ar?"العصر  00:45":"Asr  00:45",320,top+28,20,"gold-400");}

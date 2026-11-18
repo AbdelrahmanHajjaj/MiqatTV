@@ -13,8 +13,7 @@ times, with a 32 KiB body cap, no redirects/cache and a 12-second one-shot deadl
 Pause/Back cancel the request; returning offers manual retry. No account, polling,
 new network dependency or background service is involved.
 
-From the repository root, with JDK 17 and Android SDK 34 installed (also Node 24
-when local adhan recordings are present):
+From the repository root, with JDK 17, Node 24 and Android SDK 34 installed:
 
 ```sh
 ./gradlew -p platforms/android-tv verifyApkSize lintDebug --no-daemon
@@ -22,7 +21,7 @@ when local adhan recordings are present):
 
 Set `ANDROID_HOME` to the installed SDK for this standalone build, or use an ignored
 `platforms/android-tv/local.properties`. It consumes only this project, `shared/`,
-local optional recordings under `state/media/`, and the root Gradle wrapper. It does
+reviewed shared recordings under `shared/media/`, and the root Gradle wrapper. It does
 not configure the phone installer, preview or LG project. The output remains
 `platforms/android-tv/build/outputs/apk/debug/app-debug.apk`, with a strict 25 MB limit.
 The new Miqat package installs fresh. Retain its signing key for subsequent updates.
@@ -97,3 +96,9 @@ the process timezone. They exercise the actual Settings action, D-pad return foc
 Use `-e check online-network` separately for one real verified HTTPS request to
 AlAdhan. This sends the fixed public Cairo test coordinates/date/method/school.
 Emulator proof does not validate a physical Android TV's firmware or network stack.
+
+Use `-e check opacity` with the same instrumentation runner for the focused Home
+mihrab control check. It verifies bilingual 50–100% limits, numeric Back, outer
+draft cancellation, Apply/re-entry and fill-only alpha, then restores the complete
+original preferences. Run only on an authorized target; the design review used a
+task-owned read-only emulator, not a physical TV.

@@ -21,6 +21,6 @@
     "id": "appearance.background",
     "state": "unimplemented",
     "values": ["theme", "lattice", "panorama", "daylight", "mountains", "dunes", "halo", "night_sky"],
-    "reason": "The renderer offers plain solid fill and shared pattern masks; Android procedural backgrounds are not ported."
+    "reason": "The renderer offers plain solid fill, shared pattern masks and static landscapes; Android procedural backgrounds are not ported."
   }
 ]

@@ -151,6 +151,11 @@ final class CompanionDeviceCheck {
             phase(test,"Settings/lifecycle/revocation");
             JSONObject snapshot=client.call("GET","/v1/settings",null,credential).body,base=snapshot.getJSONObject("values");
             check(base.getString("display.size").equals("100"),"Actual settings read");
+            check(base.getString("appearance.mihrab-opacity").equals("85"),"New opacity default is offered");
+            check(client.call("POST","/v1/settings",new JSONObject().put("expected",base).put("changes",Json.object("appearance.mihrab-opacity","70")),credential).body.getString("status").equals("saved")&&Prefs.of(app).getInt("mihrab_opacity",0)==70,"Opacity persists through actual companion adapter");
+            base=client.call("GET","/v1/settings",null,credential).body.getJSONObject("values");
+            check(client.call("POST","/v1/settings",new JSONObject().put("expected",base).put("changes",Json.object("appearance.mihrab-opacity","86")),credential).status==400,"Off-step opacity rejected");
+
             JSONObject edit=new JSONObject().put("expected",base).put("changes",Json.object("display.size","110"));
             check(client.call("POST","/v1/settings",edit,credential).body.getString("status").equals("saved")&&Prefs.uiScale(app)==110,"Actual settings apply");
             check(client.call("POST","/v1/settings",edit,credential).body.getString("status").equals("conflict")&&Prefs.uiScale(app)==110,"Stale edit rejected");

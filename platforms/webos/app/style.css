@@ -32,7 +32,7 @@ body, button { font: {{font.size.body}} Alexandria, sans-serif; color: {{color.p
 .verse { position: absolute; left: 70px; top: 110px; width: 460px; font: 32px/1.55 Amiri, serif; color: {{color.gold-400}}; }
 .verse-ref { position: absolute; left: 40px; top: 274px; width: 520px; color: {{color.mist-400}}; font-size: 20px; }
 .arch-info { position: absolute; left: 40px; top: 348px; width: 520px; }
-.eyebrow { color: {{color.mist-400}}; font-size: {{font.size.label}}; margin: 0 0 20px; }
+.eyebrow { color: {{color.mist-400}}; font-size: 24px; margin: 0 0 20px; }
 .prayer-name { font: 72px/1.5 Alexandria, sans-serif; color: {{color.gold-400}}; margin: 0; letter-spacing: 0; }
 /* shortcut: use the menu font for Arabic names on old LG shaping engines; revisit with newer webOS targets. */
 [dir=ltr] .prayer-name { font: 68px Marcellus, serif; line-height: 1.8; }
@@ -161,7 +161,7 @@ button:disabled { color: {{color.disabled-text}}; }
 [dir=rtl] .switch.on > span { right: auto; left: {{layout.settings.toggle-inset}}; }
 button:focus .switch.on { background: {{color.lapis-900}}; }
 button:focus .switch.on > span { background: {{color.gold-400}}; }
-.settings-rows .segments { max-width: none; border-radius: {{radius.pill}}; padding: 6px; background: {{color.lapis-900}}; font-size: {{font.size.label}}; }
+.settings-rows .segments { max-width: none; border-radius: {{radius.pill}}; padding: 6px; background: {{color.lapis-900}}; font-size: 24px; }
 .segment { display: inline-block; text-align: center; padding: 10px 18px; margin: 0 3px; border: 3px solid transparent; border-radius: {{radius.pill}}; color: {{color.mist-400}}; cursor: pointer; }
 .segment.selected { color: {{color.lapis-900}}; background: {{color.plaster-100}}; }
 button:focus .segments { background: {{color.seg-track-focused}}; }
@@ -320,3 +320,20 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 [dir=rtl] .pairing-controls .value { float:left; }
 .pairing-code { display:block;font-size:56px;letter-spacing:8px; }
 .pairing-controls h2 { word-wrap:break-word; }
+
+
+.appearance-group { margin:24px 16px 12px; color:{{color.mist-400}};font-size:24px; }
+
+.opacity-help {display:block;clear:both;font-size:20px;font-weight:400;color:{{color.mist-400}};}
+
+.prayer-icon {display:inline-block;width:1em;height:1em;max-width:38px;max-height:38px;vertical-align:-.08em;margin-right:.24em;}
+[dir=rtl] .prayer-icon {margin-right:0;margin-left:.24em;}
+
+.settings-rows button:focus .opacity-help {color:{{color.lapis-900}};}
+
+.home-prayers .prayer-head {display:block;height:22px;line-height:22px;}
+.home-prayers .prayer-head .prayer-icon {float:left;width:18px;height:18px;margin:0;}
+.home-prayers .prayer-head .prayer-tag {float:right;}
+[dir=rtl] .home-prayers .prayer-head .prayer-icon {float:right;}
+[dir=rtl] .home-prayers .prayer-head .prayer-tag {float:left;}
+.home-prayers .prayer-label {display:block;}

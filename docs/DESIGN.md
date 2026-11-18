@@ -40,13 +40,13 @@ LG also bundles the existing Alexandria medium/semibold faces for shared UI
 hierarchy. Font choice, Arabic shaping, CSS and native drawing remain in adapters.
 
 `themes.json` owns the exact ordered IDs: 20 built-ins followed by Android's reserved
-`custom` import slot. `assets/themes/` owns the 19 unchanged preset files; Mihrab
-uses the existing design tokens. Android packages them as `assets/themes/<id>.json`
+`custom` import slot. `assets/themes/` owns the 19 preset files; Miqat
+uses the canonical design tokens. Android packages them as `assets/themes/<id>.json`
 and uses generated `ThemeCatalog.PRESETS` through the existing Appearance API.
 Preview/LG filter out `custom`, keeping their existing feature sets. Palette,
 surface, background and lighting behavior stays in each adapter.
 
-`appearance.json` owns the eight procedural background IDs, eight SVG pattern IDs,
+`appearance.json` owns the eight procedural background IDs, eight SVG pattern IDs, six static scene IDs,
 seven surface IDs and eight theme-v1 color slots. Generated `ThemeCatalog` arrays
 feed native `ThemeSpec`; preview uses the same background order/color keys. LG
 retains its alphabetic SVG-pattern list and separate plain-background choice.
@@ -81,3 +81,114 @@ fill and 0.35-module half-gap clearance; do not duplicate these design values.
 The SVG renderer uses embedded local PNG data and SVG 1.1 image/filter attributes;
 Android draws the same crop and alpha tint with native Canvas. QR/frame decoding
 and rendered shell checks remain separate from physical TV/camera acceptance.
+
+## Palette/background refinement (review draft)
+
+The default uses deeper petrol, warm gold and ivory. Built-in palettes keep their IDs, with six landscape presets gaining paired
+artwork, names, palettes and surface styles. The others retain distinct mineral/earth/night colors and calmer
+lighting. Every text/accent role passes the existing 4.5:1 validator against all
+four surface colors; glass also passes over white video. User imports are unchanged.
+
+The default tile uses complete four-point stars and small diamonds, from
+`shared/design/background-tile.json`. Eight full-composition masks offer stars,
+woven lattice, botanical scrolls, diamond tiles, floral rosettes, hexagon mosaic,
+flowing lines and one complete-arch option. Every mask keeps an eight-unit margin;
+none crops an arch at the top or bottom. Existing IDs preserve saved selections;
+bilingual display names describe the new geometry. Mountains have broader ridges,
+dunes use two connected curves, and night skies use fewer points. No blur, new idle loop or decorative video is added.
+
+`background.tile-size`, `tile-stroke` and `pattern-opacity` in the canonical tokens
+set the common treatment. Android rasterizes the selected mask once; the preview
+renders the same SVG path. LG builds small palette-tinted SVGs for each theme,
+using full-screen proportions on Home and in its appearance preview. This avoids
+the former bright white, densely repeated LG masks. Source SVGs remain white
+alpha masks for Android; never bake a particular theme into their canonical files.
+
+The review gallery compares actual browser renders in Arabic/English, with the
+previous English appearance available for comparison. It is not physical-TV
+acceptance. This draft is intentionally uncommitted pending the owner's review.
+
+Base pattern opacity is 14%, with the existing lighting adjustment; the default repeating tile uses 9% ink. Solid is explicitly
+plain, while Halo/Daylight are light-field styles. The gallery's optional artwork
+detail view uses stronger lines for inspection and is labelled as such; its normal
+view always shows actual app opacity.
+
+Neutral landscape choices use the six local JPEGs in
+`shared/design/assets/backgrounds/`, selected by `appearance.json.scenes`.
+They keep their original colors under a 20% black readability overlay; lighting
+continues to affect generated backgrounds only. Android decodes only the selected
+scene, downsampling settings previews and retaining the existing screen cache.
+Preview/LG use the same assets as CSS backgrounds, including draft previews.
+Attribution and source filenames are in [THIRD-PARTY.md](THIRD-PARTY.md).
+
+### Complete presets and customization
+
+The preset carousel is the first Appearance control. A Customize heading separates
+it from the existing layout, background, lighting and other fine controls; these
+remain directly accessible. Selecting a different preset restores its background
+and lighting in the draft, without changing prayer settings or layout. Apply saves
+and Back/cancellation discards the draft. Repeated input at a carousel boundary
+preserves manual changes. Saved settings are not reset on page entry or upgrade.
+
+Six stable preset IDs now carry handcrafted scene themes:
+
+| Display name | Stable ID | Palette / surface | Default scene |
+| --- | --- | --- | --- |
+| Dusk peaks | dusk | Violet / apricot, classic | dusk_peaks |
+| Golden coast | sand | Coastal navy / peach, classic | golden_coast |
+| Moon lake | midnight | Midnight navy / silver, cinema | moon_lake |
+| Aurora sky | aurora | Blue-green / mint, glass | aurora_sky |
+| Tea hills | forest | Tea green / pale leaf, soft | tea_hills |
+| Monsoon | slate | Rain blue / amber, frame | monsoon |
+
+Android/preview resolve the existing Theme background and inherited lighting;
+manual overrides remain available. LG uses its explicit background selection:
+choosing a preset sets the supported canonical mask/scene in its draft; an
+unsupported procedural default resolves to plain, retaining the documented gaps.
+
+### Miqat flagship default
+
+`appearance.json.defaultBackground` selects `miqat_signature`, an original
+material landscape made specifically for Miqat. Petrol ceramic and jade folds
+with champagne-gold inlay borrow the logo's curve rhythm without repeating it
+or adding another wordmark behind the controls. The default retains the Miqat
+petrol/gold/ivory palette and classic surface; the new scene replaces the lattice.
+The lattice remains a separate manual background.
+
+The canonical JPEG is `shared/design/assets/backgrounds/miqat_signature.jpg`;
+its creation notes/prompt are in `shared/design/artwork/miqat-signature.md`.
+All renderers use the same bounded local asset and readability overlay. Android
+and preview use it when the default preset follows Theme. LG uses it on fresh
+preferences and when choosing Miqat again. Explicit saved background overrides
+are preserved. No runtime AI, new network access, animation or blur is introduced.
+
+### Home mihrab opacity and prayer symbols
+
+Home supports 50–100% fill opacity in 5% steps, default/recommended 85%. The
+percentage applies directly to the opaque panel color, including Glass; it does
+not compound another surface alpha. Text and outlines remain opaque. Non-Home
+prayer/alert frames retain their existing rendering. Invalid stored values resolve
+to 85%. The inline editor previews its draft; numeric Back restores that draft,
+and outer Cancel discards it. Apply persists it. A different preset restores 85%;
+clamped selection preserves manual changes.
+
+`shared/design/prayer-icons.json` owns all six symbols. The revised proposal uses
+familiar sun/horizon, rising/setting arrows, an afternoon shadow and a crescent,
+with a consistent 2-unit stroke. Decorative diamond rays were removed after owner
+feedback. Android vectors, browser SVG and LG SVG use the same paths; labels,
+order, accessibility and prayer behavior stay intact. This remains a review draft.
+
+### Second Miqat scene and next-prayer contrast
+
+`miqat_quiet` / Miqat quiet / هدوء ميقات is an additional local scene. Its low
+petrol/jade sculpted ribbons leave the upper reading area calm. Both original
+Miqat artworks remain selectable; `defaultBackground` stays `miqat_signature`.
+Neither artwork is automatically mirrored with language. Existing explicit scene
+choices are preserved. Creation notes are in
+[miqat-quiet.md](../shared/design/artwork/miqat-quiet.md).
+
+The Home next-prayer card uses the selected surface's opaque panel RGB at an
+absolute 75% alpha, from `surface.next-prayer-opacity`. It does not compound Glass
+opacity. Labels and gold outline remain opaque; current/past cards and the
+independent Home mihrab opacity control are unchanged. Android, preview and LG
+use the same token and surface color. No blur or extra bitmap layer is required.

@@ -5,12 +5,12 @@
   'use strict';
   var rules = portable.tv.miqat.core.PrayerRules;
   var reminders = portable.tv.miqat.core.ReminderRules;
-  var appearanceKeys = ['theme', 'background', 'homeLayout', 'archSide', 'homeBar', 'prayerMode'];
+  var appearanceKeys = ['theme', 'background', 'mihrabOpacity', 'homeLayout', 'archSide', 'homeBar', 'prayerMode'];
   var defaults = {lang: 'ar', city: 'cairo', method: null, hanafi: false, utcOffset: null,
     automatic: false, adhan: true, remind: 15, remindVoice: false, announce: true, callClose: 0,
     voice: 'alafasy', fajrVoice: 'chebae_fajr', volume: 60, bells: [true, false, true, true, true, true],
     offsets: [0, 0, 0, 0, 0, 0], hijriOffset: 0, digits: 'auto', clock: '24', uiScale: portable.tv.miqat.core.UiScale.DEFAULT_PERCENT,
-    dockPosition: 'top', dockAutoHide: 20, theme: 'mihrab', background: 'plain',
+    dockPosition: 'top', dockAutoHide: 20, theme: 'mihrab', mihrabOpacity: portable.tv.miqat.core.UiContract.MIHRAB_OPACITY_DEFAULT, background: data.defaultBackground,
     homeLayout: 'mihrab', archSide: 'auto', homeBar: 'top', prayerMode: 'all', quickLabels: false,
     station: 'cairo', radioResume: true};
   var methods = {EGYPTIAN: 'Egyptian', UMM_AL_QURA: 'UmmAlQura', MUSLIM_WORLD_LEAGUE: 'MuslimWorldLeague',
@@ -37,6 +37,7 @@
     ['automatic', 'adhan', 'remindVoice', 'announce', 'radioResume', 'quickLabels'].forEach(function (k) { invalid(typeof result[k] !== 'boolean'); });
     invalid([0, 5, 10, 15, 20, 30].indexOf(result.remind) < 0 || [0, 1, 5, 10].indexOf(result.callClose) < 0);
     invalid(!integer(result.volume, 0, 100) || !integer(result.hijriOffset, -rules.MAX_HIJRI_OFFSET_DAYS, rules.MAX_HIJRI_OFFSET_DAYS));
+    invalid(typeof result.mihrabOpacity !== 'number' || portable.tv.miqat.core.UiContract.mihrabOpacity(result.mihrabOpacity) !== result.mihrabOpacity);
     invalid(typeof result.uiScale !== 'number' || portable.tv.miqat.core.UiScale.percent(result.uiScale) !== result.uiScale);
     invalid(!Array.isArray(result.bells) || result.bells.length !== 6 || result.bells.some(function (v) { return typeof v !== 'boolean'; }) || result.bells[1]);
     invalid(!Array.isArray(result.offsets) || result.offsets.length !== 6);
@@ -46,7 +47,7 @@
     invalid(!voice(result.voice) || !voice(result.fajrVoice) || !station(result.station));
     invalid(['auto', 'western', 'eastern'].indexOf(result.digits) < 0 || ['12', '24'].indexOf(result.clock) < 0);
     invalid(['top', 'bottom'].indexOf(result.dockPosition) < 0 || [0, 10, 20, 30].indexOf(result.dockAutoHide) < 0);
-    invalid(data.themes.indexOf(result.theme) < 0 || result.background !== 'plain' && data.patterns.indexOf(result.background) < 0);
+    invalid(data.themes.indexOf(result.theme) < 0 || result.background !== 'plain' && data.patterns.indexOf(result.background) < 0 && data.scenes.indexOf(result.background) < 0);
     invalid(['mihrab', 'compact', 'hidden'].indexOf(result.homeLayout) < 0 || ['auto', 'left', 'right'].indexOf(result.archSide) < 0 ||
       ['top', 'bottom'].indexOf(result.homeBar) < 0 || ['all', 'current', 'next', 'both', 'none'].indexOf(result.prayerMode) < 0);
     return result;

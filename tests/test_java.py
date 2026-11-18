@@ -81,7 +81,7 @@ class JavaChecks(unittest.TestCase):
         java = ROOT / "platforms/android-tv/src/main/java/tv/miqat/home"
         modes = re.findall(r'"([^"\n]+)"', re.search(r'BACKGROUNDS = \{([^}]+)', (java / "ThemeCatalog.java").read_text()).group(1))
         design = json.loads((ROOT / "shared/design/appearance.json").read_text())
-        self.assertEqual(modes, design["proceduralBackgrounds"] + design["patterns"])
+        self.assertEqual(modes, design["proceduralBackgrounds"] + design["patterns"] + design["scenes"])
         labels = re.search(r'String\[\] backgroundNames\(\).*', (java / "Text.java").read_text(encoding="utf-8")).group(0)
         for language in re.findall(r'new String\[\] \{([^}]+)', labels):
             self.assertEqual(len(re.findall(r'"[^"]+"', language)), len(modes) + 1)
@@ -96,6 +96,11 @@ class JavaChecks(unittest.TestCase):
             path = svg.find("{http://www.w3.org/2000/svg}path")
             self.assertTrue(path.get("d"))
             self.assertGreater(float(path.get("stroke-width")), 0)
+            points = [float(value) for value in re.findall(r"-?\d+(?:\.\d+)?", path.get("d"))]
+            self.assertGreaterEqual(min(points[::2]), 8, "Keep complete motifs inside the left edge")
+            self.assertLessEqual(max(points[::2]), 472, "Keep complete motifs inside the right edge")
+            self.assertGreaterEqual(min(points[1::2]), 8, "Do not crop motif tops")
+            self.assertLessEqual(max(points[1::2]), 262, "Do not crop motif bottoms")
             png = (ROOT / f"platforms/android-tv/src/main/res/drawable-nodpi/{resource}.png").read_bytes()
             self.assertEqual(png[:8], b"\x89PNG\r\n\x1a\n")
             self.assertEqual(struct.unpack(">II", png[16:24]), (1920, 1080), "Home must not enlarge a preview-resolution mask")

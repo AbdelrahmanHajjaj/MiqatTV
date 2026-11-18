@@ -7,8 +7,10 @@ module.exports = function checkCompanionSettings(adapter, core) {
   assert.equal(Object.keys(baseline).length, editable.length, 'every offered setting reads actual state');
   assert.equal(baseline['reminders.volume'], '25');
   assert.equal(baseline['device.startup'], 'true');
-  assert.equal(baseline['appearance.background'], 'solid');
+  assert.equal(baseline['appearance.background'], 'miqat_signature');
   assert.equal(baseline['prayer.zone'], 'system');
+  assert.equal(baseline['appearance.mihrab-opacity'], '85');
+  assert.equal(adapter.patch(state, baseline, {'appearance.mihrab-opacity':'70'}).prefs.mihrabOpacity,70);
   const unchanged = JSON.stringify(state);
   for (const spec of editable) {
     const result = adapter.patch(state, baseline, {[spec.id]:baseline[spec.id]});
@@ -28,7 +30,7 @@ module.exports = function checkCompanionSettings(adapter, core) {
   assert.equal(city.city,'london'); assert.equal(city.method,core.city('london').method); assert.equal(city.hanafi,core.city('london').hanafi);
   const startup=adapter.patch(state,baseline,{'device.startup':'false'});
   assert.equal(startup.startup,false); assert.deepEqual(startup.prefs,core.prefs(state.prefs),'startup is a separately orchestrated OS operation');
-  for (const bad of [{},{'display.size':'85'},{'reminders.volume':'101'},{'offsets.fajr':'1.5'},{'prayer.zone':'15.0'},
+  for (const bad of [{'appearance.mihrab-opacity':'49'},{'appearance.mihrab-opacity':'86'},{},{'display.size':'85'},{'reminders.volume':'101'},{'offsets.fajr':'1.5'},{'prayer.zone':'15.0'},
     {'prayer.location':'unknown'},{'reminders.voice':'../outside'}, {'device.startup':'false','display.clock':'12'},
     {'prayer.facing':'10'},{'radio.playback':'true'},{'device.startup':false},JSON.parse('{"__proto__":"value"}')]) {
     assert.throws(()=>adapter.patch(state,baseline,bad));

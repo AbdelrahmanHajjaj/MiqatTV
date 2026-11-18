@@ -38,7 +38,7 @@ final class CompanionSettings implements PairingRoutes.Settings {
             "display.bar-position","dock_position","appearance.favourites","home_layout","appearance.theme","theme","appearance.background","background",
             "appearance.custom-theme","theme_json","device.redirects","redirects");
         map(numbers,"prayer.hijri","hijri_offset","prayer.facing","facing","reminders.before","remind","reminders.close","call_close",
-            "radio.screen-off","radio_dark","display.size","ui_scale","appearance.lighting","lighting","appearance.cycle","appearance_cycle");
+            "radio.screen-off","radio_dark","display.size","ui_scale","appearance.mihrab-opacity","mihrab_opacity","appearance.lighting","lighting","appearance.cycle","appearance_cycle");
         map(toggles,"reminders.spoken","remind_voice","reminders.adhan","adhan","reminders.announce","announce","radio.resume","radio_resume",
             "display.hide-system-apps","hide_system_apps","display.quick-labels","quick_labels","appearance.focus-lighting","focus_lighting",
             "appearance.reduce-motion","reduce_motion","device.repair","repair_service","device.remote-enabled","remote_enabled");
@@ -224,7 +224,7 @@ final class CompanionSettings implements PairingRoutes.Settings {
             case "toggle":if(!value.equals("true")&&!value.equals("false"))throw new IllegalArgumentException();break;
             case "number":
                 if(!value.matches("-?(0|[1-9][0-9]*)"))throw new IllegalArgumentException();int number=Integer.parseInt(value);
-                if(number<UiContract.INSTANCE.minimum(id)||number>UiContract.INSTANCE.maximum(id)||id.equals("display.size")&&(number-UiContract.INSTANCE.minimum(id))%UiContract.INSTANCE.numberStep(id)!=0)throw new IllegalArgumentException();break;
+                if(number<UiContract.INSTANCE.minimum(id)||number>UiContract.INSTANCE.maximum(id)||(id.equals("display.size")||id.equals("appearance.mihrab-opacity"))&&(number-UiContract.INSTANCE.minimum(id))%UiContract.INSTANCE.numberStep(id)!=0)throw new IllegalArgumentException();break;
             case "choice":
                 if(!options(c).contains(value) || remote.containsKey(id)&&!value.startsWith("@")&&Apps.launchIntent(app,value)==null)throw new IllegalArgumentException();break;
             case "list":List<String> items=value.isEmpty()?Collections.emptyList():Arrays.asList(value.split(",",-1));

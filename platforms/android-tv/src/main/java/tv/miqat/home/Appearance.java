@@ -17,7 +17,7 @@ final class Appearance {
     static long motion(long duration) { return reduceMotion ? 0 : duration; }
     static final class Style {
         final int[] colors = BASE.clone();
-        String mode = "lattice";
+        String mode = ThemeCatalog.DEFAULT_BACKGROUND;
         int lighting = 35;
         ThemeSurface surface = new ThemeSurface("classic", colors);
     }
@@ -88,7 +88,7 @@ final class Appearance {
             if (!(changes.get(name) instanceof String)) throw new IllegalArgumentException("Colour must be text");
             colors.put(name, ThemeSpec.color(changes.getString(name)));
         }
-        ThemeSpec.validate(colors, object.optString("background", "lattice"), object.optInt("lighting", 35), object.optString("surface", "classic"));
+        ThemeSpec.validate(colors, object.optString("background", ThemeCatalog.DEFAULT_BACKGROUND), object.optInt("lighting", 35), object.optString("surface", "classic"));
         return object;
     }
 
@@ -122,7 +122,7 @@ final class Appearance {
             JSONObject changes = object.optJSONObject("colors");
             for (int i = 0; changes != null && i < BASE.length; i++)
                 if (changes.has(ThemeSpec.COLORS[i])) style.colors[i] = ThemeSpec.color(changes.getString(ThemeSpec.COLORS[i]));
-            style.mode = object.optString("background", "lattice"); style.lighting = object.optInt("lighting", 35);
+            style.mode = object.optString("background", ThemeCatalog.DEFAULT_BACKGROUND); style.lighting = object.optInt("lighting", 35);
             style.surface = new ThemeSurface(object.optString("surface", "classic"), style.colors);
         } catch (Exception ignored) { /* Invalid saved data falls back to the original Mihrab. */ }
         if (Arrays.asList(ThemeSpec.BACKGROUNDS).contains(background)) style.mode = background;
@@ -160,7 +160,7 @@ final class Appearance {
     }
 
     static Drawable preview(Context c, Style style) {
-        if ("lattice".equals(style.mode)) return Ui.starLattice(c, style.colors[1], (style.colors[4] & 0xffffff) | 0x12000000, 24);
+        if ("lattice".equals(style.mode)) return Ui.starLattice(c, style.colors[1], (style.colors[4] & 0xffffff) | 0x17000000, Tokens.BACKGROUND_TILE_SIZE / 4);
         if ("solid".equals(style.mode)) return new android.graphics.drawable.ColorDrawable(style.colors[1]);
         return drawable(c, scene(c, style, Math.round(Tokens.BACKGROUND_PREVIEW_WIDTH), Math.round(Tokens.BACKGROUND_PREVIEW_HEIGHT)));
     }
@@ -177,9 +177,26 @@ final class Appearance {
         // Keep the artwork's 480x270 coordinates, rasterising edges at the destination size.
         canvas.scale(width / Tokens.BACKGROUND_PREVIEW_WIDTH, height / Tokens.BACKGROUND_PREVIEW_HEIGHT);
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        if (Arrays.asList(ThemeCatalog.SCENES).contains(style.mode)) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 1;
+            while (1920 / (options.inSampleSize * 2) >= width
+                    && 1080 / (options.inSampleSize * 2) >= height) options.inSampleSize *= 2;
+            try (java.io.InputStream in = c.getAssets().open("backgrounds/" + style.mode + ".jpg")) {
+                Bitmap landscape = BitmapFactory.decodeStream(in, null, options);
+                if (landscape != null) {
+                    p.setFilterBitmap(true);
+                    canvas.drawBitmap(landscape, null, new RectF(0, 0, 480, 270), p);
+                    landscape.recycle();
+                    p.setColor(0x33000000);
+                    canvas.drawRect(0, 0, 480, 270, p);
+                    return next;
+                }
+            } catch (java.io.IOException ignored) { /* Fall back to the theme ground. */ }
+        }
         float hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + Calendar.getInstance().get(Calendar.MINUTE) / 60f;
         float daylight = "daylight".equals(style.mode) ? Math.max(.15f, (float)Math.sin((hour - 6) / 12 * Math.PI)) : .7f;
-        int glow = blend(style.colors[1], style.colors[4], style.lighting / 100f * .3f * daylight);
+        int glow = blend(style.colors[1], style.colors[4], style.lighting / 100f * .45f * daylight);
         p.setShader(new LinearGradient(0, 0, 480, 270, new int[]{style.colors[0], style.colors[1], glow}, null, Shader.TileMode.CLAMP));
         canvas.drawRect(0, 0, 480, 270, p);
         p.setShader(new RadialGradient(360, 190, 210, glow, 0, Shader.TileMode.CLAMP));
@@ -208,7 +225,7 @@ final class Appearance {
             if (lines != null) {
                 p.setFilterBitmap(true);
                 p.setColorFilter(new PorterDuffColorFilter(style.colors[4], PorterDuff.Mode.SRC_IN));
-                p.setAlpha(18 + style.lighting / 4);
+                p.setAlpha(Math.round(255 * Tokens.BACKGROUND_PATTERN_OPACITY) + style.lighting / 6);
                 canvas.drawBitmap(lines, null, new RectF(0, 0, 480, 270), p);
                 lines.recycle(); // The software canvas copied the mask into the final cached image.
             }
@@ -219,30 +236,30 @@ final class Appearance {
             for (int layer = 0; layer < 3; layer++) {
                 p.setColor(blend(style.colors[0], glow, .5f - layer * .18f));
                 Path peaks = new Path(); peaks.moveTo(0, 270);
-                for (int x = 0; x <= 480; x += 40)
-                    peaks.lineTo(x, 125 + layer * 38 + ((x / 40 * 37 + layer * 17) % 67));
+                int[][] ridge = {{0,202},{72,155},{148,183},{218,112},{304,186},{390,146},{480,192}};
+                for (int[] point : ridge) peaks.lineTo(point[0], point[1] + layer * 24);
                 peaks.lineTo(480, 270); peaks.close(); canvas.drawPath(peaks, p);
             }
         } else if ("dunes".equals(style.mode)) {
             for (int layer = 0; layer < 3; layer++) {
                 p.setColor(blend(style.colors[0], glow, .55f - layer * .18f));
-                Path dune = new Path(); dune.moveTo(0, 150 + layer * 35);
-                dune.cubicTo(140, 80 + layer * 50, 260, 270 - layer * 15, 480, 140 + layer * 38);
+                Path dune = new Path(); dune.moveTo(0, 194 + layer * 24);
+                dune.cubicTo(100, 132 + layer * 24, 178, 255 - layer * 10, 288, 198 + layer * 18);
+                dune.cubicTo(370, 156 + layer * 28, 422, 205 + layer * 18, 480, 184 + layer * 26);
                 dune.lineTo(480, 270); dune.lineTo(0, 270); dune.close(); canvas.drawPath(dune, p);
             }
         } else if ("halo".equals(style.mode)) {
-            p.setShader(new RadialGradient(345, 115, 130,
+            p.setShader(new RadialGradient(380, 84, 172,
                 new int[]{glow, blend(style.colors[1], style.colors[4], style.lighting / 500f), 0},
                 new float[]{0, .5f, 1}, Shader.TileMode.CLAMP));
-            canvas.drawCircle(345, 115, 130, p); p.setShader(null);
+            canvas.drawCircle(380, 84, 172, p); p.setShader(null);
         } else if ("night_sky".equals(style.mode)) {
-            Random stars = new Random(41);
-            p.setColor(blend(style.colors[1], style.colors[6], .2f + style.lighting / 250f));
-            for (int i = 0; i < 65; i++) canvas.drawCircle(stars.nextInt(480), stars.nextInt(190), i % 5 == 0 ? .8f : .4f, p);
+            p.setColor(blend(style.colors[1], style.colors[6], .24f + style.lighting / 100f * .7f * .18f));
+            for (int i = 0; i < 28; i++) canvas.drawCircle((i * 73 + 11) % 480, 12 + (i * 47 + 19) % 156, i % 5 == 0 ? .8f : .4f, p);
         }
         p.setColor(blend(style.colors[0], glow, .18f));
-        Path ridge = new Path(); ridge.moveTo(0, 225); ridge.cubicTo(110, 160, 160, 265, 280, 215);
-        ridge.cubicTo(360, 180, 400, 210, 480, 155); ridge.lineTo(480, 270); ridge.lineTo(0, 270); ridge.close();
+        Path ridge = new Path(); ridge.moveTo(0, 234); ridge.cubicTo(100, 208, 175, 255, 278, 226);
+        ridge.cubicTo(374, 196, 418, 225, 480, 204); ridge.lineTo(480, 270); ridge.lineTo(0, 270); ridge.close();
         if (!"mountains".equals(style.mode) && !"dunes".equals(style.mode) && !"halo".equals(style.mode)) canvas.drawPath(ridge, p);
         return next;
     }

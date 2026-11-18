@@ -1,0 +1,77 @@
+name: Draft build release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Validate run ID for the current main commit
+        required: true
+        type: string
+      tag:
+        description: Version tag, for example v0.7.0-preview.1
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: draft-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Create draft prerelease
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_ID: ${{ inputs.run_id }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify the source before downloading artifacts
+        run: |
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo 'Run ID must be numeric'; exit 1; }
+          mkdir -p state/release
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" > state/release-run.json
+          python3 tools/release_source.py state/release-run.json
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: android-builds
+          path: state/downloads/android
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: webos-build
+          path: state/downloads/webos
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Prepare the verified build files and checksums
+        run: |
+          cp state/downloads/android/miqat.apk state/release/
+          cp state/downloads/android/miqat-installer.apk state/release/
+          cp state/downloads/webos/*.ipk state/release/
+          python3 tools/check_apk_media.py state/release/miqat.apk
+          (cd state/release && sha256sum -- miqat.apk miqat-installer.apk ./*.ipk > SHA256SUMS)
+          cat > state/release-notes.md <<EOF
+          Full-audio Android TV, Android phone installer and LG webOS builds from $GITHUB_SHA.
+
+          Validation: https://github.com/$GITHUB_REPOSITORY/actions/runs/$RUN_ID
+
+          These are CI debug APKs for fresh-install testing. Their signing key may change between runs; persistent release signing is not configured. Physical acceptance under the new Miqat identities remains pending.
+
+          SHA256SUMS covers the attached binaries. This draft requires maintainer review before publication.
+          EOF
+      - name: Create a draft; do not publish a stable release
+        run: |
+          gh release create "$RELEASE_TAG" state/release/miqat.apk state/release/miqat-installer.apk state/release/*.ipk state/release/SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --prerelease \
+            --title "Miqat $RELEASE_TAG" --notes-file state/release-notes.md

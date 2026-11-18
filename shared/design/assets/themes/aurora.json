@@ -1,15 +1,16 @@
 {
   "version": 1,
   "colors": {
-    "lapis-950": "#081921",
-    "lapis-900": "#0B202C",
-    "lapis-800": "#10313E",
-    "lapis-700": "#173D49",
-    "gold-400": "#8EDBD2",
-    "gold-200": "#B9F0D8",
-    "plaster-100": "#EFF5ED",
-    "mist-400": "#B3D0D8"
+    "lapis-950": "#071C22",
+    "lapis-900": "#0B2831",
+    "lapis-800": "#12333D",
+    "lapis-700": "#19424E",
+    "gold-400": "#A8E7CC",
+    "gold-200": "#D8F9E9",
+    "plaster-100": "#F0F9F3",
+    "mist-400": "#BAD4D5"
   },
-  "background": "panorama",
-  "lighting": 35
+  "background": "aurora_sky",
+  "lighting": 20,
+  "surface": "glass"
 }

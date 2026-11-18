@@ -179,7 +179,8 @@ function generate() {
     '    static final String ADHAN_CALL = ' + JSON.stringify(sacred.adhanCall) + ';\n}\n';
   const nativeThemes = '// Generated from shared/design/{themes,appearance}.json by tools/catalogs.mjs. Do not edit.\n' +
     'package tv.miqat.home;\n\nfinal class ThemeCatalog {\n    private ThemeCatalog() {}\n\n' +
-    Object.entries({PRESETS: themes, BACKGROUNDS: [...appearance.proceduralBackgrounds, ...appearance.patterns], SURFACES: appearance.surfaces, COLORS: appearance.colors})
+    '    static final String DEFAULT_BACKGROUND = ' + JSON.stringify(appearance.defaultBackground) + ';\n' +
+    Object.entries({PRESETS: themes, BACKGROUNDS: [...appearance.proceduralBackgrounds, ...appearance.patterns, ...appearance.scenes], SCENES: appearance.scenes, SURFACES: appearance.surfaces, COLORS: appearance.colors})
       .map(([name, ids]) => '    static final String[] ' + name + ' = {' + ids.map(id => JSON.stringify(id)).join(', ') + '};').join('\n') + '\n}\n';
   const vectors = prayerIcons.prayers.map(({id, path}) => ['platforms/android-tv/src/main/res/drawable/ic_prayer_' + id + '.xml',
     '<?xml version="1.0" encoding="utf-8"?>\n<!-- Generated from shared/design/prayer-icons.json by tools/catalogs.mjs. Do not edit. -->\n' +

@@ -910,14 +910,21 @@ const server = http.createServer((req, res) => {
     assert.notEqual(await carousel('theme').locator('.carousel-choice').innerText(), 'Miqat', 'pointer arrow updates the preview inline');
     await page.locator('[data-action=cancel-appearance]').click();
     assert.equal(await carousel('theme').locator('.carousel-choice').innerText(), 'Miqat');
+    const backgroundBeforePreset = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.background);
     const forestIndex = await page.evaluate(() => window.MiqatData.themes.indexOf('forest'));
     await carousel('theme').focus();
     for (let i = 0; i < forestIndex; i++) await page.keyboard.press('ArrowRight');
-    await carousel('background').focus(); await page.keyboard.press('ArrowRight');
+    assert.match(await page.locator('.appearance-model svg').evaluate(el => getComputedStyle(el).backgroundImage), /backgrounds\/tea_hills.jpg/, 'scenic theme chooses its paired landscape in the draft');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.background), backgroundBeforePreset, 'theme preview does not change saved background');
+    await carousel('background').focus();
+    for (let i = 0; i < 14; i++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowRight');
     for (const layout of ['mihrab', 'compact', 'hidden']) {
       const svg = page.locator('.appearance-model svg');
       assert.equal(await svg.locator('pattern, image').count(), 0, 'old WebKit preview must not clip controls through an SVG image paint server');
       assert.match(await svg.evaluate(el => getComputedStyle(el).backgroundImage), /eight_point_stars/, 'preview retains the selected CSS pattern');
+      assert.match(await svg.evaluate(el => getComputedStyle(el).backgroundImage), /forest-eight_point_stars/, 'draft theme chooses the matching tinted mask');
+      assert.equal(await svg.evaluate(el => getComputedStyle(el).backgroundSize), '100% 100%', 'preview shows the complete composition');
       assert.deepEqual(await svg.locator('rect').evaluateAll(nodes => nodes.flatMap(el => {
         const box = el.getBBox();
         return box.x < 0 || box.y < 0 || box.x + box.width > 1920 || box.y + box.height > 1080 ? [el.outerHTML] : [];
@@ -1407,6 +1414,67 @@ const server = http.createServer((req, res) => {
         await page.keyboard.press('Enter'); await page.locator('[data-action=home]').click();
         assert.equal(await page.locator('.countdown').evaluate(el => parseFloat(getComputedStyle(el).fontSize)), 48, 'theme typography preserves the compact countdown size');
       }
+    }
+    for (const lang of ['en', 'ar']) {
+      await page.evaluate(lang => {
+        const fixture = JSON.parse(localStorage.getItem('fixture'));
+        fixture.prefs = window.Miqat.prefs({...fixture.prefs, lang, background:'plain'});
+        localStorage.setItem('fixture', JSON.stringify(fixture));
+      }, lang);
+      await page.reload(); await page.waitForSelector('#input-video source', {state:'attached'});
+      await page.keyboard.press('Enter');
+      await page.locator('[data-action=settings]').click();
+      await page.locator('[data-action=section][data-value=appearance]').click();
+      const scenes = await page.evaluate(() => window.MiqatData.scenes);
+      const choice = page.locator('[data-action=carousel][data-value=background]');
+      // Plain, eight masks, then the canonical scenes in the existing carousel.
+      const forward = lang === 'ar' ? 'ArrowLeft' : 'ArrowRight';
+      await choice.focus();
+      for (let step = 0; step < 9; step++) await page.keyboard.press(forward);
+      for (let i = 0; i < scenes.length; i++) {
+        const image = await page.locator('.appearance-model svg').evaluate(el => getComputedStyle(el).backgroundImage);
+        assert.ok(image.includes('backgrounds/' + scenes[i] + '.jpg'), 'scenic draft follows carousel: ' + lang + ' ' + scenes[i] + ' ' + image);
+        assert.ok(await page.evaluate(id => new Promise(resolve => {
+          const image = new Image(); image.onload = () => resolve(image.naturalWidth === 1920 && image.naturalHeight === 1080);
+          image.onerror = () => resolve(false); image.src = 'backgrounds/' + id + '.jpg';
+        }), scenes[i]), 'full landscape decodes');
+        if (i < scenes.length - 1) { await choice.focus(); await page.keyboard.press(forward); }
+      }
+      await page.locator('[data-action=apply-appearance]').click();
+      assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.background), scenes.at(-1));
+      await page.locator('[data-action=home]').click();
+      assert.ok((await page.locator('.home').evaluate(el => getComputedStyle(el).backgroundImage)).includes('backgrounds/' + scenes.at(-1) + '.jpg'));
+      await page.reload(); await page.waitForSelector('#input-video source', {state:'attached'}); await page.keyboard.press('Enter');
+      await page.locator('[data-action=home]').click();
+      assert.ok((await page.locator('.home').evaluate(el => getComputedStyle(el).backgroundImage)).includes('backgrounds/' + scenes.at(-1) + '.jpg'), 'saved landscape survives re-entry');
+      assert.equal(await page.locator('.home-prayers .prayer.next').evaluate(el => getComputedStyle(el).backgroundColor.split(',').at(-1).trim()), '0.75)', 'next-prayer fill stays translucent');
+      assert.equal(await page.locator('.home-prayers .prayer.next').evaluate(el=>getComputedStyle(el).opacity), '1', 'label and outline retain full opacity');
+    }
+    for (const lang of ['en','ar']) {
+      await page.evaluate(lang => { const f=JSON.parse(localStorage.getItem('fixture')); f.prefs=window.Miqat.prefs({...f.prefs,lang,theme:'mihrab',homeLayout:'mihrab',mihrabOpacity:85});localStorage.setItem('fixture',JSON.stringify(f)); },lang);
+      await page.reload();await page.waitForSelector('#input-video source',{state:'attached'});await page.keyboard.press('Enter');
+      await page.locator('[data-action=settings]').click();await page.locator('[data-action=section][data-value=appearance]').click();
+      const opacity=page.locator('[data-ui="appearance.mihrab-opacity"]');
+      const next=lang==='ar'?'ArrowLeft':'ArrowRight',previous=lang==='ar'?'ArrowRight':'ArrowLeft';
+      const alpha=()=>page.locator('.appearance-model svg > path').first().getAttribute('fill-opacity');
+      assert.equal(await alpha(),'0.85');
+      await opacity.focus();await page.keyboard.press('Enter');for(let i=0;i<20;i++)await page.keyboard.press(previous);
+      assert.equal(await alpha(),'0.5','draft reaches and clamps at 50%');
+      assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),85,'numeric draft stays unsaved');
+      await page.keyboard.press('Escape');assert.equal(await alpha(),'0.85','Back cancels only numeric draft');
+      await opacity.focus();await page.keyboard.press('Enter');for(let i=0;i<20;i++)await page.keyboard.press(next);await page.keyboard.press('Enter');
+      assert.equal(await alpha(),'1','100% is fully solid');
+      assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),85,'OK waits for Apply');
+      await page.locator('[data-action=cancel-appearance]').click();assert.equal(await alpha(),'0.85','outer Cancel restores saved fill');
+      await opacity.focus();await page.keyboard.press('Enter');for(let i=0;i<20;i++)await page.keyboard.press(previous);await page.keyboard.press('Enter');
+      await page.locator('[data-action=apply-appearance]').click();assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),50);
+      await page.locator('[data-action=home]').click();assert.equal(await page.locator('.arch-shape .outer').evaluate(el=>getComputedStyle(el).fillOpacity),'0.5');
+      assert.equal(await page.locator('.arch-shape .outer').evaluate(el=>getComputedStyle(el).strokeOpacity),'1');
+      await page.reload();await page.waitForSelector('#input-video source',{state:'attached'});await page.keyboard.press('Enter');await page.locator('[data-action=home]').click();
+      assert.equal(await page.locator('.arch-shape .outer').evaluate(el=>getComputedStyle(el).fillOpacity),'0.5','saved fill survives re-entry');
+      await page.locator('[data-action=prayer-day]').click();
+      const paths=await page.locator('.day-row .prayer-icon path').evaluateAll(nodes=>nodes.map(el=>el.getAttribute('d')));
+      assert.deepEqual(paths,await page.evaluate(()=>window.MiqatData.prayerIcons.prayers.map(p=>p.path)),'all six actual prayer labels use canonical Miqat geometry');
     }
     assert.deepEqual(errors, []);
     console.log('PASS: Arabic/English controls, grouped settings, offsets and cancel, prayer bells, overlays preserving HDMI, audio stop/end/error recovery, radio, theme/layout, persistence and global sizing. Decoder and Luna boundaries are mocked; actual LG tests remain separate.');

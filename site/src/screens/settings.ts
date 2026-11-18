@@ -2,7 +2,7 @@
 // code renders the page at build time and re-renders it in the browser after every change.
 import { homeChoice } from '../lib/home-layout';
 import { CYCLE_MINUTES, cycleMinutes } from '../lib/appearance-cycle';
-import { THEMES, BACKGROUNDS } from '../scripts/appearance';
+import { THEMES, BACKGROUNDS, mihrabOpacity } from '../scripts/appearance';
 import voicesJson from '../../../shared/data/voices.json';
 import F from '../../../shared/data/format-text.json';
 import { makeCtx, type Ctx } from '../lib/ctx';
@@ -120,12 +120,13 @@ export function rowsFor(c: Ctx, section: number, radioOn = false, offsetsPage = 
 
     ];
     case APPEARANCE: return [
+      { id: 'theme', kind: 'carousel', label: t.s('themeRow'), help: '', segs: t.list('themeNames').slice(0, THEMES.length), selected: Math.max(0, THEMES.indexOf(p.theme ?? 'mihrab')) },
       { id: 'homeCountdown', kind: 'carousel', label: t.s('homeCountdown'), help: '', segs: t.list('homeCountdowns'), selected: mode },
       { id: 'homePosition', kind: 'carousel', label: t.s('homePosition'), help: '', segs: mode === 2 ? ['—'] : t.list(mode === 1 ? 'homeBars' : 'homeSides'), selected: mode === 2 ? 0 : homeChoice(mode === 1 ? p.homeBar : p.homeSide, mode === 1 ? 1 : 2) },
       { id: 'homePrayers', kind: 'carousel', label: t.s('homePrayers'), help: '', segs: t.list('homePrayerModes'), selected: homeChoice(p.homePrayers, 4) },
       { id: 'homeFavourites', kind: 'carousel', label: t.s('homeFavourites'), help: '', segs: t.list('homeLayouts'), selected: p.homeLayout === 'classic' ? 1 : 0 },
-      { id: 'theme', kind: 'carousel', label: t.s('themeRow'), help: '', segs: t.list('themeNames').slice(0, THEMES.length), selected: Math.max(0, THEMES.indexOf(p.theme ?? 'mihrab')) },
       { id: 'background', kind: 'carousel', label: t.s('backgroundRow'), help: '', segs: t.list('backgroundNames'), selected: Math.max(0, BACKGROUNDS.indexOf(p.background ?? 'theme')) },
+      { id: 'mihrabOpacity', kind:'step', label:t.s('mihrabOpacity'), help:t.d(t.s('mihrabOpacityHelp')), value:t.d(mihrabOpacity(p.mihrabOpacity)+'%') },
       { id: 'lighting', kind: 'step', label: t.s('lightingRow'), help: '', value: t.d(`${p.lighting ?? 35}%`) },
       { id: 'appearanceCycle', kind: 'carousel', label: t.s('appearanceCycle'), help: t.s('appearanceCycleHelp'), segs: t.list('appearanceCycleChoices'), selected: CYCLE_MINUTES.indexOf(cycleMinutes(p.appearanceCycle)) },
       { id: 'reduceMotion', kind: 'toggle', label: t.s('reduceMotion'), help: '', on: p.reduceMotion ?? false },
@@ -146,12 +147,12 @@ export function rowsFor(c: Ctx, section: number, radioOn = false, offsetsPage = 
 export type Edit = { row: number; draft: number };
 
 /** What editing starts from: the chosen segment, or the Hijri offset. */
-export const savedDraft = (c: Ctx, row: Row) => (row.id === sizeControl.id ? uiPercent(c.prefs.uiScale) : row.kind === 'seg' ? row.selected! : row.prayer !== undefined ? prayerOffsets(c.prefs)[row.prayer] : row.id === 'lighting' ? c.prefs.lighting ?? 35 : (c.prefs as SPrefs).hijriOffset);
+export const savedDraft = (c: Ctx, row: Row) => (row.id === 'mihrabOpacity' ? mihrabOpacity(c.prefs.mihrabOpacity) : row.id === sizeControl.id ? uiPercent(c.prefs.uiScale) : row.kind === 'seg' ? row.selected! : row.prayer !== undefined ? prayerOffsets(c.prefs)[row.prayer] : row.id === 'lighting' ? c.prefs.lighting ?? 35 : (c.prefs as SPrefs).hijriOffset);
 
 /** ◀▶ while editing (d = +1 toward the end), held to the row's range. */
 export const moveDraft = (row: Row, draft: number, d: number) => {
   if (row.kind === 'seg') return Math.max(0, Math.min(row.segs!.length - 1, draft + d));
-  const ids: Record<string, string> = {hijri: 'prayer.hijri', lighting: 'appearance.lighting', [sizeControl.id]: sizeControl.id};
+  const ids: Record<string, string> = {mihrabOpacity:'appearance.mihrab-opacity', hijri: 'prayer.hijri', lighting: 'appearance.lighting', [sizeControl.id]: sizeControl.id};
   const id = row.prayer !== undefined
     ? 'offsets.' + ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'][row.prayer]
     : ids[row.id];
@@ -162,7 +163,9 @@ export const moveDraft = (row: Row, draft: number, d: number) => {
 /** OK while editing: the new prefs, or null when the draft is what is already saved. 'lang' is the page's. */
 export function commit(c: Ctx, row: Row, draft: number): SPrefs | null {
   if (row.id === sizeControl.id && (typeof draft !== 'number' || draft !== uiPercent(draft))) throw new RangeError('Invalid interface size');
+  if (row.id === 'mihrabOpacity' && mihrabOpacity(draft) !== draft) throw new RangeError('Invalid mihrab opacity');
   if (draft === savedDraft(c, row)) return null;
+  if (row.id === 'mihrabOpacity') return {...c.prefs, mihrabOpacity:draft};
   if (row.id === sizeControl.id) return { ...c.prefs, uiScale: draft };
   if (row.prayer !== undefined) {
     const offsets = prayerOffsets(c.prefs);
@@ -180,7 +183,7 @@ export function pick(c: Ctx, id: string, i: number): SPrefs | null {
     case 'homePosition': return p.homeCountdown === 2 ? p : p.homeCountdown === 1 ? { ...p, homeBar: homeChoice(i, 1) } : { ...p, homeSide: homeChoice(i, 2) };
     case 'homePrayers': return { ...p, homePrayers: homeChoice(i, 4) };
     case 'homeFavourites': return { ...p, homeLayout: i === 1 ? 'classic' : 'two_rows' };
-    case 'theme': return { ...p, theme: THEMES[i] };
+    case 'theme': return THEMES[i] === p.theme ? { ...p } : { ...p, theme: THEMES[i], background: 'theme', lighting: undefined, mihrabOpacity:undefined };
     case 'background': return { ...p, background: BACKGROUNDS[i] };
     case 'appearanceCycle': return { ...p, appearanceCycle: CYCLE_MINUTES[i] ?? 0 };
     case 'school': return { ...p, hanafi: i === 1 };
@@ -201,7 +204,7 @@ const chevron = '<svg class="chev" width="22" height="22" viewBox="0 0 24 24" fi
 export function rowHtml(t: Text, r: Row, i: number, editing = false, top = 'var(--layout-settings-rows-top)') {
   const choiceId = ({ school: 'prayer.asr', dark: 'radio.screen-off', lang: 'display.language',
     digits: 'display.digits', clock: 'display.clock', dockPosition: 'display.bar-position' } as Record<string, string>)[r.id];
-  const contract = r.id === onlineControl.id ? onlineControl : r.id === sizeControl.id ? sizeControl : r.id === companionControl.id ? companionControl : choiceId ? uiContract.bind(choiceId, 'choice') : null;
+  const contract = r.id === 'mihrabOpacity' ? uiContract.bind('appearance.mihrab-opacity','number') : r.id === onlineControl.id ? onlineControl : r.id === sizeControl.id ? sizeControl : r.id === companionControl.id ? companionControl : choiceId ? uiContract.bind(choiceId, 'choice') : null;
   if (choiceId && (r.kind !== 'seg' || uiContract.choiceEditor(choiceId) !== 'segments')) throw new Error('Wrong choice editor: ' + choiceId);
   const binding = contract ? ` data-ui="${contract.id}" data-ui-kind="${contract.kind}"` : '';
   let control = '';
@@ -232,10 +235,11 @@ export function navHtml(t: Text, section: number) {
 /** The rows; the one being edited shows its draft. */
 export const rowsHtml = (c: Ctx, section: number, radioOn = false, edit: Edit | null = null, offsetsPage = false) =>
   rowsFor(c, section, radioOn, offsetsPage).map((r, i) => {
-    if (edit?.row !== i) return rowHtml(c.t, r, i, false, section === APPEARANCE ? '0px' : 'var(--layout-settings-rows-top)');
-    const shown = r.prayer !== undefined ? { ...r, value: c.t.offsetMinutes(edit.draft), help: clock(c.t, new Date(c.day.times[r.prayer].getTime() + (edit.draft - savedDraft(c, r)) * 60000), c.h24) } : r.kind === 'seg' ? { ...r, selected: edit.draft } : { ...r, value: r.id === 'lighting' || r.id === sizeControl.id ? c.t.d(`${edit.draft}%`) : c.t.days(edit.draft) };
+    const heading = section === APPEARANCE && i === 1 ? `<h3 class="appearance-group">${esc(c.t.s('customizeAppearance'))}</h3>` : '';
+    if (edit?.row !== i) return heading + rowHtml(c.t, r, i, false, section === APPEARANCE ? '0px' : 'var(--layout-settings-rows-top)');
+    const shown = r.prayer !== undefined ? { ...r, value: c.t.offsetMinutes(edit.draft), help: clock(c.t, new Date(c.day.times[r.prayer].getTime() + (edit.draft - savedDraft(c, r)) * 60000), c.h24) } : r.kind === 'seg' ? { ...r, selected: edit.draft } : { ...r, value: r.id === 'mihrabOpacity' || r.id === 'lighting' || r.id === sizeControl.id ? c.t.d(`${edit.draft}%`) : c.t.days(edit.draft) };
     if (r.id === 'school') shown.help = c.t.s('preview') + c.t.sep() + previewHtml(makeCtx(c.lang, { ...c.prefs, hanafi: edit.draft === 1 }, c.now, c.mode));
-    return rowHtml(c.t, shown, i, true, section === APPEARANCE ? '0px' : 'var(--layout-settings-rows-top)');
+    return heading + rowHtml(c.t, shown, i, true, section === APPEARANCE ? '0px' : 'var(--layout-settings-rows-top)');
   }).join('');
 export const previewHtml = (c: Ctx) => clock(c.t, c.day.times[ASR], c.h24);
 

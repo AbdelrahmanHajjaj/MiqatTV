@@ -248,6 +248,11 @@
     if (key !== cacheKey) { cachedDay = A.day(now, prefs); cacheKey = key; }
     return cachedDay;
   }
+  function prayerLabel(index, label) {
+    var icon = D.prayerIcons.prayers[index];
+    if (!icon) throw new Error('Invalid prayer icon');
+    return '<svg class="prayer-icon" aria-hidden="true" viewBox="0 0 ' + D.prayerIcons.size + ' ' + D.prayerIcons.size + '" fill="none" stroke="currentColor" stroke-width="' + D.prayerIcons.strokeWidth + '" stroke-linecap="round" stroke-linejoin="round"><path d="' + icon.path + '"/></svg>' + escape(label);
+  }
   function prayers(now) {
     var day = schedule(now), selected = A.select(day, now), next = {index: selected.next, time: selected.nextTime}, labels = s('prayerNames');
     var times = day.times.slice();
@@ -264,7 +269,9 @@
       var text = digits(A.clock(time, prefs)), period = text.lastIndexOf(' ');
       var label = view === 'home' && period > 0 ? escape(text.slice(0, period)) + ' <small>' + escape(text.slice(period + 1)) + '</small>' : escape(text);
       return '<div class="prayer' + (upcoming ? ' next' : i === current ? ' current' : time < +now ? ' past' : '') + '">' +
-        '<span class="prayer-tag">' + (upcoming ? t('التالية', 'Next') : i === current ? t('الآن', 'Now') : '&nbsp;') + '</span>' + escape(labels[i]) +
+        (view === 'home' ? '<span class="prayer-head">' + prayerLabel(i, '') : '') +
+        '<span class="prayer-tag">' + (upcoming ? t('التالية', 'Next') : i === current ? t('الآن', 'Now') : '&nbsp;') + '</span>' +
+        (view === 'home' ? '</span><span class="prayer-label">' + escape(labels[i]) + '</span>' : prayerLabel(i, labels[i])) +
         '<span class="time">' + label + '</span></div>';
     }).join('') + '</div>';
   }
@@ -291,11 +298,13 @@
   function row(id, action, value, kind) {
     var control = uiContract.bind(id, kind || 'action');
     var label = '<span class="row-label">' + escape(controlLabel(control)) + '</span>';
+    if (control.range === 'prayer-offset') { var index = D.prayerIcons.prayers.map(function (p) { return p.id; }).indexOf(id.slice(8)); label = '<span class="row-label">' + prayerLabel(index, controlLabel(control)) + '</span>'; }
+    var help = id === 'appearance.mihrab-opacity' ? '<small class="opacity-help">' + escape(digits(s('mihrabOpacityHelp'))) + '</small>' : '';
     if (control.kind === 'number' && uiContract.numberEditor(id) === 'inline') {
       var editing = inlineDraft && inlineDraft.key === action;
-      var suffix = control.range === 'percent' || control.range === 'ui-scale' ? '%' : control.range === 'prayer-offset' ? ' ' + f('minuteUnit') : '';
+      var suffix = control.range === 'percent' || control.range === 'ui-scale' || control.range === 'mihrab-opacity' ? '%' : control.range === 'prayer-offset' ? ' ' + f('minuteUnit') : '';
       return button(action, label + '<span class="value inline-step"><span data-number-step="-1" aria-hidden="true">−</span><strong dir="ltr">' +
-        digits(editing ? inlineDraft.value : inlineValue(action)) + escape(suffix) + '</strong><span data-number-step="1" aria-hidden="true">+</span></span>', '', editing ? 'editing' : '', '', control);
+        digits(editing ? inlineDraft.value : inlineValue(action)) + escape(suffix) + '</strong><span data-number-step="1" aria-hidden="true">+</span></span>' + help, '', editing ? 'editing' : '', '', control);
     }
     var values = control.kind === 'choice' ? choiceValues(id, choices(action, true)) : null;
     if (control.kind === 'choice' && uiContract.choiceEditor(id) === 'segments') {
@@ -337,7 +346,9 @@
   function changeAppearance(key, delta) {
     var list = choices(key), index = 0, scroll = screen.querySelector('.settings-rows').scrollTop;
     list.forEach(function (item, i) { if (item.value === appearanceDraft[key]) { index = i; } });
-    appearanceDraft[key] = list[Math.max(0, Math.min(list.length - 1, index + delta))].value;
+    var next = list[Math.max(0, Math.min(list.length - 1, index + delta))].value;
+    if (key === 'theme' && next !== appearanceDraft.theme) { appearanceDraft.background = D.presetBackgrounds[next]; appearanceDraft.mihrabOpacity = A.defaults.mihrabOpacity; }
+    appearanceDraft[key] = next;
     render('[data-action=carousel][data-value=' + key + ']');
     screen.querySelector('.settings-rows').scrollTop = scroll;
   }
@@ -379,8 +390,8 @@
         row('display.open-bar', 'bar', '') + row('display.open-clock', 'clock-view', '');
     } else if (section === 'appearance') {
       var draft = appearanceDraft;
-      result = carousel('appearance.theme', 'theme') +
-        carousel('appearance.background', 'background') +
+      result = carousel('appearance.theme', 'theme') + '<h3 class="appearance-group">' + escape(s('customizeAppearance')) + '</h3>' +
+        carousel('appearance.background', 'background') + row('appearance.mihrab-opacity', 'mihrabOpacity', '', 'number') +
         carousel('appearance.countdown', 'homeLayout') +
         (draft.homeLayout === 'compact' ? carousel('appearance.position', 'homeBar') :
           draft.homeLayout === 'mihrab' ? carousel('appearance.position', 'archSide') : '') +
@@ -466,12 +477,14 @@
       return '<rect x="' + rx + '" y="' + ry + '" width="' + rw + '" height="' + rh + '" rx="' + (prayerCell ? surface.prayerRadius : surface.radius === null ? 14 : surface.radius) + '" fill="' + (fill === c['lapis-800'] ? surface.fill : fill) + '"' + (stroke ? ' stroke="' + (surface.stroke ? surface.edge : stroke) + '" stroke-width="' + (surface.stroke || 3) + '"' : '') + '/>';
     }
     var svg = '', background = 'background-color:' + c['lapis-900'] + ';';
-    if (p.background !== 'plain') {
+    if (D.scenes.indexOf(p.background) >= 0) {
+      background += 'background-image:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.2)),url(backgrounds/' + p.background + '.jpg);background-size:100% 100%;';
+    } else if (p.background !== 'plain') {
       // Old WebKit clips later controls when an SVG image paints the pattern.
-      background += 'background-image:url(patterns/' + p.background + '.svg);background-size:50% 50%;';
+      background += 'background-image:url(patterns/' + p.theme + '-' + p.background + '.svg);background-size:100% 100%;';
     }
     if (mihrab) {
-      svg += '<path transform="translate(' + archX + ' 124) scale(' + archWidth / D.homeMihrab.width + ' 1)" d="' + D.mihrab.outer + '" fill="' + surface.fill + '" stroke="' + surface.archEdge + '" stroke-width="' + surface.archStroke + '"/>' +
+      svg += '<path transform="translate(' + archX + ' 124) scale(' + archWidth / D.homeMihrab.width + ' 1)" d="' + D.mihrab.outer + '" fill="' + surface.archFill + '" fill-opacity="' + ((inlineDraft && inlineDraft.key === 'mihrabOpacity' ? inlineDraft.value : p.mihrabOpacity) / 100) + '" stroke="' + surface.archEdge + '" stroke-width="' + surface.archStroke + '"/>' +
         '<text x="' + (archX + archWidth / 2) + '" y="570" text-anchor="middle" font-size="76" fill="' + c['gold-400'] + '">' + escape(s('nextPrayer')) + '</text>';
     } else if (compact) { svg += rect(96, p.homeBar === 'bottom' ? 916 : p.quickLabels ? 342 : 242, 1728, 100, c['lapis-800'], c['gold-400']); }
     svg += '<text x="' + (rtl ? x + width : x) + '" y="150" text-anchor="' + (rtl ? 'end' : 'start') + '" direction="ltr" font-size="88" fill="' + c['plaster-100'] + '">' + digits(A.clock(new Date(), prefs)) + '</text>';
@@ -517,7 +530,7 @@
         html = '<section class="bar ' + prefs.dockPosition + '" aria-label="' + escape(inputName() + ' · ' + city[prefs.lang]) + '"><div class="dock-prayers" data-prayers>' + prayers(now) + '</div>' + dockActions() + '</section>';
       } else if (view === 'home') {
         html = '<section class="page home"><div class="arch"><svg class="arch-shape" viewBox="0 0 600 900" aria-hidden="true">' +
-          '<path d="' + D.mihrab.outer + '"/>' +
+          '<path class="outer" style="fill:' + D.surfaces[prefs.theme].archFill + ';fill-opacity:' + prefs.mihrabOpacity / 100 + '" d="' + D.mihrab.outer + '"/>' +
           '<path class="inner" d="' + D.mihrab.inner + '"/></svg>' +
           '<div class="verse" lang="ar" dir="rtl">' + D.sacred.prayerVerse.map(escape).join('<br>') + '</div>' +
           '<div class="verse-ref">' + digits(s('ref')) + '</div><div class="arch-info"><p class="eyebrow">' + s('nextPrayer') +
@@ -537,7 +550,7 @@
         dayViewMinute = Math.floor(+now / 60000);
         var today = schedule(now), h = A.hijri(now, prefs), bearing = A.qibla(prefs);
         html = '<section class="page">' + header(t('اليوم والقبلة', 'Today & Qibla')) + '<div class="day-times">' + today.times.map(function (time, i) {
-          return '<div class="day-row"><span>' + s('prayerNames')[i] + '</span><strong>' + digits(A.clock(time, prefs)) + '</strong>' +
+          return '<div class="day-row"><span>' + prayerLabel(i, s('prayerNames')[i]) + '</span><strong>' + digits(A.clock(time, prefs)) + '</strong>' +
             (!prayerRules.isPrayer(i) ? '<span class="muted">' + t('لا أذان للشروق', 'No adhan') + '</span>' : button('bell', onOff(prefs.bells[i]), i, '', t('أذان ', 'Adhan for ') + s('prayerNames')[i], uiContract.bind(uiContract.prayerAdhanId(i), 'toggle'))) + '</div>';
         }).join('') + '</div><div class="day-details"><h2>' + escape(city[prefs.lang]) + '</h2><p>' +
           (h ? digits(h.day + ' ' + s('hijriMonths')[h.month] + ' ' + h.year) : t('التاريخ الهجري غير متاح', 'Hijri date unavailable')) +
@@ -706,8 +719,9 @@
     if (document.hidden || document.webkitHidden || view === 'input') { return; }
     var now = new Date();
     function put(selector, text) { var list = screen.querySelectorAll(selector); for (var i = 0; i < list.length; i++) { list[i].textContent = text; } }
+    function putPrayer(selector, index, text) { var list = screen.querySelectorAll(selector); for (var i = 0; i < list.length; i++) list[i].innerHTML = prayerLabel(index, text); }
     put('[data-clock]', digits(A.clock(now, prefs)));
-    if (view === 'apps') { var appNext = A.next(schedule(now), now); put('[data-app-prayer]', s('prayerNames')[appNext.index]); put('[data-app-time]', digits(A.clock(appNext.time, prefs))); }
+    if (view === 'apps') { var appNext = A.next(schedule(now), now); putPrayer('[data-app-prayer]', appNext.index, s('prayerNames')[appNext.index]); put('[data-app-time]', digits(A.clock(appNext.time, prefs))); }
     if (view === 'prayer-day' && dayViewMinute !== Math.floor(+now / 60000)) {
       var focused = document.activeElement, selector = focused && focused.getAttribute('data-action') === 'bell' ? '[data-action=bell][data-value="' + focused.getAttribute('data-value') + '"]' : 'home';
       render(selector); return;
@@ -715,7 +729,7 @@
     if (view !== 'home' && view !== 'bar' && view !== 'clock') { return; }
     try {
       var next = A.next(schedule(now), now);
-      put('[data-next-label]', (view === 'bar' ? ' · ' : '') + s('prayerNames')[next.index]);
+      putPrayer('[data-next-label]', next.index, (view === 'bar' ? ' · ' : '') + s('prayerNames')[next.index]);
       put('[data-countdown]', digits(A.duration(next.time - +now)));
       put('[data-next-time]', (next.time === cachedDay.tomorrowFajr ? t('غدًا · ', 'Tomorrow · ') : '') + digits(A.clock(next.time, prefs)));
       var rows = screen.querySelectorAll('[data-prayers]');
@@ -784,7 +798,7 @@
       background: [['plain', t('سادة', 'Plain')]].concat(['eight_point_stars', 'mashrabiya', 'arches', 'arabesque', 'star_tiles', 'rosettes', 'octagon_lattice', 'corner_medallions'].map(function (id) {
         var ids = ['arches', 'eight_point_stars', 'mashrabiya', 'arabesque', 'star_tiles', 'rosettes', 'octagon_lattice', 'corner_medallions'];
         return [id, s('backgroundNames')[9 + ids.indexOf(id)]];
-      }))
+      })).concat(D.scenes.map(function (id, i) { return [id, s('backgroundNames')[17 + i]]; }))
     };
     if (options[key]) { return options[key].map(function (v) { return {value: v[0], label: v[1]}; }); }
     return uiContract.choices('prayer.zone').map(function (value) {
@@ -801,7 +815,7 @@
     if (/^offset-/.test(picker)) { return s('prayerNames')[Number(picker.slice(7))]; }
     return sectionName(section) || t('اختر', 'Choose');
   }
-  function inlineValue(key) { return /^offset-/.test(key) ? prefs.offsets[Number(key.slice(7))] : prefs[key === 'language' ? 'lang' : key]; }
+  function inlineValue(key) { if (key === 'mihrabOpacity') return (appearanceDraft || prefs).mihrabOpacity; return /^offset-/.test(key) ? prefs.offsets[Number(key.slice(7))] : prefs[key === 'language' ? 'lang' : key]; }
   function inlineControl(key) {
     var row = screen.querySelector('.settings-rows [data-action="' + key + '"][data-ui]');
     var id = row && row.getAttribute('data-ui');
@@ -1033,7 +1047,7 @@
         '<p class="call-status" data-audio-status>' + t('جارٍ تحميل الصوت…', 'Loading audio…') + '</p></section></div>';
     } else {
       overlay.innerHTML = '<div class="alert-content"><section class="alert-box' + (alert.mode === 'banner' ? ' banner-box' : '') + '"><p class="eyebrow">' + (alert.test ? t('اختبار · ميقات', 'Test · Miqat') : t('تذكير بالصلاة', 'Prayer reminder')) +
-      '</p><h1>' + title + escape(label) + '</h1><p>' + escape(A.city(prefs.city)[prefs.lang]) + ' · ' + digits(A.clock(alert.prayerTime || new Date(), prefs)) +
+      '</p><h1>' + title + prayerLabel(alert.prayer, label) + '</h1><p>' + escape(A.city(prefs.city)[prefs.lang]) + ' · ' + digits(A.clock(alert.prayerTime || new Date(), prefs)) +
       '</p>' + (audible ? '<p data-audio-status>' + t('جارٍ تحميل الصوت…', 'Loading audio…') + '</p>' : '') +
       button('dismiss-alert', audible ? t('إيقاف والعودة', 'Stop & return') : t('إغلاق', 'Dismiss')) + '</section></div>';
     }
@@ -1066,6 +1080,7 @@
     if (inlineControl(action)) {
       if (!inlineDraft || inlineDraft.key !== action) { inlineDraft = {key: action, value: inlineValue(action)}; render(action); }
       else {
+        if (uiContract.control(inlineControl(action)).save === 'appearance') { appearanceDraft[action] = inlineDraft.value; inlineDraft = null; render(action); return; }
         var changed = A.prefs(prefs);
         if (/^offset-/.test(action)) { changed.offsets[Number(action.slice(7))] = inlineDraft.value; }
         else { changed[action === 'language' ? 'lang' : action] = inlineDraft.value; }

@@ -53,7 +53,7 @@ export function generate(platforms = ['android','lg']) {
     'radio.station':'cairo','radio.screen-off':'0','display.language':'system','display.digits':'western','display.clock':'24',
     'display.size':'100','display.bar-mode':'hidden','display.bar-position':'top','display.bar-timeout':'20',
     'appearance.countdown':'mihrab','appearance.position':'auto','appearance.prayers':'all','appearance.favourites':'two_rows',
-    'appearance.theme':'mihrab','appearance.background':'theme','appearance.lighting':'35','appearance.cycle':'0','tests.prayer':'0'};
+    'appearance.mihrab-opacity':'85','appearance.theme':'mihrab','appearance.background':'theme','appearance.lighting':'35','appearance.cycle':'0','tests.prayer':'0'};
   const trueIds = ['reminders.adhan','reminders.announce','radio.resume',...controls.filter(c=>c.section==='prayer-day').map(c=>c.id)];
   const appOptions = [pair('القرآن','Quran'),pair('الفيديو','Video'),pair('الموسيقى','Music'),pair('المتصفح','Browser')].map((x,i)=>({value:['quran','video','music','browser'][i],...x}));
   const extras = contract.extraSettings.map(c=>({...c, title:pair(c.ar,c.en), save:c.section === 'appearance' ? 'appearance':'immediate',
@@ -72,7 +72,7 @@ export function generate(platforms = ['android','lg']) {
       let options = c.options.filter(x=>!missing.includes(x.value));
       // The phone exposes the two independently persisted positions as separate editors.
       if(c.id==='appearance.position')options=options.filter(x=>!['top','bottom'].includes(x.value));
-      const def = platform==='lg' && c.id==='appearance.background' ? 'solid' : platform==='lg' && c.id==='display.language' ? 'ar' : defaults[c.id];
+      const def = platform==='lg' && c.id==='appearance.background' ? read('shared/design/appearance.json').defaultBackground : platform==='lg' && c.id==='display.language' ? 'ar' : defaults[c.id];
       return {...c, options, default:def ?? (c.kind==='toggle' ? String(trueIds.includes(c.id)) : c.kind==='number' ? '0' : options[0]?.value || ''),
         available:!unsupported.has(c.id), reason:gaps.find(x=>x.id===c.id)?.reason || ''};
     });

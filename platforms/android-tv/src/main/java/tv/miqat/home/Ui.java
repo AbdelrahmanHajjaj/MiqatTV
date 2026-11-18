@@ -80,10 +80,10 @@ final class Ui {
     static final Interpolator EASE = new PathInterpolator(0.2f, 0.8f, 0.2f, 1f);
 
     /**
-     * Miqat crown and shoulders on a quiet repeating tile in gold at 7%. Drawn once into a bitmap, so it costs nothing per frame.
+     * A geometric star-and-diamond tile with quiet gold lines. Drawn once into a bitmap, so it costs nothing per frame.
      */
     static Drawable starLattice(Context c) {
-        return starLattice(c, Palette.LAPIS_900, Palette.PATTERN_LINE, 96);
+        return starLattice(c, Palette.LAPIS_900, Palette.PATTERN_LINE, Tokens.BACKGROUND_TILE_SIZE);
     }
 
     static Drawable starLattice(Context c, int ground, int line, float cell) {
@@ -93,11 +93,10 @@ final class Ui {
         cv.drawColor(ground);
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(px(1.5f * cell / 96));
+        p.setStrokeWidth(px(Tokens.BACKGROUND_TILE_STROKE * cell / Tokens.BACKGROUND_TILE_SIZE));
         p.setColor(line);
         android.graphics.Path motif = new android.graphics.Path();
-        MiqatShape.set(motif, s * .75f, s * .96f, true);
-        motif.offset(s * .125f, s * .02f);
+        MiqatShape.tile(motif, s, s);
         cv.drawPath(motif, p);
         BitmapDrawable d = new BitmapDrawable(c.getResources(), b);
         d.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);

@@ -76,4 +76,4 @@ Migration scope/status live in WORK.md; verification facts live in EVIDENCE.md.
 | `display.language` | `system` | unimplemented | The language control switches Arabic/English; TV-locale following is not implemented. |
 | `display.clock` | `system` | unimplemented | The clock editor offers 12/24-hour formats without TV-format following. |
 | `appearance.theme` | `custom` | unimplemented | Imported custom themes are not implemented; the shared preset catalog remains available. |
-| `appearance.background` | `theme`, `lattice`, `panorama`, `daylight`, `mountains`, `dunes`, `halo`, `night_sky` | unimplemented | The renderer offers plain solid fill and shared pattern masks; Android procedural backgrounds are not ported. |
+| `appearance.background` | `theme`, `lattice`, `panorama`, `daylight`, `mountains`, `dunes`, `halo`, `night_sky` | unimplemented | The renderer offers plain solid fill, shared pattern masks and static landscapes; Android procedural backgrounds are not ported. |

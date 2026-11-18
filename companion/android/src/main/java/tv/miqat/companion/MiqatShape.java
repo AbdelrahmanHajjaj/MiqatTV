@@ -1,6 +1,6 @@
 package tv.miqat.companion;
 
-// Generated from shared/design/mihrab.json by tools/branding.mjs. Do not edit.
+// Generated from shared/design geometry by tools/branding.mjs. Do not edit.
 final class MiqatShape {
     private MiqatShape() {}
     static void set(android.graphics.Path path, float width, float height, boolean inner) {
@@ -26,4 +26,5 @@ final class MiqatShape {
         path.close();
         }
     }
+
 }

@@ -52,15 +52,31 @@ assert.ok(fs.readdirSync(path.join(out,'service/vendor/forge')).every(name=>name
 const data = require('node:vm').runInNewContext(fs.readFileSync(path.join(out, 'app/data.js'), 'utf8') + ';MiqatData;');
 assert.equal(data.qrMark, 'data:image/png;base64,' + fs.readFileSync(path.join(__dirname, '../../shared/design/assets/qr-mark.png')).toString('base64'), 'package the approved alpha mark unchanged');
 const root = path.resolve(__dirname, '../..');
+assert.equal(JSON.stringify(data.prayerIcons), JSON.stringify(JSON.parse(fs.readFileSync(path.join(root,'shared/design/prayer-icons.json'),'utf8'))), 'LG ships exact canonical prayer icons');
 for (const theme of data.themes) {
-  const preset = theme === 'mihrab' ? {} : JSON.parse(fs.readFileSync(path.join(root, 'shared/design/assets/themes', theme + '.json')));
+  const preset = theme === 'mihrab' ? {background: data.defaultBackground} : JSON.parse(fs.readFileSync(path.join(root, 'shared/design/assets/themes', theme + '.json')));
+  if (data.scenes.includes(preset.background)) assert.equal(data.presetBackgrounds[theme], preset.background, 'scenic theme carries its canonical paired background');
   assert.equal(data.surfaces[theme].name, preset.surface || 'classic', 'theme keeps its canonical surface: ' + theme);
   const css = fs.readFileSync(path.join(out, 'app', theme === 'mihrab' ? 'style.css' : 'theme-' + theme + '.css'), 'utf8');
   assert.ok(!css.includes('{{'), 'all design tokens resolved');
   assert.ok(css.includes('background:' + data.surfaces[theme].fill), 'actual stylesheet consumes its surface fill');
   for (const [key, value] of Object.entries(preset.colors || {})) assert.equal(data.palettes[theme][key], value, 'retain all canonical theme colors');
+  for (const pattern of data.patterns) {
+    const file = theme + '-' + pattern + '.svg';
+    const svg = fs.readFileSync(path.join(out, 'app/patterns', file), 'utf8');
+    assert.ok(css.includes('patterns/' + file), 'Home loads its own palette mask');
+    assert.ok(svg.includes('stroke="' + data.palettes[theme]['gold-400'] + '"'), 'mask ink follows the selected palette');
+    const opacity = Number(/stroke-opacity="([^"]+)"/.exec(svg)[1]);
+    assert.ok(opacity >= 0.13 && opacity <= 0.22, 'decoration remains visible without overpowering content');
+  }
 }
-for (const font of ['alexandria_regular', 'alexandria_medium', 'alexandria_semibold']) {
+for (const id of data.scenes) {
+  const name = id + '.jpg';
+  assert.deepEqual(fs.readFileSync(path.join(out, 'app/backgrounds', name)), fs.readFileSync(path.join(root, 'shared/design/assets/backgrounds', name)), 'ship the canonical local landscape');
+  const css = fs.readFileSync(path.join(out, 'app/style.css'), 'utf8');
+  assert.ok(css.includes('[data-pattern=' + id + '] .home') && css.includes('backgrounds/' + name), 'Home binds the scenic choice');
+}
+for (const font of ['alexandria_regular' , 'alexandria_medium', 'alexandria_semibold']) {
   assert.deepEqual(fs.readFileSync(path.join(out, 'app/fonts', font + '.ttf')),
     fs.readFileSync(path.join(root, 'shared/design/resources/font', font + '.ttf')), 'package the shared typeface: ' + font);
 }

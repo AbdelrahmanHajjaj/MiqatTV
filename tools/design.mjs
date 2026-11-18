@@ -8,8 +8,8 @@ const attributes = {
 };
 
 export function validateAppearance(value) {
-  const groups = ['colors', 'patterns', 'proceduralBackgrounds', 'surfaces'];
-  if (!value || Object.keys(value).sort().join(',') !== groups.join(',')) throw new Error('Invalid appearance metadata');
+  const groups = ['colors', 'patterns', 'proceduralBackgrounds', 'scenes', 'surfaces'];
+  if (!value || Object.keys(value).sort().join(',') !== [...groups, 'defaultBackground'].sort().join(',')) throw new Error('Invalid appearance metadata');
   for (const group of groups) {
     const ids = value[group];
     const idPattern = group === 'colors' ? /^[a-z][a-z0-9_-]*$/ : /^[a-z][a-z0-9_]*$/;
@@ -17,8 +17,8 @@ export function validateAppearance(value) {
       throw new Error('Invalid appearance IDs: ' + group);
     }
   }
-  const backgrounds = [...value.proceduralBackgrounds, ...value.patterns];
-  if (new Set(backgrounds).size !== backgrounds.length || value.proceduralBackgrounds[0] !== 'lattice' || value.surfaces[0] !== 'classic' || value.colors.length !== 8) {
+  const backgrounds = [...value.proceduralBackgrounds, ...value.patterns, ...value.scenes];
+  if (!backgrounds.includes(value.defaultBackground) || new Set(backgrounds).size !== backgrounds.length || value.proceduralBackgrounds[0] !== 'lattice' || value.surfaces[0] !== 'classic' || value.colors.length !== 8) {
     throw new Error('Invalid appearance defaults or color slots');
   }
 }

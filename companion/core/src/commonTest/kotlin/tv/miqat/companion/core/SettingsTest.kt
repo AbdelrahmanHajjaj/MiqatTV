@@ -75,4 +75,11 @@ class SettingsTest {
         assertFailsWith<IllegalArgumentException> { list.validate("a,a") }
         assertFailsWith<IllegalArgumentException> { list.validate("c") }
     }
+    @Test fun mihrabOpacityUsesPortableBoundsAndFivePercentSteps() {
+        val opacity = SettingSpec("appearance.mihrab-opacity", "number", "appearance", emptyList(), 50, 100, 5)
+        opacity.validate("50"); opacity.validate("100")
+        assertEquals("90", opacity.adjust("85", 1))
+        assertFailsWith<IllegalArgumentException> { opacity.validate("86") }
+        assertFailsWith<IllegalArgumentException> { opacity.validate("49") }
+    }
 }

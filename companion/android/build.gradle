@@ -23,7 +23,7 @@ android {
         assets.srcDir file('../protocol')
         assets.srcDir layout.buildDirectory.dir('generated/companion')
         assets.srcDir file('../../shared/design/assets')
-        assets.srcDir file('../../state/media')
+        assets.srcDir file('../../shared/media')
         res.srcDir file('../../shared/design/resources')
         res.srcDir layout.buildDirectory.dir('generated/companion-res')
     }
@@ -44,7 +44,7 @@ def generateCompanion = tasks.register('generateCompanion', Exec) {
     commandLine 'node', file('../generate.mjs')
 }
 def checkCompanionMedia = tasks.register('checkCompanionMedia', Exec) {
-    onlyIf { file('../../state/media/adhan').isDirectory() }
+    onlyIf { file('../../shared/media/adhan').isDirectory() }
     commandLine 'node', file('../../tools/prepare-adhans.mjs'), '--check'
 }
 tasks.named('preBuild') { dependsOn(generateCompanion, checkCompanionMedia) }

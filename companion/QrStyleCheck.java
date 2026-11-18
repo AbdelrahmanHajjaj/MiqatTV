@@ -4,6 +4,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.*;
 import java.nio.file.*;
+import java.util.Collections;
 
 /** Independent decoder against actual browser rasterization, rotations and mild optical degradation. */
 public final class QrStyleCheck {
@@ -29,7 +30,10 @@ public final class QrStyleCheck {
     private static void decode(BufferedImage image,String expected,String why)throws Exception {
         int w=image.getWidth(),h=image.getHeight();int[] pixels=image.getRGB(0,0,w,h,null,0,w);
         try {
-            String result=new MultiFormatReader().decode(new BinaryBitmap(new HybridBinarizer(new RGBLuminanceSource(w,h,pixels)))).getText();
+            // Match the phone: unrestricted readers can mistake rotated QR cells for UPC-E.
+            Result decoded=new MultiFormatReader().decode(new BinaryBitmap(new HybridBinarizer(new RGBLuminanceSource(w,h,pixels))),Collections.singletonMap(DecodeHintType.POSSIBLE_FORMATS,Collections.singletonList(BarcodeFormat.QR_CODE)));
+            if(decoded.getBarcodeFormat()!=BarcodeFormat.QR_CODE)throw new AssertionError("Wrong barcode format: "+why);
+            String result=decoded.getText();
             if(!result.equals(expected))throw new AssertionError("Payload changed: "+why);
         } catch(ReaderException error){throw new AssertionError("Cannot scan "+why,error);}
     }

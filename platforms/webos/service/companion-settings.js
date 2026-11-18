@@ -10,7 +10,7 @@ var fields = {
   'display.language': 'lang', 'display.digits': 'digits', 'display.clock': 'clock', 'display.size': 'uiScale',
   'display.quick-labels': 'quickLabels', 'display.bar-position': 'dockPosition', 'display.bar-timeout': 'dockAutoHide',
   'appearance.countdown': 'homeLayout', 'appearance.position': 'archSide', 'appearance.prayers': 'prayerMode',
-  'appearance.theme': 'theme', 'appearance.compact-position': 'homeBar'
+  'appearance.mihrab-opacity': 'mihrabOpacity', 'appearance.theme': 'theme', 'appearance.compact-position': 'homeBar'
 };
 var prayers = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 var specs = Object.create(null);
@@ -45,7 +45,7 @@ function validate(id, text) {
   else if (spec.kind === 'number') {
     var number = Number(text), low = portable.UiContract.minimum(id);
     if (!/^-?(0|[1-9][0-9]*)$/.test(text) || number < low || number > portable.UiContract.maximum(id) ||
-        id === 'display.size' && (number - low) % portable.UiContract.numberStep(id) !== 0) { throw new Error('Invalid number'); }
+        (id === 'display.size' || id === 'appearance.mihrab-opacity') && (number - low) % portable.UiContract.numberStep(id) !== 0) { throw new Error('Invalid number'); }
   } else if (spec.kind === 'choice') {
     if (!spec.options.some(function (option) { return option.value === text; })) { throw new Error('Invalid choice'); }
   } else { throw new Error('Unknown editor'); }

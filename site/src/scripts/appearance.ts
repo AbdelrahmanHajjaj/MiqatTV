@@ -1,3 +1,4 @@
+import portable from '@miqat/core';
 import tokens from '../../../shared/design/mihrab/tokens.json';
 import themes from '../../../shared/design/themes.json';
 import design from '../../../shared/design/appearance.json';
@@ -21,16 +22,26 @@ import oasis from '../../../shared/design/assets/themes/oasis.json';
 import brass from '../../../shared/design/assets/themes/brass.json';
 import mosaic from '../../../shared/design/assets/themes/mosaic.json';
 import patterns from '../data/background-patterns.json';
+import dusk_peaks from '../../../shared/design/assets/backgrounds/dusk_peaks.jpg?url';
+import golden_coast from '../../../shared/design/assets/backgrounds/golden_coast.jpg?url';
+import moon_lake from '../../../shared/design/assets/backgrounds/moon_lake.jpg?url';
+import aurora_sky from '../../../shared/design/assets/backgrounds/aurora_sky.jpg?url';
+import tea_hills from '../../../shared/design/assets/backgrounds/tea_hills.jpg?url';
+import monsoon from '../../../shared/design/assets/backgrounds/monsoon.jpg?url';
+import miqat_signature from '../../../shared/design/assets/backgrounds/miqat_signature.jpg?url';
+import miqat_quiet from '../../../shared/design/assets/backgrounds/miqat_quiet.jpg?url';
+const scenes: Record<string, string> = {dusk_peaks, golden_coast, moon_lake, aurora_sky, tea_hills, monsoon, miqat_signature, miqat_quiet};
 import type { Prefs } from '../lib/data';
 const presets: Record<string, typeof aurora & { surface?: string }> = { aurora, ember, forest, midnight, rose, sand, slate, glass, frost, cinema, carbon, neon, blueprint, signal, arcade, dusk, oasis, brass, mosaic };
+export const mihrabOpacity = (value: unknown) => portable.tv.miqat.core.UiContract.mihrabOpacity(typeof value === 'number' ? value : NaN);
 export const THEMES = themes.filter(id => id !== 'custom');
-export const BACKGROUNDS = ['theme', ...design.proceduralBackgrounds, ...design.patterns];
+export const BACKGROUNDS = ['theme', ...design.proceduralBackgrounds, ...design.patterns, ...design.scenes];
 const rendered = new WeakMap<HTMLElement, string>();
-export const backgroundOf = (prefs: Prefs) => prefs.background && prefs.background !== 'theme' ? prefs.background : presets[prefs.theme ?? 'mihrab']?.background ?? 'lattice';
+export const backgroundOf = (prefs: Prefs) => prefs.background && prefs.background !== 'theme' ? prefs.background : presets[prefs.theme ?? 'mihrab']?.background ?? design.defaultBackground;
 export function appearance(stage: HTMLElement, prefs: Prefs) {
   const theme = presets[prefs.theme ?? 'mihrab'];
   const mode = backgroundOf(prefs);
-  const key = JSON.stringify([prefs.theme, prefs.background, prefs.lighting, prefs.reduceMotion, mode === 'daylight' ? Math.floor(Date.now() / 60000) : 0]);
+  const key = JSON.stringify([prefs.theme, prefs.background, prefs.lighting, prefs.reduceMotion, mihrabOpacity(prefs.mihrabOpacity), mode === 'daylight' ? Math.floor(Date.now() / 60000) : 0]);
   if (key === rendered.get(stage)) return;
   rendered.set(stage, key);
   for (const name of design.colors) {
@@ -66,6 +77,8 @@ export function appearance(stage: HTMLElement, prefs: Prefs) {
   const panel = surface === 'cinema' || surface === 'outline' ? 'lapis-950' : surface === 'frame' ? 'lapis-900' : surface === 'blocks' ? 'lapis-700' : 'lapis-800';
   const fill = surface === 'glass' ? `color-mix(in srgb, var(--color-${panel}) ${tokens.surface.glass.opacity.$value * 100}%, transparent)` : `var(--color-${panel})`;
   const edge = surface === 'glass' ? `color-mix(in srgb, var(--color-lapis-800), var(--color-plaster-100) ${tokens.surface.glass.edge.$value * 100}%)` : 'var(--color-gold-400)';
+  stage.style.setProperty('--mihrab-fill', `var(--color-${panel})`);
+  stage.style.setProperty('--mihrab-opacity', String(mihrabOpacity(prefs.mihrabOpacity) / 100));
   stage.style.setProperty('--surface-fill', fill);
   stage.style.setProperty('--surface-edge', edge);
   stage.style.setProperty('--surface-stroke', treatment?.stroke?.$value ?? '0px');
@@ -79,22 +92,23 @@ export function appearance(stage: HTMLElement, prefs: Prefs) {
   const light = (prefs.lighting ?? theme?.lighting ?? 35) / 100 * daylight;
   let art = '';
   const pattern = patterns[mode as keyof typeof patterns];
-  if (pattern) art = `<path d="${pattern.path}" fill="none" stroke="${accent}" stroke-width="${pattern.stroke}" stroke-linecap="round" stroke-linejoin="round" opacity="${(18 + Math.floor((prefs.lighting ?? theme?.lighting ?? 35) / 4)) / 255}"/>`;
+  if (pattern) art = `<path d="${pattern.path}" fill="none" stroke="${accent}" stroke-width="${pattern.stroke}" stroke-linecap="round" stroke-linejoin="round" opacity="${(Math.round(255 * tokens.background['pattern-opacity'].$value) + Math.floor((prefs.lighting ?? theme?.lighting ?? 35) / 6)) / 255}"/>`;
   else if (mode === 'mountains') {
     for (let layer = 0; layer < 3; layer++) {
       let points = '0,270 ';
-      for (let x = 0; x <= 480; x += 40) points += `${x},${125 + layer * 38 + ((x / 40 * 37 + layer * 17) % 67)} `;
+      const ridge = [[0,202],[72,155],[148,183],[218,112],[304,186],[390,146],[480,192]];
+      for (const [x,y] of ridge) points += `${x},${y + layer * 24} `;
       art += `<polygon points="${points}480,270" fill="${dark}" opacity="${.45 + layer * .2}"/>`;
     }
   } else if (mode === 'dunes') {
-    for (let layer = 0; layer < 3; layer++) art += `<path d="M0 ${150 + layer * 35} C140 ${80 + layer * 50} 260 ${270 - layer * 15} 480 ${140 + layer * 38} V270 H0Z" fill="${dark}" opacity="${.4 + layer * .2}"/>`;
-  } else if (mode === 'halo') art = `<ellipse cx="345" cy="115" rx="130" ry="130" fill="url(#glow)"/>`;
+    for (let layer = 0; layer < 3; layer++) art += `<path d="M0 ${194 + layer * 24} C100 ${132 + layer * 24} 178 ${255 - layer * 10} 288 ${198 + layer * 18} C370 ${156 + layer * 28} 422 ${205 + layer * 18} 480 ${184 + layer * 26} V270 H0Z" fill="${dark}" opacity="${.4 + layer * .2}"/>`;
+  } else if (mode === 'halo') art = `<ellipse cx="380" cy="84" rx="172" ry="172" fill="url(#glow)"/>`;
   else if (mode === 'night_sky') {
-    for (let i = 0; i < 65; i++) art += `<circle cx="${(i * 73 + 11) % 480}" cy="${(i * 47 + 19) % 190}" r="${i % 5 === 0 ? .8 : .4}" fill="${color('plaster-100')}" opacity="${.2 + light * .4}"/>`;
+    for (let i = 0; i < 28; i++) art += `<circle cx="${(i * 73 + 11) % 480}" cy="${12 + (i * 47 + 19) % 156}" r="${i % 5 === 0 ? .8 : .4}" fill="${color('plaster-100')}" opacity="${.24 + light * .18}"/>`;
   }
-  if (['panorama','daylight','night_sky'].includes(mode)) art += `<path d="M0 225 C110 160 160 265 280 215 C360 180 400 210 480 155 V270 H0Z" fill="${dark}"/>`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270"><defs><linearGradient id="base" x2="1" y2="1"><stop stop-color="${dark}"/><stop offset="1" stop-color="${ground}"/></linearGradient><radialGradient id="glow"><stop stop-color="${accent}" stop-opacity="${light * .3}"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs><path fill="url(#base)" d="M0 0H480V270H0Z"/><ellipse cx="360" cy="190" rx="210" ry="210" fill="url(#glow)"/>${art}</svg>`;
-  stage.style.setProperty('--scene-image', mode === 'solid' ? 'none' : `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+  if (['panorama','daylight','night_sky'].includes(mode)) art += `<path d="M0 234 C100 208 175 255 278 226 C374 196 418 225 480 204 V270 H0Z" fill="${dark}"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270"><defs><linearGradient id="base" x2="1" y2="1"><stop stop-color="${dark}"/><stop offset="1" stop-color="${ground}"/></linearGradient><radialGradient id="glow"><stop stop-color="${accent}" stop-opacity="${light * .45}"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs><path fill="url(#base)" d="M0 0H480V270H0Z"/><ellipse cx="360" cy="190" rx="210" ry="210" fill="url(#glow)"/>${art}</svg>`;
+  stage.style.setProperty('--scene-image', scenes[mode] ? `linear-gradient(#0003,#0003),url("${scenes[mode]}")` : mode === 'solid' ? 'none' : `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
   stage.dataset.reduced = String(!!prefs.reduceMotion);
   stage.style.setProperty('--ambient-light', `${Math.round((prefs.lighting ?? 35) * .3)}%`);
 }

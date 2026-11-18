@@ -12,8 +12,8 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const writeJson = (file, value) => writeFileSync(file, JSON.stringify(value));
 try {
   mkdirSync(join(root, 'shared/data'), {recursive: true});
-  mkdirSync(join(root, 'state/media/adhan'), {recursive: true});
-  const input = join(root, 'state/media/adhan/test.mp3');
+  mkdirSync(join(root, 'shared/media/adhan'), {recursive: true});
+  const input = join(root, 'shared/media/adhan/test.mp3');
   const manifest = join(root, 'shared/data/adhan-edits.json');
   writeJson(join(root, 'shared/data/voices.json'), [{id: 'test'}]);
   writeJson(manifest, {test: {sourceSha256: '0'.repeat(64), endSeconds: 1.2}});
@@ -45,6 +45,12 @@ try {
   prepareAdhans(root, true);
   prepareAdhans(root);
   assert.deepEqual([input, backup, stamp].map(p => statSync(p).mtimeMs), before, 'idempotent preparation and read-only build check');
+  rmSync(stamp); rmSync(backup);
+  writeJson(manifest, {test: {...edit, outputSha256: hash(cleaned)}});
+  prepareAdhans(root, true); prepareAdhans(root);
+  assert.deepEqual(readFileSync(input), cleaned, 'fresh checkout accepts only the approved prepared bytes');
+  assert.ok(!existsSync(stamp) && !existsSync(backup), 'packaged check must not invent private originals or stamps');
+  writeFileSync(backup, original);
   writeFileSync(input, 'unrecognized replacement');
   assert.throws(() => prepareAdhans(root, true), /Unprepared adhan/);
   assert.throws(() => prepareAdhans(root), /Unknown recording/);
@@ -57,6 +63,8 @@ try {
   writeJson(manifest, {'../outside': edit});
   assert.throws(() => prepareAdhans(root), /Invalid adhan edit/);
   writeJson(manifest, {test: {...edit, endSeconds: -1}});
+  assert.throws(() => prepareAdhans(root), /Invalid adhan edit/);
+  writeJson(manifest, {test: {...edit, outputSha256: 'bad'}});
   assert.throws(() => prepareAdhans(root), /Invalid adhan edit/);
   console.log('PASS: audio cuts retain encoded frames/originals; checks are read-only; preparation is idempotent and rejects unknown input/unsafe edits.');
 } finally {

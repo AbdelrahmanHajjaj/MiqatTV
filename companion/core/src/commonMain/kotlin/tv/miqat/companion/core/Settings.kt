@@ -17,7 +17,7 @@ class SettingSpec(
             "toggle" -> value == "true" || value == "false"
             "choice" -> value in options
             "number" -> value.toIntOrNull()?.let { it in minimum..maximum &&
-                (id != "display.size" || (it - minimum) % step == 0) } ?: false
+                (id != "display.size" && id != "appearance.mihrab-opacity" || (it - minimum) % step == 0) } ?: false
             "list" -> {
                 val items = if (value.isEmpty()) emptyList() else value.split(',')
                 items.size <= maximum && items.distinct().size == items.size && items.all { it in options }

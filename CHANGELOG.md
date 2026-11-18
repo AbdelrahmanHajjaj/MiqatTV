@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Sync companion branding/catalogs with the refreshed main design and expose its
+  Home mihrab-opacity setting with shared bounds, drafts and conflict handling.
+
 - Add the approved theme-matched Miqat centre mark with half-gap clearance and
   stronger error correction to Android TV and LG pairing QR codes.
 - Use `miqat` as the Android companion launcher label (product name `miqatTv`).
@@ -9,6 +12,46 @@
   Miqat, using its shared artwork, geometry, palettes and tv.miqat identities.
 - Add themed local pairing QR codes, physical TV approval, phone appearance
   preview with Apply/Cancel, and Home/input/radio/adhan-preview controls.
+
+- Add Miqat quiet as a second original Miqat background; keep Miqat signature as
+  the default. Use 75% surface opacity for the Home next-prayer card while keeping
+  its text and gold outline opaque.
+
+- Add Home mihrab fill opacity from 50–100% in 5% steps, with 85% recommended.
+  Preserve opaque text/outlines and draft Apply/Cancel behavior.
+- Simplify all six prayer icons with heavier solar/lunar symbols, shared across
+  Android, LG and browser preview.
+
+- Give the default Miqat preset bespoke sculpted petrol/jade artwork with fine
+  champagne-gold inlay. Keep its branded palette and classic panels, and preserve
+  manual background choices. The geometric lattice remains available separately.
+
+- Put complete presets first in Appearance, above the existing Customize controls.
+  Selecting a different preset previews its palette, surface, paired background
+  and lighting; Apply/cancel and manual adjustments remain available.
+- Tailor Dusk, Sand, Midnight, Aurora, Forest and Slate into Dusk peaks, Golden coast,
+  Moon lake, Aurora sky, Tea hills and Monsoon, keeping their stable setting IDs.
+
+- Add six local, neutral illustrated backgrounds from CleanYourTV: Dusk peaks,
+  Golden coast, Moon lake, Aurora sky, Tea hills and Monsoon. Available in Android,
+  LG and browser preview, with bilingual choices and preserved MIT attribution.
+
+- Refine all 20 built-in palettes around deeper petrol, mineral and earth colors,
+  with quieter lighting and verified text/accent contrast. Redraw the decorative
+  masks with geometric, botanical and flowing designs, keep the sole arch option
+  complete, replace the default tile with stars and soften scenic backgrounds. LG patterns use
+  palette-matched ink and the same full-screen proportions as Android/preview.
+
+
+- Publish the bilingual interactive preview to GitHub Pages after main passes validation.
+- Update the preview toolchain to include the available Astro security fixes.
+
+- Preserve Android's arrange menu and selected app when the installed-app catalog refreshes.
+
+- Add full-audio CI builds, validation Actions, a manual draft-release workflow
+  and main-branch protection requirements.
+
+- Show English and Arabic Android launcher Home screenshots in the README.
 - Establish Miqat as an independent project with Android TV and LG applications,
   a portable Kotlin JVM/ES5 core, canonical data/design and a browser preview.
 - Use Miqat names and tv.miqat.* identities throughout apps, services, setup

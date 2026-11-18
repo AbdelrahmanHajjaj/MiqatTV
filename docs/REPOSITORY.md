@@ -9,12 +9,13 @@ The local checkout is D:/Dev/MiqatTv. It has its own .git directory and does not
 depend on the previous repository's worktree links. Its origin points to MiqatTV.
 No local-folder move or remote rename is needed.
 
-There are no inherited GitHub Actions. Local checks are documented in TESTING.md;
-CI and publishing can be added for this repository when requested. Do not claim
-checks run automatically. The preview targets the MiqatTV Pages path; Pages and
-public downloads need separate publication setup.
+The new workflows are owned here: Validate checks the shared core and all three
+consumers; Draft build release publishes verified artifacts to a draft prerelease.
+Main protection and token defaults follow [CI.md](CI.md). No inherited workflow
+is retained. GitHub Pages serves the validated browser preview automatically
+from main; see [website deployment](CI.md#website).
 
 Main starts with the validated foundation and fresh Git history, as approved
-by the owner on 17 November 2026. Future changes use feature branches. Releases,
-branch protections and CI need their own setup. Keep credentials, ignored
-recordings, build outputs and device configuration outside source control.
+by the owner on 17 November 2026. Future changes use feature branches. Stable releases still need explicit
+authorization and persistent signing. Keep credentials, unreviewed recordings,
+build outputs and device configuration outside source control.
