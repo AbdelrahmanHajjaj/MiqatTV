@@ -302,5 +302,6 @@ plus the new default mihrab opacity; input, startup and automatic alerts restore
 Old scheduling was disabled before Miqat scheduling was enabled. Old launcher
 uninstallation and settings preservation through the 0.2.24 update are verified.
 Backups, logs and device configuration stay private under ignored state/.
-Human splash, picture/sound, physical remote and new-identity pairing/camera
-acceptance remain pending; service readback and mocked browsers do not prove them.
+The owner confirmed the branded splash, picture and sound all work on the
+physical LG with 0.2.24 on 18 November 2026. Physical remote, new-identity
+pairing/camera, phone commands and power/lifecycle acceptance remain pending.

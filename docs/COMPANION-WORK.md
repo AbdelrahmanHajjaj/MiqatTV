@@ -203,5 +203,7 @@ splash inside the app until its first rendered screen, with a 600 ms minimum.
 Error screens also dismiss the cover. LG unit/service and full bilingual browser
 checks pass, including startup-cover visibility and dismissal. Version 0.2.24 is
 installed and launched; service readback verifies all migrated settings survived
-the update and the old app is absent. Physical splash and fresh Miqat camera,
-pairing, picture/sound and remote acceptance remain pending.
+the update and the old app is absent. The owner confirmed on the physical LG
+that the splash, picture and sound all work with 0.2.24 on 18 November 2026.
+Fresh Miqat camera/pairing, phone commands, physical remote and power/lifecycle
+acceptance remain pending.
