@@ -115,3 +115,11 @@ No runtime QR renderer, pairing wire format or TV integration was changed.
 
 Naming check: `:companion:assembleDebug :companion:lintDebug` pass; Android aapt
 reports application label `miqat` and unchanged package `tv.miqat.companion`.
+
+Gold-only refinement: extracted a transparent PNG from the shared icon with the
+built-in image-editing tool (remove petrol background; preserve gold Arabic mark
+and arch). The canonical master is unchanged. Gold-only and previous-badge
+comparisons each pass 144 exact decoder checks at 220/280/400 px with rotations,
+blur and lower contrast. Preview/cutout/evidence live under ignored
+state/companion/qr-centre-transparent/. Runtime QR remains unchanged; physical
+camera and all-theme acceptance are pending selection.
