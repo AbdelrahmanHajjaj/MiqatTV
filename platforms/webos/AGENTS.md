@@ -7,7 +7,7 @@ Read the root [AGENTS.md](../../AGENTS.md), [LG guide](../../docs/WEBOS.md) and
   and service must parse as ES5 and avoid unavailable APIs. Build tools use Node 24.
 - Keep tv.miqat.webos and tv.miqat.webos.service aligned across metadata, Luna
   calls, storage, activities, tests and packaging. Align all four version declarations.
-- Build consumes shared core/data/design and local audio. Edit canonical sources;
+- Build consumes shared core/data/design and approved shared/media audio. Edit canonical sources;
   never edit build/. Run shared JS generators sequentially.
 - Preserve input/audio lifecycle, volume ownership, duplicate/expired callback
   handling and once-per-boot startup. The service is demand-started, not a global

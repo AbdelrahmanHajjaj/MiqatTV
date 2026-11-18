@@ -34,6 +34,14 @@ const { t, lang } = ctx;
     <p class="online-note">{t.s('onlineAdvisory')}</p>
     <button class="ft online-retry" data-online-retry type="button" hidden>{t.s('checkOnline')}</button>
   </section>
+  <section class="online-check pairing-preview" data-pairing hidden role="dialog" aria-modal="true" aria-label={t.s('companionPhones')}>
+    <div class="online-heading">
+      <button class="ft online-back" data-pair-action="back" type="button" aria-label={t.s('back')}><Icon name="back" size={32} /></button>
+      <h2 class="display-bold">{t.s('companionPhones')}</h2>
+    </div>
+    <p class="online-note">{t.ar ? 'عرض تجريبي في المتصفح — لا يوجد تلفاز متصل' : 'Browser demo — no TV is connected'}</p>
+    <div class="pairing-demo-body" data-pairing-body></div>
+  </section>
   <div class="toast" data-toast-out hidden role="status"></div>
   <a data-home href={href('', lang) + '#tv'} tabindex="-1" hidden>{lang === 'ar' ? 'الرئيسية' : 'Home'}</a>
   <audio data-audio preload="none"></audio>
@@ -54,6 +62,13 @@ const { t, lang } = ctx;
   .settings .online-check thead { font-size:var(--font-size-label); color:var(--color-mist-400); }
   .settings .online-check tbody th { font-weight:500; }
   .settings .online-retry { position:relative; display:flex; align-items:center; justify-content:center; width:580px; height:72px; font-size:var(--font-size-body); border-radius:var(--radius-cell); }
+  .settings .pairing-demo-body { display:flex; gap:var(--space-6); width:100%; min-height:0; overflow:auto; padding:24px; }
+  .settings .pairing-demo-qr { flex:none;width:420px;height:420px;background:white; }
+  .settings .pairing-demo-qr svg { display:block;width:420px;height:420px; }
+  .settings .pairing-demo-controls { flex:1; min-width:0; }
+  .settings .pairing-demo-controls button { position:relative;display:flex;align-items:center;width:100%;min-height:72px;padding:var(--space-4);margin-bottom:12px;border-radius:var(--radius-cell);font-size:var(--font-size-body); }
+  .settings .pairing-demo-code { display:block;font-size:var(--font-size-display-s);letter-spacing:8px; }
+  .settings .rows.scrolling:not(.appearance) { top:calc(var(--layout-settings-rows-top) - var(--layout-settings-scroll-padding));height:calc(100% - var(--layout-settings-rows-top) - var(--space-safe-block)); }
   .settings .slide { width: var(--layout-settings-carousel-width); height: var(--layout-settings-carousel-height); padding: 0 12px; display: grid; place-items: center; overflow: hidden; white-space: nowrap; font-size: var(--font-size-label); opacity: .65; }
   .settings .slide.home-choice { width:var(--layout-settings-home-arrow-width); }
   .settings .slide.home-choice.on { width:var(--layout-settings-home-choice-width); }

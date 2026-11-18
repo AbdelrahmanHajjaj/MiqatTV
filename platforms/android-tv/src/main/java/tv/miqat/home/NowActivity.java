@@ -38,6 +38,8 @@ public class NowActivity extends Screen {
     private int restoreVolume = -1;
     private boolean restoreMute;
     private boolean started;
+    boolean companionPreview(){return getIntent().getBooleanExtra("companionPreview",false);}
+    String companionPlayback(){try{return player==null?"idle":player.isPlaying()?"playing":"loading";}catch(RuntimeException stopped){return "idle";}}
 
     private final Runnable autoClose = this::finish;
 
@@ -66,7 +68,7 @@ public class NowActivity extends Screen {
         verse.setText(SacredText.ADHAN_CALL);
         verse.setTextDirection(View.TEXT_DIRECTION_RTL);
         TextView label = caps(text(ui400, 22, Palette.MIST_400));
-        label.setText(t.nowLabel());
+        label.setText(companionPreview()?t.testAdhanShort():t.nowLabel());
         String[] names = t.prayerNames();
         if (prayer == PrayerDay.DHUHR && new PrayerDay(this, time).friday) names[PrayerDay.DHUHR] = t.jumuah();
         TextView name = text(displayBold, 128, Palette.PLASTER_100);
@@ -116,7 +118,7 @@ public class NowActivity extends Screen {
         // visible before starting audio or its close countdown, rather than playing behind the dream.
         if (hasFocus && !started) {
             started = true;
-            if (Prefs.adhan(this)) startAdhan();
+            if (companionPreview() || Prefs.adhan(this)) startAdhan();
             scheduleClose();
         }
     }
@@ -127,6 +129,7 @@ public class NowActivity extends Screen {
      */
     private void scheduleClose() {
         tick.removeCallbacks(autoClose);
+        if(companionPreview()){tick.postDelayed(autoClose,12000);return;}
         int minutes = Prefs.callCloseMinutes(this);
         if (minutes > 0) tick.postDelayed(autoClose, minutes * 60_000L);
         else if (player == null) tick.postDelayed(autoClose, Tokens.MOTION_CALL_SILENT_DISMISS_MS);
@@ -166,7 +169,7 @@ public class NowActivity extends Screen {
         if (player != null) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (player != null) player.setOnCompletionListener(mp -> {
             stopAdhan();
-            if (Prefs.callCloseMinutes(this) == 0) finish();
+            if (companionPreview() || Prefs.callCloseMinutes(this) == 0) finish();
         });
         updatePlayLabel();
     }

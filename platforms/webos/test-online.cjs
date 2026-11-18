@@ -111,7 +111,7 @@ for (const [cityId, zone, offset, suffix] of [['kolkata', 'Asia/Kolkata', 330, '
   let failStart = false;
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'service/service.js'), 'utf8'), {
     Date, setTimeout, clearTimeout, process: {getuid: () => 1},
-    require: name => name === 'fs' ? fakeFs : name === 'webos-service' ? Service : name === './core' ? core
+    require: name => name === 'fs' ? fakeFs : name === 'webos-service' ? Service : name === './companion-session' ? require('./build/service/companion-session') : name === './core' ? core
       : name === './online-prayer' ? (p, now, callback) => {
         if (failStart) throw new Error('Calculation unavailable');
         assert.equal(JSON.stringify(p), JSON.stringify(prefs));

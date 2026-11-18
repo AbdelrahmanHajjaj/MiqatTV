@@ -6,6 +6,7 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Opens Android's user-confirmed uninstall screen from All apps. -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!-- Quran Radio and manual prayer comparisons use the network. Radio also keeps the CPU/Wi-Fi
@@ -51,6 +52,7 @@
     </queries>
 
     <application
+        android:name=".CompanionApplication"
         android:label="@string/app_name"
         android:icon="@drawable/miqat_icon"
         android:banner="@drawable/miqat_banner"
@@ -82,6 +84,8 @@
         <activity android:name=".InputsActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@style/Theme.Miqat.Call" android:taskAffinity="tv.miqat.home.inputs" android:launchMode="singleInstance" />
         <activity android:name=".DockActivity" android:exported="false" android:excludeFromRecents="true" android:noHistory="true" android:theme="@android:style/Theme.NoDisplay" />
         <activity android:name=".RemoteButtonsActivity" android:exported="false" android:excludeFromRecents="true" />
+        <activity android:name=".PairingActivity" android:exported="false" android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|uiMode|locale|layoutDirection" />
         <activity
             android:name=".AllAppsActivity"
             android:exported="false"

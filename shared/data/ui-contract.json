@@ -737,6 +737,12 @@
     "label": "cancel",
     "save": "action"
   },
+  {"id":"device.companion","section":"device","kind":"action","label":"companionPhones","save":"action"},
+  {"id":"pairing.open","section":"pairing","kind":"action","label":"pairPhone","save":"action"},
+  {"id":"pairing.cancel","section":"pairing","kind":"action","label":"cancel","save":"action"},
+  {"id":"pairing.approve","section":"pairing","kind":"action","label":"approvePhone","save":"action"},
+  {"id":"pairing.reject","section":"pairing","kind":"action","label":"rejectPhone","save":"action"},
+  {"id":"pairing.revoke","section":"pairing","kind":"action","label":"revokePhone","save":"action"},
   {
     "id": "apps.uninstall",
     "section": "apps",

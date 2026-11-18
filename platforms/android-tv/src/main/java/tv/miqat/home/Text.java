@@ -378,6 +378,21 @@ final class Text {
     String onlineDifference() { return ar ? "الفارق بالدقائق (AlAdhan − الحساب)" : "AlAdhan − calculated (min)"; }
     String uiSize() { return ar ? "حجم الواجهة" : "Interface size"; }
     String uiSizeHelp() { return ar ? "كل الشاشات وشريط الصلاة" : "All screens and the prayer bar"; }
+    String companionPhones() { return ar ? "الهواتف المقترنة" : "Paired phones"; }
+    String pairPhone() { return ar ? "إقران هاتف" : "Pair phone"; }
+    String approvePhone() { return ar ? "السماح للهاتف" : "Approve phone"; }
+    String rejectPhone() { return ar ? "رفض الهاتف" : "Reject phone"; }
+    String revokePhone() { return ar ? "إلغاء الوصول" : "Revoke access"; }
+    String pairingLoading() { return ar ? "جارٍ تجهيز الاتصال الآمن…" : "Preparing secure connection…"; }
+    String pairingUnavailable() { return ar ? "الاتصال الآمن غير متاح على هذا التلفاز" : "Secure connection unavailable on this TV"; }
+    String pairingNetwork() { return ar ? "وصّل الهاتف والتلفاز بالشبكة المنزلية نفسها" : "Connect phone and TV to the same home network"; }
+    String pairingScan() { return ar ? "امسح الرمز من تطبيق الهاتف" : "Scan with the phone companion"; }
+    String pairingConfirm() { return ar ? "تحقّق من تطابق الرمز على الهاتف ثم وافق بريموت التلفاز" : "Check the code matches the phone, then approve with the TV remote"; }
+    String pairingWaiting() { return ar ? "بانتظار إكمال الهاتف للإقران…" : "Waiting for the phone to complete pairing…"; }
+    String pairingExpired() { return ar ? "انتهت صلاحية الرمز" : "Pairing code expired"; }
+    String pairingEmpty() { return ar ? "لا توجد هواتف مقترنة" : "No paired phones"; }
+    String pairingForeground() { return ar ? "يبقى الاتصال متاحاً أثناء فتح التطبيق" : "Connection is available while the app is open"; }
+    String pairingFailed() { return ar ? "تعذّر حفظ التغيير. حاول مجدداً." : "Could not save the change. Try again."; }
     String onlineAdvisory() { return ar ? "مقارنة استرشادية. الحساب المحلي يتضمن تعديلاتك المحفوظة؛ مواقيت AlAdhan لا تتضمنها. قد يختلف التقريب أو العرف المحلي." : "Advisory comparison. Calculated times include your saved offsets; AlAdhan values do not. Rounding and local conventions may differ."; }
     String onlineContext(String place, PrayerMethod method, Madhab school, String date, String zone) {
         return place + sep() + methodName(method) + sep() + school(school) + sep() + d(date) + sep() + zone;

@@ -377,6 +377,21 @@ final class Text {
     String onlineDifference() { {{STRINGS:onlineDifference}} }
     String uiSize() { {{STRINGS:uiSize}} }
     String uiSizeHelp() { {{STRINGS:uiSizeHelp}} }
+    String companionPhones() { {{STRINGS:companionPhones}} }
+    String pairPhone() { {{STRINGS:pairPhone}} }
+    String approvePhone() { {{STRINGS:approvePhone}} }
+    String rejectPhone() { {{STRINGS:rejectPhone}} }
+    String revokePhone() { {{STRINGS:revokePhone}} }
+    String pairingLoading() { {{STRINGS:pairingLoading}} }
+    String pairingUnavailable() { {{STRINGS:pairingUnavailable}} }
+    String pairingNetwork() { {{STRINGS:pairingNetwork}} }
+    String pairingScan() { {{STRINGS:pairingScan}} }
+    String pairingConfirm() { {{STRINGS:pairingConfirm}} }
+    String pairingWaiting() { {{STRINGS:pairingWaiting}} }
+    String pairingExpired() { {{STRINGS:pairingExpired}} }
+    String pairingEmpty() { {{STRINGS:pairingEmpty}} }
+    String pairingForeground() { {{STRINGS:pairingForeground}} }
+    String pairingFailed() { {{STRINGS:pairingFailed}} }
     String onlineAdvisory() { {{STRINGS:onlineAdvisory}} }
     String onlineContext(String place, PrayerMethod method, Madhab school, String date, String zone) {
         return place + sep() + methodName(method) + sep() + school(school) + sep() + d(date) + sep() + zone;

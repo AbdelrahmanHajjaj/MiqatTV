@@ -22,3 +22,6 @@ include ':app'
 project(':app').projectDir = file('platforms/android-tv')
 include ':installer'
 includeBuild('shared/core')
+include ':companion'
+project(':companion').projectDir = file('companion/android')
+includeBuild('companion/core') { name = 'companion-core' }

@@ -15,14 +15,16 @@ import java.util.Map;
 public final class AppearanceCycleDeviceCheck extends Instrumentation {
     private boolean prayerCheck;
     private boolean uiCheck;
-    private boolean onlineCheck, onlineNetwork;
+    private boolean onlineCheck, onlineNetwork, companionCheck,companionHost;
     private boolean sizeCheck, sizeWindows;
 
     private boolean opacityCheck;
 
     @Override public void onCreate(Bundle arguments) {
         String requested = arguments == null ? null : arguments.getString("check");
-        if (requested != null && !requested.equals("opacity") && !requested.equals("prayer") && !requested.equals("ui") && !requested.equals("online") && !requested.equals("online-network") && !requested.equals("size") && !requested.equals("size-windows")) throw new IllegalArgumentException("Unknown device check: " + requested);
+        if (requested != null && !requested.equals("opacity") && !requested.equals("prayer") && !requested.equals("ui") && !requested.equals("online") && !requested.equals("online-network") && !requested.equals("size") && !requested.equals("size-windows") && !requested.equals("companion") && !requested.equals("companion-host")) throw new IllegalArgumentException("Unknown device check: " + requested);
+        companionCheck = "companion".equals(requested);
+        companionHost = "companion-host".equals(requested);
         opacityCheck = "opacity".equals(requested);
         prayerCheck = "prayer".equals(requested);
         uiCheck = "ui".equals(requested);
@@ -35,6 +37,9 @@ public final class AppearanceCycleDeviceCheck extends Instrumentation {
     }
 
     @Override public void onStart() {
+        if (companionHost) { CompanionDeviceCheck.host(this); return; }
+        if (companionCheck) { CompanionDeviceCheck.run(this); return; }
+
         if (opacityCheck) { MihrabOpacityDeviceCheck.run(this); return; }
         if (prayerCheck) { PrayerRuntimeDeviceCheck.run(this); return; }
         if (uiCheck) { UiContractDeviceCheck.run(this); return; }

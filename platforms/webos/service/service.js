@@ -144,7 +144,7 @@ register('onlinePrayer', function (message) {
     });
   } catch (error) { if (onlineJob === job) { onlineJob = null; } throw error; }
 });
-register('inputs', function (message) {
+function getInputs(message) {
   call('luna://com.webos.service.eim/getCurrentInput', {}, safe(message, function (current) {
     call('luna://com.webos.service.eim/getAllInputStatus', {}, safe(message, function (all) {
       var inputs = [], seen = {};
@@ -157,10 +157,12 @@ register('inputs', function (message) {
       message.respond({returnValue: true, inputs: inputs, current: selected, discoveryFailed: !all.returnValue || !current.returnValue});
     }));
   }));
-});
+}
+register('inputs', getInputs);
 register('savePrefs', function (message) {
-  if (!message.payload.prefs || typeof message.payload.prefs !== 'object' || Array.isArray(message.payload.prefs)) { throw new Error('Missing preferences'); }
-  var state = read(); state.prefs = core.prefs(message.payload.prefs); save(state);
+  var state = read(), merged = core.mergePrefs(state.prefs, message.payload.expected, message.payload.prefs);
+  if (merged.conflicts.length) { message.respond({returnValue: false, conflicts: merged.conflicts, prefs: merged.prefs}); return; }
+  state.prefs = merged.prefs; save(state);
   scheduleAlerts(safe(message, function (result) {
     message.respond({returnValue: true, prefs: read().prefs, scheduleResult: result});
   }));
@@ -176,7 +178,7 @@ register('exitToInput', function (message) {
   if (!input) { throw new Error('Unknown input'); }
   call('luna://com.webos.applicationManager/launch', {id: input.appId}, safe(message, function (result) { message.respond(result); }));
 });
-register('setStartup', function (message) {
+function setStartup(message) {
   var enabled = message.payload.enabled;
   if (typeof enabled !== 'boolean') { throw new Error('Expected enabled boolean'); }
   var state = read();
@@ -200,7 +202,8 @@ register('setStartup', function (message) {
     save(latest);
     message.respond({returnValue: !!result.returnValue, enabled: latest.startup.enabled, result: result});
   }));
-});
+}
+register('setStartup', setStartup);
 register('startupTick', function (message) {
   if (!message.activity) { throw new Error('Missing scheduled activity'); }
   function complete(restart) {
@@ -220,7 +223,7 @@ register('startupTick', function (message) {
 });
 register('report', function (message) {
   var p = message.payload;
-  if (['input', 'bar', 'home', 'settings', 'inputs', 'picker', 'prayer-day', 'online-prayer', 'radio', 'apps', 'clock', 'error', 'hidden'].indexOf(p.view) < 0 ||
+  if (['input', 'bar', 'home', 'settings', 'inputs', 'picker', 'prayer-day', 'online-prayer', 'pairing', 'radio', 'apps', 'clock', 'error', 'hidden'].indexOf(p.view) < 0 ||
       typeof p.instance !== 'string' || !/^[0-9-]{1,40}$/.test(p.instance) ||
       (p.input !== null && !core.input(p.input))) { throw new Error('Invalid app status'); }
   var state = read();
@@ -353,4 +356,42 @@ register('media', function (message) {
 register('launchApp', function (message) {
   if (message.payload.id !== 'com.palm.app.settings' && !core.app(message.payload.id)) { throw new Error('Unsupported app'); }
   call('luna://com.webos.applicationManager/launch', {id: message.payload.id}, safe(message, function (result) { message.respond(result); }));
+});
+var companionAdapter = null;
+function companionSnapshot() {
+  if (!companionAdapter) { companionAdapter = require('./companion-settings'); }
+  return companionAdapter.snapshot(read());
+}
+var companion = require('./companion-session')(service, {
+  directory: dir,
+  current: function () { var state = read(); return {prefs: core.prefs(state.prefs), startup: !!(state.startup && state.startup.enabled)}; },
+  snapshot: companionSnapshot,
+  remote: function (done) {
+    getInputs({payload: {}, respond: function (reply) {
+      if (!reply.returnValue || !Array.isArray(reply.inputs)) { done(new Error('TV inputs unavailable')); return; }
+      var state = read(), media = state.media;
+      done(null, {commands: require('./companion-lan.json').commands,
+        inputs: reply.inputs.map(function (input) { return {value: input.id, label: input.label}; }),
+        input: state.input || '', view: state.ui && state.ui.view || '',
+        media: media ? {kind: media.kind, state: media.event === 'progress' ? 'playing' : media.event} : {kind: '', state: 'idle'}});
+    }});
+  },
+  info: function () { return {protocol: 1, profile: 'lg', name: 'LG TV', version: require('./package.json').version, systemLanguage: ''}; },
+  apply: function (expected, changes, callback) {
+    var state = read(); companionSnapshot();
+    var planned = companionAdapter.patch(state, expected, changes);
+    function finish(status, conflicts) {
+      var result;
+      try { result = companionSnapshot(); result.status = status; result.conflicts = conflicts || []; }
+      catch (error) { callback(error); return; }
+      callback(null, result);
+    }
+    if (planned.conflicts.length) { finish('conflict', planned.conflicts); return; }
+    if (planned.startup !== null) {
+      setStartup({payload: {enabled: planned.startup}, respond: function (reply) { finish(reply.returnValue ? 'saved' : 'uncertain'); }}); return;
+    }
+    try { state.prefs = planned.prefs; save(state); }
+    catch (error) { finish('uncertain'); return; }
+    scheduleAlerts(function () { finish('saved'); });
+  }
 });

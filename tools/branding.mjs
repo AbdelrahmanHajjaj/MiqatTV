@@ -1,4 +1,4 @@
-// Project the original Miqat arch into Android's two independent renderers.
+// Project the shared Miqat arch into the independent Android renderers.
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
@@ -23,8 +23,8 @@ function java(path) {
   return lines.join('\n');
 }
 export function generateBranding(check = false) {
-for (const target of ['platforms/android-tv/src/main/java/tv/miqat/home', 'installer/src/main/java/tv/miqat/installer']) {
-  const pkg = target.endsWith('home') ? 'home' : 'installer';
+for (const target of ['platforms/android-tv/src/main/java/tv/miqat/home', 'installer/src/main/java/tv/miqat/installer', 'companion/android/src/main/java/tv/miqat/companion']) {
+  const pkg = target.split('/').at(-1);
   const tileMethod = pkg === 'home' ? `
     static void tile(android.graphics.Path path, float width, float height) {
         float x = width / ${tile.width}f, y = height / ${tile.height}f;
@@ -51,6 +51,6 @@ ${tileMethod}
   if (check) assert.equal(readFileSync(url, 'utf8'), source, target + ' is stale');
   else writeFileSync(url, source);
 }
-console.log(check ? 'Miqat geometry projections match' : 'Generated Miqat geometry for TV and installer');
+console.log(check ? 'Miqat geometry projections match' : 'Generated Miqat geometry for TV, installer and companion');
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) generateBranding(process.argv.includes('--check'));

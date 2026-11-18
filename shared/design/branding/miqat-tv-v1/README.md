@@ -19,3 +19,9 @@ variation; there is no vector calligraphy master or Android adaptive-icon layer.
 The icon-size review image is a desktop comparison, not device acceptance.
 See [design sources](../../../../docs/DESIGN.md) and
 [current validation](../../../../docs/EVIDENCE.md).
+
+The companion pairing mark is [`../../assets/qr-mark.png`](../../assets/qr-mark.png),
+a transparent derivative extracted from the selected icon with the built-in
+image-editing tool on 18 November 2026. The owner selected the theme-filled,
+borderless half-gap QR treatment. Original icon/logo masters and their exports
+are unchanged; QR consumers use the derivative's alpha with the app accent.

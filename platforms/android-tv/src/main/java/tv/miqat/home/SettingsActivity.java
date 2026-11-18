@@ -111,6 +111,7 @@ public class SettingsActivity extends Screen {
     }
 
     private int section = PRAYER;
+    @Override boolean companionEditing() { return editing != null || chooser != null || section == APPEARANCE; }
     private boolean onNav = true;
     private int rowIndex;
     private boolean prayerOffsetsPage;
@@ -240,6 +241,15 @@ public class SettingsActivity extends Screen {
         b.addView(v, new FrameLayout.LayoutParams(-1, -1));
         navLabel[i] = v;
         b.setLook(f -> styleNav(i));
+        b.setOnFocusChangeListener((view, focused) -> {
+            if (!focused) return;
+            // Rebuilding rows can briefly focus the sidebar before restoring the row.
+            b.post(() -> {
+                if (!b.isFocused()) return;
+                if (editing != null) stopEditing(false);
+                if (i != section) navTo(i); else focusNav();
+            });
+        });
         float height = largeUi ? 64 : NAV_H;
         placeTile(b, sideStart, (largeUi ? rowsTop : NAV_TOP) + i * (height + NAV_GAP), 424, height);
         return b;
@@ -726,6 +736,10 @@ public class SettingsActivity extends Screen {
                     void open() { SystemScreens.open(SettingsActivity.this, Settings.ACTION_WIFI_SETTINGS); }
                 });
             default: return Arrays.asList(
+                new Row("device.companion", VALUE) {
+                    String label() { return t.companionPhones(); }
+                    void open() { startSafely(new Intent(c, PairingActivity.class)); }
+                },
                 new Row("device.settings", VALUE) {
                     String label() { return t.deviceRow(); }
                     String help() { return t.deviceHelp(); }
@@ -1066,6 +1080,7 @@ public class SettingsActivity extends Screen {
         if (i < 0 || i >= SECTIONS || i == section) return;
         section = i;
         prayerOffsetsPage = false;
+        onNav = true;
         showSection();
         focusNav();
     }

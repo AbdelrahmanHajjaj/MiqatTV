@@ -8,7 +8,8 @@ const sacred = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/dat
 const uiGaps = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-gaps.json')));
 const uiChoiceGaps = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-choice-gaps.json')));
 const shots = path.resolve(__dirname, '../../state/webos-port');
-fs.mkdirSync(shots, { recursive: true });
+const capture=process.argv.includes('--capture');
+if(capture)fs.mkdirSync(shots, { recursive: true });
 const server = http.createServer((req, res) => {
   const file = path.resolve(base, '.' + (req.url === '/' ? '/index.html' : req.url));
   if (!file.startsWith(base + path.sep) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
@@ -18,16 +19,28 @@ const server = http.createServer((req, res) => {
 });
 (async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  let browser;
+  let browser, page;
   try {
     browser = await chromium.launch({channel: 'msedge', headless: true});
-    const page = await browser.newPage({viewport: {width: 1920, height: 1080}});
-    await page.addInitScript(() => {
+    page = await browser.newPage({viewport: {width: 1920, height: 1080}});
+    const identity=await new Promise((resolve,reject)=>require('./build/service/companion-identity').load({read:()=>null,write(){}},(error,value)=>error?reject(error):resolve(value)));
+    const qrFixture={type:'miqat-tv-pair',version:3,url:'https://192.168.1.5:45761',pin:identity.pin,token:require('./service/companion-pairing').token()};
+    await page.addInitScript(qrFixture => {
       // Mock the TV boundary and decoder events; the physical LG validates actual picture/sound.
       window.mediaCalls = [];
       window.volumeCalls = [];
       window.onlineCalls = [];
       window.closeCount = 0; window.close = () => { window.closeCount++; };
+      window.companionCalls=[]; window.companionState={supported:true,starting:false,failure:'',phones:[],open:false,pending:null,approved:false,ownsPairing:false,qr:null};
+      window.publishCompanion=(extra={})=>window.companionBridge?.onservicecallback(JSON.stringify({returnValue:true,subscribed:true,session:'owned-frontend',companion:window.companionState,...extra}));
+      window.companionRequest=(name='Home phone')=>{
+        window.companionState.pending={name,nonce:'N'.repeat(43),code:'123456'};window.publishCompanion();
+      };
+      window.companionComplete=()=>{
+        if(!window.companionState.approved)throw Error('Fixture approval required');
+        window.companionState.phones.push({id:'P'.repeat(43),name:window.companionState.pending.name});
+        Object.assign(window.companionState,{open:false,pending:null,approved:false,ownsPairing:false,qr:null});window.publishCompanion();
+      };
       HTMLMediaElement.prototype.load = function () { window.mediaCalls.push({op: 'load', tag: this.tagName, src: this.getAttribute('src'), children: this.children.length}); };
       HTMLMediaElement.prototype.pause = function () { window.mediaCalls.push({op: 'pause', tag: this.tagName}); };
       HTMLMediaElement.prototype.play = function () {
@@ -35,10 +48,37 @@ const server = http.createServer((req, res) => {
         setTimeout(() => this.dispatchEvent(new Event('playing')), 0); return Promise.resolve();
       };
       window.PalmServiceBridge = function () {
+        this.cancel=()=>{window.companionCalls.push({action:'bridge-cancel'});if(window.companionBridge===this)window.companionBridge=null;};
         this.call = (uri, raw) => {
           const p = JSON.parse(raw), method = uri.split('/').pop();
+          if(method.startsWith('companion')) {
+            window.companionCalls.push({method,...p});const fixture=window.companionState;
+            const respond=(ok=true)=>setTimeout(()=>this.onservicecallback(JSON.stringify({returnValue:ok})),5);
+            if(method==='companionForeground'){window.companionBridge=this;setTimeout(()=>window.publishCompanion(),5);return;}
+            if(method==='companionLeave'){Object.assign(fixture,{open:false,pending:null,approved:false,ownsPairing:false,qr:null});respond();return;}
+            if(method==='companionUi') {
+              window.companionEditing=p.editing;window.companionPage=p.pairingPage;
+              if(!p.pairingPage&&fixture.open){Object.assign(fixture,{open:false,pending:null,approved:false,ownsPairing:false,qr:null});setTimeout(()=>window.publishCompanion(),5);}
+              respond();return;
+            }
+            if(method==='companionPairing') {
+              if(window.failCompanion||!window.companionPage||!fixture.supported){respond(false);return;}
+              if(p.action==='open')Object.assign(fixture,{open:true,pending:null,approved:false,ownsPairing:true,qr:qrFixture});
+              else if(p.action==='approve'){if(p.nonce!==fixture.pending?.nonce){respond(false);return;}fixture.approved=true;}
+              else if(p.action==='reject'||p.action==='cancel')Object.assign(fixture,{open:false,pending:null,approved:false,ownsPairing:false,qr:null});
+              else if(p.action==='revoke')fixture.phones=fixture.phones.filter(phone=>phone.id!==p.id);
+              else {respond(false);return;}
+              setTimeout(()=>{this.onservicecallback(JSON.stringify({returnValue:true}));window.publishCompanion();},5);return;
+            }
+          }
           const state = JSON.parse(localStorage.getItem('fixture') || '{}');
-          if (method === 'savePrefs') state.prefs = p.prefs;
+          if (method === 'savePrefs') {
+            const merged = window.Miqat.mergePrefs(state.prefs, p.expected, p.prefs);
+            if (merged.conflicts.length) {
+              setTimeout(() => this.onservicecallback(JSON.stringify({returnValue: false, conflicts: merged.conflicts, prefs: merged.prefs})), 5); return;
+            }
+            state.prefs = merged.prefs;
+          }
           if (method === 'setStartup') state.startup = {enabled: p.enabled};
           if (method === 'selectInput') state.input = p.id;
           if (method === 'media') state.media = p;
@@ -90,7 +130,7 @@ const server = http.createServer((req, res) => {
           setTimeout(() => this.onservicecallback(JSON.stringify(reply)), 5);
         };
       };
-    });
+    },qrFixture);
     async function inputRestored() {
       await page.waitForFunction(() => {
         const source = document.querySelector('#input-video source');
@@ -98,7 +138,9 @@ const server = http.createServer((req, res) => {
       });
     }
     const errors = []; page.on('pageerror', e => errors.push(e.message));
-    await page.goto('http://127.0.0.1:' + server.address().port);
+    await page.goto('http://127.0.0.1:' + server.address().port, {waitUntil: 'domcontentloaded'});
+    assert.equal(await page.locator('#splash').isVisible(), true, 'startup artwork is visible before the first screen');
+    await page.locator('#splash').waitFor({state:'hidden'});
     assert.match(await page.title(), /^Miqat/);
     await page.evaluate(() => document.fonts.ready);
     await inputRestored();
@@ -107,6 +149,16 @@ const server = http.createServer((req, res) => {
       await page.evaluate(({lang,uiScale}) => localStorage.setItem('fixture', JSON.stringify({prefs:window.Miqat.prefs({lang,uiScale}),input:'HDMI_1'})), {lang,uiScale});
       await page.reload(); await inputRestored(); await page.keyboard.press('Enter');
       await page.locator('[data-action=home]').click(); await page.locator('[data-action=settings]').click();
+      await page.locator('[data-action=section][data-value=prayer]').focus();
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('.settings-nav .selected').getAttribute('data-value'),'reminders','Down previews the focused sidebar section without OK');
+      assert.equal(await page.locator(':focus').getAttribute('data-value'),'reminders','preview retains sidebar focus');
+      assert.ok(await page.locator('.settings-rows [data-ui^="reminders."]').count()>0,'previewed section renders real reminder controls');
+      await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
+      assert.equal(await page.locator(':focus').evaluate(el=>!!el.closest('.settings-rows')),true,'content-direction arrow enters the previewed section');
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('.settings-nav .selected').getAttribute('data-value'),'prayer','Up previews the previous section without OK');
       const spacing = await page.locator('.settings-page').evaluate(el => {
         const box=el.getBoundingClientRect(), scale=box.width/el.offsetWidth, rtl=document.documentElement.dir==='rtl';
         const width=el.querySelector('.settings-sidebar').offsetWidth*scale;
@@ -119,7 +171,7 @@ const server = http.createServer((req, res) => {
       assert.ok(spacing.navGap>=12, 'sidebar contains its navigation and focus ring');
       assert.ok(spacing.width<=561, 'sidebar stays slim when interface size increases');
       assert.ok(spacing.navLeft>=48 && spacing.navRight<=1872, 'navigation keeps padding from the TV edges');
-      if(uiScale===110) await page.screenshot({path:path.join(shots,'settings-spacing-'+lang+'-110.png')});
+      if(uiScale===110) if(capture)await page.screenshot({path:path.join(shots,'settings-spacing-'+lang+'-110.png')});
       await page.locator('[data-action=section][data-value=appearance]').click();
       assert.ok(await page.locator('.appearance-preview').evaluate(el => {
         const preview=el.getBoundingClientRect(), rows=document.querySelector('.settings-rows').getBoundingClientRect();
@@ -130,6 +182,174 @@ const server = http.createServer((req, res) => {
     await page.reload(); await inputRestored();
     console.log('PASS: Settings sidebar/content spacing and appearance bounds in both languages at every supported size.');
     if(process.argv.includes('--settings-layout')) return;
+    async function preservingSettings() {
+      const original = await page.evaluate(() => localStorage.getItem('fixture'));
+      for (const lang of ['ar', 'en']) {
+        await page.evaluate(lang => localStorage.setItem('fixture', JSON.stringify({prefs: window.Miqat.prefs({lang}), input:'HDMI_1', startup:{enabled:false, launches:7}, audioVolume:{fixture:true}})), lang);
+        await page.reload(); await inputRestored(); await page.keyboard.press('Enter');
+        await page.locator('[data-action=home]').click(); await page.locator('[data-action=settings]').click();
+        await page.locator('[data-action=section][data-value=display]').click();
+        const size = page.locator('[data-action=uiScale]');
+        await size.click(); await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+        await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.volume=25; localStorage.setItem('fixture',JSON.stringify(state)); });
+        await page.keyboard.press('Enter'); await page.locator('[data-action=uiScale]:not(.editing)').waitFor();
+        assert.deepEqual(await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); return [state.prefs.uiScale,state.prefs.volume,state.startup.launches,state.input,state.audioVolume]; }), [110,25,7,'HDMI_1',{fixture:true}], 'local save preserves newer unrelated preferences and outer state');
+        await page.locator('[data-action=section][data-value=reminders]').click();
+        const volume = page.locator('[data-action=volume]');
+        await volume.click(); await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+        await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.volume=40; localStorage.setItem('fixture',JSON.stringify(state)); });
+        await page.keyboard.press('Enter'); await page.locator('[data-action=reload-settings]').waitFor();
+        assert.equal(await volume.locator('strong').innerText(), lang === 'ar' ? '٣٠%' : '30%', 'conflict retains the unsaved inline draft');
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.volume),40);
+        await page.locator('[data-action=reload-settings]').click();
+        await page.locator('[data-action=volume]:not(.editing)').waitFor();
+        assert.equal(await volume.locator('strong').innerText(),lang === 'ar' ? '٤٠%' : '40%', 'explicit reload discards draft and reads actual values');
+        await page.locator('[data-action=section][data-value=appearance]').click();
+        await page.locator('[data-action=carousel-step][data-value="theme:1"]').click();
+        const choice=await page.locator('[data-action=carousel][data-value=theme] .carousel-choice').innerText();
+        await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.homeLayout='compact'; localStorage.setItem('fixture',JSON.stringify(state)); });
+        await page.locator('[data-action=apply-appearance]').click(); await page.locator('[data-action=reload-settings]').waitFor();
+        assert.equal(await page.locator('[data-action=carousel][data-value=theme] .carousel-choice').innerText(),choice,'appearance conflict retains the local preview');
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.theme),'mihrab');
+        await page.locator('[data-action=reload-settings]').click(); await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.homeLayout),'compact');
+        await page.locator('[data-action=section][data-value=display]').click();await page.locator('[data-action=uiScale]').focus();
+        await page.evaluate(()=>{const state=JSON.parse(localStorage.getItem('fixture'));state.prefs.clock='12';localStorage.setItem('fixture',JSON.stringify(state));window.publishCompanion({current:{prefs:state.prefs,startup:false}});});
+        await page.waitForFunction(()=>document.querySelector('[data-action=clock] .segment.selected')?.getAttribute('data-choice-index')==='0');
+        assert.equal(await page.locator(':focus').getAttribute('data-action'),'uiScale','a phone save preserves TV browsing focus');
+        await page.locator('[data-action=uiScale]').click();await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
+        await page.evaluate(()=>{const state=JSON.parse(localStorage.getItem('fixture'));state.prefs.uiScale=130;localStorage.setItem('fixture',JSON.stringify(state));window.publishCompanion({current:{prefs:state.prefs,startup:false}});});
+        await page.locator('[data-action=reload-settings]').waitFor();assert.equal(await page.locator('[data-action=uiScale] strong').innerText(),lang==='ar'?'١٢٠%':'120%','an accepted race never discards the active TV draft');
+        await page.locator('[data-action=reload-settings]').click();await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
+        await page.locator('[data-action=uiScale]').click();await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
+        await page.evaluate(()=>window.publishCompanion({currentUnavailable:true}));await page.locator('[data-action=reload-settings]').waitFor();
+        assert.equal(await page.locator('[data-action=uiScale] strong').innerText(),lang==='ar'?'١٤٠%':'140%','notification failure keeps the draft');
+        assert.equal(await page.evaluate(()=>window.companionEditing),true);
+        await page.locator('[data-action=reload-settings]').click();await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
+      }
+      await page.evaluate(original => { if(original===null)localStorage.removeItem('fixture'); else localStorage.setItem('fixture',original); }, original);
+      await page.reload(); await inputRestored();
+    }
+    await preservingSettings();
+    if (process.argv.includes('--preferences-only')) {
+      assert.deepEqual(errors, []);
+      console.log('PASS: bilingual LG settings merge, unrelated/outer-state preservation, inline and appearance conflicts, retained drafts and explicit reload. Luna and media are mocked.'); return;
+    }
+    async function pairingControls(collect=async()=>{}) {
+      await page.locator('[data-action=section][data-value=device]').click();
+      await page.locator('[data-action=companion]').click(); await page.waitForSelector('[data-action=pairing-open]:enabled');
+      assert.equal(await page.locator('[data-action=pairing-back]').evaluate(el=>el===document.activeElement),true,'pairing opens at Back');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('[data-action=pairing-open]').evaluate(el=>el===document.activeElement),true,'Down from pairing Back enters the controls');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('[data-action=pairing-back]').evaluate(el=>el===document.activeElement),true,'Up from the first pairing control returns to Back');
+      await collect();
+      await page.locator('[data-action=pairing-open]').click(); await page.waitForSelector('.pairing-symbol > svg');
+      assert.deepEqual(await page.locator('.pairing-symbol > svg').evaluate(el=>[el.getAttribute('width'),el.getAttribute('height'),!!el.getAttribute('viewBox')]),['400','400',true],'old WebKit gets explicit compact QR dimensions');
+      assert.equal(await page.locator('.pairing-symbol > svg > g[transform]').count(),3,'three original styled finder eyes');
+      assert.equal(await page.locator('.pairing-symbol .qr-mark').getAttribute('data-clearance'),'0.35','approved half-gap clearance');
+      assert.match(await page.locator('.pairing-symbol .qr-mark image').getAttribute('xlink:href'),/^data:image\/png;base64,/,'local alpha mark ships in the real pairing DOM');
+      assert.ok(await page.locator('.pairing-symbol > svg path').count()>300,'actual data modules use canonical mihrab paths');
+      const assertQrVisible=async()=>assert.ok(await page.locator('.pairing-symbol').evaluate(el=>{const qr=el.getBoundingClientRect(),body=el.closest('.pairing-body').getBoundingClientRect();return qr.left>=body.left&&qr.right<=body.right&&qr.top>=body.top&&qr.bottom<=body.bottom;}),'complete QR and quiet zone stay visible at the chosen UI size');
+      await assertQrVisible();
+      assert.equal(await page.locator('.pairing-qr').getAttribute('role'),'img');await collect();
+      await page.locator('[data-action=pairing-cancel]').click();await page.locator('.pairing-qr').waitFor({state:'detached'});
+      await page.evaluate(()=>{window.qrMakes=0;window.originalQrFactory=window.originalQrFactory||window.qrcode;window.qrcode=(...args)=>{window.qrMakes++;return window.originalQrFactory(...args);};});
+      await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();
+      assert.equal(await page.evaluate(()=>window.qrMakes),1,'new window generates its QR once');
+      await page.evaluate(()=>{window.pairingQrNode=document.querySelector('.pairing-qr');});
+      await page.evaluate(()=>window.companionRequest('هاتف <b>المنزل</b> & "Phone"'));
+      await page.waitForSelector('[data-action=pairing-reject]');assert.equal(await page.locator(':focus').getAttribute('data-action'),'pairing-reject','new requests default to Reject');
+      assert.ok(await page.locator('[data-action=pairing-reject]').evaluate(el=>{const box=el.getBoundingClientRect(),frame=el.closest('.pairing-body').getBoundingClientRect();const scale=window.Miqat.prefs(JSON.parse(localStorage.getItem('fixture')).prefs).uiScale/100;return box.left>=frame.left+10*scale&&box.right<=frame.right-10*scale;}),'focused pairing controls reserve the complete shared focus ring');
+      assert.equal(await page.evaluate(()=>window.qrMakes),1,'phone request does not regenerate an unchanged QR while approval waits');
+      assert.equal(await page.evaluate(()=>document.querySelector('.pairing-qr')===window.pairingQrNode),true,'pending phone preserves the actual QR DOM and decoded artwork');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('[data-action=pairing-approve]').evaluate(el=>el===document.activeElement),true,'Down advances from Reject to Approve');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('[data-action=pairing-reject]').evaluate(el=>el===document.activeElement),true,'Up returns to Reject without approving');
+      assert.equal(await page.locator('.pairing-code').innerText(),'123456');assert.equal(await page.locator('.pairing-controls h2 b').count(),0,'phone names are escaped');await collect();
+      await assertQrVisible();
+      if(process.argv.includes('--pairing-only')) {
+        const label=await page.evaluate(()=>document.documentElement.lang+'-'+window.Miqat.prefs(JSON.parse(localStorage.getItem('fixture')).prefs).uiScale);
+        if(capture)await page.screenshot({path:path.join(shots,'companion-browser-'+label+'.png')});
+        if(label==='en-100') {
+          if(capture)await page.locator('.pairing-qr').screenshot({path:path.join(shots,'companion-browser-qr.png')});
+          if(capture)fs.writeFileSync(path.join(shots,'companion-browser-qr.json'),require('../../companion/qr').encode(qrFixture));
+        }
+      }
+      await page.locator('[data-action=pairing-reject]').click();await page.locator('.pairing-code').waitFor({state:'detached'});
+      await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();await page.evaluate(()=>window.companionRequest());
+      await page.evaluate(()=>{window.pairingQrNode=document.querySelector('.pairing-qr');});
+      await page.locator('[data-action=pairing-approve]').click();await page.locator('[data-action=pairing-approve]').waitFor({state:'detached'});
+      assert.equal(await page.evaluate(()=>document.querySelector('.pairing-qr')===window.pairingQrNode),true,'approval preserves the actual QR DOM');
+      assert.equal(await page.locator(':focus').getAttribute('data-action'),'pairing-cancel');assert.equal(await page.locator('[data-action=pairing-revoke]').count(),0,'approval waits for completion');
+      await page.evaluate(()=>window.companionComplete());await page.locator('[data-action=pairing-revoke]').waitFor();await collect();
+      await page.evaluate(()=>window.failCompanion=true);await page.locator('[data-action=pairing-revoke]').click();await page.waitForFunction(()=>document.querySelector('.pairing-controls [role=status]'));
+      assert.equal(await page.locator('[data-action=pairing-revoke]').count(),1,'failed revocation keeps the phone');
+      await page.evaluate(()=>window.failCompanion=false);await page.locator('[data-action=pairing-revoke]').click();await page.locator('[data-action=pairing-revoke]').waitFor({state:'detached'});
+      await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();await page.keyboard.press('Escape');
+      await page.locator('.settings-page').waitFor();assert.equal(await page.locator(':focus').getAttribute('data-action'),'companion');
+      await page.waitForFunction(()=>!window.companionState.open,'leaving the pairing page cancels its window');
+      await page.locator('[data-action=companion]').click();await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();
+      await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});
+      await page.waitForFunction(()=>!window.companionBridge);assert.equal(await page.locator('.pairing-qr').count(),0,'backgrounding clears the QR immediately');
+      assert.ok(await page.evaluate(()=>window.companionCalls.some(c=>c.method==='companionLeave')&&window.companionCalls.some(c=>c.action==='bridge-cancel')));
+      await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});
+      await page.locator('[data-action=pairing-open]:enabled').waitFor();
+      await page.evaluate(()=>{window.companionState.supported=false;window.publishCompanion();});await page.locator('[data-action=pairing-open]:disabled').waitFor();
+      assert.equal(await page.locator('.pairing-qr').count(),0);assert.ok(await page.locator('.pairing-controls').innerText());
+      await page.evaluate(()=>{window.companionState.supported=true;window.publishCompanion();});await page.locator('[data-action=pairing-open]:enabled').waitFor();
+      await page.locator('[data-action=pairing-back]').click();
+    }
+    if(process.argv.includes('--remote-only')) {
+      for(const lang of ['ar','en']) {
+        await page.evaluate(lang=>localStorage.setItem('fixture',JSON.stringify({prefs:window.Miqat.prefs({lang}),input:'HDMI_1',startup:{enabled:false}})),lang);
+        await page.reload();await inputRestored();
+        let serial=0;
+        const command=async(id,value='')=>{
+          const request='R'.repeat(42)+(++serial).toString(36);
+          await page.evaluate(command=>window.publishCompanion({command}),{request,id,value});
+          await page.waitForFunction(request=>window.companionCalls.some(call=>call.method==='companionResult'&&call.request===request),request);
+          return page.evaluate(request=>window.companionCalls.find(call=>call.method==='companionResult'&&call.request===request).status,request);
+        };
+        assert.equal(await command('device.home'),'accepted');await page.locator('.home').waitFor();
+        assert.equal(await command('device.inputs'),'accepted');await page.locator('[data-action=select-input]').first().waitFor();
+        assert.equal(await command('device.inputs','HDMI_2'),'accepted');await inputRestored();
+        assert.equal(await command('device.inputs','arbitrary-input'),'unavailable');assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).input),'HDMI_2');
+        assert.equal(await command('radio.play'),'accepted');await page.waitForFunction(()=>JSON.parse(localStorage.getItem('fixture')).media?.event==='playing');
+        assert.equal(await command('device.home'),'busy','navigation does not discard current media/editor ownership');
+        assert.equal(await command('radio.stop'),'accepted');await page.waitForFunction(()=>JSON.parse(localStorage.getItem('fixture')).media?.event==='stopped');
+        assert.equal(await command('tests.adhan-short'),'accepted');await page.locator('.adhan-overlay').waitFor();
+        assert.equal(await command('tests.cancel'),'accepted');await page.waitForFunction(()=>!document.querySelector('.adhan-overlay'));
+        assert.equal(await command('device.home'),'accepted');await page.locator('.home').waitFor();
+        const oldPrefs=await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs);
+        await page.locator('[data-action=settings]').click();await page.locator('[data-action=section][data-value=appearance]').click();
+        assert.equal(await command('device.home'),'busy');assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs),oldPrefs);
+        console.log('PASS: authenticated-command frontend dispatch '+lang+' Home/input validation/radio/adhan preview/Stop and local draft/media guards; native boundaries mocked');
+      }
+      assert.deepEqual(errors,[]);return;
+    }
+    if(process.argv.includes('--pairing-only')) {
+      for(const lang of ['ar','en'])for(const uiScale of [80,100,150]) {
+        await page.evaluate(({lang,uiScale})=>localStorage.setItem('fixture',JSON.stringify({prefs:window.Miqat.prefs({lang,uiScale}),input:'HDMI_1'})),{lang,uiScale});
+        await page.reload();await inputRestored();await page.keyboard.press('Enter');await page.locator('[data-action=home]').click();await page.locator('[data-action=settings]').click();
+        await pairingControls();
+      }
+      for(const theme of ['mihrab','mosaic','brass','rose']) {
+        await page.evaluate(theme=>localStorage.setItem('fixture',JSON.stringify({prefs:window.Miqat.prefs({lang:'en',uiScale:100,theme}),input:'HDMI_1'})),theme);
+        await page.reload();await inputRestored();await page.keyboard.press('Enter');
+        await page.locator('[data-action=home]').click();await page.locator('[data-action=settings]').click();
+        await page.locator('[data-action=section][data-value=device]').click();await page.locator('[data-action=companion]').click();
+        await page.waitForSelector('[data-action=pairing-open]:enabled');await page.locator('[data-action=pairing-open]').click();await page.waitForSelector('.pairing-symbol > svg');
+        const binding=await page.locator('.pairing-symbol > svg').evaluate((el,theme)=>{
+          const d=window.MiqatData,expected=window.mihrabQr.palette(d.palettes[theme],d.qrStyle,d.palettes.mihrab['plaster-100']);
+          return {paper:el.querySelector(':scope > rect').getAttribute('fill'),expected:expected.paper,rim:el.querySelector('#miqat-qr-rim stop').getAttribute('stop-color'),expectedRim:expected.rim[0],logo:el.querySelector('#miqat-qr-logo-tint feFlood').getAttribute('flood-color'),expectedLogo:d.palettes[theme]['gold-400']};
+        },theme);
+        assert.equal(binding.logo,binding.expectedLogo,'centre mark follows '+theme);assert.equal(binding.paper,binding.expected,'pairing paper follows '+theme);assert.equal(binding.rim,binding.expectedRim,'finder colour follows '+theme);
+        if(capture)await page.screenshot({path:path.join(shots,'companion-approved-'+theme+'-en.png')});
+      }
+      assert.deepEqual(errors,[]);console.log('PASS: LG bilingual pairing QR, default Reject, approve/complete/revoke/failure, Back/background cleanup and unsupported state at 80/100/150%; actual theme binding in Mihrab/Mosaic/Brass/Rose. Luna/media are mocked.');return;
+    }
     await page.evaluate(() => { window.originalVideo = document.getElementById('input-video'); });
     // Magic Remote OK becomes a click while its pointer is visible.
     await page.mouse.click(960, 540);
@@ -247,7 +467,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'inputs', 'RTL remote moves along the small top row');
     await page.keyboard.press('ArrowDown');
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'native-app', 'Down reaches app tiles');
-    await page.screenshot({path: path.join(shots, 'home-ar.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'home-ar.png')});
     assert.equal(await page.locator('.arch-shape path').first().getAttribute('d'), JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/design/mihrab.json'))).outer, 'Home uses the canonical Miqat crown and shoulders');
     const arCount = await page.locator('.prayer').count(); assert.equal(arCount, 6);
     await page.locator('[data-action=settings]').click();
@@ -294,6 +514,13 @@ const server = http.createServer((req, res) => {
         await page.locator('[data-action=section][data-value=' + section + ']').click();
         await collect(section);
       }
+      await pairingControls(async()=>{
+        const controls=await page.locator('[data-ui^="pairing."]').evaluateAll(items=>items.map(el=>({id:el.dataset.ui,kind:el.dataset.uiKind,text:el.textContent})));
+        for(const item of controls){
+          const expected=await page.evaluate(({id,kind})=>{const c=window['tv.miqat:core'].tv.miqat.core.UiContract.bind(id,kind);return window.MiqatData.strings[c.labelKey][document.documentElement.lang];},item);
+          assert.ok(item.text.includes(expected),'actual pairing control uses canonical bilingual label');seen.add(item.id);
+        }
+      });
       await page.locator('[data-action=section][data-value=appearance]').click();
       const countdown = page.locator('[data-action=carousel][data-value=homeLayout]');
       const rtl = await page.locator('html').getAttribute('dir') === 'rtl';
@@ -389,7 +616,7 @@ const server = http.createServer((req, res) => {
         assert.ok(box.x >= 0 && box.y >= 0 && box.x + box.width <= 1920 && box.y + box.height <= 1080, 'online comparison fits screen');
       }
       const lang = await page.locator('html').getAttribute('lang');
-      await page.screenshot({path: path.join(shots, 'online-' + lang + '.png')});
+      if(capture)await page.screenshot({path: path.join(shots, 'online-' + lang + '.png')});
       assert.deepEqual(await page.evaluate(() => ({prefs: JSON.parse(localStorage.getItem('fixture')).prefs,
         source: document.getElementById('input-video').innerHTML, media: window.mediaCalls.length})), before, 'manual comparison preserves settings and HDMI');
       await page.keyboard.press('Escape');
@@ -444,7 +671,7 @@ const server = http.createServer((req, res) => {
     await settingsCoverage();
     await onlineChecks();
     await page.locator('[data-action=section][data-value=prayer]').click();
-    await page.screenshot({path: path.join(shots, 'settings-ar.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'settings-ar.png')});
     await page.keyboard.press('ArrowLeft');
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'city', 'RTL direction enters settings rows');
     await page.keyboard.press('Escape');
@@ -455,7 +682,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'tests', 'remote reaches the last scrolling reminder setting');
     const bottomSetting = await page.locator(':focus').boundingBox();
     assert.ok(bottomSetting.y >= 172 && bottomSetting.y + bottomSetting.height <= 972, 'focused row scrolls fully into view');
-    await page.screenshot({path: path.join(shots, 'reminders-ar.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'reminders-ar.png')});
     await page.locator('[data-action=section][data-value=display]').click();
     async function selectInlineChoice(action, index) {
       const row = page.locator('[data-action=' + action + ']');
@@ -482,7 +709,7 @@ const server = http.createServer((req, res) => {
     await page.locator('[data-action=startup]').click();
     await page.waitForFunction(() => document.querySelector('[data-action=startup]').getAttribute('aria-checked') === 'true');
     assert.equal(await page.locator('[data-action=startup]').getAttribute('role'), 'switch');
-    await page.screenshot({path: path.join(shots, 'settings-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'settings-en.png')});
     await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
     await page.waitForSelector('.arch');
@@ -490,10 +717,10 @@ const server = http.createServer((req, res) => {
     await page.locator('[data-action=prayer-day]').focus();
     await page.keyboard.press('ArrowRight');
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'inputs', 'LTR remote moves along the small top row');
-    await page.screenshot({path: path.join(shots, 'home-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'home-en.png')});
     await page.locator('[data-action=apps]').click();
     assert.equal(await page.locator('.app-grid button').count(), 16);
-    await page.screenshot({path: path.join(shots, 'apps-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'apps-en.png')});
     assert.equal(await page.locator('[data-action=apps-back]').getAttribute('aria-label'), 'Back');
     await page.locator('[data-action=apps-back]').click();
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'apps', 'visible Back restores Home focus');
@@ -521,7 +748,7 @@ const server = http.createServer((req, res) => {
     assert.match(await page.locator('#notice').innerText(), /Could not open/);
     assert.equal(await page.locator('.app-grid').count(), 1, 'failed launch leaves app list usable');
     await page.evaluate(() => { window.failAppLaunch = false; });
-    await page.screenshot({path: path.join(shots, 'apps-error-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'apps-error-en.png')});
     await page.keyboard.press('Escape');
     await page.waitForSelector('.home');
     await page.locator('[data-action=inputs]').click();
@@ -531,7 +758,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.evaluate(() => window.originalVideo === document.getElementById('input-video')), true, 'internal navigation retains video element');
     await page.keyboard.press('Enter');
     assert.match(await page.locator('.bar').getAttribute('aria-label'), /HDMI 2/);
-    await page.screenshot({path: path.join(shots, 'bar-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'bar-en.png')});
     const buttons = await page.locator('button').all();
     for (const button of buttons) {
       const bounds = await button.boundingBox();
@@ -596,7 +823,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('[data-action=bell]').count(), 5, 'no sunrise bell');
     await page.locator('[data-action=bell][data-value="0"]').click();
     await page.waitForFunction(() => document.querySelector('[data-action=bell][data-value="0"]').textContent === 'Off');
-    await page.screenshot({path: path.join(shots, 'prayer-day-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'prayer-day-en.png')});
     await page.locator('[data-action=tests]').click();
     await page.locator('[data-action=section][data-value=reminders]').click();
     await page.locator('[data-action=voice]').click();
@@ -611,7 +838,7 @@ const server = http.createServer((req, res) => {
     await page.evaluate(() => document.querySelector('audio').dispatchEvent(new Event('ended')));
     await inputRestored();
     assert.equal(await page.locator('.voice-list').evaluate(el => el.scrollTop), voiceScroll, 'preview completion preserves list position');
-    await page.screenshot({path: path.join(shots, 'voices-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'voices-en.png')});
     await page.keyboard.press('Escape');
     await page.locator('[data-action=section][data-value=tests]').click();
     const loadsBefore = await page.evaluate(() => window.mediaCalls.filter(c => c.tag === 'VIDEO').length);
@@ -619,7 +846,7 @@ const server = http.createServer((req, res) => {
     await page.waitForSelector('.banner-overlay .alert-box');
     assert.equal(await page.evaluate(() => window.mediaCalls.filter(c => c.tag === 'VIDEO').length), loadsBefore, 'silent banner never pauses, unloads or reloads HDMI');
     assert.equal(await page.locator('#input-video source').getAttribute('src'), 'ext://hdmi:2');
-    await page.screenshot({path: path.join(shots, 'banner-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'banner-en.png')});
     await page.locator('[data-action=dismiss-alert]').click();
     assert.equal(await page.locator('.bar').count(), 0, 'pointer dismiss must not open the bar underneath');
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'test-banner', 'banner returns to the test that opened it');
@@ -642,7 +869,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#input-video source').getAttribute('src'), 'ext://hdmi:2', 'adhan retains the selected HDMI picture');
     assert.deepEqual(await page.locator('#input-video source').evaluate(el => JSON.parse(decodeURI(el.type.split(';mediaOption=')[1]))),
       {option: {mediaFormat: {type: 'video_only'}}}, 'adhan suppresses programme audio while keeping HDMI video');
-    await page.screenshot({path: path.join(shots, 'adhan-test-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'adhan-test-en.png')});
     assert.equal(await page.locator('.call-frame').count(), 1, 'adhan uses the Android mihrab layout');
     assert.equal(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'only the adhan mihrab has a background');
     assert.equal(await page.locator('#screen').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'adhan hides the originating page outside its mihrab');
@@ -703,7 +930,7 @@ const server = http.createServer((req, res) => {
     await page.keyboard.press('ArrowRight');
     assert.equal(await carousel('theme').locator('.carousel-choice').innerText(), 'Mosaic', 'carousel clamps at the end');
     assert.equal(await page.locator('#theme-style').getAttribute('href'), 'style.css', 'preview does not save the draft');
-    await page.screenshot({path: path.join(shots, 'themes-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'themes-en.png')});
     await page.keyboard.press('ArrowDown');
     assert.equal(await page.locator(':focus').getAttribute('data-value'), 'background', 'Down moves between carousel rows');
     await page.keyboard.press('Escape');
@@ -743,7 +970,7 @@ const server = http.createServer((req, res) => {
     await carousel('prayerMode').focus();
     for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
     await carousel('theme').focus();
-    await page.screenshot({path: path.join(shots, 'appearance-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'appearance-en.png')});
     await page.locator('[data-action=apply-appearance]').click();
     await page.waitForFunction(() => document.getElementById('theme-style').getAttribute('href') === 'theme-forest.css');
     assert.equal(await page.locator('.settings-page').evaluate(el => getComputedStyle(el).backgroundImage), 'none', 'Home patterns do not leak onto Settings');
@@ -752,7 +979,7 @@ const server = http.createServer((req, res) => {
     await page.locator('[data-action=home]').click();
     assert.match(await page.locator('.home').evaluate(el => getComputedStyle(el).backgroundImage), /eight_point_stars/, 'saved pattern still appears on Home');
     await homeControls();
-    await page.screenshot({path: path.join(shots, 'home-compact-en.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'home-compact-en.png')});
     const dateBox = await page.locator('[data-gregorian]').boundingBox(), compactArch = await page.locator('.arch').boundingBox();
     assert.ok(dateBox.y + dateBox.height < compactArch.y, 'both dates fit above the compact countdown');
     assert.equal(compactArch.y, 916, 'compact countdown can be placed at the bottom');
@@ -782,7 +1009,7 @@ const server = http.createServer((req, res) => {
     await page.waitForFunction(() => document.querySelector('audio') && document.querySelector('audio').getAttribute('src'));
     assert.equal(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Arabic adhan keeps the same transparent outer area');
     assert.equal(await page.locator('#screen').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'Arabic adhan hides the originating page');
-    await page.screenshot({path: path.join(shots, 'adhan-test-ar.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'adhan-test-ar.png')});
     await page.keyboard.press('Escape');
     await inputRestored();
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'test-adhan');
@@ -792,7 +1019,7 @@ const server = http.createServer((req, res) => {
     const rtlTheme = await carousel('theme').locator('.carousel-choice').innerText();
     await page.keyboard.press('ArrowRight');
     assert.notEqual(await carousel('theme').locator('.carousel-choice').innerText(), rtlTheme, 'Arabic carousel arrows follow RTL');
-    await page.screenshot({path: path.join(shots, 'themes-ar.png')});
+    if(capture)await page.screenshot({path: path.join(shots, 'themes-ar.png')});
     await page.keyboard.press('Escape');
     await page.locator('[data-action=section][data-value=display]').click();
     await page.locator('[data-action=quickLabels]').click();
@@ -822,7 +1049,7 @@ const server = http.createServer((req, res) => {
             assert.ok(arch.y > links.y + links.height || arch.y + arch.height < prayer.y, 'countdown stays clear of prayer times and app controls');
           }
           await homeNavigation();
-          await page.screenshot({path: path.join(shots, 'labels-' + lang + '-' + layout + '-' + position + '.png')});
+          if(capture)await page.screenshot({path: path.join(shots, 'labels-' + lang + '-' + layout + '-' + position + '.png')});
         }
       }
     }
@@ -974,9 +1201,13 @@ const server = http.createServer((req, res) => {
         const box = panel.getBoundingClientRect(); return (box.left + box.right) / 2;
       });
       assert.ok(centre === null || Math.abs(centre - 960) < 0.5, 'scaled content stays horizontally centred in its physical viewport');
+      const originalSection = await page.evaluate(()=>{const selected=document.querySelector('.settings-nav .selected');return selected?selected.getAttribute('data-value'):null;});
       const items = await page.locator(selector).all();
       assert.ok(items.length, 'expected visible controls: ' + selector);
-      for (const item of items) {
+      const contentItems=[], sidebarItems=[];
+      for(const item of items)(await item.evaluate(el=>!!el.closest('.settings-nav'))?sidebarItems:contentItems).push(item);
+      // Sidebar focus now replaces the content, so check its rows before browsing other sections.
+      for (const item of [...contentItems,...sidebarItems]) {
         await item.evaluate(el => { if (el.matches('button')) { el.focus(); document.getElementById('screen').scrollLeft = document.getElementById('screen').scrollTop = 0; document.getElementById('overlay').scrollLeft = document.getElementById('overlay').scrollTop = 0; } else if (document.getElementById('stage').getAttribute('data-large-ui') === 'true') el.scrollIntoView({block:'center', inline:'nearest'}); });
         const b = await item.boundingBox();
         assert.ok(b && b.x >= -0.1 && b.y >= -0.1 && b.x + b.width <= 1920.1 && b.y + b.height <= 1080.1, selector + ' stays on screen: ' + JSON.stringify(b));
@@ -987,6 +1218,7 @@ const server = http.createServer((req, res) => {
         });
         assert.ok(b.x - ring >= -0.5 && b.y - ring >= -0.5 && b.x + b.width + ring <= 1920.5 && b.y + b.height + ring <= 1080.5, 'focused outline stays on screen: ' + selector + ' ' + JSON.stringify({box:b,ring}));
       }
+      if(originalSection&&sidebarItems.length)await page.locator('[data-action=section][data-value='+originalSection+']').focus();
     }
     for (const lang of ['ar', 'en']) for (const size of [150, 80, 90, 100, 110, 120, 130, 140]) {
       await page.evaluate(lang => {
@@ -1063,7 +1295,7 @@ const server = http.createServer((req, res) => {
         return box.width > 0 && box.height > 0 && knob.left >= box.left && knob.right <= box.right && knob.top >= box.top && knob.bottom <= box.bottom
           && box.left >= row.left && box.right <= row.right && box.top >= row.top && box.bottom <= row.bottom;
       }), 'scaled switch track and knob stay inside their row');
-      if (size === 80 || size === 110 || size === 150) await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-settings.png')});
+      if (size === 80 || size === 110 || size === 150) if(capture)await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-settings.png')});
       await page.locator('[data-action=settings-back]').click();
       await fits('.home-quick button,.home-apps button,.home-links button,.verse,.city-name');
       assert.deepEqual(await page.locator('.arch .verse,.arch .verse-ref,.arch .prayer-name,.arch .prayer-time,.arch .countdown,.arch .city-name').evaluateAll(nodes => {
@@ -1087,7 +1319,7 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator(':focus').getAttribute('data-action'), 'apps', 'Down reaches visible All apps');
       await fits('.home-links [data-action=apps]');
       assert.ok(Math.abs((await page.locator('.home-quick button').first().boundingBox()).width - 64 * size / 100) < 0.2, 'controls scale with the setting');
-      if (size === 80 || size === 110 || size === 150) await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-home.png')});
+      if (size === 80 || size === 110 || size === 150) if(capture)await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-home.png')});
       await page.locator('.home-links [data-action=apps]').click();
       await fits('.apps-heading,.apps-tools');
       await page.locator('.app-tile').nth(3).focus(); await page.keyboard.press('ArrowUp');
@@ -1122,7 +1354,7 @@ const server = http.createServer((req, res) => {
       await page.locator('[data-action=test-adhan]').click(); await page.waitForFunction(() => document.querySelector('audio')?.getAttribute('src'));
       await fits('.call-column button,.call-verse,.call-name,.call-time,.call-status');
       assert.equal(await page.locator('.call-verse').innerText(), sacred.adhanCall);
-      if (size === 80 || size === 110 || size === 150) await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-call.png')});
+      if (size === 80 || size === 110 || size === 150) if(capture)await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-call.png')});
       await page.keyboard.press('Escape'); await inputRestored();
       await tests(); await page.locator('[data-action=settings-back]').click();
       if (await page.locator('[data-action=apps-back]').count()) { await page.locator('[data-action=apps-back]').click(); }
@@ -1137,7 +1369,7 @@ const server = http.createServer((req, res) => {
         const bar = await page.locator('.bar').boundingBox();
         assert.ok(Math.abs(bar.x) < 0.2 && Math.abs(bar.width - 1920) < 0.2, 'prayer bar fits full width');
         assert.ok(Math.abs(position === 'top' ? bar.y : bar.y + bar.height - 1080) < 0.2, 'bar remains attached to selected edge');
-        if (size === 80 || size === 110 || size === 150) await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-' + position + '-bar.png')});
+        if (size === 80 || size === 110 || size === 150) if(capture)await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-' + position + '-bar.png')});
         await page.keyboard.press('Escape');
       }
       const video = await page.locator('#input-video').boundingBox();
@@ -1178,7 +1410,7 @@ const server = http.createServer((req, res) => {
         const arch = await page.locator('.arch').boundingBox();
         assert.ok(arch.y + arch.height < prayer.y || arch.y > apps.y + apps.height, 'large compact countdown clears prayer/app content');
       }
-      await page.screenshot({path:path.join(shots,'size-'+lang+'-150-home-'+variant.homeLayout+'-'+(variant.archSide||variant.homeBar||'none')+'.png')});
+      if(capture)await page.screenshot({path:path.join(shots,'size-'+lang+'-150-home-'+variant.homeLayout+'-'+(variant.archSide||variant.homeBar||'none')+'.png')});
     }
     for (const lang of ['ar', 'en']) for (const theme of ['mihrab', 'glass', 'cinema', 'neon', 'signal', 'dusk', 'mosaic']) {
       await page.evaluate(({lang, theme}) => {
@@ -1206,7 +1438,7 @@ const server = http.createServer((req, res) => {
         return {width:box.width,height:box.height,knob:knob.width,inside:knob.left>=box.left && knob.right<=box.right && knob.top>=box.top && knob.bottom<=box.bottom};
       });
       assert.deepEqual(geometry, {width:88,height:48,knob:36,inside:true}, 'switch uses shared Android dimensions');
-      if (theme === 'mihrab' || theme === 'neon') await page.screenshot({path:path.join(shots,'unified-settings-'+lang+'-'+theme+'.png')});
+      if (theme === 'mihrab' || theme === 'neon') if(capture)await page.screenshot({path:path.join(shots,'unified-settings-'+lang+'-'+theme+'.png')});
       if (lang === 'en') {
         await page.evaluate(() => {
           const fixture = JSON.parse(localStorage.getItem('fixture')); fixture.prefs.homeLayout = 'compact';
@@ -1280,6 +1512,12 @@ const server = http.createServer((req, res) => {
     }
     assert.deepEqual(errors, []);
     console.log('PASS: Arabic/English controls, grouped settings, offsets and cancel, prayer bells, overlays preserving HDMI, audio stop/end/error recovery, radio, theme/layout, persistence and global sizing. Decoder and Luna boundaries are mocked; actual LG tests remain separate.');
-    console.log('Preview screenshots: ' + shots);
+    if(capture)console.log('Preview screenshots: ' + shots);
+  } catch(error) {
+    if(page&&!page.isClosed()) {
+      if(capture)await page.screenshot({path:path.join(shots,'browser-failure.png')});
+      if(capture)fs.writeFileSync(path.join(shots,'browser-failure.json'),JSON.stringify(await page.evaluate(()=>({body:document.body.innerText,fixture:localStorage.getItem('fixture'),companion:window.companionState,calls:window.companionCalls?.slice(-8)})),null,2));
+    }
+    throw error;
   } finally { if (browser) await browser.close(); server.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

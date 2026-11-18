@@ -5,6 +5,7 @@
   'use strict';
   var rules = portable.tv.miqat.core.PrayerRules;
   var reminders = portable.tv.miqat.core.ReminderRules;
+  var appearanceKeys = ['theme', 'background', 'mihrabOpacity', 'homeLayout', 'archSide', 'homeBar', 'prayerMode'];
   var defaults = {lang: 'ar', city: 'cairo', method: null, hanafi: false, utcOffset: null,
     automatic: false, adhan: true, remind: 15, remindVoice: false, announce: true, callClose: 0,
     voice: 'alafasy', fajrVoice: 'chebae_fajr', volume: 60, bells: [true, false, true, true, true, true],
@@ -50,6 +51,35 @@
     invalid(['mihrab', 'compact', 'hidden'].indexOf(result.homeLayout) < 0 || ['auto', 'left', 'right'].indexOf(result.archSide) < 0 ||
       ['top', 'bottom'].indexOf(result.homeBar) < 0 || ['all', 'current', 'next', 'both', 'none'].indexOf(result.prayerMode) < 0);
     return result;
+  }
+  function mergePrefs(current, expected, proposed) {
+    var keys = Object.keys(defaults);
+    [expected, proposed].forEach(function (value) {
+      if (!value || typeof value !== 'object' || Array.isArray(value) ||
+          keys.some(function (key) { return !Object.prototype.hasOwnProperty.call(value, key); }) ||
+          Object.keys(value).some(function (key) { return keys.indexOf(key) < 0; })) { throw new Error('Missing preference baseline'); }
+    });
+    current = prefs(current); expected = prefs(expected); proposed = prefs(proposed);
+    var ids = [], groups = [], actual = [], baseline = [], changes = [], edits = [];
+    keys.forEach(function (key) {
+      var indices = Array.isArray(current[key]) ? current[key].map(function (_, i) { return i; }) : [null];
+      indices.forEach(function (index) {
+        var id = key + (index === null ? '' : '.' + index);
+        var a = index === null ? current[key] : current[key][index];
+        var b = index === null ? expected[key] : expected[key][index];
+        var next = index === null ? proposed[key] : proposed[key][index];
+        ids.push(id); actual.push(JSON.stringify(a)); baseline.push(JSON.stringify(b));
+        groups.push(appearanceKeys.indexOf(key) >= 0 ? 'appearance' : ['city', 'method', 'hanafi'].indexOf(key) >= 0 ? 'location' : '');
+        if (JSON.stringify(next) !== JSON.stringify(b)) { changes.push(id); edits.push({key: key, index: index, value: next}); }
+      });
+    });
+    var conflicts = portable.tv.miqat.core.SettingChanges.conflicts(ids, groups, actual, baseline, changes);
+    if (!conflicts.length) {
+      edits.forEach(function (edit) {
+        if (edit.index === null) { current[edit.key] = edit.value; } else { current[edit.key][edit.index] = edit.value; }
+      });
+    }
+    return {prefs: prefs(current), conflicts: conflicts};
   }
   function voice(id) { for (var i = 0; i < data.voices.length; i++) { if (data.voices[i].id === id) { return data.voices[i]; } } return null; }
   function station(id) { for (var i = 0; i < data.stations.length; i++) { if (data.stations[i].id === id) { return data.stations[i]; } } return null; }
@@ -131,6 +161,6 @@
     return reminders.deliveryState(time, now, 90000);
   }
   return {defaults: defaults, maxPrayerOffset: rules.MAX_OFFSET_MINUTES, maxHijriOffset: rules.MAX_HIJRI_OFFSET_DAYS,
-    prefs: prefs, city: city, input: input, wall: wall, clock: clock, day: day, next: next, select: select,
+    prefs: prefs, mergePrefs: mergePrefs, appearanceKeys: appearanceKeys, city: city, input: input, wall: wall, clock: clock, day: day, next: next, select: select,
     duration: duration, voice: voice, station: station, app: app, hijri: hijri, qibla: qibla, nextEvent: nextEvent, deliveryState: deliveryState};
 }));

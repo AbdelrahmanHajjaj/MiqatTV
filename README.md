@@ -54,3 +54,6 @@ Start with the [documentation](docs/README.md), [architecture](docs/ARCHITECTURE
 and [contribution guide](CONTRIBUTING.md).
 
 [MIT licence](LICENSE) · [Credits and third-party licences](docs/THIRD-PARTY.md)
+
+The Android phone [companion](companion/README.md) adds foreground home-LAN pairing,
+settings and explicit TV controls on its separate feature branch.

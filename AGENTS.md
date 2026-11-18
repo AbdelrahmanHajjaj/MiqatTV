@@ -17,6 +17,7 @@ the approved scope. Companion work belongs to its separate project/branch.
 - platforms/android-tv/: Java and Android Views; [Android notes](docs/ANDROID-INTEGRATION.md).
 - platforms/webos/: ES5 app and JS service; read its [AGENTS.md](platforms/webos/AGENTS.md).
 - installer/: Android phone installation/recovery tool; separate from the companion.
+- companion/: Android phone UI and portable settings workflow; see docs/COMPANION-WORK.md.
 - site/: browser demonstration and resource generators, with simulated TV APIs.
 - docs/: setup, development, technical references and validation status.
 
@@ -33,8 +34,9 @@ the approved scope. Companion work belongs to its separate project/branch.
   when they consume a shared change. Run shared JS generators sequentially.
 - Preserve Arabic/English, RTL/LTR, joined Arabic and exact religious text.
   Mirror horizontal physical input once at the shell boundary.
-- Keep runtime networking limited to selected radio and manual advisory prayer
-  comparison. Installer ADB/downloads are separate. No ads, analytics or feeds.
+- Keep runtime networking limited to selected radio, manual advisory prayer
+  comparison and the authorized foreground household-LAN companion protocol.
+  Installer ADB/downloads are separate. No ads, analytics or feeds.
 - Keep keys, local device configuration, private state, outputs, unreviewed audio
   and original recordings out of Git. Only the approved shared/media set is shipped. Retain MIT and third-party notices in distributed builds.
 - Keep the portable core independent of any SDK or renderer. Android stays Java

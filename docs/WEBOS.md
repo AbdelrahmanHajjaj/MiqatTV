@@ -8,8 +8,10 @@ arbitrary native apps or wake the TV from standby.
 
 The integration was developed on LG LF6300 / webOS 2.2, WebKit 538.2 and service
 Node 0.10.25. Prior device checks confirmed HDMI picture/sound, physical remote,
-Arabic shaping, sizing, startup, prayer audio and restoration. The new tv.miqat.*
-identities have not been installed on hardware. Newer LG hardware is unverified.
+Arabic shaping, sizing, startup, prayer audio and restoration. Miqat was installed on that TV on 18 November 2026. Live service readback verified
+the one-time settings transfer and the old launcher was uninstalled. The owner confirmed the 0.2.24 splash, picture and sound on the physical TV.
+The owner also reports working pairing and smooth connected controls/settings.
+Detailed physical remote and power/lifecycle acceptance remain pending. Newer LG hardware is unverified.
 
 ## Build and install
 
@@ -36,6 +38,11 @@ The service ID is tv.miqat.webos.service. App and service IDs must share that
 prefix. Keep the four package/version declarations aligned. --no-minify keeps
 the prebuilt ES5 files checked by the suite. The browser suite uses installed
 Microsoft Edge and mocks Luna/media; its captures are not TV screenshots.
+
+Share tested packages from the primary checkout's ignored `state/builds/webos/`
+folder as `Miqat-latest.ipk`. Verify its SHA-256 matches before sharing. Keep
+only the latest export and use the same location across worktrees. Do not create
+new per-task evidence folders or duplicate exports; summarize checks concisely.
 
 ## Controls and settings
 
@@ -91,6 +98,20 @@ Physical picture, sound, remote and power checks require a ready watcher. LG
 capture APIs do not reliably show the video plane. See [TESTING.md](TESTING.md)
 and the platform [agent rules](../platforms/webos/AGENTS.md).
 
+## Foreground phone pairing
+
+The companion branch adds Settings / Phones with themed local QR and physical
+remote approval/revocation. Its listener follows the foreground app subscription.
+See [protocol and legacy TLS limits](COMPANION-LAN.md) and
+[current companion evidence](COMPANION-WORK.md). The owner confirmed working
+Miqat pairing and smooth connected controls/settings on the physical LF6300.
+The 0.2.25 speed improvements still need a timed full pairing retest.
+
+The approved pairing QR now uses the shared Miqat centre mark, theme body fill
+and accent tint, no border and half-width (0.35-module) centre clearance with
+high error correction. Automated SVG and mocked browser checks are not evidence
+of SVG image/filter rendering or camera recognition on physical legacy LG hardware.
+
 ### Neutral landscapes (review draft)
 
 Appearance also offers six bundled illustrated landscapes: Dusk peaks, Golden
@@ -120,3 +141,30 @@ Validation is mocked browser/service testing; physical LG acceptance is pending.
 Miqat quiet is an additional canonical scene; the original Signature stays default.
 Home next-prayer fill is 75% of the selected surface panel color, with opaque gold
 labels/outline. This alpha is independent of the Home mihrab setting and Glass.
+
+
+The app displays the canonical splash artwork while its first screen loads, for
+at least 600 ms, in addition to LG's configured splash image. It does not replay
+on foreground resume. The owner confirmed the splash, picture and sound with 0.2.24 on 18 November 2026.
+
+
+Legacy pairing preparation uses bounded native OpenSSL RSA-2048 generation when
+Node lacks its own key-generation API. Stored identity is reused; keys are not
+passed through shell arguments or temporary files. If the binary is absent, the
+existing OS-random Forge path remains available. One-off physical identity-only
+measurements were 65.3 seconds before and 2.0 seconds after; these are not full
+pairing timings. The app also reuses unchanged QR artwork while awaiting approval.
+
+
+On the pairing page, Down from Back enters the first enabled control; Up returns
+to Back. Up/Down follow the visible control order, including Reject and Approve.
+With a QR open, the controls scroll independently so the complete code remains
+visible. Version 0.2.26 passes bilingual mocked navigation checks; physical remote
+confirmation of this correction remains pending.
+
+
+Version 0.2.27 preserves the QR element while pending/approval controls update.
+Bilingual DOM-retention and focus regressions pass. The owner confirmed much
+more responsive physical pairing with phone 0.1.3 and accepted the result.
+This legacy TV profile uses Web Inspector console/timeline diagnostics;
+`ares-log` is not supported for the TV profile.

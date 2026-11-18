@@ -7,8 +7,13 @@
   var prayerRules = window['tv.miqat:core'].tv.miqat.core.PrayerRules;
   var tv = typeof window.PalmServiceBridge !== 'undefined';
   var prefs = A.prefs(), startup = false, loaded = false, busy = false;
+  var splashStarted = Date.now(), splashPending = true;
   var inlineDraft = null;
   var pointerDown = false;
+  var settingsConflict = false;
+  var companionBridge = null, companionSession = '', companionUi = '', companionTimer = null;
+  var companion = {supported: null, starting: false, phones: [], open: false}, pairingMessage = '';
+  var lastRemoteRequest = '', pairingSvgKey = '', pairingSvg = '', pairingRenderKey = '';
   var input = null, inputs = [], view = 'input', picker = null, page = 0;
   var screen = document.getElementById('screen'), video = document.getElementById('input-video');
   var bridges = [], instance = String(Date.now()), cachedDay = null, cacheKey = '', noticeTimer;
@@ -21,7 +26,7 @@
   var appNodes = [];
   var pickerControl = null;
   var onlineId = null, onlineSerial = 0, onlineData = null, onlineError = false;
-  var appearanceKeys = ['theme', 'background', 'mihrabOpacity', 'homeLayout', 'archSide', 'homeBar', 'prayerMode'];
+  var appearanceKeys = A.appearanceKeys;
   var overlay = document.getElementById('overlay');
   var sections = ['prayer', 'reminders', 'radio', 'display', 'appearance', 'device', 'tests'];
   function sectionName(id) { return {
@@ -69,7 +74,11 @@
     if (method === 'audioVolume') { return {returnValue: true, mode: 'element'}; }
     var state;
     try { state = JSON.parse(localStorage.getItem('miqat-webos-preview') || '{}'); } catch (error) { state = {}; }
-    if (method === 'savePrefs') { state.prefs = A.prefs(data.prefs); }
+    if (method === 'savePrefs') {
+      var merged = A.mergePrefs(state.prefs, data.expected, data.prefs);
+      if (merged.conflicts.length) { return {returnValue: false, conflicts: merged.conflicts, prefs: merged.prefs}; }
+      state.prefs = merged.prefs;
+    }
     if (method === 'setStartup') { state.startup = {enabled: data.enabled}; }
     if (method === 'selectInput') { state.input = data.id; }
     if (method === 'testAlert') {
@@ -104,7 +113,139 @@
     try { bridge.call('luna://tv.miqat.webos.service/' + method, JSON.stringify(data)); }
     catch (error) { finish({returnValue: false, errorText: error.message}); }
   }
-  function report(name) { request('report', {view: name || view, instance: instance, input: input ? input.id : null, error: lastError}); }
+  function report(name) { companionUiState(); request('report', {view: name || view, instance: instance, input: input ? input.id : null, error: lastError}); }
+  function tvEditing() { return !!(busy || inlineDraft || appearanceDraft || view === 'picker' || media || overlay.firstChild || settingsConflict); }
+  function companionUiState() {
+    if (!companionSession || !companionBridge || companion.supported !== true) { return; }
+    var value = {session: companionSession, editing: tvEditing(), pairingPage: view === 'pairing'};
+    var signature = JSON.stringify(value); if (signature === companionUi) { return; } companionUi = signature;
+    request('companionUi', value, function (reply) { if (!reply.returnValue) { companionUi = ''; } });
+  }
+  function stopCompanion() {
+    var bridge = companionBridge, session = companionSession;
+    companionBridge = null; companionSession = ''; companionUi = ''; pairingSvgKey = ''; pairingSvg = ''; clearTimeout(companionTimer);
+    companion = {supported: null, starting: false, phones: [], open: false};
+    if (session) { request('companionLeave', {session: session}); }
+    if (bridge) { bridge.onservicecallback = function () {}; try { bridge.cancel(); } catch (error) {} }
+  }
+  function startCompanion() {
+    if (!loaded || companionBridge || document.hidden || document.webkitHidden) { return; }
+    if (!tv) { companion = {supported: false, phones: [], open: false}; return; }
+    var bridge = new PalmServiceBridge(); companionBridge = bridge;
+    companionTimer = setTimeout(function () {
+      if (companionBridge !== bridge || companionSession) { return; }
+      stopCompanion(); companion.failure = 'service'; if (view === 'pairing') { render(); }
+    }, 16000);
+    bridge.onservicecallback = function (raw) {
+      if (companionBridge !== bridge || document.hidden || document.webkitHidden) { return; }
+      var reply;
+      try { reply = JSON.parse(raw); } catch (error) { reply = {returnValue: false}; }
+      if (!reply.returnValue || !reply.subscribed || typeof reply.session !== 'string' || !reply.companion) {
+        stopCompanion(); companion.failure = 'service'; if (view === 'pairing') { render(); } return;
+      }
+      clearTimeout(companionTimer); companionSession = reply.session;
+      var oldNonce = companion.pending && companion.pending.nonce, previous = JSON.stringify(companion); companion = reply.companion;
+      if (companion.starting || companion.open) { pairingMessage = ''; }
+      var focused = document.activeElement, action = focused && focused.getAttribute('data-action');
+      var focus = action && '[data-action=' + JSON.stringify(action) + '][data-value=' + JSON.stringify(focused.getAttribute('data-value')) + ']', refresh = false;
+      if (reply.currentUnavailable) { settingsConflict = true; refresh = view === 'settings'; notify(s('pairingFailed')); }
+      if (reply.current) {
+        try {
+          if (!reply.current.prefs || Object.keys(reply.current.prefs).sort().join(',') !== Object.keys(A.defaults).sort().join(',') || typeof reply.current.startup !== 'boolean') { throw new Error('Incomplete settings notification'); }
+          var current = A.prefs(reply.current.prefs);
+          if (JSON.stringify(current) !== JSON.stringify(prefs) || startup !== reply.current.startup) {
+            if (tvEditing()) { settingsConflict = true; refresh = view === 'settings'; }
+            else { prefs = current; startup = !!reply.current.startup; cacheKey = ''; refresh = true; }
+          }
+        } catch (error) { settingsConflict = true; refresh = view === 'settings'; }
+      }
+      if (companion.pending && companion.pending.nonce !== oldNonce && companion.ownsPairing) { focus = 'pairing-reject'; }
+      if (companion.pending && companion.approved) { focus = 'pairing-cancel'; }
+      companionUiState();
+      if (reply.command) { runRemoteCommand(reply.command); }
+      if (refresh || view === 'pairing' && previous !== JSON.stringify(companion)) { render(focus); }
+    };
+    try { bridge.call('luna://tv.miqat.webos.service/companionForeground', JSON.stringify({subscribe: true})); }
+    catch (error) { stopCompanion(); companion.failure = 'service'; }
+  }
+  function pairingMarkup() {
+    var content = '', qr = companion.qr;
+    if (qr && companion.open) {
+      var payload = window.PairingQr.encode(qr), key = payload + ':' + prefs.theme;
+      if (key !== pairingSvgKey) {
+        var code = window.qrcode(0, D.qrStyle.errorCorrection); code.addData(payload, 'Alphanumeric'); code.make();
+        pairingSvg = window.mihrabQr(code, D.qrStyle, D.palettes[prefs.theme] || D.palettes.mihrab, D.palettes.mihrab['plaster-100'], D.qrMark);
+        pairingSvgKey = key;
+      }
+      content = '<div class="pairing-qr" role="img" aria-label="' + escape(s('pairingScan')) + '"><div class="pairing-symbol">' + pairingSvg + '</div></div>';
+    } else { pairingSvgKey = ''; pairingSvg = ''; }
+    return '<section class="page pairing-page">' + header(s('companionPhones'), 'pairing-back') +
+      '<div class="pairing-body' + (qr && companion.open ? ' has-qr' : '') + '">' + content + '<div class="pairing-controls">' + pairingControlsMarkup() + '</div></div></section>';
+  }
+  function pairingControlsMarkup() {
+    var status = companion.starting || companion.supported === null ? s('pairingLoading') : companion.supported === false ? s('pairingUnavailable') :
+      companion.failure ? s('pairingNetwork') : pairingMessage;
+    var actions = '';
+    if (companion.open && companion.ownsPairing) {
+      if (companion.pending) {
+        actions += '<h2 dir="auto">' + escape(companion.pending.name) + '</h2><strong class="pairing-code" dir="ltr">' + escape(companion.pending.code) + '</strong><p>' +
+          escape(s(companion.approved ? 'pairingWaiting' : 'pairingConfirm')) + '</p>';
+        if (!companion.approved) {
+          actions += button('pairing-reject', s('rejectPhone'), '', '', '', uiContract.bind('pairing.reject', 'action')) +
+            button('pairing-approve', s('approvePhone'), '', '', '', uiContract.bind('pairing.approve', 'action'));
+        }
+      } else { actions += '<p>' + escape(s('pairingScan')) + '</p>'; }
+      actions += button('pairing-cancel', s('cancel'), '', '', '', uiContract.bind('pairing.cancel', 'action'));
+    } else {
+      actions += button('pairing-open', s('pairPhone'), '', '', '', uiContract.bind('pairing.open', 'action'));
+      if (!companion.phones.length) { actions += '<p>' + escape(s('pairingEmpty')) + '</p>'; }
+      companion.phones.forEach(function (phone) {
+        actions += button('pairing-revoke', escape(phone.name) + '<span class="value">' + escape(s('revokePhone')) + '</span>', phone.id, '', '', uiContract.bind('pairing.revoke', 'action'));
+      });
+    }
+    if (companion.failure) { actions += button('pairing-retry', t('حاول مجدداً', 'Retry')); }
+    return (status ? '<p role="status">' + escape(status) + '</p>' : '') + actions;
+  }
+
+  function runRemoteCommand(command) {
+    if (!command || typeof command.request !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(command.request) ||
+        D.companionCommands.indexOf(command.id) < 0 || typeof command.value !== 'string' || command.value.length > 2048 || lastRemoteRequest === command.request) { return; }
+    lastRemoteRequest = command.request;
+    function done(status) { request('companionResult', {session: companionSession, request: command.request, status: status}); }
+    var stopping = command.id === 'radio.stop' || command.id === 'tests.cancel';
+    if ((document.hidden || document.webkitHidden) || !stopping && tvEditing()) { done('busy'); return; }
+    try {
+      if (command.id === 'device.inputs' && command.value) {
+        var selected = null;
+        inputs.forEach(function (candidate) { if (candidate.id === command.value) { selected = candidate; } });
+        if (!selected) { done('unavailable'); return; }
+        busy = true; request('selectInput', {id: selected.id}, function (reply) {
+          busy = false;
+          if (!reply.returnValue) { done('unavailable'); return; }
+          input = selected; play(input); show('input'); done('accepted');
+        }); return;
+      }
+      if (command.id === 'device.home') { show('home'); }
+      else if (command.id === 'device.inputs') { show('inputs'); }
+      else if (command.id === 'device.exit-input') { show('input'); }
+      else if (command.id === 'radio.play') { if (!media || media.kind !== 'radio') { startRadio(); } }
+      else if (command.id === 'radio.stop') { if (media && media.kind === 'radio') { radioBeforeCall = false; stopAudio('stopped', true); } }
+      else if (command.id === 'tests.adhan-short') { startAlert({mode: 'adhan', prayer: 2, test: true, full: false}); if (media) { media.remotePreview = true; } }
+      else if (command.id === 'tests.cancel') { if (media && media.remotePreview) { stopAudio('stopped', true); } }
+      else { done('unavailable'); return; }
+      done('accepted');
+    } catch (error) { done('unavailable'); }
+  }
+  function pairingAction(action, id) {
+    if (!companionSession || companion.supported !== true || companion.starting || companion.failure) { return; }
+    busy = true; companionUiState();
+    var payload = {session: companionSession, action: action, id: id, nonce: companion.pending && companion.pending.nonce};
+    request('companionPairing', payload, function (reply) {
+      busy = false; pairingMessage = reply.returnValue ? '' : s('pairingFailed');
+      if (view === 'pairing') { render(companion.approved ? 'pairing-cancel' : action === 'approve' ? 'pairing-reject' : 'pairing-back'); }
+      else { companionUiState(); }
+    });
+  }
   function notify(text, error) {
     var el = document.getElementById('notice'); el.textContent = text; el.style.display = 'block';
     clearTimeout(noticeTimer); noticeTimer = setTimeout(function () { el.style.display = 'none'; }, 9000);
@@ -270,6 +411,7 @@
       result = row('device.startup', 'startup', onOff(startup), 'toggle') +
         row('device.inputs', 'inputs', inputName()) + row('device.apps', 'apps', '') +
         row('device.settings', 'tv-settings', '') +
+        row('device.companion', 'companion', '') +
         row('device.health', 'health', '') + row('device.exit-input', 'exit', '');
     } else if (section === 'tests') {
       result = row('tests.prayer', 'testPrayer', s('prayerNames')[testPrayer], 'choice') +
@@ -293,7 +435,8 @@
       '<nav class="settings-nav" aria-label="' + t('الأقسام', 'Sections') + '">' + sections.map(function (id) {
         return button('section', sectionName(id), id, id === section || section === 'offsets' && id === 'prayer' ? 'selected' : '');
       }).join('') + '</nav>' + (section === 'appearance' ? '<div class="appearance-preview">' + appearancePreview(appearanceDraft) + '</div>' : '') + '<div class="settings-rows"><h2>' + (section === 'offsets' ? t('تعديل المواقيت', 'Time adjustments') : sectionName(section)) +
-      '</h2>' + settingRows() + '</div></section>';
+      '</h2>' + (settingsConflict ? '<p role="status">' + t('تغيرت الإعدادات على التلفاز.', 'Settings changed on the TV.') + '</p>' +
+        button('reload-settings', t('تحديث وإلغاء التعديل', 'Reload and discard draft')) : '') + settingRows() + '</div></section>';
   }
   function onlineMarkup() {
     var body = '<p role="status">' + escape(s(onlineError ? 'onlineUnavailable' : 'onlineLoading')) + '</p>';
@@ -383,12 +526,18 @@
     Object.keys(appNodes).forEach(function (id) { appNodes[id].setAttribute('data-app-focus', id); });
   }
   function render(focusAction) {
+    if (splashPending) {
+      splashPending = false;
+      setTimeout(function () { document.getElementById("splash").style.display = "none"; }, Math.max(0, 600 - (Date.now() - splashStarted)));
+    }
     document.documentElement.lang = prefs.lang; document.documentElement.dir = prefs.lang === 'ar' ? 'rtl' : 'ltr';
     var stage = document.getElementById('stage'), sheet = prefs.theme === 'mihrab' ? 'style.css' : 'theme-' + prefs.theme + '.css';
     if (document.getElementById('theme-style').getAttribute('href') !== sheet) { document.getElementById('theme-style').setAttribute('href', sheet); }
     stage.setAttribute('data-layout', prefs.homeLayout); stage.setAttribute('data-side', prefs.archSide);
     stage.setAttribute('data-pattern', prefs.background); stage.setAttribute('data-prayers', prefs.prayerMode);
     stage.setAttribute('data-home-bar', prefs.homeBar); stage.setAttribute('data-quick-labels', String(prefs.quickLabels));
+    var pairingKey = view === 'pairing' && companion.open && companion.qr ? window.PairingQr.encode(companion.qr) + ':' + prefs.theme + ':' + prefs.lang + ':' + prefs.uiScale : '';
+    var pairingControls = pairingKey && pairingKey === pairingRenderKey && screen.querySelector('.pairing-controls');
     var html = '', now = new Date(), city = A.city(prefs.city);
     try {
       if (view === 'bar') {
@@ -409,6 +558,8 @@
           '</div></div></section>';
       } else if (view === 'settings') {
         html = settingsMarkup();
+      } else if (view === 'pairing') {
+        html = pairingControls ? pairingControlsMarkup() : pairingMarkup();
       } else if (view === 'prayer-day') {
         dayViewMinute = Math.floor(+now / 60000);
         var today = schedule(now), h = A.hijri(now, prefs), bearing = A.qibla(prefs);
@@ -458,13 +609,19 @@
         }
       }
     } catch (error) { html = '<section class="page">' + header(t('تعذر عرض الصفحة', 'Page unavailable')) + actions(false) + '</section>'; lastError = error.message; }
-    screen.innerHTML = html;
+    if (pairingControls) { pairingControls.innerHTML = html; }
+    else { screen.innerHTML = html; }
+    pairingRenderKey = pairingKey;
+    if (view === 'pairing') {
+      var open = screen.querySelector('[data-action=pairing-open]');
+      if (open) { open.disabled = companion.supported !== true || companion.starting || !!companion.failure; }
+    }
     sizeUi();
     if (view === 'home') { updateClock(); bindHomeFocus(); }
     if (view === 'apps') { bindAppsFocus(); }
     if (view !== 'input') {
       var target = focusAction && screen.querySelector(focusAction.charAt(0) === '[' ? focusAction : '[data-action="' + focusAction + '"]');
-      target = target || (view === 'settings' ? screen.querySelector('.settings-nav .selected') :
+      target = target || (view === 'settings' ? screen.querySelector(section === 'offsets' ? '.settings-rows button' : '.settings-nav .selected') :
         view === 'home' ? homeNodes[homeNavigation.initial(homeAppCount, 0)] :
         view === 'apps' ? screen.querySelector('.app-tile') : screen.querySelector('button')); if (target) { focusControl(target); }
     }
@@ -501,6 +658,14 @@
       } else { content.style.top = Math.max(0, (1080 - height) / 2 + 12 / factor - 56) + 'px'; }
     }
     var nav = content && content.querySelector('.settings-nav'), rows = content && content.querySelector('.settings-rows');
+    var pairingFrame = content && content.querySelector('.pairing-qr');
+    if (pairingFrame) {
+      var qrScale = Math.max(1, factor), symbol = pairingFrame.querySelector('.pairing-symbol');
+      pairingFrame.style.width = pairingFrame.style.height = (400 / qrScale) + 'px';
+      symbol.style.width = symbol.style.height = symbol.firstChild.style.width = symbol.firstChild.style.height = (400 / qrScale) + 'px';
+      var pairingControls = content.querySelector('.pairing-controls');
+      pairingControls.style[prefs.lang === 'ar' ? 'marginRight' : 'marginLeft'] = (400 / qrScale + 56) + 'px';
+    }
     var inset = Math.max(72, (1920 - width) / 2 + 72 / factor);
     // Keep both Settings columns and their focus rings inside the scaled viewport.
     if (nav) {
@@ -697,13 +862,18 @@
     render(key);
   }
   function savePrefs(next, focusAction, returnView) {
-    if (!loaded || busy) { return; } busy = true;
-    request('savePrefs', {prefs: next}, function (reply) {
+    if (!loaded || busy || settingsConflict) { return; } busy = true;
+    request('savePrefs', {expected: prefs, prefs: next}, function (reply) {
       busy = false;
       if (reply.returnValue) {
+        inlineDraft = null;
         if (focusAction === 'apply-appearance') { appearanceDraft = null; }
         prefs = A.prefs(reply.prefs); cacheKey = ''; view = returnView || 'settings'; render(focusAction);
         notify(reply.scheduleResult && !reply.scheduleResult.returnValue ? t('تم الحفظ لكن تعذر جدولة التنبيهات. راجع حالة الخدمة.', 'Saved, but alert scheduling failed. Check service status.') : t('تم الحفظ', 'Saved'));
+      }
+      else if (reply.conflicts && reply.conflicts.length) {
+        settingsConflict = true; view = 'settings'; render('reload-settings');
+        notify(t('تغيرت الإعدادات على التلفاز. راجع القيم الحالية قبل إعادة التعديل.', 'Settings changed on the TV. Reload current values before editing again.'));
       }
       else { notify(t('لم تُحفظ الإعدادات. حاول مرة أخرى.', 'Settings were not saved. Please try again.'), reply.errorText); }
     });
@@ -760,7 +930,7 @@
   function mediaReport(event, detail) {
     if (media) { request('media', {kind: media.kind, event: event, time: isFinite(media.audio.currentTime) ? media.audio.currentTime : 0, detail: detail || ''}); }
   }
-  function dismissOverlay() { clearTimeout(overlayTimer); overlay.innerHTML = ''; overlay.className = ''; screen.style.visibility = ''; }
+  function dismissOverlay() { clearTimeout(overlayTimer); overlay.innerHTML = ''; overlay.className = ''; screen.style.visibility = ''; companionUiState(); }
   function releaseAudioVolume(item, callback) {
     var id = item.volumeId;
     request('audioVolume', {action: 'release', id: id}, function (reply) {
@@ -797,6 +967,7 @@
     audio.setAttribute('preload', 'none'); audio.volume = prefs.volume / 100;
     var item = {kind: kind, audio: audio, serial: serial, started: false};
     media = item;
+    companionUiState();
     document.getElementById('stage').appendChild(audio);
     function active() { return media && media.serial === serial; }
     function failed(detail, ownerId) {
@@ -896,7 +1067,7 @@
       '</p>' + (audible ? '<p data-audio-status>' + t('جارٍ تحميل الصوت…', 'Loading audio…') + '</p>' : '') +
       button('dismiss-alert', audible ? t('إيقاف والعودة', 'Stop & return') : t('إغلاق', 'Dismiss')) + '</section></div>';
     }
-    sizeUi();
+    sizeUi(); companionUiState();
     focusControl(overlay.querySelector('button'));
     if (!audible) { overlayTimer = setTimeout(finishOverlay, alert.test ? 16000 : 20000); }
   }
@@ -910,6 +1081,18 @@
   function activate(action, value) {
     if (busy) { return; }
     armDock();
+    if (action === 'companion') { pairingMessage = ''; startCompanion(); show('pairing', 'pairing-back'); return; }
+    if (action === 'pairing-back') { show('settings', 'companion'); return; }
+    if (action === 'pairing-retry') { stopCompanion(); startCompanion(); render('pairing-back'); return; }
+    if (['pairing-open', 'pairing-cancel', 'pairing-approve', 'pairing-reject', 'pairing-revoke'].indexOf(action) >= 0) { pairingAction(action.slice(8), value); return; }
+    if (action === 'reload-settings') {
+      busy = true; request('status', {}, function (reply) {
+        busy = false;
+        if (!reply.returnValue) { notify(t('تعذر تحميل الإعدادات.', 'Could not load settings.'), reply.errorText); return; }
+        prefs = A.prefs(reply.state.prefs); settingsConflict = false; inlineDraft = null; appearanceDraft = null; cacheKey = ''; view = 'settings'; render();
+      });
+      return;
+    }
     if (inlineControl(action)) {
       if (!inlineDraft || inlineDraft.key !== action) { inlineDraft = {key: action, value: inlineValue(action)}; render(action); }
       else {
@@ -917,7 +1100,6 @@
         var changed = A.prefs(prefs);
         if (/^offset-/.test(action)) { changed.offsets[Number(action.slice(7))] = inlineDraft.value; }
         else { changed[action === 'language' ? 'lang' : action] = inlineDraft.value; }
-        inlineDraft = null;
         savePrefs(changed, action);
       }
       return;
@@ -977,7 +1159,7 @@
       if (action === 'inputs') { discover(false); } return;
     }
     var next = A.prefs(prefs);
-    if (action === 'section') { if (section !== value) { appearanceDraft = null; } section = value; render('[data-action=section][data-value=' + value + ']'); return; }
+    if (action === 'section') { if (section !== value) { appearanceDraft = null; inlineDraft = null; } section = value; render('[data-action=section][data-value=' + value + ']'); return; }
     if (action === 'tests') { section = 'tests'; show('settings'); return; }
     if (action === 'offsets') { section = 'offsets'; render(); return; }
     if (action === 'reset-offsets') { next.offsets = [0, 0, 0, 0, 0, 0]; savePrefs(next, action); return; }
@@ -1089,6 +1271,10 @@
     if (view === 'home' && id >= homeNavigation.FIRST_APP && id < homeNavigation.FIRST_APP + homeAppCount) { lastHomeApp = id; }
     // Moving a pointer target between mousedown and mouseup loses its click.
     if (pointerDown) { return; }
+    if (view === 'settings' && event.target.getAttribute('data-action') === 'section') {
+      var focusedSection = event.target.getAttribute('data-value');
+      if (focusedSection !== section) { activate('section', focusedSection); return; }
+    }
     var factor = window['tv.miqat:core'].tv.miqat.core.UiScale.percent(prefs.uiScale) / 100;
     if (factor <= 1.1) { return; }
     var page = screen.firstElementChild;
@@ -1107,6 +1293,14 @@
   }, true);
   function move(key) {
     var current = document.activeElement;
+    if (view === 'pairing' && (key === 38 || key === 40)) {
+      var column = Array.prototype.filter.call(screen.querySelectorAll('[data-action=pairing-back], .pairing-controls button'), function (button) {
+        return !button.disabled && button.getAttribute('tabindex') !== '-1';
+      });
+      var index = column.indexOf(current), next = index < 0 ? 0 : Math.max(0, Math.min(column.length - 1, index + (key === 40 ? 1 : -1)));
+      if (column[next]) { focusControl(column[next]); }
+      return;
+    }
     if (view === 'home' || view === 'apps') {
       var dx = key === 37 ? -1 : key === 39 ? 1 : 0, dy = key === 38 ? -1 : key === 40 ? 1 : 0;
       if (prefs.lang === 'ar') { dx = -dx; }
@@ -1168,6 +1362,7 @@
       else if (view === 'settings') { show(settingsParent, 'settings'); }
       else if (view === 'prayer-day') { show(dayParent, 'prayer-day'); }
       else if (view === 'online-prayer') { show('settings', 'online-prayer'); }
+      else if (view === 'pairing') { show('settings', 'companion'); }
       else {
         var backView = ['settings', 'inputs', 'prayer-day', 'radio', 'apps'].indexOf(view) >= 0 ? 'home' : view === 'input' ? 'bar' : 'input';
         if (backView === 'input' && media) { radioBeforeCall = false; stopAudio('stopped', true); } else { show(backView); }
@@ -1183,14 +1378,19 @@
   });
   function visibility() {
     if (document.hidden || document.webkitHidden) {
+      stopCompanion();
+      if (view === 'pairing') { render(); }
       cancelOnline();
       returnContext = null; radioBeforeCall = false; if (media) { stopAudio('stopped', false); } dismissOverlay(); releaseVideo(); report('hidden');
     } else if (input && !media) {
       play(input); if (view === 'online-prayer') { render('online-back'); } updateClock(); report();
     }
+    if (!(document.hidden || document.webkitHidden)) { startCompanion(); }
   }
   document.addEventListener('visibilitychange', visibility);
   document.addEventListener('webkitvisibilitychange', visibility);
+  window.addEventListener('pagehide', stopCompanion);
+  window.addEventListener('beforeunload', stopCompanion);
   function launched(event) {
     var p = event.detail || {};
     if (typeof p === 'string') { try { p = JSON.parse(p); } catch (error) { p = {}; } }
@@ -1213,8 +1413,9 @@
         if (!retry) { setTimeout(function () { load(true); }, 1000); return; }
         show('home'); notify(t('تعذر تحميل الإعدادات. أعد فتح المشغل للمحاولة.', 'Settings could not be loaded. Reopen the launcher to retry.'), reply.errorText); return;
       }
-      try { prefs = A.prefs(reply.state.prefs); } catch (error) { notify(t('تعذر قراءة الإعدادات المحفوظة.', 'Saved settings could not be read.'), error.message); return; }
+      try { prefs = A.prefs(reply.state.prefs); } catch (error) { show('home'); notify(t('تعذر قراءة الإعدادات المحفوظة.', 'Saved settings could not be read.'), error.message); return; }
       startup = !!(reply.state.startup && reply.state.startup.enabled); loaded = true;
+      startCompanion();
       if (reply.state.pendingAlert && !reply.state.pendingAlert.displayedAt) { pendingLaunch = reply.state.pendingAlert.id; coldAlert = true; }
       request('audioVolume', {action: 'recover', id: instance + '-0'}, function (result) {
         if (!result.returnValue) { notify(t('تعذر استعادة مستوى صوت التلفاز.', 'Could not restore the TV audio level.'), result.errorText); }

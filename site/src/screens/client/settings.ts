@@ -8,9 +8,10 @@ import { CITIES, METHODS, cityOf, stationOf } from '../../lib/data';
 import { APPS } from '../apps';
 import type { Ctx } from '../../lib/ctx';
 import type { Lang } from '../../lib/text';
+import {pairingDemo, pairingHtml, pairingStep, type PairingAction} from '../pairing';
 import {fetchComparison, onlineRequest} from '../../lib/online-prayer';
 import {
-  APPEARANCE, DOCK_MODES, REMIND, VOICES, chooserHtml, citiesOf, commit, countries, methodItems, regionOf, moveDraft, pick, rowsFor, rowsHtml,
+  APPEARANCE, DEVICE, DOCK_MODES, REMIND, VOICES, chooserHtml, citiesOf, commit, countries, methodItems, regionOf, moveDraft, pick, rowsFor, rowsHtml,
   savedDraft, sectionName, stationChoice, stationsOf, onlineHtml, type Edit, type SPrefs,
 } from '../settings';
 
@@ -41,6 +42,18 @@ onScreen('settings', (stage, signal) => {
   let online: OnlineView | null = null;
   const onlineBackground = [...root.children].filter(el => el !== onlineEl) as HTMLElement[];
 
+  const pairingEl=$('[data-pairing]'),pairingBody=$('[data-pairing-body]'),pairingBack=$('[data-pair-action=back]');
+  let pairingRow:number|null=null,pairingState=pairingDemo();
+  const pairingBackground=[...root.children].filter(el=>el!==pairingEl) as HTMLElement[];
+  const renderPairing=()=>{
+    pairingBody.innerHTML=pairingHtml(ctx.t,pairingState);
+    (pairingBody.querySelector<HTMLElement>(pairingState.phase==='pending'?'[data-pair-action=reject]':pairingState.phase==='approved'?'[data-pair-action=cancel]':'[data-pair-action]')??pairingBack).focus({preventScroll:true});
+  };
+  const closePairing=(restoreFocus=true)=>{
+    if(pairingRow===null)return;const row=pairingRow;pairingRow=null;pairingState=pairingStep(pairingState,'cancel');pairingEl.hidden=true;pairingBody.replaceChildren();
+    pairingBackground.forEach(el=>el.inert=false);if(restoreFocus)focusRow(row);
+  };
+
   const rowEls = () => [...rowsEl.querySelectorAll<HTMLElement>('[data-row]')];
   const focusRow = (i: number) => {
     const r = rowEls()[Math.max(0, Math.min(rowEls().length - 1, i))];
@@ -65,7 +78,7 @@ onScreen('settings', (stage, signal) => {
       appearance($('[data-appearance-preview]'), preview);
     }
     $('[data-theme-name]').textContent = ctx.t.list('themeNames')[Math.max(0, THEMES.indexOf(rowCtx().prefs.theme ?? 'mihrab'))];
-    rowsEl.classList.toggle('scrolling', section === APPEARANCE || (ctx.prefs.uiScale ?? 100) > 110);
+    rowsEl.classList.toggle('scrolling', section === APPEARANCE || section === DEVICE || (ctx.prefs.uiScale ?? 100) > 110);
     rowsEl.classList.toggle('appearance', section === APPEARANCE);
     if (appearanceDraft) $('[data-home-plan]').innerHTML = homePreview(appearanceDraft, rtl);
     $('[data-label]').textContent = offsetsPage ? ctx.t.s('prayerOffsets') : sectionName(ctx.t, section);
@@ -182,8 +195,8 @@ onScreen('settings', (stage, signal) => {
       onlineBody.textContent = ctx.t.s('onlineUnavailable'); onlineRetry.hidden = false;
     } finally { if (online === owner) owner.request = null; }
   };
-  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelOnline(); }, {signal});
-  window.addEventListener('pagehide', () => closeOnline(false), {signal});
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelOnline(); closePairing(false); } }, {signal});
+  window.addEventListener('pagehide', () => { closeOnline(false); closePairing(false); }, {signal});
   const choose = (i: number) => {
     const before = chooser;
     onPick(i);
@@ -277,6 +290,7 @@ onScreen('settings', (stage, signal) => {
   const act = (i: number) => {
     const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[i];
     if (!r) return;
+    if(r.id==='device.companion'){pairingRow=i;pairingEl.hidden=false;pairingBackground.forEach(el=>el.inert=true);renderPairing();return;}
     if (r.id === 'prayer.online') { void checkOnline(i); return; }
     if (r.id === 'homeReset' && appearanceDraft) save({ ...appearanceDraft, homeCountdown: 0, homeSide: 0, homeBar: 0, homePrayers: 0, homeLayout: 'two_rows' });
     else if (r.id === 'apply' && appearanceDraft) { appearanceDraft = armCycle(appearanceDraft, Date.now()); update(appearanceDraft); showSaved(); }
@@ -316,6 +330,17 @@ onScreen('settings', (stage, signal) => {
     const horiz = k === 'ArrowRight' ? 1 : k === 'ArrowLeft' ? -1 : 0;
     const toEnd = rtl ? -horiz : horiz; // +1 toward the end of the line, mirrored in RTL
     const handled = () => { e.preventDefault(); e.stopPropagation(); };
+
+    if(pairingRow!==null){
+      if(!ok&&!back&&!vert&&!horiz&&k!=='Tab')return;handled();
+      if(back)closePairing();
+      else if(ok&&pairingEl.contains(a))a.click();
+      else if(vert||k==='Tab'){
+        const buttons=[...pairingEl.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+        buttons[Math.max(0,Math.min(buttons.length-1,buttons.indexOf(a as HTMLButtonElement)+(vert||1)))]?.focus({preventScroll:true});
+      }
+      return;
+    }
 
     if (online) {
       if (!ok && !back && !vert && !horiz && k !== 'Tab') return;
@@ -373,6 +398,7 @@ onScreen('settings', (stage, signal) => {
 
   // Focus on a section shows it at once, as on the TV.
   root.addEventListener('focusin', (e) => {
+    if(pairingRow!==null){if(!pairingEl.contains(e.target as Node))pairingBack.focus({preventScroll:true});return;}
     if (online) {
       if (!onlineEl.contains(e.target as Node)) onlineBack.focus({preventScroll: true});
       return;
@@ -384,6 +410,13 @@ onScreen('settings', (stage, signal) => {
   // Pointer: the same actions.
   root.addEventListener('click', (e) => {
     const el = e.target as HTMLElement;
+    if(pairingRow!==null){
+      const button=el.closest<HTMLElement>('[data-pair-action]');if(!button)return;
+      const action=button.dataset.pairAction;if(action==='back')closePairing();
+      else {pairingState=pairingStep(pairingState,action as PairingAction,Number(button.dataset.pairPhone));renderPairing();}
+      return;
+    }
+
     if (online) {
       if (el.closest('[data-online-back]')) closeOnline();
       else if (el.closest('[data-online-retry]')) void checkOnline(online.row);
@@ -417,5 +450,5 @@ onScreen('settings', (stage, signal) => {
     sessionStorage.removeItem(FOCUS);
     if (f) requestAnimationFrame(() => { if (signal.aborted) return; setSection(f.section); if (f.row >= 0) focusRow(f.row); else focusNav(); });
   } catch { /* fine */ }
-  signal.addEventListener('abort', () => { clearTimeout(savedTimer); clearTimeout(toastTimer); closeOnline(false); audio.pause(); audio.removeAttribute('src'); audio.load(); }, {once: true});
+  signal.addEventListener('abort', () => { clearTimeout(savedTimer); clearTimeout(toastTimer); closeOnline(false); closePairing(false); audio.pause(); audio.removeAttribute('src'); audio.load(); }, {once: true});
 });

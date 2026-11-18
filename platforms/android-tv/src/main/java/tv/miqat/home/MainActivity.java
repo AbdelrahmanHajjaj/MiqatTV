@@ -61,6 +61,7 @@ public class MainActivity extends Screen {
     private FocusGlow focusGlow;
     private String replacementPackage;
 
+    @Override boolean companionEditing() { return replacementPackage != null || card != null || radioCard != null || quickMenu != null && quickMenu.isShowing(); }
     private TextView clock, gdate, hdate, wifiName, homePrayerTime;
     private int favouriteCount, recentCount;
     private boolean classicHome;

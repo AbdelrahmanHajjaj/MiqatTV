@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.Companion" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">@font/alexandria_regular</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">@color/companion_gold_400</item>
+        <item name="android:windowBackground">@color/companion_lapis_900</item>
+    </style>
+</resources>

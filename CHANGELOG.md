@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+- Load TV settings sections as sidebar focus moves Up/Down, with no OK press.
+  Keep focus in the sidebar until moving toward the content, in both languages
+  (Android TV 0.7.1 and LG 0.2.28).
+
+- Keep LG QR artwork mounted while phone approval changes, and let the phone
+  finish connecting before optional control discovery completes (LG 0.2.27,
+  phone 0.1.3). Reuse stored pinned certificates when rescanning known TVs.
+- Add Forget TV to the phone's TV-list and Remote menus; remove only that
+  phone's saved TV record/cache. TV-side revocation still uses its remote.
+- Make native/LG test screenshots opt-in instead of creating evidence folders.
+
+- Center the phone pairing-button icons beside their labels (0.1.2), and let
+  Up/Down navigate LG pairing from Back through enabled controls while the QR
+  stays visible (0.2.26).
+
+- Refine the Miqat phone companion with persistent floating navigation, clearer
+  selection, compact headers, rounded controls and stable in-place loading.
+  Capitalize its launcher label to Miqat (phone version 0.1.1).
+- Speed up legacy LG identity preparation with native OpenSSL, reuse unchanged
+  QR artwork during approval and remove a redundant phone pairing request.
+  Existing trust and physical TV approval remain required (LG version 0.2.25).
+
+- Keep the branded LG splash visible until the first screen is ready.
+
+- Sync companion branding/catalogs with the refreshed main design and expose its
+  Home mihrab-opacity setting with shared bounds, drafts and conflict handling.
+
+- Add the approved theme-matched Miqat centre mark with half-gap clearance and
+  stronger error correction to Android TV and LG pairing QR codes.
+- Use `miqat` as the Android companion launcher label (product name `miqatTv`).
+- Port the Android phone companion and foreground TV pairing/settings controls to
+  Miqat, using its shared artwork, geometry, palettes and tv.miqat identities.
+- Add themed local pairing QR codes, physical TV approval, phone appearance
+  preview with Apply/Cancel, and Home/input/radio/adhan-preview controls.
+
 - Refresh the README with current Miqat Android screenshots and remove its header icon.
 
 - Keep FFmpeg audio-processing tests local; CI retains approved media checksum checks.

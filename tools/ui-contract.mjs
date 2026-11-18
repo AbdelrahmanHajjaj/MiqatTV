@@ -13,7 +13,7 @@ const choiceSources = {
   backgrounds: ['theme', ...appearance.proceduralBackgrounds, ...appearance.patterns, ...appearance.scenes],
   zones: ['system', ...Array.from({length: 105}, (_, i) => String(-720 + i * 15))],
 };
-const sections = ['prayer', 'reminders', 'radio', 'display', 'appearance', 'network', 'device', 'tests', 'offsets', 'prayer-day', 'favourites', 'apps'];
+const sections = ['prayer', 'reminders', 'radio', 'display', 'appearance', 'network', 'device', 'tests', 'offsets', 'prayer-day', 'favourites', 'apps', 'pairing'];
 const kinds = ['choice', 'toggle', 'number', 'action'];
 
 export function uiChoices(control) {

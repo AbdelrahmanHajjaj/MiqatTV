@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "qrVersion": 3,
+  "commands": ["device.home", "device.inputs", "device.exit-input", "radio.play", "radio.stop", "tests.adhan-short", "tests.cancel"],
+  "port": 45761,
+  "pairWindowMillis": 300000,
+  "maxPhones": 16,
+  "maxBodyBytes": 65536,
+  "maxResponseBytes": 2097152,
+  "timeoutMillis": 6000,
+  "maxQrBytes": 2048
+}
