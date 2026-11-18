@@ -12,7 +12,8 @@ No local-folder move or remote rename is needed.
 The new workflows are owned here: Validate checks the shared core and all three
 consumers; Draft build release publishes verified artifacts to a draft prerelease.
 Main protection and token defaults follow [CI.md](CI.md). No inherited workflow
-is retained, and Pages deployment is not part of this setup.
+is retained. GitHub Pages serves the validated browser preview automatically
+from main; see [website deployment](CI.md#website).
 
 Main starts with the validated foundation and fresh Git history, as approved
 by the owner on 17 November 2026. Future changes use feature branches. Stable releases still need explicit
