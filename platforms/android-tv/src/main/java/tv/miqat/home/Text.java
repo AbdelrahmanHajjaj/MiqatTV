@@ -284,7 +284,10 @@ final class Text {
     String[] hijriMonths() { return ar ? new String[] {"محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"} : new String[] {"Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani", "Jumada al-Ula", "Jumada al-Akhirah", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu al-Qadah", "Dhu al-Hijjah"}; }
 
     String hijriSuffix() { return ar ? " هـ" : " AH"; }
-    String themeRow() { return ar ? "السمة" : "Theme"; }
+    String mihrabOpacity() { return ar ? "عتامة المحراب" : "Mihrab opacity"; }
+    String mihrabOpacityHelp() { return ar ? "موصى به: 85%" : "Recommended: 85%"; }
+    String themeRow() { return ar ? "الإعداد المسبق" : "Preset"; }
+    String customizeAppearance() { return ar ? "تخصيص" : "Customize"; }
     String backgroundRow() { return ar ? "الخلفية" : "Background"; }
     String lightingRow() { return ar ? "الإضاءة المحيطية" : "Ambient light"; }
     String appearanceCycle() { return ar ? "تغيير المظهر عشوائيًا" : "Random appearance"; }
@@ -331,7 +334,7 @@ final class Text {
     String applyAppearance() { return ar ? "تطبيق التغييرات" : "Apply changes"; }
     String appearancePreview() { return ar ? "معاينة الرئيسية" : "Home preview"; }
     String sectionAppearance() { return ar ? "الرئيسية والمظهر" : "Home & appearance"; }
-    String[] themeNames() { return ar ? new String[] {"ميقات", "شفق", "جمر", "غابة", "منتصف الليل", "وردي", "رمال", "أردوازي", "زجاج", "صقيع", "سينما", "كربون", "نيون", "مخطط", "إشارة", "أركيد", "غسق", "واحة", "نحاس أصفر", "فسيفساء", "مخصصة"} : new String[] {"Miqat", "Aurora", "Ember", "Forest", "Midnight", "Rose", "Sand", "Slate", "Glass", "Frost", "Cinema", "Carbon", "Neon", "Blueprint", "Signal", "Arcade", "Dusk", "Oasis", "Brass", "Mosaic", "Custom"}; }
+    String[] themeNames() { return ar ? new String[] {"ميقات", "الشفق القطبي", "جمر", "تلال الشاي", "بحيرة القمر", "وردي", "الساحل الذهبي", "أمطار موسمية", "زجاج", "صقيع", "سينما", "كربون", "نيون", "مخطط", "إشارة", "أركيد", "قمم الغسق", "واحة", "نحاس أصفر", "فسيفساء", "مخصصة"} : new String[] {"Miqat", "Aurora sky", "Ember", "Tea hills", "Moon lake", "Rose", "Golden coast", "Monsoon", "Glass", "Frost", "Cinema", "Carbon", "Neon", "Blueprint", "Signal", "Arcade", "Dusk peaks", "Oasis", "Brass", "Mosaic", "Custom"}; }
     String homeLayout() { return ar ? "تخطيط الرئيسية" : "Home layout"; }
     String homeCountdown() { return ar ? "العد التنازلي للصلاة" : "Prayer countdown"; }
     String[] homeCountdowns() { return ar ? new String[] {"محراب", "شريط مدمج", "مخفي"} : new String[] {"Mihrab", "Compact bar", "Hidden"}; }
@@ -345,7 +348,7 @@ final class Text {
     String homeFavourites() { return ar ? "صفوف المفضلة" : "Favourite rows"; }
     String noCurrentPrayer() { return ar ? "لا توجد صلاة حالية" : "No current prayer"; }
     String[] homeLayouts() { return ar ? new String[] {"صفّان للمفضلة", "كلاسيكي — صف واحد"} : new String[] {"Two favourite rows", "Classic — one row"}; }
-    String[] backgroundNames() { return ar ? new String[] {"حسب السمة", "شبكة ميقات", "سادة", "بانوراما", "ضوء النهار", "جبال", "كثبان", "هالة", "سماء الليل", "أقواس ميقات", "نقاط الخط", "رواق صغير", "صدى التاج", "أقواس ونقاط", "بوابات هادئة", "رواق متدرج", "أقواس الأركان"} : new String[] {"Theme", "Miqat lattice", "Solid", "Panorama", "Daylight", "Mountains", "Dunes", "Halo", "Night sky", "Miqat arches", "Calligraphy diamonds", "Small arcade", "Crown echoes", "Arches & diamonds", "Quiet portals", "Offset arcade", "Corner arches"}; }
+    String[] backgroundNames() { return ar ? new String[] {"حسب السمة", "شبكة هندسية", "سادة", "بانوراما", "ضوء النهار", "جبال", "كثبان", "هالة", "سماء الليل", "أقواس كاملة", "نجوم ثمانية", "نسيج هندسي", "زخرفة نباتية", "بلاط معيّن", "وريدات", "فسيفساء سداسية", "خطوط منسابة", "قمم الغسق", "الساحل الذهبي", "بحيرة القمر", "الشفق القطبي", "تلال الشاي", "أمطار موسمية", "بصمة ميقات", "هدوء ميقات"} : new String[] {"Theme", "Geometric lattice", "Solid", "Panorama", "Daylight", "Mountains", "Dunes", "Halo", "Night sky", "Whole arches", "Eight-point stars", "Woven lattice", "Botanical scroll", "Diamond tiles", "Floral rosettes", "Hexagon mosaic", "Flowing lines", "Dusk peaks", "Golden coast", "Moon lake", "Aurora sky", "Tea hills", "Monsoon", "Miqat signature", "Miqat quiet"}; }
     String[] buttonActions() { return ar ? new String[] {"الأصلي", "الرئيسية", "التطبيقات", "المداخل", "الإعدادات", "شريط الصلاة"} : new String[] {"Original", "Home", "All apps", "Inputs", "Settings", "Prayer bar"}; }
     String timeZone() { return ar ? "التوقيت" : "Time zone"; }
     String scheduledAlerts() { return ar ? "التنبيهات المجدولة" : "Scheduled alerts"; }

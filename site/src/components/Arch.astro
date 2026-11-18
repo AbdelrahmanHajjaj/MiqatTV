@@ -30,6 +30,7 @@ const m = model ?? archModel(ctx);
 
 <style>
   .arch { position: absolute; inset-inline-start: var(--layout-arch-inset-inline-start); top: var(--layout-arch-top); overflow: visible; }
+  :global(.tv[data-screen='home']) .outer { fill:var(--mihrab-fill);fill-opacity:var(--mihrab-opacity); }
   .outer { fill: var(--surface-fill, var(--color-lapis-800)); stroke: var(--surface-edge, var(--border-arch-rest-color)); stroke-width: var(--surface-arch-stroke, var(--border-arch-rest-width)); transition: stroke var(--motion-focus); }
   .inner { fill: none; stroke: var(--color-arch-inner); stroke-width: 1.5; }
   :global(.tv[data-surface]:not([data-surface="classic"]):not([data-surface="frame"])) .inner { display: none; }

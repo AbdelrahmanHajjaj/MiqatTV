@@ -38,3 +38,131 @@ Raw logs, recordings, HARs and captures remain under ignored state/.
 No physical TV was changed. The old platform-core and companion checkouts remain
 clean and unchanged. No companion code, inherited Actions, previous history,
 credentials, private device state or recordings are part of this repository's sources.
+
+## Appearance review draft — 18 November 2026
+
+Branch `design/miqat-themes`, based on `e612c11`, in an isolated linked worktree.
+All work remains unstaged and uncommitted pending owner review. Other main-checkout
+and companion work is separate and was not modified. Local review: `state/theme-review/index.html`, revision 6.
+
+- Revised after owner feedback: seven non-arch ornamental families, one fully
+  framed arch composition and a star/diamond default tile. All SVG coordinates
+  and control points stay within an eight-unit margin, covered by a regression.
+  Existing selection IDs remain stable; bilingual background labels were updated.
+  Aggregate text hashes changed intentionally for those labels only; religious
+  text and formatter expectations are unchanged.
+- Canonical freshness, tokens/data checks, preview tests and 18-route build pass.
+  All 20 themes render in both languages without page errors; all 23 background
+  views were regenerated. Actual-opacity overview sheets were inspected; gallery
+  theme/language/background/detail controls and image loading pass at desktop/mobile.
+- Android build/size/lint/AndroidTest assembly and all 41 Python/Java regressions
+  pass, including palette contrast and full-resolution mask checks. Complete
+  local-audio APK: **21,976,961 bytes**.
+- LG build/ES5/adapter/service/mock HTTPS checks pass. Palette-tinted masks,
+  opacity bounds, draft-theme image loading and full-composition sizing are checked.
+  Full browser checks pass in Arabic/English at 80–150%, including all six scenic
+  carousel previews, full-resolution decoding, Apply and saved Home re-entry. The
+  new test mirrors physical arrows for Arabic; decoder and Luna are mocked.
+
+Six neutral landscape assets are reused unmodified under CleanYourTV's MIT license,
+with source filenames/revision recorded in THIRD-PARTY.md. They total 367,296 bytes.
+All six render natively in the task-owned read-only API 37 phone emulator at
+1920×1080/density 160, alternating English and Arabic; captures were inspected.
+Only this emulator was installed/configured, then closed. These are emulator
+spot checks, not physical-TV or real-remote acceptance. The review gallery also
+contains 12 bilingual browser Home examples using complementary palettes. Raw
+captures and private media stay ignored. Physical TV, media/remote/power acceptance,
+deployment, commit and push are outside this review. Existing preview dependency
+advisories remain separate work. Reload the local gallery to see revision 6;
+versioned image URLs avoid stale copies.
+
+### Handcrafted presets and customization
+
+Six existing IDs now pair the landscapes with dedicated palettes, bilingual names
+and surface treatments (see DESIGN.md). All palette roles and glass-over-white
+checks pass. Appearance places the complete preset carousel first, then Customize
+with the existing controls. Selecting a different preset restores its bundled
+background and lighting only in the draft. Clamped input preserves manual changes.
+
+Preview regressions/build and actual bilingual page checks pass: draft-only preset
+selection, manual background override and Apply are verified. Android build, size,
+lint and AndroidTest assembly pass, along with all 41 Python/Java regressions.
+The native UI contract check passes on the task-owned read-only API 37 emulator,
+including preset defaults, customization preservation, row order and both languages.
+Six final native theme captures were inspected; the emulator was then closed.
+LG build/service suites and full bilingual browser checks pass, including preset
+background selection, unsaved draft isolation and later manual overrides. These
+remain mocked LG checks, not physical picture/remote acceptance. Current gallery
+includes the new presets, before/after palette comparisons and customization page.
+No files are staged, committed or pushed. Other ongoing checkout work is preserved.
+
+### Miqat flagship
+
+The canonical default now selects original `miqat_signature` artwork rather than
+the lattice. Built-in ImageGen produced the petrol/jade ceramic relief with gold
+inlay; the app bundles a 115,784-byte 1920×1080 JPEG. The generation brief is in
+`shared/design/artwork/miqat-signature.md`. Existing manual backgrounds stay intact.
+Canonical/catalog/token checks, preview regressions/18-route build and all 41
+Python/Java regressions pass. Android build/size/lint/AndroidTest assembly pass;
+all seven local scene files are confirmed in the APK. Actual browser and native
+API 37 emulator renders were inspected in both languages with Theme resolving
+the new default. The read-only task-owned emulator was closed afterward.
+LG build/service and full bilingual browser suites pass for the new default,
+including fresh preferences, manual-background preservation and all seven scene
+previews/save/re-entry. LG remains mocked. Review revision 6 includes before/after
+and current native flagship captures.
+No physical-TV acceptance, commit or push is claimed.
+
+### Home opacity and clearer prayer icons — review revision 7
+
+Home fill now supports 50–100% in 5% steps, default/recommended 85%, preserving
+opaque text/outlines and non-Home frames. Shared JVM/JS/legacy checks pass. Native
+focused opacity and UI-contract instrumentation passed on the task-owned read-only
+API 37 emulator: bilingual limits, live draft, both cancellation layers, Apply,
+saved re-entry and actual fill-only paint alpha. The emulator was closed after
+final bilingual native captures. No physical TV was operated.
+
+Owner rejected the first decorative icon proposal as unclear. The revised review
+set removes diamond ornaments and uses familiar solar/lunar symbols with a heavier
+2-unit stroke. Canonical paths feed Android, preview and LG. LG Home icons share
+the tag header strip, preserving long labels at 150% sizing. This replaces the
+failed inline placement that wrapped Maghrib. Final full LG bilingual browser
+suite passes at all supported sizes, including opacity persistence and all six
+canonical paths; service/ES5/mock HTTPS suites pass. Decoder/Luna remain mocked.
+
+Preview regressions and 18-route build pass. Actual bilingual page checks verify
+50–100% bounds, live preview, numeric/outer cancellation, Apply/re-entry, opaque
+text/outlines and six canonical paths. Android build/size/lint pass; current local
+APK is 21,835,655 bytes. All 41 Python/Java regressions pass. Review revision 7
+contains refreshed Home/preset images, opacity controls, a rejected/revised icon
+comparison with small-size samples, and final native flagship captures. Gallery
+controls/image loading pass. Native instrumentation was run before the final
+path-only icon revision; the final APK was installed and visually inspected.
+
+No physical-TV acceptance, staging, commit or push. Existing dependency advisories
+remain separate work. Main-checkout work was preserved.
+
+### Miqat quiet addition and 75% next-prayer fill — review revision 8
+
+Owner selected a 75% next-prayer fill and approved keeping both original Miqat
+scenes. `miqat_quiet` is added with English/Arabic labels; `miqat_signature`
+remains the canonical default. Neither background is automatically mirrored.
+The added 1920×1080 JPEG is 90,742 bytes. Android/preview/LG apply absolute 75%
+alpha to the selected surface panel RGB, without dimming text/outline or
+compounding Glass. The mihrab's separate opacity control is unchanged.
+
+Canonical freshness/token checks, preview regressions/18-route build, Android
+size/lint/AndroidTest assembly and all 41 Python/Java regressions pass. Current
+local-media APK: 22,040,731 bytes, below 25,000,000; both Miqat JPEGs are confirmed
+byte-for-byte in the APK. Aggregate text hashes were intentionally regenerated
+for the additional background label; sacred text/formatter fixtures are unchanged.
+Actual bilingual preview checks pass for preserved default, quiet carousel draft,
+Apply/re-entry, 75% fill and opaque labels. Both scenes were rendered in English
+and Arabic on the isolated read-only API 37 emulator; native captures were
+inspected and that emulator was closed. No physical TV was operated.
+
+LG packaging/ES5/service/mock HTTPS and full bilingual browser checks pass,
+including all eight scene decodes, saving/re-entry and computed 75% card alpha.
+Decoder/Luna remain mocked. Gallery revision 8 includes the added background and
+updated previews; gallery controls/images pass. Native original/quiet captures
+are retained under ignored state. No staging, commit, push or physical acceptance.

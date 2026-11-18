@@ -1,14 +1,14 @@
 {
   "version": 1,
   "colors": {
-    "lapis-950": "#190D09",
-    "lapis-900": "#281710",
-    "lapis-800": "#3A2319",
-    "lapis-700": "#4B3022",
-    "gold-400": "#FFB875",
-    "gold-200": "#FFDBAC",
-    "plaster-100": "#FFF3E8",
-    "mist-400": "#E4C2AB"
+    "lapis-950": "#291B13",
+    "lapis-900": "#39291D",
+    "lapis-800": "#503B29",
+    "lapis-700": "#664C35",
+    "gold-400": "#F1C48F",
+    "gold-200": "#F9DEB8",
+    "plaster-100": "#FCF1DF",
+    "mist-400": "#D8C6AD"
   },
   "surface": "blocks",
   "background": "solid",

@@ -37,5 +37,16 @@
     "gold-200",
     "plaster-100",
     "mist-400"
-  ]
+  ],
+  "scenes": [
+    "dusk_peaks",
+    "golden_coast",
+    "moon_lake",
+    "aurora_sky",
+    "tea_hills",
+    "monsoon",
+    "miqat_signature",
+    "miqat_quiet"
+  ],
+  "defaultBackground": "miqat_signature"
 }

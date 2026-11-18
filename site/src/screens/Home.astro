@@ -377,7 +377,7 @@ const W = { site: ar ? 'على التلفاز يفتح هذا' : 'On the TV this
   .cells :global(.time) { font-size: var(--layout-home-cell-time-size); line-height: 1.1; white-space: nowrap; }
   :global(:lang(en)) .cells :global(.time) { font-size: var(--layout-home-cell-time-size); }
   .cells :global(.cell[data-state='now']) { background: var(--color-plaster-100); color: var(--color-lapis-900); box-shadow:none; }
-  .cells :global(.cell[data-state='next']) { background: transparent; color: var(--color-gold-400); box-shadow: inset 0 0 0 var(--border-next-prayer-width) var(--border-next-prayer-color); }
+  .cells :global(.cell[data-state='next']) { background: color-mix(in srgb, var(--mihrab-fill, var(--color-lapis-800)) calc(var(--surface-next-prayer-opacity) * 100%), transparent); color: var(--color-gold-400); box-shadow: inset 0 0 0 var(--border-next-prayer-width) var(--border-next-prayer-color); }
   .cells :global(.cell[data-state='past']) { background: color-mix(in srgb, var(--surface-fill, var(--color-lapis-800)) 60%, transparent); color: var(--color-mist-400); }
   .cells :global(.cell:is([data-state='now'], [data-state='next']) :is(.name, .time)) { font-weight: 600; }
 

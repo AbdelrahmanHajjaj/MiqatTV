@@ -502,7 +502,7 @@ public class MainActivity extends Screen {
         boolean compact = home.mode == HomeLayout.COMPACT;
         float inset = Tokens.LAYOUT_HOME_PANEL_INSET;
         if (!compact) {
-            arch = new ArchView(this);
+            arch = new ArchView(this, Prefs.mihrabOpacity(this));
             place(arch, home.panelX, home.panelY, home.panelWidth, Tokens.LAYOUT_HOME_MIHRAB_HEIGHT);
             TextView verse = text(sacred, Tokens.FONT_SIZE_SACRED, Palette.GOLD_400);
             verse.setText(SacredText.PRAYER_VERSE);
@@ -754,7 +754,11 @@ public class MainActivity extends Screen {
             else if (past) { bg = Palette.LAPIS_800_60; fg = Palette.MIST_400; bold = false; }
             else { bg = Palette.LAPIS_800; fg = Palette.PLASTER_100; bold = false; }
             GradientDrawable g = Appearance.prayerPanel(bg);
-            if (ring != 0) g.setStroke(Ui.ipx(3), ring);
+            if (ring != 0) {
+                g.setColor((Math.round(255 * Tokens.SURFACE_NEXT_PRAYER_OPACITY) << 24)
+                    | (Appearance.surface().panel & 0xffffff));
+                g.setStroke(Ui.ipx(3), ring);
+            }
             cell[slot].setBackground(g);
             cellTag[slot].setText(tag);
             PrayerIcon.set(cellIcon[slot], i, "");

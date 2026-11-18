@@ -50,3 +50,24 @@ or relicensing is part of this notice audit.
 
 The fonts can be renamed or bundled under the OFL, but not sold on their own. The full text is at
 https://openfontlicense.org.
+
+## Illustrated landscape backgrounds
+
+Six unmodified 1920×1080 JPEG illustrations are reused from Gathin's
+[CleanYourTV](https://github.com/Gathin23/cleanyourtv), source checkout revision
+`f9f0c5353e65c5003d5f2f45784a30c5dee19ecb`, under MIT (copyright 2026 Gathin).
+The complete notice is already shipped as `licenses/CleanYourTV-MIT.txt`.
+Source directory: `themes/scenes/wallpapers/`; generator: `tools/scenes_wallpapers.py`.
+
+| Miqat asset in shared/design/assets/backgrounds/ | CleanYourTV source |
+| --- | --- |
+| dusk_peaks.jpg | 01-dusk-peaks.jpg |
+| golden_coast.jpg | 02-golden-coast.jpg |
+| moon_lake.jpg | 03-moon-lake.jpg |
+| aurora_sky.jpg | 04-aurora.jpg |
+| tea_hills.jpg | 08-tea-hills.jpg |
+| monsoon.jpg | 12-monsoon.jpg |
+
+These are local illustrated scenes, with a 20% black overlay applied by each
+renderer for readability. They do not change color with the theme or lighting
+control. No external image service or runtime image generation is used.

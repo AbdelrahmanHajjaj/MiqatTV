@@ -202,15 +202,16 @@ console.log('PASS: local SVG geometry allowlist and ordered prayer vector dimens
 const appearance = JSON.parse(readFileSync(new URL('../shared/design/appearance.json', import.meta.url)));
 validateAppearance(appearance);
 for (const change of [
-  data => { data.extra = []; }, data => { data.colors.pop(); }, data => { data.patterns = []; },
+  data => { data.defaultBackground = '../escape'; }, data => { data.extra = []; }, data => { data.colors.pop(); }, data => { data.patterns = []; },
   data => { data.patterns[0] = '../pattern'; }, data => { data.patterns[0] = 'bad-pattern'; }, data => { data.patterns.push(data.patterns[0]); },
   data => { data.patterns.push(data.proceduralBackgrounds[0]); }, data => { data.surfaces[0] = 'unknown'; },
+  data => { data.scenes[0] = "../escape"; }, data => { data.scenes.push(data.patterns[0]); },
   data => { data.proceduralBackgrounds.reverse(); }, data => { data.colors[0] = 1; },
 ]) {
   const modified = structuredClone(appearance); change(modified);
   assert.throws(() => validateAppearance(modified));
 }
-for (const [name, expected] of Object.entries({BACKGROUNDS: [...appearance.proceduralBackgrounds, ...appearance.patterns], SURFACES: appearance.surfaces, COLORS: appearance.colors})) {
+for (const [name, expected] of Object.entries({BACKGROUNDS: [...appearance.proceduralBackgrounds, ...appearance.patterns, ...appearance.scenes], SURFACES: appearance.surfaces, COLORS: appearance.colors})) {
   assert.deepEqual(JSON.parse('[' + new RegExp(name + ' = \\{([^}]+)\\}').exec(themeJava)[1] + ']'), expected);
 }
 console.log('PASS: appearance defaults, unique background groups, color slots and generated native ID lists');
