@@ -9,7 +9,7 @@ import Settings from '../screens/Settings.astro';
 import Call from '../screens/Call.astro';
 import Screensaver from '../screens/Screensaver.astro';
 import { buildCtx } from '../lib/ctx';
-import { PAGES, type Page } from '../lib/site';
+import { PAGES, href, type Page } from '../lib/site';
 import type { Lang } from '../lib/text';
 
 export function getStaticPaths() {
@@ -26,13 +26,23 @@ const { page, lang } = Astro.props;
 const ctx = buildCtx(lang, page.mode);
 const SCREENS = { home: Home, 'prayer-day': PrayerDay, apps: Apps, settings: Settings, call: Call, screensaver: Screensaver } as Record<string, any>;
 const Screen = SCREENS[page.screen];
-const images: Record<string, string> = {
-  'prayer-day': 'prayer-day.png', reminder: 'reminder.png', call: 'call.png', friday: 'friday.png', ramadan: 'ramadan.png',
-  apps: 'all-apps.png', settings: lang === 'en' ? 'settings-en.png' : 'settings-radio.png', screensaver: 'screensaver.png',
-};
 ---
-<Layout lang={lang} page={page} image={images[page.slug]}>
-  <Tv screen={page.screen} mode={page.mode} ground={page.screen === 'screensaver' ? 'black' : 'lattice'}>
-    {Screen ? <Screen ctx={ctx} /> : <p style="position:absolute;inset:0;display:grid;place-items:center;font-size:40px">…</p>}
-  </Tv>
+<Layout lang={lang} page={page}>
+  <div id="preview-host" data-preview-host data-preview-path={href(page.slug, lang)}>
+    <Tv screen={page.screen} mode={page.mode} ground={page.screen === 'screensaver' ? 'black' : 'lattice'}>
+      <Screen ctx={ctx} />
+    </Tv>
+  </div>
+  {PAGES.map(p => {
+    const Panel = SCREENS[p.screen];
+    return <template data-preview-path={href(p.slug, lang)} data-preview-name={p.nav[lang]} data-other-path={href(p.slug, lang === 'ar' ? 'en' : 'ar')}>
+      <Tv screen={p.screen} mode={p.mode} ground={p.screen === 'screensaver' ? 'black' : 'lattice'}>
+        <Panel ctx={buildCtx(lang, p.mode)} />
+      </Tv>
+      <div data-preview-copy>
+        <p class="lede">{p.description[lang]}</p>
+        {p.body[lang].map(para => <p>{para}</p>)}
+      </div>
+    </template>;
+  })}
 </Layout>

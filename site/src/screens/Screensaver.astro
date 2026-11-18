@@ -26,37 +26,6 @@ const m = screensaverModel(ctx);
   </div>
 </div>
 
-<script>
-  import { live } from '../scripts/live';
-  import { screensaverModel } from './screensaver';
-
-  const stage = document.querySelector<HTMLElement>('.tv')!;
-  if (stage.dataset.screen === 'screensaver') {
-    live(screensaverModel);
-    const wake = stage.querySelector<HTMLAnchorElement>('.wake')!;
-    const group = stage.querySelector<HTMLElement>('[data-group]')!;
-    // Any key wakes it, as on the TV (arrows included, once the screen has focus).
-    wake.addEventListener('keydown', (e) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || e.key === 'Tab') return;
-      e.preventDefault();
-      e.stopPropagation();
-      wake.click();
-    });
-    // MiqatDream.drift: fade out, move somewhere new inside the safe margins, fade back in.
-    const place = (x: number, y: number) => group.style.setProperty('translate', `${x}px ${y}px`);
-    const fadeMs = () => parseFloat(getComputedStyle(group).transitionDuration) * 1000 || 0;
-    place(1140, 250);
-    window.setInterval(() => {
-      group.style.opacity = '0';
-      window.setTimeout(() => {
-        const factor = Number(stage.dataset.uiSize) / 100;
-        place(96 + Math.random() * (1920 - 192 - 440 * factor), 56 + Math.random() * (1080 - 112 - 640 * factor));
-        group.style.opacity = '1';
-      }, fadeMs());
-    }, Number(group.dataset.drift));
-  }
-</script>
-
 <style>
   .wake { position: absolute; inset: 0; z-index: 1; outline: none; cursor: pointer; }
   .group { position: absolute; left: 0; top: 0; width: 440px; height: 640px; translate:1140px 250px; scale:var(--ui-size, 1); transform-origin:0 0; transition: opacity var(--motion-screensaver-fade) linear; }
