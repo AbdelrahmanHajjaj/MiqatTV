@@ -104,22 +104,23 @@ canonical branding master, runtime renderers and pairing wire format are unchang
 A transparent gold Arabic/mihrab cutout was made with the built-in image-editing
 tool; the source artwork remains intact. It is used only in ignored previews.
 
-Current direction: centre fill follows the QR's contrast-adjusted theme body;
-lettering/arch use the app accent. Compare A (no border) with B (one line directly
-on the fill edge). There is no inset ring or fixed-colour logo background. A
-narrow paper separation around the centre remains for scanning. Final candidate
-uses an 11-module tile on a 49x49 high-correction symbol; a larger tile was rejected
-after exact-payload failures in rotated samples.
+Current direction: borderless centre fill follows the QR's contrast-adjusted
+body; lettering/arch use the app accent. There is no fixed-colour logo tile or
+inset ring. Compare A (previous 0.7-module clearance), B (half-width, 0.35 modules)
+and C (no clearance), all using the same 11-module tile and 49x49/H symbol.
+A larger filled tile was previously rejected after rotated exact-payload failures.
 
-Both candidates pass 144 independent exact-payload ZXing decodes in each of
-Mihrab, Aurora, Rose and Brass: 1,152 total. Matrix: eight synthetic payloads,
-220/280/400 px, four rotations, blur and reduced contrast. Actual browser output
-was inspected; per-symbol SVG IDs keep all palettes independent in the comparison.
+A and B each pass 576 independent exact-payload ZXing decodes across Mihrab,
+Aurora, Rose and Brass. Matrix: eight synthetic payloads, 220/280/400 px, four
+rotations, blur and reduced contrast. C fails exact-payload checks at 280 px / 180°
+for one synthetic payload in Mihrab, Aurora and Rose; Brass passes. Zero clearance
+is excluded from recommendation. Recommend B, subject to owner selection.
+Actual browser output was inspected; per-symbol SVG IDs isolate theme palettes.
 
 Prior icon, gold-only and matching-ring previews were reviewed but not applied.
 Shared-outline and lighter-correction variants failed small samples and were
 excluded. Scripts, PNG/SVG/HTML previews, transparent asset and raw pass/failure
-evidence remain in ignored state/companion/qr-centre-{exploration,transparent,rings,fill}/.
+evidence remain in ignored state/companion/qr-centre-{exploration,transparent,rings,fill,clearance}/.
 
 Selection, full-theme and physical phone-camera/TV acceptance remain pending.
 No runtime QR or physical-device change is included in this exploration.
