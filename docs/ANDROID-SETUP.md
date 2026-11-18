@@ -2,6 +2,19 @@
 
 These tools install your locally built Miqat. They never fetch or push Git. Python 3.9+, JDK 17 and Android SDK 34 are required. The phone installer can also install an APK you copy to the phone: choose **Install a local launcher APK**.
 
+On the Miqat phone companion, choose **Your TVs → Set up Android TV**. This uses
+the same implementation as the standalone installer, including optional cleanup
+and recovery, in the companion's selected language. After successful setup,
+**Pair TV** opens ordinary pairing; confirm access using the TV's remote. Cancelling
+or finishing incomplete setup does not start pairing. This setup entry supports
+Android/Google TV; LG installation still follows [the LG guide](WEBOS.md).
+
+The standalone installer remains available. Its ADB authorisation and private
+recovery files are not automatically transferred to the companion. Export and
+keep its recovery backup before clearing or removing that app; PC recovery below
+can use the export. Download installation requires a published compatible APK;
+use a local APK when no release is available.
+
 Tested on TCL 50C641K, Android 11 (API 30), firmware V8-R51MT02-LF1V903.021315. Installation, exclusive Home and reboot passed; see [validation and remaining hardware checks](EVIDENCE.md). The tools read the actual API version and refuse anything below 26.
 
 ## Install from Windows

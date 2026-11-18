@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add Set up Android TV inside the Miqat phone companion (0.1.4), reusing the
+  standalone installer's guarded installation, cleanup and recovery. Follow the
+  phone language and offer normal pairing after successful setup. Correct the
+  installer download/catalogue repository URL.
+
 - Load TV settings sections as sidebar focus moves Up/Down, with no OK press.
   Keep focus in the sidebar until moving toward the content, in both languages
   (Android TV 0.7.1 and LG 0.2.28).

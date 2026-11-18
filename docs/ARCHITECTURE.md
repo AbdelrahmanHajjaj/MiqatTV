@@ -24,7 +24,7 @@ flowchart TD
 | platforms/android-tv | Java Views, Adhan Java/ICU adapters, preferences, Home, accessibility/remote keys, scheduling and media. |
 | platforms/webos | ES5 UI, Adhan JS/calendar adapters, preferences, HDMI/audio and Activity Manager service. |
 | site | Browser demonstration and design-resource generators; simulated device integration. |
-| installer | Android phone ADB setup and recovery. |
+| installer | Shared Android ADB setup/recovery library and standalone installer host. |
 
 Core accepts explicit inputs and returns decisions. It has no platform, network,
 storage, renderer or clock dependency. The JVM artifact is tv.miqat:core; JS
@@ -56,7 +56,7 @@ Each project builds independently with the root Gradle wrapper and shared source
 See [build instructions](BUILD.md), [core API](CORE.md), [data](DATA.md),
 [design](DESIGN.md) and [testing](TESTING.md). Shared JS generators run sequentially.
 
-Companion work is outside this repository foundation. Samsung/Tizen is unimplemented;
+The phone companion is maintained in this repository. Samsung/Tizen is unimplemented;
 Sony Android/Google TV uses the Android shell. Current hardware limits are in
 [validation evidence](EVIDENCE.md).
 
@@ -65,3 +65,10 @@ Sony Android/Google TV uses the Android shell. Current hardware limits are in
 `companion/core` owns portable settings drafts/session contracts; native phone and
 TV shells own rendering, persistence and LAN transport. See [protocol boundaries](COMPANION-LAN.md)
 and [separate companion scope/evidence](COMPANION-WORK.md).
+
+The Android companion also hosts `installer/runtime` through a private setup
+activity. The standalone installer uses that same implementation. Installation
+credentials/recovery records live in the hosting app's private storage, separately
+from ordinary companion LAN credentials; the two installed apps do not share
+private files. The installer is currently Android TV only. Future standalone
+phone prayer/iOS work is sequenced in [WORK.md](WORK.md).

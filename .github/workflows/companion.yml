@@ -1,10 +1,10 @@
 name: Companion
 on:
   pull_request:
-    paths: ['companion/**', 'shared/core/**', 'shared/data/**', 'shared/design/**', 'shared/media/**', 'shared/design/mihrab/tokens.json', 'tools/ui-contract.mjs', 'tools/branding.mjs', 'tools/catalogs.mjs', 'platforms/**/ui-gaps.json', 'platforms/**/ui-choice-gaps.json', 'settings.gradle', 'build.gradle', 'gradle/**', '.github/workflows/companion.yml']
+    paths: ['companion/**', 'installer/**', 'shared/core/**', 'shared/data/**', 'shared/design/**', 'shared/media/**', 'shared/design/mihrab/tokens.json', 'tools/ui-contract.mjs', 'tools/branding.mjs', 'tools/catalogs.mjs', 'platforms/**/ui-gaps.json', 'platforms/**/ui-choice-gaps.json', 'settings.gradle', 'build.gradle', 'gradle/**', '.github/workflows/companion.yml']
   push:
     branches: [main]
-    paths: ['companion/**', 'shared/core/**', 'shared/data/**', 'shared/design/**', 'shared/media/**', 'shared/design/mihrab/tokens.json', 'tools/ui-contract.mjs', 'tools/branding.mjs', 'tools/catalogs.mjs', 'platforms/**/ui-gaps.json', 'platforms/**/ui-choice-gaps.json', 'settings.gradle', 'build.gradle', 'gradle/**', '.github/workflows/companion.yml']
+    paths: ['companion/**', 'installer/**', 'shared/core/**', 'shared/data/**', 'shared/design/**', 'shared/media/**', 'shared/design/mihrab/tokens.json', 'tools/ui-contract.mjs', 'tools/branding.mjs', 'tools/catalogs.mjs', 'platforms/**/ui-gaps.json', 'platforms/**/ui-choice-gaps.json', 'settings.gradle', 'build.gradle', 'gradle/**', '.github/workflows/companion.yml']
   workflow_dispatch:
 permissions:
   contents: read

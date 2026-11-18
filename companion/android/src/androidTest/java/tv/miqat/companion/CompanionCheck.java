@@ -44,7 +44,7 @@ public final class CompanionCheck extends Instrumentation {
                 runOnMainSync(()->{activity.page="pair";activity.pairState="";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-start.png");centeredIcon(activity,"pair.scan");
                 runOnMainSync(()->{activity.page="pair";activity.pairState="requesting";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-connecting.png");centeredIcon(activity,"pair.cancel");
                 runOnMainSync(()->{activity.pairState="waiting";activity.pairCode="123456";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-approval.png");
-                runOnMainSync(activity::finish);count++;
+                runOnMainSync(activity::finish);waitForIdleSync();InstallationCheck.run(this,lang);count++;
             }
             result.putString("stream","PASS: bilingual native bindings, capabilities, drafts, native number editor, saves, offline and specialized validation ("+count+" languages)\n");
             finish(-1,result);

@@ -140,3 +140,10 @@ Run [phone checks](../companion/README.md), shared core and affected shell/previ
 checks. Native UI/LAN suites use owned emulators. QR validation uses
 `node companion/check-qr.cjs <cached-zxing-core-jar>`. Physical Miqat TV
 approval/camera/picture/sound acceptance remains separate.
+
+The default bilingual phone suite also opens the embedded Android setup guide,
+checks its private activity/language/direction, verifies cancelling and incomplete
+setup return without pairing, and exercises the successful setup-to-pairing result.
+Completion is a native UI fixture; this does not perform an ADB installation or
+prove cleanup/restore on a physical TV. The standalone installer must still build
+and lint when changing `installer/runtime` or its shared source directories.

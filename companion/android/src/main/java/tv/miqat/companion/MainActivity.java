@@ -312,6 +312,8 @@ public final class MainActivity extends Activity {
             });more.setTag(tv.key+".forget");
         }
         Button pair=button(body,t("pair"),()->navigate("pair"));leadingIcon(pair,"add");pair.setTag("pair.open");pair.setEnabled(!vaultFailed);pair.setTextColor(ground);pair.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000),background(accent,28),null));pair.setCompoundDrawableTintList(ColorStateList.valueOf(ground));pair.setMinHeight(dp(56));
+        navigationRow(body,"tv",t("install_android"),t("install_android_hint"),()->startActivityForResult(
+            new android.content.Intent(this,SetupActivity.class),72)).setTag("install.open");
         if(!prefs().getBoolean("show-demo",false))return;
         body.addView(text(t("demo"),13,muted));
         for(int i=0;i<tvs.length;i++) {
@@ -839,6 +841,7 @@ public final class MainActivity extends Activity {
     @Override protected void onActivityResult(int request,int result,android.content.Intent data) {
         super.onActivityResult(request,result,data);
         if(request==71 && result==RESULT_OK && data!=null){String qr=data.getStringExtra("qr");if(qr!=null)beginPairing(qr);}
+        if(request==72 && result==RESULT_OK)navigate("pair");
     }
     void beginPairing(String qr) {
         cancelPairing();page="pair";

@@ -54,8 +54,8 @@ class TextChecks(unittest.TestCase):
                     self.assertNotRegex(value, r"(?i)\bafnon\b|[أا]فنون|Islamic TV Launcher|واجهة التلفاز الإسلامي")
             translations.append(strings)
         english, arabic = translations
-        self.assertEqual(english["app_name"], "Miqat Installer")
-        self.assertEqual(arabic["app_name"], "مثبّت ميقات")
+        self.assertEqual(english["installer_app_name"], "Miqat Installer")
+        self.assertEqual(arabic["installer_app_name"], "مثبّت ميقات")
         self.assertEqual(english.keys(), arabic.keys())
         for key in english:
             with self.subTest(key=key):

@@ -1,6 +1,6 @@
 # Miqat
 
-Android companion with launcher label `Miqat`, separate from the installer.
+Android companion with launcher label `Miqat` and integrated Android TV setup.
 Native phone UI plus portable settings workflow.
 See [scope and evidence](../docs/COMPANION-WORK.md) and the
 [foreground LAN protocol](../docs/COMPANION-LAN.md).
@@ -25,9 +25,17 @@ encrypted persistence; `android-shared/` owns LAN/QR helpers. `contract.json`
 extends canonical TV controls, and `generate.mjs` produces ignored profiles and
 Android resources from shared sources. There is no second product catalog.
 
+**Your TVs → Set up Android TV** opens the shared installer inside this app:
+local APK/download, guarded ADB setup, optional reviewed cleanup and recovery.
+It follows the phone language. Successful setup offers **Pair TV**; cancelling
+or finishing incomplete setup returns to Your TVs. Installation does not grant
+everyday remote access: normal TV approval is still required. LG can be paired
+after separate installation; phone-based LG installation is not implemented yet.
+See [setup and recovery](../docs/ANDROID-SETUP.md).
+
 Miqat uses tv.miqat packages and its own QR prefix. Install/pair fresh; old-app
 credentials are not migrated. No cloud, account, Bluetooth/Wi-Fi Direct,
-background listener, remote update installation or iOS implementation is included.
+background listener, unattended updates or iOS implementation is included.
 
 With JDK 17, Node 24 and Android SDK 34:
 

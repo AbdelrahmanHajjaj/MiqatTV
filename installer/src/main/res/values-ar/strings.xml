@@ -2,7 +2,8 @@
 <!-- Arabic, for phones set to Arabic. English, the fallback, is in values/strings.xml; keep the two in step. -->
 <resources>
     <string name="lang" translatable="false">ar</string>
-    <string name="app_name">مثبّت ميقات</string>
+    <string name="installer_app_name">مثبّت ميقات</string>
+    <string name="pair_tv">إقران التلفاز</string>
 
     <string name="stage_prepare">التجهيز</string>
     <string name="stage_connect">الاتصال</string>

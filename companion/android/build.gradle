@@ -7,8 +7,8 @@ android {
         applicationId 'tv.miqat.companion'
         minSdk 26
         targetSdk 34
-        versionCode 4
-        versionName '0.1.3'
+        versionCode 5
+        versionName '0.1.4'
         testInstrumentationRunner 'tv.miqat.companion.CompanionCheck'
     }
     compileOptions {
@@ -17,6 +17,7 @@ android {
     }
     // The in-app language choice must remain available offline.
     bundle { language { enableSplit = false } }
+    packaging.resources.excludes += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF']
     sourceSets.main {
         java.srcDir file('../android-shared/src/main/java')
         assets.srcDir file('../android-shared/src/main/assets')
@@ -29,6 +30,7 @@ android {
     }
 }
 dependencies {
+    implementation project(':installer-runtime')
     implementation 'tv.miqat:companion-core'
     implementation 'tv.miqat:core'
     implementation 'com.google.zxing:core:3.5.4'

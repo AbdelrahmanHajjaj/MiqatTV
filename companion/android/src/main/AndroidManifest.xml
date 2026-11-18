@@ -13,5 +13,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ScanActivity" android:exported="false" />
+        <activity android:name=".SetupActivity" android:exported="false"
+            android:theme="@style/Theme.Installer"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode" />
     </application>
 </manifest>

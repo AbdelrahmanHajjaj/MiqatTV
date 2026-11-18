@@ -1,5 +1,30 @@
 # Validation evidence
 
+## Companion installation integration — 18 November 2026
+
+Based on merged companion main `3c5b38e`; phone 0.1.4, standalone installer 1.1.0.
+The companion and standalone app build/lint with one shared installer runtime.
+The existing ADB dependencies/versions and their full notices are retained;
+their pre-existing TLS-manager lint warnings now also appear in the companion.
+
+Shared core JVM/Java/JS/97 ES5 assertions, companion core, canonical generation,
+seven companion generator tests, JVM LAN/QR checks and 43 Python/Java regressions
+pass. Owned read-only API 37 emulator checks pass for both languages: setup opens
+with host language/direction, its activity is private, opening does not create
+ADB credentials, cancellation/incomplete setup do not open pairing and successful
+completion offers ordinary pairing without automatic approval. Native pinned-LAN,
+revocation/credential-tamper and uncertain-write checks also pass.
+Portrait and landscape native renders were inspected. The standalone installer
+still launches under its existing app/activity identity. Both APKs retain all 16
+installer asset/notice files byte-for-byte; the companion retains all 26 approved
+recordings exactly.
+
+An initial native launch failed because a locale override ran after resource
+access; host-context localization fixes it and the same regression passes. Native
+setup completion is simulated; no TV was connected or changed. Physical Android
+installation/cleanup/recovery, LG phone installation and iOS remain pending.
+Private logs/captures stay in ignored state/; [WORK.md](WORK.md) owns the sequence.
+
 Checked on 17 November 2026 in the new Miqat checkout, using JDK 17, Node 24.14.0
 and SDK 34. Source versions: Android TV 0.7.0, installer 1.1.0, LG 0.2.23.
 

@@ -20,7 +20,7 @@ final class Setup {
     private Setup() {}
 
     static final String PACKAGE = "tv.miqat.home";
-    private static final String REPO = "AbdelrahmanHajjaj/Miqat";
+    private static final String REPO = "AbdelrahmanHajjaj/MiqatTV";
     private static final String LATEST = "https://github.com/" + REPO + "/releases/latest";
     private static final String APK = LATEST + "/download/miqat.apk";
     private static final String RAW = "https://raw.githubusercontent.com/" + REPO + "/";

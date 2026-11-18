@@ -2,6 +2,8 @@
   "companion":{"en":"Companion","ar":"التطبيق المرافق"},
   "demo":{"en":"Demo TVs · no real TV connection","ar":"تلفزيونات تجريبية · لا يوجد اتصال بتلفاز حقيقي"},
   "tvs":{"en":"Your TVs","ar":"أجهزة التلفاز"},
+  "install_android":{"en":"Set up Android TV","ar":"إعداد Android TV"},
+  "install_android_hint":{"en":"Install Miqat, review optional cleanup or recover your TV. Pair for everyday control afterward.","ar":"ثبّت ميقات، وراجع التنظيف الاختياري أو استعد إعدادات التلفاز. ثم اقترن للتحكّم اليومي."},
   "remote_title":{"en":"Remote","ar":"التحكّم"},
   "tv_home":{"en":"Home","ar":"الرئيسية"},
   "tv_input":{"en":"TV picture","ar":"صورة التلفاز"},

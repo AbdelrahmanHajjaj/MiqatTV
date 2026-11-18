@@ -28,11 +28,12 @@ final class Ui {
     private static Typeface light, regular, medium, semibold, display;
 
     static void init(Context c) {
-        if (light != null) return;
-        light = c.getResources().getFont(R.font.alexandria_light);
-        regular = c.getResources().getFont(R.font.alexandria_regular);
-        medium = c.getResources().getFont(R.font.alexandria_medium);
-        semibold = c.getResources().getFont(R.font.alexandria_semibold);
+        if (light == null) {
+            light = c.getResources().getFont(R.font.alexandria_light);
+            regular = c.getResources().getFont(R.font.alexandria_regular);
+            medium = c.getResources().getFont(R.font.alexandria_medium);
+            semibold = c.getResources().getFont(R.font.alexandria_semibold);
+        }
         display = c.getResources().getFont(arabic(c) ? R.font.amiri_bold : R.font.marcellus_regular);
     }
 

@@ -41,7 +41,7 @@ import io.github.muntashirakon.adb.AdbPairingRequiredException;
  * tools/install.sh). Every screen is the same frame: stage bar, arch, title, lead, content, and the actions pinned
  * to the bottom.
  */
-public final class MainActivity extends Activity {
+public class MainActivity extends Activity {
     static final int PREPARE = 0, CONNECT = 1, INSTALL = 2, PERSONAL = 3;
 
     final ExecutorService work = Executors.newSingleThreadExecutor();
@@ -717,7 +717,11 @@ public final class MainActivity extends Activity {
         tip.addView(Ui.label(this, getString(R.string.tip_title)));
         tip.addView(Ui.small(this, getString(R.string.tip_body)), Ui.wide(this, 8));
         add(tip, 12);
-        foot(Ui.primary(this, getString(R.string.finish), v -> finish()));
+        boolean embedded = getCallingActivity() != null && getPackageName().equals(getCallingActivity().getPackageName());
+        foot(Ui.primary(this, getString(ok && embedded ? R.string.pair_tv : R.string.finish), v -> {
+            if (ok && embedded) setResult(RESULT_OK);
+            finish();
+        }));
         foot(Ui.secondary(this, getString(R.string.another), v -> go(this::showGuide)));
         recoveryActions();
         back = this::finish;
