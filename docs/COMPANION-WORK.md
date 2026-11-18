@@ -94,39 +94,32 @@ local CLI token (repository permission). The branch push succeeded; open the
 [comparison](https://github.com/AbdelrahmanHajjaj/MiqatTV/compare/main...feature/companion-app?expand=1)
 to create the PR with the repository template. No merge or release is authorized.
 
-## Centre QR exploration and companion naming
+## Companion naming and centre QR exploration
 
-Owner requested a central Miqat mihrab/icon exploration on 18 November 2026.
-Keep the approved runtime QR unchanged until a variant is selected. Compare the
-current code with shared-outline and compact/larger official-artwork centre
-badges; preserve the canonical lettering. Synthetic previews and decoder evidence
-stay in ignored state/companion/qr-centre-exploration/.
+Companion product: `miqatTv`; Android launcher label: `miqat`. Package remains
+`tv.miqat.companion`. Android build/lint pass; aapt confirms the actual APK label.
 
-Companion product name: `miqatTv`; Android launcher label: `miqat`.
-Keep its `tv.miqat.companion` application identity stable.
+The owner is exploring a central mark before changing the runtime QR. The
+canonical branding master, runtime renderers and pairing wire format are unchanged.
+A transparent gold Arabic/mihrab cutout was made with the built-in image-editing
+tool; the source artwork remains intact. It is used only in ignored previews.
 
-Exploration result: A retains the current 37x37/M symbol; B uses the official
-Miqat icon in an 11-module badge and C a 13-module badge, both 49x49/H. Each passes
-144 exact independent ZXing decodes (eight synthetic payloads, 220/280/400 px,
-four rotations, blur and lower contrast): 432 checks total. A shared-outline-only
-badge and a lighter Q variant failed small samples and were excluded. This is
-one-palette desktop raster evidence, not all-theme or physical-camera acceptance.
-No runtime QR renderer, pairing wire format or TV integration was changed.
+Current direction: centre fill follows the QR's contrast-adjusted theme body;
+lettering/arch use the app accent. Compare A (no border) with B (one line directly
+on the fill edge). There is no inset ring or fixed-colour logo background. A
+narrow paper separation around the centre remains for scanning. Final candidate
+uses an 11-module tile on a 49x49 high-correction symbol; a larger tile was rejected
+after exact-payload failures in rotated samples.
 
-Naming check: `:companion:assembleDebug :companion:lintDebug` pass; Android aapt
-reports application label `miqat` and unchanged package `tv.miqat.companion`.
+Both candidates pass 144 independent exact-payload ZXing decodes in each of
+Mihrab, Aurora, Rose and Brass: 1,152 total. Matrix: eight synthetic payloads,
+220/280/400 px, four rotations, blur and reduced contrast. Actual browser output
+was inspected; per-symbol SVG IDs keep all palettes independent in the comparison.
 
-Gold-only refinement: extracted a transparent PNG from the shared icon with the
-built-in image-editing tool (remove petrol background; preserve gold Arabic mark
-and arch). The canonical master is unchanged. Gold-only and previous-badge
-comparisons each pass 144 exact decoder checks at 220/280/400 px with rotations,
-blur and lower contrast. Preview/cutout/evidence live under ignored
-state/companion/qr-centre-transparent/. Runtime QR remains unchanged; physical
-camera and all-theme acceptance are pending selection.
+Prior icon, gold-only and matching-ring previews were reviewed but not applied.
+Shared-outline and lighter-correction variants failed small samples and were
+excluded. Scripts, PNG/SVG/HTML previews, transparent asset and raw pass/failure
+evidence remain in ignored state/companion/qr-centre-{exploration,transparent,rings,fill}/.
 
-Centre-ring refinement: compare unframed A, fine double rings B and matching-eye
-medallion C. B/C derive rounding, rim colours and gold inlay from the approved
-finder-eye style and keep the transparent gold mark on ivory. All three pass
-144 independent decodes each (432 total; same payload/size/rotation/degradation
-matrix). Candidates/evidence are in ignored state/companion/qr-centre-rings/.
-No runtime change; selection, all-theme and physical-camera acceptance are pending.
+Selection, full-theme and physical phone-camera/TV acceptance remain pending.
+No runtime QR or physical-device change is included in this exploration.
