@@ -276,4 +276,8 @@ LG dedicated prayer offsets start in their content instead of reopening Prayer.
 Android build/lint/APK bound, 43 Python regressions, bilingual native settings and
 LG service/ES5 and full bilingual browser regressions at 80–150% pass.
 Latest Android TV APK is exported to the primary checkout’s fixed build folder.
-The owner’s physical LG sidebar check and PR CI remain gates before merge.
+Final LG 0.2.28 is installed with settings/input/startup preserved. The owner
+authorized merge before the physical sidebar check; that acceptance and later
+polish remain follow-up work. PR CI still gates merge. Companion CI uses the
+repository action pins and raw instrumentation output to verify result codes
+alongside the suite PASS messages.
