@@ -40,6 +40,8 @@ npm --prefix site ci
 npm --prefix site run dev
 ```
 
+Try the [hosted preview](https://abdelrahmanhajjaj.github.io/MiqatTV/) or follow
+[website deployment](CI.md#website) for its automatic main-branch updates.
 The preview simulates TV integrations. Run core, preview and LG builds sequentially
 because they generate the same shared JavaScript files.
 

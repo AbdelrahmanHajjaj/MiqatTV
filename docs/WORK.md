@@ -1,34 +1,32 @@
 # Current work
 
-Updated: 2026-11-18. Delivery: [PR #1](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/1).
+Updated: 2026-11-18.
 
 ## Approved scope
 
-Configure main protection, the PR template, validation Actions and build publication
-for MiqatTV. The owner approved including the current 14 adhan and 12 announcement
-clips in public builds. Approved media lives in shared/media/; private originals,
-stamps, credentials and device state remain ignored.
+Publish the existing Arabic/English browser preview on GitHub Pages and update it
+automatically when changes reach main. Reuse the tested static artifact, retain
+main protection and normal merges, and apply available preview security fixes.
+No app, companion, release-signing or TV deployment changes.
 
-## Delivery and receipts
+## Status and next action
 
-Main requires a PR, passing GitHub Actions Required checks, an up-to-date branch
-and resolved conversations. Force pushes/deletion and bypasses are blocked. No
-approving reviewer is required for the solo maintainer. Preserve branch commits
-with normal merges; squash/rebase merging is disabled. Actions requires full SHA
-pins and uses a read-only default token without PR approval permission.
+Pages is enabled with GitHub Actions as its source. feature/github-pages adds a
+main-only deployment job after all required validation passes. The deployed site
+uses /MiqatTV/ (Arabic) and /MiqatTV/en/ (English). PRs do not deploy.
 
-PR #1 supplies full-audio Android/LG artifacts, core/preview/native emulator checks
-and manual draft prereleases. The owner authorized its normal merge after required
-checks pass, followed by one draft-publication verification. PR #1 and the linked
-[Actions runs](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions) own the final
-merge, validation and draft receipts; concise local evidence is in EVIDENCE.md.
-Edge is authorized because API credentials lack admin/PR access. Do not create
-credentials, change token scopes, publish a stable release or touch TVs.
+Finish local preview/workflow checks and browser acceptance, open the PR, and
+obtain the owner's normal-merge instruction before its initial deployment.
+Confirm the live site after the successful main run. Essential receipts belong
+in EVIDENCE.md and the PR; raw logs and captures stay under ignored state/.
 
-## Further work
+## Previous delivery and remaining limits
 
-No additional product work is approved by this setup. Physical new-identity
-acceptance, full phone-installer testing, portable settings transfer and companion
-integration remain separate. CI APKs use temporary debug keys; configure persistent
-release signing before stable updates. Preview dependency advisories remain in
-EVIDENCE.md. No new platform or cloud framework.
+[PR #1](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/1) was normally merged as
+2bb348f. [Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44301830392)
+passed all six jobs; [draft publication](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44304525540)
+created an unpublished full-audio prerelease with verified checksums.
+
+Physical Miqat installation, complete phone-installer testing, settings transfer
+and companion integration remain separate. CI APKs use temporary debug keys.
+EVIDENCE.md records the remaining unpatched build-tool dependency advisory.

@@ -4,6 +4,8 @@
 
 A TV home screen with prayer times, adhan and Quran radio, in Arabic and English.
 
+[Try the interactive preview](https://abdelrahmanhajjaj.github.io/MiqatTV/) · [English](https://abdelrahmanhajjaj.github.io/MiqatTV/en/)
+
 <p dir="rtl">واجهة للتلفاز تعرض مواقيت الصلاة والأذان والقبلة وإذاعة القرآن الكريم، بالعربية والإنجليزية.</p>
 
 - Prayer times work offline, with city, calculation method and individual adjustments.

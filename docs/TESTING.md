@@ -119,7 +119,9 @@ There are no path filters that could leave the required status pending.
 GitHub jobs use separate workspaces; generators stay sequential within each job.
 CI artifacts contain the reviewed audio and expire after seven days. CI does not
 provide physical-TV acceptance or run all optional instrumentation modes.
-See [CI.md](CI.md) for protection, artifacts and draft publishing.
+After Required checks passes on main, GitHub Pages deploys the tested preview
+artifact. PRs skip deployment. See [CI.md](CI.md) for protection, website deployment,
+artifacts and draft publishing.
 
 Use the [PR template](../.github/pull_request_template.md). Record commands, outcomes,
 evidence type, skipped checks and remaining risk. Keep raw private logs under state/

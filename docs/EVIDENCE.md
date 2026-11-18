@@ -31,9 +31,13 @@ Raw logs, original/review recordings, HARs and captures remain under ignored sta
 - Complete installer operation on a real phone/TV. Newer LG and Samsung are unverified.
 - Portable prayer/appearance settings export/import is not implemented. Installer
   recovery exports Android setup state only.
-- The unchanged preview toolchain reports 9 high npm audit findings, chiefly
-  picomatch dependency propagation, plus Astro advisories. Dependency remediation
-  is separate work before public preview hosting. No preview was deployed.
+- The preview's Astro advisories were fixed in the GitHub Pages pass by updating
+  the lockfile to Astro 7.4.12. npm audit still reports 10 high findings propagated
+  from the unpatched picomatch build dependency (GHSA-fc5q-39xc-vjpf). It processes
+  repository file patterns in the Node build/dev tools, not visitor input in the
+  published static site. Pages serves only site/dist; no Node server, dependencies,
+  source checkout or private state is deployed. Do not use npm audit fix --force:
+  its proposed Astro downgrade reintroduces unrelated fixed advisories.
 
 No physical TV was changed. The old platform-core and companion checkouts remain
 clean and unchanged. No companion code, inherited Actions, previous history,
@@ -73,3 +77,21 @@ passed all six jobs for 0229237: core, Android build, API 34 emulator, LG browse
 package checks, preview and the required aggregate. Full-audio Android/LG artifacts
 were uploaded successfully. The owner then confirmed normal merges, never squash;
 repository and ruleset merge options now match that preference.
+
+
+## GitHub Pages, 18 November 2026
+
+The existing Arabic/English static preview is configured for
+https://abdelrahmanhajjaj.github.io/MiqatTV/. Pages uses GitHub Actions; the
+created github-pages environment permits main only. The deployment job reuses
+the current run's browser-preview artifact after Required checks passes, with
+job-scoped Pages/OIDC permissions and pinned official actions. PRs skip deployment.
+
+Local data/token freshness, preview regressions and the Astro 7.4.12 static build
+passed. All 18 routes have correct canonical URLs; 450 internal link/asset
+references resolve under /MiqatTV/. The artifact contains no Node dependencies,
+private state, keys, app binaries or recordings. Edge checks passed for Arabic/
+English Home, language switching, Settings tab changes and return navigation,
+with joined Arabic, loaded branding and no browser console errors.
+Workflow actionlint and documentation checks passed. Live deployment remains
+pending the owner's normal-merge instruction and a successful main run.
