@@ -16,7 +16,7 @@ export const STATIONS: Station[] = stationsJson;
 
 /** Viewer preferences, as Miqat Settings keeps them on the TV. Saved in this browser only. */
 export type Prefs = {
-  theme?: string; background?: string; lighting?: number; reduceMotion?: boolean; repairService?: boolean;
+  theme?: string; mihrabOpacity?: number; background?: string; lighting?: number; reduceMotion?: boolean; repairService?: boolean;
   appearanceCycle?: number; appearanceCycleAt?: number;
   uiScale?: number;
   quickLabels?: boolean; homeLayout?: 'two_rows' | 'classic';

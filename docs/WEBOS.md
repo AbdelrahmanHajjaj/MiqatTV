@@ -90,3 +90,33 @@ Do not use historical probes, firmware changes or root recipes for routine testi
 Physical picture, sound, remote and power checks require a ready watcher. LG
 capture APIs do not reliably show the video plane. See [TESTING.md](TESTING.md)
 and the platform [agent rules](../platforms/webos/AGENTS.md).
+
+### Neutral landscapes (review draft)
+
+Appearance also offers six bundled illustrated landscapes: Dusk peaks, Golden
+coast, Moon lake, Aurora sky, Tea hills and Monsoon. These static choices retain
+full color with a 20% dark overlay in Home and draft previews. Android's procedural
+Mountains/Dunes and time-based light fields remain unported. Current validation
+is a mocked browser check; physical LG picture acceptance remains pending.
+
+The Appearance preset carousel now comes first, above Customize controls. Choosing
+a different preset restores its supported canonical background in the draft;
+manual overrides and Apply/Cancel remain available. Six scenic presets pair their
+landscape, palette and surface. Unsupported procedural defaults use plain fill;
+this does not add Android's procedural renderer to LG.
+
+Miqat's default preset now pairs its branded palette with the original Signature
+background. Fresh preferences select it; existing explicit background selections
+remain unchanged. Choosing Miqat in the preset carousel restores the Signature
+background in the draft. The scene is a bundled JPEG, not a runtime effect.
+
+Home mihrab fill opacity is adjustable from 50–100% in 5% steps, recommended 85%,
+using portable numeric rules and draft Apply/Cancel. It changes the opaque panel
+fill only; text/outlines retain full opacity. Different presets restore 85%.
+Prayer labels use the canonical shared vector family. Home icons occupy the
+header strip so long labels retain their own line at larger interface sizes.
+Validation is mocked browser/service testing; physical LG acceptance is pending.
+
+Miqat quiet is an additional canonical scene; the original Signature stays default.
+Home next-prayer fill is 75% of the selected surface panel color, with opaque gold
+labels/outline. This alpha is independent of the Home mihrab setting and Glass.

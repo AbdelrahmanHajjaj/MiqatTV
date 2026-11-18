@@ -18,9 +18,12 @@ public final class AppearanceCycleDeviceCheck extends Instrumentation {
     private boolean onlineCheck, onlineNetwork;
     private boolean sizeCheck, sizeWindows;
 
+    private boolean opacityCheck;
+
     @Override public void onCreate(Bundle arguments) {
         String requested = arguments == null ? null : arguments.getString("check");
-        if (requested != null && !requested.equals("prayer") && !requested.equals("ui") && !requested.equals("online") && !requested.equals("online-network") && !requested.equals("size") && !requested.equals("size-windows")) throw new IllegalArgumentException("Unknown device check: " + requested);
+        if (requested != null && !requested.equals("opacity") && !requested.equals("prayer") && !requested.equals("ui") && !requested.equals("online") && !requested.equals("online-network") && !requested.equals("size") && !requested.equals("size-windows")) throw new IllegalArgumentException("Unknown device check: " + requested);
+        opacityCheck = "opacity".equals(requested);
         prayerCheck = "prayer".equals(requested);
         uiCheck = "ui".equals(requested);
         onlineCheck = "online".equals(requested) || "online-network".equals(requested);
@@ -32,6 +35,7 @@ public final class AppearanceCycleDeviceCheck extends Instrumentation {
     }
 
     @Override public void onStart() {
+        if (opacityCheck) { MihrabOpacityDeviceCheck.run(this); return; }
         if (prayerCheck) { PrayerRuntimeDeviceCheck.run(this); return; }
         if (uiCheck) { UiContractDeviceCheck.run(this); return; }
         if (onlineCheck) { OnlinePrayerDeviceCheck.run(this, onlineNetwork); return; }

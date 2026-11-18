@@ -51,6 +51,7 @@ for (let at = Date.UTC(1999, 0, 1); at < Date.UTC(2102, 0, 1); at += 86400000) {
 data.methodNames = Object.fromEntries(methods.map(method => [method.id, {ar: method.ar, en: method.en}]));
 data.icons = json('shared/design/icons.json');
 data.mihrab = json('shared/design/mihrab.json');
+data.prayerIcons = json('shared/design/prayer-icons.json');
 const appIds = new Set();
 for (const app of data.apps) {
   if (!/^[a-z0-9][a-z0-9._-]{0,127}$/.test(app.id) || appIds.has(app.id) || !app.ar || !app.en || !data.icons[app.icon]) throw new Error('Invalid TV app shortcut');
@@ -62,9 +63,12 @@ data.homeMihrab = {width: parseFloat(tokens.layout.home['mihrab-width'].$value),
 data.homeHeader = {clockShare: tokens.layout.home['header-clock-share'].$value, gap: parseFloat(tokens.layout.home.gap.$value)};
 data.palettes = {};
 data.surfaces = {};
+data.presetBackgrounds = {};
 for (const theme of data.themes) {
-  const preset = theme === 'mihrab' ? {} : json('shared/design/assets/themes/' + theme + '.json');
+  const preset = theme === 'mihrab' ? {background: json('shared/design/appearance.json').defaultBackground} : json('shared/design/assets/themes/' + theme + '.json');
   const colors = preset.colors || {};
+  const appearance = json('shared/design/appearance.json');
+  data.presetBackgrounds[theme] = [...appearance.patterns, ...appearance.scenes].includes(preset.background) ? preset.background : 'plain';
   data.palettes[theme] = {};
   for (const key of json('shared/design/appearance.json').colors) {
     data.palettes[theme][key] = colors[key] || tokens.color[key].$value;
@@ -78,13 +82,18 @@ for (const theme of data.themes) {
     fill = 'rgba(' + panelRgb.join(',') + ',' + tokens.surface.glass.opacity.$value + ')';
     edge = 'rgb(' + panelRgb.map((channel, i) => Math.trunc(channel * (1 - amount) + inkRgb[i] * amount)).join(',') + ')';
   }
-  data.surfaces[theme] = {name, fill, edge, radius: treatment.radius ? parseFloat(treatment.radius.$value) : null,
+  data.surfaces[theme] = {name, fill, archFill:panel, edge, radius: treatment.radius ? parseFloat(treatment.radius.$value) : null,
     prayerRadius: Math.min(parseFloat(tokens.surface['prayer-radius-max'].$value), parseFloat(treatment.radius ? treatment.radius.$value : tokens.radius.cell.$value)),
     stroke: treatment.stroke ? parseFloat(treatment.stroke.$value) : 0,
     archStroke: name === 'classic' ? parseFloat(tokens.surface['arch-stroke'].$value) : treatment.stroke ? parseFloat(treatment.stroke.$value) : 0,
     archEdge: name === 'cinema' || name === 'soft' ? panel : edge};
 }
 data.patterns = json('shared/design/appearance.json').patterns.slice().sort();
+data.scenes = json('shared/design/appearance.json').scenes;
+data.defaultBackground = json('shared/design/appearance.json').defaultBackground;
+for (const id of data.scenes) {
+  write(path.join(out, 'app/backgrounds', id + '.jpg'), fs.readFileSync(path.join(root, 'shared/design/assets/backgrounds', id + '.jpg')));
+}
 write(path.join(out, 'app/data.js'), 'var MiqatData = ' + JSON.stringify(data) + ';\n');
 write(path.join(out, 'service/data.json'), JSON.stringify(data));
 for (const part of ['app', 'service']) fs.copyFileSync(path.join(__dirname, 'core.js'), path.join(out, part, 'core.js'));
@@ -105,7 +114,8 @@ for (const part of ['app', 'service']) {
   write(path.join(out, part, 'licenses/adhan.txt'), fs.readFileSync(path.join(adhanRoot, 'LICENSE'), 'utf8'));
 }
 for (const theme of data.themes) {
-  const colors = theme === 'mihrab' ? {} : json('shared/design/assets/themes/' + theme + '.json').colors;
+  const preset = theme === 'mihrab' ? {background: json('shared/design/appearance.json').defaultBackground} : json('shared/design/assets/themes/' + theme + '.json');
+  const colors = preset.colors || {};
   const css = fs.readFileSync(path.join(__dirname, 'app/style.css'), 'utf8').replace(/\{\{([\w.-]+)\}\}/g, (_, key) => {
     if (key.startsWith('color.') && colors[key.slice(6)]) return colors[key.slice(6)];
     let value = tokens;
@@ -120,20 +130,27 @@ for (const theme of data.themes) {
     }
     return value.$value;
   });
-  const patterns = data.patterns.map(name => '[data-pattern=' + name + '] .home { background-image: url("patterns/' + name + '.svg"); background-size: 960px 540px; }').join('\n');
-  const surface = data.surfaces[theme], c = data.palettes[theme];
+  const c = data.palettes[theme];
+  const patternOpacity = (Math.round(255 * tokens.background['pattern-opacity'].$value) + Math.floor((preset.lighting ?? 35) / 6)) / 255;
+  const scenes = data.scenes.map(id => '[data-pattern=' + id + '] .home { background-image:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.2)),url("backgrounds/' + id + '.jpg");background-size:1920px 1080px; }').join('\n');
+  const patterns = data.patterns.map(name => {
+    const filename = theme + '-' + name + '.svg';
+    const svg = read('shared/design/mihrab/patterns/' + name + '.svg')
+      .replace('stroke="white"', 'stroke="' + c['gold-400'] + '" stroke-opacity="' + patternOpacity + '"');
+    write(path.join(out, 'app/patterns', filename), svg);
+    return '[data-pattern=' + name + '] .home { background-image: url("patterns/' + filename + '"); background-size:' + tokens.background['max-width'].$value + ' ' + tokens.background['max-height'].$value + '; }';
+  }).join('\n');
+  const surface = data.surfaces[theme];
   const surfaceCss = ['.settings-rows button,.app-tile,.prayer,.day-row { background:' + surface.fill + ';border:' + surface.stroke + 'px solid ' + surface.edge + '; }',
     ...[['.settings-rows button', 'row'], ['.app-tile', 'tile'], ['.prayer', 'cell'], ['.day-row', 'row']].map(([selector, radius]) => selector + ' { border-radius:' + (selector === '.prayer' ? surface.prayerRadius + 'px' : surface.radius === null ? tokens.radius[radius].$value : surface.radius + 'px') + '; }'),
+    '.home-prayers .prayer.next { background:rgba(' + [1, 3, 5].map(at => parseInt(surface.archFill.slice(at, at + 2), 16)).join(',') + ',' + tokens.surface['next-prayer-opacity'].$value + ');color:' + c['gold-400'] + '; }',
     '.prayer.next { border:' + tokens.border['next-prayer'].width.$value + ' solid ' + c['gold-400'] + '; }',
     '.settings-rows button:focus,.app-tile:focus { background:' + c['gold-400'] + ';color:' + c['lapis-900'] + ';border-color:transparent; }',
     '.arch-shape { fill:' + surface.fill + ';stroke:' + surface.archEdge + ';stroke-width:' + surface.archStroke + '; }',
     '.arch-shape .inner { display:' + (surface.name === 'classic' || surface.name === 'frame' ? 'block' : 'none') + '; }'];
   if (surface.name === 'blocks') surfaceCss.push('.settings-rows button,.app-tile,.prayer,.day-row { border-bottom:' + tokens.surface.blocks.stripe.$value + ' solid ' + c['gold-400'] + '; }');
   if (surface.name !== 'classic' && surface.name !== 'frame') surfaceCss.push('.home .prayer-name,.home .countdown { font-family:Alexandria,sans-serif;font-weight:600; }[data-layout=mihrab] .home .countdown { font-size:' + 102 * tokens.surface['modern-countdown-scale'].$value + 'px; }');
-  write(path.join(out, 'app', theme === 'mihrab' ? 'style.css' : 'theme-' + theme + '.css'), css + '\n' + surfaceCss.join('\n') + '\n' + patterns);
-}
-for (const name of data.patterns) {
-  write(path.join(out, 'app/patterns', name + '.svg'), read('shared/design/mihrab/patterns/' + name + '.svg'));
+  write(path.join(out, 'app', theme === 'mihrab' ? 'style.css' : 'theme-' + theme + '.css'), css + '\n' + surfaceCss.join('\n') + '\n' + patterns + '\n' + scenes);
 }
 for (const font of ['alexandria_regular', 'alexandria_medium', 'alexandria_semibold', 'amiri_regular', 'marcellus_regular']) {
   write(path.join(out, 'app/fonts', font + '.ttf'), fs.readFileSync(path.join(root, 'shared/design/resources/font', font + '.ttf')));

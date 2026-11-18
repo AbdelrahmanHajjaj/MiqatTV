@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const root = new URL('../', import.meta.url);
 const shape = JSON.parse(readFileSync(new URL('shared/design/mihrab.json', root)));
+const tile = JSON.parse(readFileSync(new URL('shared/design/background-tile.json', root)));
 
 const arities = { M: 2, L: 2, C: 6, Z: 0 };
 function java(path) {
@@ -24,9 +25,15 @@ function java(path) {
 export function generateBranding(check = false) {
 for (const target of ['platforms/android-tv/src/main/java/tv/miqat/home', 'installer/src/main/java/tv/miqat/installer']) {
   const pkg = target.endsWith('home') ? 'home' : 'installer';
+  const tileMethod = pkg === 'home' ? `
+    static void tile(android.graphics.Path path, float width, float height) {
+        float x = width / ${tile.width}f, y = height / ${tile.height}f;
+${java(tile.path)}
+    }
+` : '';
   const source = `package tv.miqat.${pkg};
 
-// Generated from shared/design/mihrab.json by tools/branding.mjs. Do not edit.
+// Generated from shared/design geometry by tools/branding.mjs. Do not edit.
 final class MiqatShape {
     private MiqatShape() {}
     static void set(android.graphics.Path path, float width, float height, boolean inner) {
@@ -37,6 +44,7 @@ ${java(shape.inner)}
 ${java(shape.outer)}
         }
     }
+${tileMethod}
 }
 `;
   const url = new URL(target + '/MiqatShape.java', root);

@@ -18,6 +18,15 @@ class UiControl(
 
 @JsExport
 object UiContract {
+    const val MIHRAB_OPACITY_MIN = 50
+    const val MIHRAB_OPACITY_MAX = 100
+    const val MIHRAB_OPACITY_STEP = 5
+    const val MIHRAB_OPACITY_DEFAULT = 85
+
+    fun mihrabOpacity(value: Double): Int =
+        if (value >= MIHRAB_OPACITY_MIN && value <= MIHRAB_OPACITY_MAX && value % MIHRAB_OPACITY_STEP == 0.0)
+            value.toInt() else MIHRAB_OPACITY_DEFAULT
+
     fun controls(): Array<UiControl> = UiCatalog.controls.copyOf()
 
     fun control(id: String): UiControl = UiCatalog.controls.firstOrNull { it.id == id }
@@ -30,12 +39,14 @@ object UiContract {
     }
 
     fun minimum(id: String): Int = when (bind(id, "number").range) {
+        "mihrab-opacity" -> MIHRAB_OPACITY_MIN
         "ui-scale" -> UiScale.MIN_PERCENT
         "percent", "bearing" -> 0
         else -> -maximum(id)
     }
 
     fun maximum(id: String): Int = when (bind(id, "number").range) {
+        "mihrab-opacity" -> MIHRAB_OPACITY_MAX
         "ui-scale" -> UiScale.MAX_PERCENT
         "prayer-offset" -> PrayerRules.MAX_OFFSET_MINUTES
         "hijri-offset" -> PrayerRules.MAX_HIJRI_OFFSET_DAYS
@@ -49,6 +60,7 @@ object UiContract {
     fun numberStep(id: String): Int {
         bind(id, "number")
         return when (id) {
+            "appearance.mihrab-opacity" -> MIHRAB_OPACITY_STEP
             "display.size" -> UiScale.STEP_PERCENT
             "reminders.volume", "prayer.facing" -> 5
             else -> 1

@@ -6,6 +6,15 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 
 class UiContractTest {
+    @Test fun mihrabOpacityKeepsUserBoundsAndRecommendedDefault() {
+        assertEquals(85, UiContract.MIHRAB_OPACITY_DEFAULT)
+        assertEquals(50, UiContract.minimum("appearance.mihrab-opacity"))
+        assertEquals(100, UiContract.maximum("appearance.mihrab-opacity"))
+        for (value in 50..100 step 5) assertEquals(value, UiContract.mihrabOpacity(value.toDouble()))
+        for (value in listOf(Double.NaN, Double.POSITIVE_INFINITY, 49.0, 101.0, 82.0, 85.5))
+            assertEquals(85, UiContract.mihrabOpacity(value))
+    }
+
     @Test fun choiceEditorsKeepShortInlineControlsAndCatalogPickersDistinct() {
         for (id in listOf("prayer.asr", "reminders.close", "radio.screen-off", "display.language",
             "display.digits", "display.clock", "display.bar-position", "display.bar-timeout")) {
@@ -67,7 +76,7 @@ class UiContractTest {
             val id = control.id
             val low = UiContract.minimum(id)
             val high = UiContract.maximum(id)
-            val step = when (id) { "display.size" -> 10; "reminders.volume", "prayer.facing" -> 5; else -> 1 }
+            val step = when (id) { "display.size" -> 10; "reminders.volume", "prayer.facing", "appearance.mihrab-opacity" -> 5; else -> 1 }
             assertEquals(step, UiContract.numberStep(id))
             assertEquals(if (id == "prayer.facing") "bearing" else "inline", UiContract.numberEditor(id))
             assertEquals(low, UiContract.adjustNumber(id, low.toDouble(), -1.0))

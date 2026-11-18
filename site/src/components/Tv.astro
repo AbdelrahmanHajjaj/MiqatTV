@@ -1,21 +1,23 @@
 ---
 // The 1920×1080 TV stage with the star lattice ground (Ui.starLattice), scaled into a 16:9 frame by the inline script below
 // (inline so the TV still fits when a cached page outlives its script bundle after a deploy).
-import mihrab from '../../../shared/design/mihrab.json';
+import tokens from '../../../shared/design/mihrab/tokens.json';
+import tileDesign from '../../../shared/design/background-tile.json';
 interface Props { mode?: string; screen: string; ground?: 'lattice' | 'black' }
+const tile = parseFloat(tokens.background['tile-size'].$value);
 const { mode, screen, ground = 'lattice' } = Astro.props;
 ---
 <div class="tv-frame">
   <div class="tv" data-mode={mode} data-screen={screen} data-ground={ground}>
     <svg class="ambient-ridge" aria-hidden="true" width="1920" height="1080" viewBox="0 0 480 270">
-      <path d="M0 225 C110 160 160 265 280 215 C360 180 400 210 480 155 L480 270 L0 270 Z" />
+      <path d="M0 234 C100 208 175 255 278 226 C374 196 418 225 480 204 L480 270 L0 270 Z" />
     </svg>
     {ground === 'lattice' && (
       <svg class="lattice" aria-hidden="true" width="1920" height="1080">
         <defs>
-          <pattern id="miqat-tile" width="96" height="96" patternUnits="userSpaceOnUse">
-            <g fill="none" stroke="var(--color-pattern-line)" stroke-width="1.5">
-              <path d={mihrab.inner} transform="translate(12 2) scale(.12 .1024)" vector-effect="non-scaling-stroke" />
+          <pattern id="miqat-tile" width={tile} height={tile} patternUnits="userSpaceOnUse">
+            <g fill="none" stroke="var(--color-pattern-line)" stroke-width={tokens.background['tile-stroke'].$value}>
+              <path d={tileDesign.path} transform={`scale(${tile/tileDesign.width} ${tile/tileDesign.height})`} vector-effect="non-scaling-stroke" />
             </g>
           </pattern>
         </defs>

@@ -85,6 +85,23 @@ final class UiContractDeviceCheck {
                 key(test, active[0], KeyEvent.KEYCODE_DPAD_CENTER);
                 int towardStart = language.equals("ar") ? KeyEvent.KEYCODE_DPAD_RIGHT : KeyEvent.KEYCODE_DPAD_LEFT;
                 int towardEnd = language.equals("ar") ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT;
+                onMain(test, () -> {
+                    SettingsActivity.Row preset = (SettingsActivity.Row) ((java.util.List<?>) field(active[0], "rows")).get(0);
+                    check(preset.contract.getId().equals("appearance.theme"), "Preset carousel is first");
+                    preset.select(1);
+                    check((int) field(active[0], "backgroundChoice") == 0 && (int) field(active[0], "lightChoice") == -1,
+                        "Preset restores bundled background and lighting in the draft");
+                    for (Object value : (Iterable<?>) field(active[0], "rows")) {
+                        SettingsActivity.Row row = (SettingsActivity.Row) value;
+                        if (row.contract.getId().equals("appearance.background")) row.select(2);
+                        if (row.contract.getId().equals("appearance.lighting")) row.setAmount(80);
+                    }
+                    preset.select(1);
+                    check((int) field(active[0], "backgroundChoice") == 2 && (int) field(active[0], "lightChoice") == 80,
+                        "Clamped preset selection preserves manual customization");
+                    preset.select(0);
+                });
+                key(test, active[0], KeyEvent.KEYCODE_DPAD_DOWN);
                 key(test, active[0], towardStart); key(test, active[0], towardStart);
                 for (int mode = 0; mode < 3; mode++) {
                     collect(test, active[0], bound, "appearance", offered);

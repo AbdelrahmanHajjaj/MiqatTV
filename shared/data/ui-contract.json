@@ -389,6 +389,14 @@
     "choices": "backgrounds"
   },
   {
+    "id": "appearance.mihrab-opacity",
+    "section": "appearance",
+    "kind": "number",
+    "label": "mihrabOpacity",
+    "save": "appearance",
+    "range": "mihrab-opacity"
+  },
+  {
     "id": "appearance.lighting",
     "section": "appearance",
     "kind": "number",

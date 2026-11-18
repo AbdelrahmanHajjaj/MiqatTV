@@ -18,10 +18,13 @@ final class ArchView extends View {
     private int state = REST;
     private final ThemeSurface surface;
 
-    ArchView(Context c) {
+    ArchView(Context c) { this(c, 100); }
+
+    ArchView(Context c, int opacity) {
         super(c);
         surface = Appearance.surface();
         fill.setColor(surface.fill(Palette.LAPIS_800));
+        fill.setAlpha(Math.round(255 * tv.miqat.core.UiContract.INSTANCE.mihrabOpacity(opacity) / 100f));
         stroke.setStyle(Paint.Style.STROKE);
         inner.setStyle(Paint.Style.STROKE);
         inner.setColor(Palette.ARCH_INNER);

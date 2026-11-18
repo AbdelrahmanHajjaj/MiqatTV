@@ -125,7 +125,7 @@ public class SettingsActivity extends Screen {
     private LinearLayout appearanceSwatches;
     private Appearance.Style previewStyle;
     private String previewKey;
-    private int themeChoice, backgroundChoice, lightChoice, cycleChoice;
+    private int themeChoice, backgroundChoice, lightChoice, cycleChoice, mihrabOpacityChoice;
     private boolean focusChoice, motionChoice;
     private static final String[] BACKGROUNDS = java.util.stream.Stream.concat(java.util.stream.Stream.of("theme"), Arrays.stream(ThemeSpec.BACKGROUNDS)).toArray(String[]::new);
     private final FocusTile[] nav = new FocusTile[SECTIONS];
@@ -270,6 +270,7 @@ public class SettingsActivity extends Screen {
             themeChoice = Math.max(0, Arrays.asList(Appearance.PRESETS).indexOf(prefs().getString("theme", "mihrab")));
             backgroundChoice = Math.max(0, Arrays.asList(BACKGROUNDS).indexOf(prefs().getString("background", "theme")));
             lightChoice = prefs().getInt("lighting", -1);
+            mihrabOpacityChoice = Prefs.mihrabOpacity(this);
             cycleChoice = 0;
             for (int i = 0; i < AppearanceCycle.MINUTES.length; i++) if (AppearanceCycle.MINUTES[i] == Appearance.cycleMinutes(this)) cycleChoice = i;
             focusChoice = prefs().getBoolean("focus_lighting", false);
@@ -299,7 +300,15 @@ public class SettingsActivity extends Screen {
             place(rowScroll, contentStart - outside, top - outside, contentWidth + 2 * outside, height);
         }
         rows.addAll(prayerOffsetsPage ? offsetRows() : rowsFor(section));
-        for (int i = 0; i < rows.size(); i++) addRow(rows.get(i), i);
+        for (int i = 0; i < rows.size(); i++) {
+            if (section == APPEARANCE && i == 1) {
+                TextView heading = text(ui500, 24, Palette.MIST_400);
+                heading.setText(t.customizeAppearance());
+                heading.setPadding(Ui.ipx(16), Ui.ipx(24), Ui.ipx(16), Ui.ipx(8));
+                rowList.addView(heading, new LinearLayout.LayoutParams(-1, -2));
+            }
+            addRow(rows.get(i), i);
+        }
         if (largeUi) fitLargeRows();
         refresh();
     }
@@ -353,6 +362,7 @@ public class SettingsActivity extends Screen {
     private View homeLayoutPreview() {
         View plan = new View(this) {
             final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            final Path mihrab = new Path();
             private void box(Canvas c, float x, float y, float w, float h, int color) {
                 ThemeSurface s = previewStyle.surface;
                 float radius = s.radius(Tokens.RADIUS_CELL);
@@ -374,7 +384,16 @@ public class SettingsActivity extends Screen {
                 HomeLayout h = homePreviewLayout;
                 box(c, h.x, Tokens.SPACE_SAFE_BLOCK, 400, 100, previewStyle.colors[6]);
                 for (int i = 0; i < 5; i++) box(c, h.x + h.width - 472 + i * 100, h.quickY, 72, 72, i == 0 ? previewStyle.colors[4] : previewStyle.colors[3]);
-                if (h.mode == HomeLayout.MIHRAB) box(c, h.panelX, h.panelY, h.panelWidth, Tokens.LAYOUT_HOME_MIHRAB_HEIGHT, previewStyle.colors[3]);
+                if (h.mode == HomeLayout.MIHRAB) {
+                    c.save(); c.translate(h.panelX, h.panelY);
+                    MiqatShape.set(mihrab, h.panelWidth, Tokens.LAYOUT_HOME_MIHRAB_HEIGHT, false);
+                    paint.setStyle(Paint.Style.FILL); paint.setColor(previewStyle.surface.fill(previewStyle.colors[2]));
+                    paint.setAlpha(Math.round(255 * (editing != null && editing.contract.getId().equals("appearance.mihrab-opacity") ? draft : mihrabOpacityChoice) / 100f)); c.drawPath(mihrab, paint);
+                    paint.setAlpha(255); paint.setStyle(Paint.Style.STROKE);
+                    paint.setColor(previewStyle.surface.archEdge()); paint.setStrokeWidth(previewStyle.surface.archStroke());
+                    if (paint.getStrokeWidth() > 0) c.drawPath(mihrab, paint);
+                    paint.setStyle(Paint.Style.FILL); c.restore();
+                }
                 if (h.mode == HomeLayout.COMPACT) box(c, h.x, h.panelY, h.width, Tokens.LAYOUT_HOME_BAR_HEIGHT, previewStyle.colors[3]);
                 int slots = homePreviewSlots;
                 float cw = Math.min(Tokens.LAYOUT_HOME_TILE_MAX_WIDTH, (h.width - (slots - 1) * 12) / Math.max(1, slots));
@@ -623,14 +642,14 @@ public class SettingsActivity extends Screen {
                     void open() { if (!RemoteKeys.toggleDock()) SystemScreens.open(c, Settings.ACTION_ACCESSIBILITY_SETTINGS); }
                 });
             case APPEARANCE: {
-                List<Row> appearance = new ArrayList<>(homeRows());
+                List<Row> appearance = new ArrayList<>();
                 appearance.addAll(Arrays.asList(
                 new Row("appearance.theme", CAROUSEL) {
                     String[] keys() { return Arrays.copyOf(Appearance.PRESETS, segs().length); }
                     String label() { return t.themeRow(); }
                     String[] segs() { return Arrays.copyOf(t.themeNames(), Appearance.PRESETS.length - (prefs().contains("theme_json") ? 0 : 1)); }
                     int selected() { return themeChoice; }
-                    void select(int i) { themeChoice = i; }
+                    void select(int i) { if (themeChoice != i) { themeChoice = i; backgroundChoice = 0; lightChoice = -1; mihrabOpacityChoice = UiContract.MIHRAB_OPACITY_DEFAULT; } }
                 },
                 new Row("appearance.background", CAROUSEL) {
                     String[] keys() { return BACKGROUNDS.clone(); }
@@ -638,6 +657,14 @@ public class SettingsActivity extends Screen {
                     String[] segs() { return t.backgroundNames(); }
                     int selected() { return backgroundChoice; }
                     void select(int i) { backgroundChoice = i; }
+                },
+                new Row("appearance.mihrab-opacity", STEP) {
+                    String label() { return t.mihrabOpacity(); }
+                    String help() { return t.d(t.mihrabOpacityHelp()); }
+                    int amount() { return mihrabOpacityChoice; }
+                    String valueOf(int n) { return t.d(n + "%"); }
+                    void setAmount(int n) { mihrabOpacityChoice = n; }
+                    boolean saves() { return false; }
                 },
                 new Row("appearance.lighting", STEP) {
                     String label() { return t.lightingRow(); }
@@ -680,7 +707,7 @@ public class SettingsActivity extends Screen {
                             .putInt("home_bar", homeDraft[2]).putInt("home_prayers", homeDraft[3])
                             .putString("home_layout", homeDraft[4] == 1 ? "classic" : "two_rows")
                             .putString("theme", Appearance.PRESETS[themeChoice]).putString("background", BACKGROUNDS[backgroundChoice])
-                            .putBoolean("focus_lighting", focusChoice).putBoolean("reduce_motion", motionChoice);
+                            .putInt("mihrab_opacity", mihrabOpacityChoice).putBoolean("focus_lighting", focusChoice).putBoolean("reduce_motion", motionChoice);
                         if (lightChoice < 0) save.remove("lighting"); else save.putInt("lighting", lightChoice);
                         int interval = AppearanceCycle.MINUTES[cycleChoice];
                         if (interval == 0) save.remove("appearance_cycle").remove("appearance_cycle_at");
@@ -688,6 +715,7 @@ public class SettingsActivity extends Screen {
                         save.apply(); relaunch(); showSaved();
                     }
                 }));
+                appearance.addAll(1, homeRows());
                 return appearance;
             }
             case NETWORK: return Arrays.asList(

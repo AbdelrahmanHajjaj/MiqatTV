@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { armCycle, cycleAppearance, CYCLE_MINUTES } from '../src/lib/appearance-cycle';
 import { DEFAULT_PREFS } from '../src/lib/data';
 import { makeCtx } from '../src/lib/ctx';
-import { rowsFor, pick, APPEARANCE } from '../src/screens/settings';
+import { rowsFor, pick, APPEARANCE, savedDraft, moveDraft, commit } from '../src/screens/settings';
 import { backgroundOf, THEMES, BACKGROUNDS } from '../src/scripts/appearance';
 
 const now = 1_800_000_000_000;
@@ -46,3 +46,39 @@ for (const language of ['ar','en'] as const) {
   assert.ok(row.label && row.help);
 }
 console.log('Appearance rotation: intervals, repeat avoidance, pause/resume deadlines and bilingual drafts passed');
+
+for (const language of ['ar','en'] as const) {
+  const source = {...DEFAULT_PREFS, theme:'mihrab', background:'solid', lighting:90};
+  const ctx = makeCtx(language, source, new Date(now));
+  const preset = pick(ctx, 'theme', THEMES.indexOf('forest'))!;
+  assert.equal(preset.background, 'theme', 'preset restores its tailored background');
+  assert.equal(preset.lighting, undefined, 'preset restores its own lighting');
+  assert.equal(backgroundOf(preset), 'tea_hills');
+  assert.equal(source.background, 'solid', 'preset selection remains a draft');
+  assert.equal(pick(ctx, 'theme', THEMES.indexOf('mihrab'))!.background, 'solid', 'clamped carousel navigation preserves customization');
+  const customized = pick({...ctx,prefs:preset}, 'background', BACKGROUNDS.indexOf('moon_lake'))!;
+  assert.equal(backgroundOf(customized), 'moon_lake', 'manual customization remains available');
+  assert.equal(rowsFor(ctx, APPEARANCE)[0].id, 'theme', 'presets come first');
+}
+
+assert.equal(backgroundOf(DEFAULT_PREFS), 'miqat_signature', 'fresh default uses Miqat flagship artwork');
+assert.equal(backgroundOf({...DEFAULT_PREFS,background:'solid'}), 'solid', 'manual background survives the new default');
+
+for (const language of ['en','ar'] as const) {
+  const ctx=makeCtx(language, DEFAULT_PREFS, new Date(now));
+  const row=rowsFor(ctx,APPEARANCE).find(r=>r.id==='mihrabOpacity')!;
+  assert.equal(savedDraft(ctx,row),85);
+  assert.equal(moveDraft(row,50,-1),50);assert.equal(moveDraft(row,100,1),100);
+  assert.equal(moveDraft(row,85,1),90);
+  const changed=commit(ctx,row,50)!;assert.equal(changed.mihrabOpacity,50);
+  assert.equal(ctx.prefs.mihrabOpacity,undefined);
+  assert.throws(()=>commit(ctx,row,49));assert.throws(()=>commit(ctx,row,82));
+  assert.equal(pick({...ctx,prefs:changed},'theme',THEMES.indexOf('forest'))!.mihrabOpacity,undefined);
+}
+
+assert.equal(backgroundOf({ ...DEFAULT_PREFS, theme:'mihrab', background:'theme' }), 'miqat_signature', 'original flagship stays default');
+assert.ok(BACKGROUNDS.includes('miqat_quiet'), 'quiet artwork is an additional selectable background');
+for (const lang of ['ar','en'] as const) {
+  const c = makeCtx(lang, {...DEFAULT_PREFS, background:'miqat_quiet'}, new Date(now));
+  assert.equal(backgroundOf(c.prefs), 'miqat_quiet', 'manual quiet choice remains selected');
+}

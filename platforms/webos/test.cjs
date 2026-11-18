@@ -52,6 +52,10 @@ for (const uiScale of [null, '90', 0, 85, 111, NaN, Infinity]) assert.throws(() 
 for (const mode of ['all', 'current', 'next', 'both', 'none']) assert.equal(A.prefs({prayerMode: mode}).prayerMode, mode);
 for (const pattern of data.patterns) assert.equal(A.prefs({background: pattern}).background, pattern);
 assert.equal(data.patterns.length, 8);
+assert.equal(A.prefs().background, data.defaultBackground, 'fresh install uses the Miqat flagship');
+assert.equal(A.prefs({background:'plain'}).background, 'plain', 'saved manual background remains unchanged');
+for (const scene of data.scenes) assert.equal(A.prefs({background: scene}).background, scene);
+assert.throws(() => A.prefs({background: '../moon_lake'}), /Invalid/);
 assert.throws(() => A.prefs({quickLabels: 'yes'}), /Invalid/);
 assert.throws(() => A.prefs({homeBar: 'left'}), /Invalid/);
 assert.throws(() => A.prefs({background: '../outside'}), /Invalid/);
@@ -308,3 +312,7 @@ clockNow = slowState.alarm.time + 89999; count = launches(); advanceOnWrite = 2;
 invoke('firePrayer', {id: slowState.alarm.id, generation: slowState.alarmGeneration});
 assert.equal(launches(), count, 'delivery must expire if the persisted claim crosses its deadline');
 console.log('PASS: legacy calculations, preferences, atomic state, startup, exact prayer scheduling, asynchronous overlap/failure recovery, expired/duplicate/cancelled alerts and media diagnostics.');
+
+assert.equal(A.prefs().mihrabOpacity,85);
+for (const value of [50,55,85,90,100]) assert.equal(A.prefs({mihrabOpacity:value}).mihrabOpacity,value);
+for (const value of [49,101,82,NaN,'85',null]) assert.throws(()=>A.prefs({mihrabOpacity:value}),/Invalid/);
