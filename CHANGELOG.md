@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Refine the Miqat phone companion with persistent floating navigation, clearer
+  selection, compact headers, rounded controls and stable in-place loading.
+  Capitalize its launcher label to Miqat (phone version 0.1.1).
+- Speed up legacy LG identity preparation with native OpenSSL, reuse unchanged
+  QR artwork during approval and remove a redundant phone pairing request.
+  Existing trust and physical TV approval remain required (LG version 0.2.25).
+
 - Keep the branded LG splash visible until the first screen is ready.
 
 - Sync companion branding/catalogs with the refreshed main design and expose its

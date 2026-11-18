@@ -13,7 +13,7 @@
   var settingsConflict = false;
   var companionBridge = null, companionSession = '', companionUi = '', companionTimer = null;
   var companion = {supported: null, starting: false, phones: [], open: false}, pairingMessage = '';
-  var lastRemoteRequest = '';
+  var lastRemoteRequest = '', pairingSvgKey = '', pairingSvg = '';
   var input = null, inputs = [], view = 'input', picker = null, page = 0;
   var screen = document.getElementById('screen'), video = document.getElementById('input-video');
   var bridges = [], instance = String(Date.now()), cachedDay = null, cacheKey = '', noticeTimer;
@@ -123,7 +123,7 @@
   }
   function stopCompanion() {
     var bridge = companionBridge, session = companionSession;
-    companionBridge = null; companionSession = ''; companionUi = ''; clearTimeout(companionTimer);
+    companionBridge = null; companionSession = ''; companionUi = ''; pairingSvgKey = ''; pairingSvg = ''; clearTimeout(companionTimer);
     companion = {supported: null, starting: false, phones: [], open: false};
     if (session) { request('companionLeave', {session: session}); }
     if (bridge) { bridge.onservicecallback = function () {}; try { bridge.cancel(); } catch (error) {} }
@@ -173,10 +173,14 @@
       companion.failure ? s('pairingNetwork') : pairingMessage;
     var content = '', qr = companion.qr;
     if (qr && companion.open) {
-      var code = window.qrcode(0, D.qrStyle.errorCorrection); code.addData(window.PairingQr.encode(qr), 'Alphanumeric'); code.make();
-      content = '<div class="pairing-qr" role="img" aria-label="' + escape(s('pairingScan')) + '"><div class="pairing-symbol">' +
-        window.mihrabQr(code, D.qrStyle, D.palettes[prefs.theme] || D.palettes.mihrab, D.palettes.mihrab['plaster-100'], D.qrMark) + '</div></div>';
-    }
+      var payload = window.PairingQr.encode(qr), key = payload + ':' + prefs.theme;
+      if (key !== pairingSvgKey) {
+        var code = window.qrcode(0, D.qrStyle.errorCorrection); code.addData(payload, 'Alphanumeric'); code.make();
+        pairingSvg = window.mihrabQr(code, D.qrStyle, D.palettes[prefs.theme] || D.palettes.mihrab, D.palettes.mihrab['plaster-100'], D.qrMark);
+        pairingSvgKey = key;
+      }
+      content = '<div class="pairing-qr" role="img" aria-label="' + escape(s('pairingScan')) + '"><div class="pairing-symbol">' + pairingSvg + '</div></div>';
+    } else { pairingSvgKey = ''; pairingSvg = ''; }
     var actions = '';
     if (companion.open && companion.ownsPairing) {
       if (companion.pending) {

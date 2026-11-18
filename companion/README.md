@@ -1,6 +1,6 @@
-# miqatTv
+# Miqat
 
-Android companion with launcher label `miqat`, separate from the installer.
+Android companion with launcher label `Miqat`, separate from the installer.
 Native phone UI plus portable settings workflow.
 See [scope and evidence](../docs/COMPANION-WORK.md) and the
 [foreground LAN protocol](../docs/COMPANION-LAN.md).

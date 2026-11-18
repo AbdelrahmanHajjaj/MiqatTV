@@ -134,15 +134,16 @@ in its [service basics](https://webostv.developer.lge.com/develop/guides/js-serv
 
 The owner approved RSA/AES-GCM compatibility for the legacy runtime. Static RSA
 lacks forward secrecy: later private-key compromise can expose recorded sessions.
-Old runtime vulnerabilities remain; Miqat physical LG acceptance is pending.
-Validation of the old identity is not acceptance of this port.
+Old runtime vulnerabilities remain. The owner confirmed fresh Miqat LG pairing
+and smooth connected controls/settings; see the separate work ledger for limits.
 
 Verify malformed/expired QR, pending/rejected/approved exchange, token isolation,
 wrong certificate, unauthenticated access, revocation, bounded input, lifecycle,
 baseline conflicts, failed/uncertain writes and settings preservation. Use owned
 emulators/local services and LG browser/service mocks first. Physical remote and
-actual TV networking remain explicit acceptance gates; no TV operation is currently
-authorized.
+actual TV networking remain explicit acceptance gates. The owner separately
+authorized LG installation/testing on 18 November 2026; that does not authorize
+firmware changes or release publication.
 
 Sources consulted: [Android Keystore](https://developer.android.com/reference/android/security/keystore/KeyGenParameterSpec),
 [Node 0.10 TLS](https://nodejs.org/download/release/v0.10.25/docs/api/tls.html),

@@ -80,7 +80,7 @@ public final class MainActivity extends Activity {
             String language=prefs().getString("language","system");
             ar=language.equals("ar") || language.equals("system") && getResources().getConfiguration().getLocales().get(0).getLanguage().equals("ar");
             regular=getResources().getFont(R.font.alexandria_regular);
-            heading=getResources().getFont(ar?R.font.amiri_bold:R.font.marcellus_regular);
+            heading=Typeface.create(regular,Typeface.BOLD);
             ground=color("lapis-900"); surface=color("lapis-800"); accent=color("gold-400"); ink=color("plaster-100"); muted=color("mist-400");
             getWindow().setStatusBarColor(ground); getWindow().setNavigationBarColor(ground);
             for(int i=0;i<tvs.length;i++) {
@@ -165,15 +165,15 @@ public final class MainActivity extends Activity {
         v.setLayoutDirection(ar?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);v.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         v.setGravity(Gravity.START); v.setTextDirection(View.TEXT_DIRECTION_LOCALE); v.setPadding(0,dp(5),0,dp(5)); return v;
     }
-    TextView heading(String value) { TextView v=text(value,ar?30:28,ink); v.setTypeface(heading); return v; }
+    TextView heading(String value) { TextView v=text(value,26,ink); v.setTypeface(heading); return v; }
     GradientDrawable background(int fill,int radius) { GradientDrawable g=new GradientDrawable(); g.setColor(fill); g.setCornerRadius(dp(radius)); return g; }
     LinearLayout card(LinearLayout parent) {
-        LinearLayout c=column(); c.setBackground(background(surface,16)); c.setPadding(dp(16),dp(12),dp(16),dp(12));
+        LinearLayout c=column(); c.setBackground(background(surface,24)); c.setPadding(dp(18),dp(16),dp(18),dp(16));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.bottomMargin=dp(12); parent.addView(c,lp); return c;
     }
     Button button(LinearLayout parent,String label,Runnable action) {
         Button b=new Button(this); b.setText(label); b.setAllCaps(false); b.setTextColor(accent); b.setTypeface(regular); b.setMinHeight(dp(48));
-        GradientDrawable shape=background(surface,10);shape.setStroke(dp(1),(accent&0x00ffffff)|0x55000000);
+        GradientDrawable shape=background(surface,24);
         b.setBackgroundTintList(null);b.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x33000000),shape,null));b.setElevation(0);b.setStateListAnimator(null);
         b.setTextColor(new ColorStateList(new int[][]{new int[]{android.R.attr.state_enabled},new int[]{}},new int[]{accent,muted}));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(5);lp.bottomMargin=dp(5);
@@ -189,17 +189,17 @@ public final class MainActivity extends Activity {
     boolean isPending(String id){return id.equals(pendingId)&&pendingBase!=null;}
     Button iconButton(LinearLayout parent,String icon,String label,Runnable action){
         Button button=button(parent,"",action);square(button);button.setContentDescription(label);button.setTooltipText(label);
-        button.setForeground(Icons.get(this,icon,accent));button.setForegroundGravity(Gravity.CENTER);button.setForegroundTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_enabled},new int[]{}},new int[]{accent,muted}));button.setPadding(0,0,0,0);return button;
+        button.setForeground(Icons.get(this,icon,accent));button.setForegroundGravity(Gravity.CENTER);button.setForegroundTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_enabled},new int[]{}},new int[]{accent,muted}));button.setPadding(0,0,0,0);button.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x22000000),background(Color.TRANSPARENT,24),null));return button;
     }
     LinearLayout navigationRow(LinearLayout parent,String icon,String title,String subtitle,Runnable action){
-        LinearLayout row=horizontal(parent);row.setMinimumHeight(dp(72));row.setPadding(dp(12),dp(8),dp(12),dp(8));
-        row.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x22000000),background(surface,14),null));
+        LinearLayout row=horizontal(parent);row.setMinimumHeight(dp(72));row.setPadding(dp(18),dp(10),dp(18),dp(10));
+        row.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x22000000),background(surface,20),null));
         LinearLayout.LayoutParams lp=(LinearLayout.LayoutParams)row.getLayoutParams();lp.bottomMargin=dp(8);
         ImageView glyph=new ImageView(this);glyph.setImageDrawable(Icons.get(this,icon,accent));glyph.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         LinearLayout.LayoutParams image=new LinearLayout.LayoutParams(dp(26),dp(26));image.setMarginEnd(dp(14));row.addView(glyph,image);
         LinearLayout labels=column();row.addView(labels,new LinearLayout.LayoutParams(0,-2,1));labels.addView(text(title,16,ink));
         if(!subtitle.isEmpty())labels.addView(text(subtitle,12,muted));
-        ImageView arrow=new ImageView(this);arrow.setImageDrawable(Icons.get(this,"back",muted));arrow.setRotation(180);arrow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);row.addView(arrow,new LinearLayout.LayoutParams(dp(20),dp(20)));
+        ImageView arrow=new ImageView(this);arrow.setImageDrawable(Icons.get(this,"back",muted));arrow.setRotation(ar?0:180);arrow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);row.addView(arrow,new LinearLayout.LayoutParams(dp(20),dp(20)));
         row.setFocusable(true);row.setContentDescription(title+(subtitle.isEmpty()?"":", "+subtitle));row.setOnClickListener(v->action.run());return row;
     }
     String sectionIcon(String id){
@@ -210,21 +210,31 @@ public final class MainActivity extends Activity {
     void tab(String target){
         if(networkBusy)return;
         if(page.equals(target)&&(!target.equals("settings")||section.isEmpty()))return;
-        Runnable change=()->{stopAudio();clearPending();appearance=null;section="";query="";page=target;
+        Runnable change=()->{stopAudio();cancelPairing();clearPending();appearance=null;section="";query="";page=target;
             if(target.equals("settings"))readSettings();else if(target.equals("overview"))readRemote();render();};
         if(appearance!=null&&!appearance.getChanges().isEmpty())confirmDiscard(change);else change.run();
     }
     void bottomNavigation(LinearLayout shell){
-        if(!Arrays.asList("overview","settings","updates").contains(page))return;
-        LinearLayout nav=horizontal(shell);nav.setPadding(dp(12),dp(6),dp(12),dp(6));nav.setBackgroundColor(surface);nav.setTag("navigation");
+        LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER_VERTICAL);nav.setOrientation(LinearLayout.HORIZONTAL);
+        nav.setPadding(dp(6),dp(6),dp(6),dp(6));nav.setTag("navigation");nav.setElevation(dp(8));
+        GradientDrawable material=background(surface,40);material.setStroke(dp(1),(muted&0x00ffffff)|0x33000000);nav.setBackground(material);
+        LinearLayout.LayoutParams bar=new LinearLayout.LayoutParams(-1,-2);bar.setMargins(dp(16),dp(8),dp(16),dp(14));shell.addView(nav,bar);
+        boolean hasTv=real()!=null||prefs().getBoolean("show-demo",false)||page.equals("overview")||page.equals("settings");
+        String active=page.equals("settings")?"settings":page.equals("overview")||page.equals("updates")?"overview":"tvs";
         String[] targets={"overview","settings","tvs"},icons={"remote","gear","tv"},labels={t("remote_title"),t("settings"),t("tvs")};
         for(int i=0;i<targets.length;i++){
-            final String target=targets[i];Button item=button(nav,labels[i],()->tab(target));flex(item);item.setMinHeight(dp(56));item.setTextSize(11);
-            item.setCompoundDrawablesRelative(null,Icons.get(this,icons[i],page.equals(target)?accent:muted),null,null);item.setCompoundDrawablePadding(dp(3));item.setTag("nav."+target);item.setContentDescription(labels[i]);item.setSelected(page.equals(target));
-            item.setBackgroundColor(surface);item.setTextColor(page.equals(target)?accent:muted);
-            if(target.equals("settings"))bindAction(item,"open-settings");
-            item.setEnabled(!networkBusy);
+            final String target=targets[i];boolean selected=target.equals(active);int tint=selected?ground:muted;
+            Button item=button(nav,labels[i],()->tab(target));flex(item);item.setMinHeight(dp(56));item.setTextSize(11);item.setPadding(dp(4),dp(4),dp(4),dp(4));
+            item.setCompoundDrawablesRelative(null,Icons.get(this,icons[i],tint),null,null);item.setCompoundDrawablePadding(dp(4));item.setTag("nav."+target);
+            item.setContentDescription(labels[i]);item.setSelected(selected);item.setTypeface(regular,selected?Typeface.BOLD:Typeface.NORMAL);
+            item.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x33000000),background(selected?accent:Color.TRANSPARENT,32),null));
+            item.setTextColor(tint);if(target.equals("settings"))bindAction(item,"open-settings");
+            item.setEnabled(!networkBusy&&(target.equals("tvs")||hasTv));item.setAlpha(item.isEnabled()?1f:0.45f);
         }
+    }
+    void disableContent(View view){
+        view.setEnabled(false);
+        if(view instanceof ViewGroup)for(int i=0;i<((ViewGroup)view).getChildCount();i++)disableContent(((ViewGroup)view).getChildAt(i));
     }
     void notice(String key) {if(toast!=null)toast.cancel();toast=Toast.makeText(this,t(key),Toast.LENGTH_LONG);toast.show();}
     void info(String title,String message) { new AlertDialog.Builder(this).setTitle(title).setMessage(message).setPositiveButton(t("done"),null).show(); }
@@ -235,27 +245,26 @@ public final class MainActivity extends Activity {
         int previousY=scroll!=null&&location.equals(renderedLocation)?scroll.getScrollY():0;renderedLocation=location;
         LinearLayout shell=column();shell.setBackgroundColor(ground);shell.setLayoutDirection(ar?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);
         LinearLayout toolbar=horizontal(shell);toolbar.setPadding(dp(12),dp(6),dp(12),dp(6));toolbar.setMinimumHeight(dp(64));
-        if(!page.equals("tvs"))iconButton(toolbar,"back",t("back"),this::back).setEnabled(!networkBusy||page.equals("pair"));
+        if(page.equals("pair")||page.equals("preferences")||page.equals("updates")||page.equals("settings")&&!section.isEmpty())iconButton(toolbar,"back",t("back"),this::back).setEnabled(!networkBusy||page.equals("pair"));
         if(page.equals("tvs")) {
             ImageView brand=new ImageView(this);brand.setImageResource(R.drawable.miqat_icon);brand.setContentDescription(ar?"ميقات":"Miqat");
-            LinearLayout.LayoutParams mark=new LinearLayout.LayoutParams(dp(48),dp(48));mark.setMarginEnd(dp(12));toolbar.addView(brand,mark);
+            LinearLayout.LayoutParams mark=new LinearLayout.LayoutParams(dp(40),dp(40));mark.setMarginEnd(dp(12));toolbar.addView(brand,mark);
         }
         LinearLayout titles=column();toolbar.addView(titles,new LinearLayout.LayoutParams(0,-2,1));
-        String pageTitle=page.equals("tvs")?t("tvs"):page.equals("overview")?name(selected):page.equals("settings")?(section.isEmpty()?t("settings"):sectionTitle(section)):t(page);
-        TextView title=text(pageTitle,24,ink);title.setTypeface(heading);title.setMaxLines(1);title.setEllipsize(android.text.TextUtils.TruncateAt.END);titles.addView(title);
-        if(page.equals("tvs"))titles.addView(text(ar?"ميقات":"Miqat",11,accent));
-        else if(Arrays.asList("overview","settings","updates").contains(page))titles.addView(text((real()==null?t("demo"):name(selected))+" · "+t(online()?"connected":"disconnected"),11,muted));
+        String pageTitle=page.equals("tvs")?(ar?"ميقات":"Miqat"):page.equals("overview")?t("remote_title"):page.equals("settings")?(section.isEmpty()?t("settings"):section.equals("appearance")?t("appearance_title"):sectionTitle(section)):t(page);
+        TextView title=text(pageTitle,page.equals("settings")&&!section.isEmpty()?22:26,ink);title.setPadding(0,0,0,0);title.setTypeface(heading);title.setMaxLines(1);title.setEllipsize(android.text.TextUtils.TruncateAt.END);titles.addView(title);
+        String subtitle=page.equals("tvs")?t("tvs"):Arrays.asList("overview","settings","updates").contains(page)?name(selected)+" · "+t(online()?"connected":"disconnected"):"";
+        if(!subtitle.isEmpty()){TextView secondary=text(subtitle,11,muted);secondary.setPadding(0,dp(2),0,0);titles.addView(secondary);}
         if(page.equals("tvs"))iconButton(toolbar,"gear",t("preferences"),()->navigate("preferences"));
         if(Arrays.asList("overview","settings").contains(page))iconButton(toolbar,"refresh",t("refresh"),()->{if(page.equals("settings"))readSettings();else readRemote();}).setEnabled(!networkBusy);
-        body=column(); body.setPadding(dp(20),dp(12),dp(20),dp(24)); body.setBackgroundColor(ground);
+        body=column(); body.setPadding(dp(20),dp(12),dp(20),dp(20)); body.setBackgroundColor(ground);
         String screen=page.equals("settings")&&section.equals("appearance")?"appearance":page;
         if(!CompanionContract.INSTANCE.getScreens().contains(screen))throw new IllegalStateException("Unknown companion screen: "+screen);
         body.setTag(screen);
         body.setLayoutDirection(ar?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);
-        scroll=new ScrollView(this); scroll.setFillViewport(true); scroll.addView(body);shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));setContentView(shell);
+        scroll=new ScrollView(this); scroll.setVerticalScrollBarEnabled(false);scroll.setFillViewport(true); scroll.addView(body);shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));setContentView(shell);
         ScrollView current=scroll;current.post(()->current.scrollTo(0,previousY));
-        if(networkBusy){renderProgress();}
-        else switch(page) {
+        switch(page) {
             case "tvs": renderTvs(); break;
             case "overview": renderOverview(); break;
             case "settings": renderSettings(); break;
@@ -265,9 +274,13 @@ public final class MainActivity extends Activity {
             default: throw new IllegalStateException("Unknown screen");
         }
         if(page.equals("settings")&&section.equals("appearance")&&appearance!=null){
-            LinearLayout actions=horizontal(shell);actions.setPadding(dp(16),dp(8),dp(16),dp(8));actions.setBackgroundColor(surface);
+            LinearLayout actions=horizontal(shell);actions.setPadding(dp(20),dp(8),dp(20),dp(8));actions.setBackgroundColor(ground);
             Button cancel=bindAction(iconButton(actions,"close",t("cancel"),()->{appearance=null;section="";render();}),"cancel-appearance");cancel.setTag("appearance.cancel");cancel.setEnabled(!networkBusy);
-            Button apply=bindAction(button(actions,t("apply"),this::applyAppearance),"apply-appearance");flex(apply);apply.setCompoundDrawablesRelative(Icons.get(this,"check",accent),null,null,null);apply.setTag("appearance.apply");apply.setEnabled(editable()&&!appearance.getChanges().isEmpty());
+            Button apply=bindAction(button(actions,t("apply"),this::applyAppearance),"apply-appearance");flex(apply);apply.setTag("appearance.apply");apply.setEnabled(editable()&&!appearance.getChanges().isEmpty());apply.setMinHeight(dp(48));apply.setBackground(background(accent,28));apply.setTextColor(ground);apply.setAlpha(apply.isEnabled()?1f:0.4f);
+        }
+        if(networkBusy&&!page.equals("pair")){
+            disableContent(body);
+            ProgressBar progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);progress.setIndeterminate(true);progress.setIndeterminateTintList(ColorStateList.valueOf(accent));progress.setContentDescription(t(networkMessage));progress.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);shell.addView(progress,new LinearLayout.LayoutParams(-1,dp(3)));
         }
         bottomNavigation(shell);
     }
@@ -282,7 +295,7 @@ public final class MainActivity extends Activity {
             final int index=i+2;LanTv tv=lanTvs.get(i);
             navigationRow(body,"tv",tv.phone.name,(tv.phone.profile.equals("android")?"Android TV":"LG webOS")+" · "+t(tv.online?"connected":"disconnected"),()->{selected=index;snapshot=null;appearance=null;section="";clearPending();page="overview";readRemote();render();}).setTag("tv."+tv.key);
         }
-        Button pair=button(body,t("pair"),()->navigate("pair"));pair.setCompoundDrawablesRelative(Icons.get(this,"add",accent),null,null,null);pair.setEnabled(!vaultFailed);
+        Button pair=button(body,t("pair"),()->navigate("pair"));pair.setCompoundDrawablesRelative(Icons.get(this,"add",accent),null,null,null);pair.setEnabled(!vaultFailed);pair.setTextColor(ground);pair.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000),background(accent,28),null));pair.setCompoundDrawableTintList(ColorStateList.valueOf(ground));pair.setMinHeight(dp(56));
         if(!prefs().getBoolean("show-demo",false))return;
         body.addView(text(t("demo"),13,muted));
         for(int i=0;i<tvs.length;i++) {
@@ -293,23 +306,18 @@ public final class MainActivity extends Activity {
 
     void renderOverview() {
         renderRemote();
-        LinearLayout details=horizontal(body);TextView label=text(t("phones"),12,muted);label.setPaddingRelative(0,dp(5),dp(12),dp(5));details.addView(label,new LinearLayout.LayoutParams(0,-2,1));
-        iconButton(details,"more",t("more_actions"),()->{
-            PopupMenu menu=new PopupMenu(this,details);
+        LinearLayout options=horizontal(body);options.setGravity(Gravity.END);
+        iconButton(options,"more",t("more_actions"),()->{
+            PopupMenu menu=new PopupMenu(this,options);
             menu.getMenu().add(t("rename")).setOnMenuItemClickListener(item->{renameTv();return true;});
             menu.getMenu().add(t("updates")).setOnMenuItemClickListener(item->{navigate("updates");return true;});menu.show();
         });
-        if(real()!=null)return;
+        if(real()!=null||!prefs().getBoolean("show-demo",false))return;
         LinearLayout tools=card(body); tools.addView(text(t("demo_tools"),16,ink));
         button(tools,t(tv().getOnline()?"disconnect":"reconnect"),()->{
             tv().setOnline(!tv().getOnline()); prefs().edit().putBoolean("online-"+selected,tv().getOnline()).apply(); render();
         });
         button(tools,t("fail_next"),()->{ tv().setFailNextSave(true); notice("fail_armed"); });
-    }
-    void renderProgress(){
-        if(page.equals("pair")){renderPair();return;}
-        LinearLayout progress=card(body);ProgressBar spinner=new ProgressBar(this);spinner.setIndeterminateTintList(ColorStateList.valueOf(accent));progress.addView(spinner,new LinearLayout.LayoutParams(-1,dp(48)));
-        TextView status=text(t(networkMessage),16,ink);status.setGravity(Gravity.CENTER);status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);progress.addView(status);
     }
     void readRemote(){
         if(real()==null){if(!tv().getOnline())tv().setOnline(true);render();return;}
@@ -349,9 +357,9 @@ public final class MainActivity extends Activity {
         if(real()!=null&&real().remoteUncertain)body.addView(text(t("remote_uncertain"),14,accent));
         if(!online())body.addView(text(t("disconnected"),14,accent));
         if(offered==null||offered.length()==0){body.addView(text(t(offered==null?"remote_failed":"remote_unavailable"),15,muted));return;}
-        LinearLayout navigation=horizontal(body);
-        Button home=commandButton(navigation,"device.home","mihrab",t("tv_home"));flex(home);home.setForeground(null);home.setText(t("tv_home"));home.setMinHeight(dp(88));home.setCompoundDrawablesRelative(null,Icons.get(this,"mihrab",accent),null,null);
-        Button inputs=commandButton(navigation,"device.inputs","input",t("tv_inputs"));flex(inputs);inputs.setForeground(null);inputs.setText(t("tv_inputs"));inputs.setMinHeight(dp(88));inputs.setCompoundDrawablesRelative(null,Icons.get(this,"input",accent),null,null);
+        LinearLayout navigation=horizontal(body);((LinearLayout.LayoutParams)navigation.getLayoutParams()).bottomMargin=dp(12);
+        Button home=commandButton(navigation,"device.home","mihrab",t("tv_home"));flex(home);home.setForeground(null);home.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x22000000),background(surface,24),null));home.setText(t("tv_home"));home.setMinHeight(dp(88));home.setCompoundDrawablesRelative(null,Icons.get(this,"mihrab",accent),null,null);home.setCompoundDrawablePadding(dp(12));home.setPadding(dp(12),dp(8),dp(12),dp(8));
+        Button inputs=commandButton(navigation,"device.inputs","input",t("tv_inputs"));flex(inputs);inputs.setForeground(null);inputs.setBackground(new RippleDrawable(ColorStateList.valueOf((accent&0x00ffffff)|0x22000000),background(surface,24),null));inputs.setText(t("tv_inputs"));inputs.setMinHeight(dp(88));inputs.setCompoundDrawablesRelative(null,Icons.get(this,"input",accent),null,null);inputs.setCompoundDrawablePadding(dp(12));inputs.setPadding(dp(12),dp(8),dp(12),dp(8));
         inputs.setOnClickListener(v->{
             JSONArray items=state.optJSONArray("inputs");if(items==null||items.length()==0){sendCommand("device.inputs","");return;}
             String[] labels=new String[items.length()+1];labels[0]=t("tv_inputs");for(int i=0;i<items.length();i++)labels[i+1]=items.optJSONObject(i).optString("label");
@@ -361,7 +369,7 @@ public final class MainActivity extends Activity {
         if(commandOffered("device.exit-input"))navigationRow(body,"tv",t("tv_input"),state.optString("input"),()->sendCommand("device.exit-input","")).setEnabled(online()&&(real()==null||!real().remoteUncertain));
         JSONObject media=state.optJSONObject("media");String kind=media==null?"":media.optString("kind"),status=media==null?"idle":media.optString("state");
         for(String section:new String[]{"radio","adhan"}){
-            LinearLayout card=card(body);LinearLayout row=horizontal(card);ImageView glyph=new ImageView(this);glyph.setImageDrawable(Icons.get(this,section.equals("radio")?"radio":"bell",accent));row.addView(glyph,new LinearLayout.LayoutParams(dp(28),dp(28)));
+            LinearLayout card=card(body);card.setPadding(dp(18),dp(10),dp(18),dp(10));LinearLayout row=horizontal(card);ImageView glyph=new ImageView(this);glyph.setImageDrawable(Icons.get(this,section.equals("radio")?"radio":"bell",accent));row.addView(glyph,new LinearLayout.LayoutParams(dp(28),dp(28)));
             LinearLayout labels=column();LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1);lp.setMarginStart(dp(12));row.addView(labels,lp);labels.addView(text(t(section.equals("radio")?"radio_title":"adhan_preview"),16,ink));
             labels.addView(text(t(!kind.equals(section)?"idle":status.equals("playing")?"playing":status.equals("loading")?"loading":"idle"),12,muted));
             commandButton(row,section.equals("radio")?"radio.play":"tests.adhan-short","play",t("play")+" · "+t(section.equals("radio")?"radio_title":"adhan_preview"));
@@ -412,7 +420,7 @@ public final class MainActivity extends Activity {
             body.addView(preview,new LinearLayout.LayoutParams(-1,-2));
             if(!appearance.getChanges().isEmpty()) body.addView(text(t("unsaved"),13,accent));
         }
-        EditText search=new EditText(this); search.setSingleLine(true); search.setHint(t("search")); search.setText(query); search.setTextSize(15);search.setTextColor(ink);search.setHintTextColor(muted);search.setPadding(dp(16),dp(12),dp(16),dp(12));search.setBackground(background(surface,16));
+        EditText search=new EditText(this); search.setSingleLine(true); search.setHint(t("search")); search.setText(query); search.setTextSize(15);search.setTextColor(ink);search.setHintTextColor(muted);search.setPadding(dp(18),dp(12),dp(18),dp(12));search.setBackground(background(surface,28));android.graphics.drawable.Drawable searchIcon=getDrawable(android.R.drawable.ic_menu_search).mutate();searchIcon.setTint(muted);searchIcon.setBounds(0,0,dp(22),dp(22));search.setCompoundDrawablesRelative(searchIcon,null,null,null);search.setCompoundDrawablePadding(dp(12));
         LinearLayout.LayoutParams searchLayout=new LinearLayout.LayoutParams(-1,dp(56));searchLayout.bottomMargin=dp(12);body.addView(search,searchLayout);
         content=column(); body.addView(content); populateSettings();
         search.addTextChangedListener(watcher(value->{query=value;populateSettings();}));
@@ -445,6 +453,7 @@ public final class MainActivity extends Activity {
                 String value=values().get(id);
                 if(kind.equals("toggle")) {
                     Switch toggle=new Switch(this);toggle.setMinHeight(dp(48));toggle.setTextColor(accent);toggle.setTypeface(regular);
+                    toggle.setThumbTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{accent,muted}));toggle.setTrackTintList(ColorStateList.valueOf((muted&0x00ffffff)|0x55000000));
                     toggle.setChecked(value.equals("true"));toggle.setEnabled(editable());toggle.setTag(id+".edit");toggle.setContentDescription(title(c)+", "+display(id,value));top.addView(toggle,new LinearLayout.LayoutParams(-2,dp(48)));
                     toggle.setOnClickListener(v->{
                         String next=String.valueOf(toggle.isChecked());toggle.setChecked(value.equals("true"));

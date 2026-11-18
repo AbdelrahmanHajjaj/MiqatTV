@@ -10,8 +10,8 @@ The integration was developed on LG LF6300 / webOS 2.2, WebKit 538.2 and service
 Node 0.10.25. Prior device checks confirmed HDMI picture/sound, physical remote,
 Arabic shaping, sizing, startup, prayer audio and restoration. Miqat was installed on that TV on 18 November 2026. Live service readback verified
 the one-time settings transfer and the old launcher was uninstalled. The owner confirmed the 0.2.24 splash, picture and sound on the physical TV.
-Pairing, phone commands, physical remote and power/lifecycle acceptance of the
-new identity remain pending. Newer LG hardware is unverified.
+The owner also reports working pairing and smooth connected controls/settings.
+Detailed physical remote and power/lifecycle acceptance remain pending. Newer LG hardware is unverified.
 
 ## Build and install
 
@@ -98,8 +98,9 @@ and the platform [agent rules](../platforms/webos/AGENTS.md).
 The companion branch adds Settings / Phones with themed local QR and physical
 remote approval/revocation. Its listener follows the foreground app subscription.
 See [protocol and legacy TLS limits](COMPANION-LAN.md) and
-[current companion evidence](COMPANION-WORK.md). Physical Miqat installation is complete; camera and
-pairing acceptance remain pending; old app observations are not Miqat passes.
+[current companion evidence](COMPANION-WORK.md). The owner confirmed working
+Miqat pairing and smooth connected controls/settings on the physical LF6300.
+The 0.2.25 speed improvements still need a timed full pairing retest.
 
 The approved pairing QR now uses the shared Miqat centre mark, theme body fill
 and accent tint, no border and half-width (0.35-module) centre clearance with
@@ -140,3 +141,11 @@ labels/outline. This alpha is independent of the Home mihrab setting and Glass.
 The app displays the canonical splash artwork while its first screen loads, for
 at least 600 ms, in addition to LG's configured splash image. It does not replay
 on foreground resume. The owner confirmed the splash, picture and sound with 0.2.24 on 18 November 2026.
+
+
+Legacy pairing preparation uses bounded native OpenSSL RSA-2048 generation when
+Node lacks its own key-generation API. Stored identity is reused; keys are not
+passed through shell arguments or temporary files. If the binary is absent, the
+existing OS-random Forge path remains available. One-off physical identity-only
+measurements were 65.3 seconds before and 2.0 seconds after; these are not full
+pairing timings. The app also reuses unchanged QR artwork while awaiting approval.

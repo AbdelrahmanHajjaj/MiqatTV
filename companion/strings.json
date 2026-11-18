@@ -33,6 +33,7 @@
   "bedroom":{"en":"Bedroom","ar":"غرفة النوم"},
   "connected":{"en":"Connected","ar":"متصل"},
   "disconnected":{"en":"Disconnected","ar":"غير متصل"},
+  "appearance_title":{"en":"Appearance","ar":"المظهر"},
   "settings":{"en":"Settings","ar":"الإعدادات"},
   "updates":{"en":"Updates","ar":"التحديثات"},
   "preferences":{"en":"Companion language","ar":"لغة التطبيق المرافق"},

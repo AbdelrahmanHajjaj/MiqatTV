@@ -305,3 +305,24 @@ Backups, logs and device configuration stay private under ignored state/.
 The owner confirmed the branded splash, picture and sound all work on the
 physical LG with 0.2.24 on 18 November 2026. Physical remote, new-identity
 pairing/camera, phone commands and power/lifecycle acceptance remain pending.
+
+
+## Companion polish and legacy pairing performance (18 November 2026)
+
+Owner feedback confirms fresh Miqat LG pairing and smooth connected controls and
+settings. Phone 0.1.1 adds persistent navigation, clearer selection/typography,
+compact controls and retained loading content; launcher label is Miqat. Native
+Arabic/English behavior checks pass in compact portrait and inherited landscape;
+phone build/lint, generator and native TLS/lost-ack regressions pass. Compact
+portrait native checks also pass at 130% system font size in both languages;
+Arabic joining and persistent navigation were visually inspected.
+
+Ephemeral physical LF6300 identity-only benchmarks measured 65,284 ms for the
+previous Forge path and 2,004 ms for the native OpenSSL path. Existing trust was
+not read, reset or replaced for the benchmark. These single samples do not prove
+full camera-to-approval latency. LG 0.2.25 adds bounded native generation and
+unchanged-QR reuse. Modern/legacy identity, storage/error/fallback tests and full
+LG mocked browser checks pass; final bilingual QR-cache checks pass at
+80/100/150%. The update is installed/launched with current preferences, input and
+startup preserved by live API readback. New phone UI and timed complete physical
+pairing acceptance remain pending. Private logs/captures remain ignored.

@@ -238,10 +238,13 @@ const server = http.createServer((req, res) => {
       await assertQrVisible();
       assert.equal(await page.locator('.pairing-qr').getAttribute('role'),'img');await collect();
       await page.locator('[data-action=pairing-cancel]').click();await page.locator('.pairing-qr').waitFor({state:'detached'});
+      await page.evaluate(()=>{window.qrMakes=0;window.originalQrFactory=window.originalQrFactory||window.qrcode;window.qrcode=(...args)=>{window.qrMakes++;return window.originalQrFactory(...args);};});
       await page.locator('[data-action=pairing-open]').click();await page.locator('.pairing-qr').waitFor();
+      assert.equal(await page.evaluate(()=>window.qrMakes),1,'new window generates its QR once');
       await page.evaluate(()=>window.companionRequest('هاتف <b>المنزل</b> & "Phone"'));
       await page.waitForSelector('[data-action=pairing-reject]');assert.equal(await page.locator(':focus').getAttribute('data-action'),'pairing-reject','new requests default to Reject');
       assert.ok(await page.locator('[data-action=pairing-reject]').evaluate(el=>{const box=el.getBoundingClientRect(),frame=el.closest('.pairing-body').getBoundingClientRect();const scale=window.Miqat.prefs(JSON.parse(localStorage.getItem('fixture')).prefs).uiScale/100;return box.left>=frame.left+10*scale&&box.right<=frame.right-10*scale;}),'focused pairing controls reserve the complete shared focus ring');
+      assert.equal(await page.evaluate(()=>window.qrMakes),1,'phone request does not regenerate an unchanged QR while approval waits');
       assert.equal(await page.locator('.pairing-code').innerText(),'123456');assert.equal(await page.locator('.pairing-controls h2 b').count(),0,'phone names are escaped');await collect();
       await assertQrVisible();
       if(process.argv.includes('--pairing-only')) {

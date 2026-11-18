@@ -49,7 +49,9 @@ final class LanCheck {
         });
         String url="https://127.0.0.1:"+config.port;
         LanClient client=new LanClient(new Endpoint(url,identity.pin,config.port,true),config,identity.encodedCertificate());
+        List<String> requests=new ArrayList<>();
         try(TlsServer server=new TlsServer(identity,config,request->{
+            requests.add(request.path);
             TlsServer.Response response=routes.handle(request);
             if(dropAck[0]&&request.path.equals("/v1/pair-complete")){dropAck[0]=false;return null;} // Deliberately close after persisting the acknowledgement.
             if(dropCommand[0]&&request.path.equals("/v1/command")){dropCommand[0]=false;return null;}
@@ -103,7 +105,9 @@ final class LanCheck {
             PairRequest phoneRequest=new PairRequest(qr,context,fixture.store);check(phoneRequest.reconnect()==null);
             phoneRequest.request("Phone fixture");check(phoneRequest.poll()==null);check(pairing.clients().isEmpty());
             pairing.approve(phoneRequest.nonce,SystemClock.elapsedRealtime());dropAck[0]=true;
+            requests.clear();
             try{phoneRequest.poll();}catch(Exception lostReply){} // Recover the grant from encrypted storage, never resend settings.
+            check(requests.equals(java.util.Arrays.asList("/v1/pair-status","/v1/pair-complete","/v1/info")));
             check(fixture.store.read().size()==1);Phones.Phone pending=fixture.store.read().get(0);
             check(pairing.authenticate(pending.id,pending.secret));
             LanTv adapter=new LanTv(context,fixture.store,pending,new Catalog(context));int writesBefore=writes[0];

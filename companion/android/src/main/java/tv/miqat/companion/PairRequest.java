@@ -60,16 +60,14 @@ final class PairRequest {
         Phones.Phone granted=new Phones.Phone(endpoint.url,endpoint.pin,certificate,Json.string(result.body,"id"),Json.string(result.body,"secret"),"TV","",true);
         store.put(granted);return complete(granted,client,store);
     }
-    /** If acknowledgement is lost, verify the credential before retrying completion. Never resubmit settings. */
+    /** Persist the grant before acknowledgement; verify it even when the acknowledgement reply is lost. */
     static Phones.Phone complete(Phones.Phone phone,LanClient client,Phones store)throws Exception {
-        LanClient.Result info=client.call("GET","/v1/info",null,phone.credential());
-        if(info.status!=200) {
-            if(!phone.pending)throw new java.io.IOException("TV access denied");
-            LanClient.Result ack=client.call("POST","/v1/pair-complete",new JSONObject(),phone.credential());
-            info=client.call("GET","/v1/info",null,phone.credential());
-            if(ack.status!=200 && info.status!=200)throw new java.io.IOException("Pair completion not confirmed");
+        if(phone.pending) {
+            try { client.call("POST","/v1/pair-complete",new JSONObject(),phone.credential()); }
+            catch(java.io.IOException uncertain) { /* The authenticated read below resolves a lost acknowledgement. */ }
         }
-        if(info.status!=200)throw new java.io.IOException("TV unavailable");
+        LanClient.Result info=client.call("GET","/v1/info",null,phone.credential());
+        if(info.status!=200)throw new java.io.IOException("Pair completion not confirmed");
         Phones.Phone learned=confirmed(phone,info.body);
         return store.update(phone,current->current.pending?new Phones.Phone(learned.url,learned.pin,learned.certificate,current.id,current.secret,current.name.equals("TV")?learned.name:current.name,learned.profile,false):current);
     }

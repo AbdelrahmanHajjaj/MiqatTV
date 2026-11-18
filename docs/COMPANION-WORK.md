@@ -37,9 +37,9 @@ New Miqat installations/pairings are fresh; old identities are not aliases.
 3. Validate shared rules, native Android flows, LG adapters and preview.
 4. Record evidence here, finish the cherry-pick and push the feature branch.
 
-The port and automated/native validation are complete. Physical Miqat TV networking, camera,
-remote usability, picture/sound and lifecycle acceptance remain pending owner
-testing. Prior old-identity observations do not establish Miqat passes.
+The owner confirmed fresh Miqat LG pairing, smooth connected settings/controls,
+splash, picture and sound. The refinement below still needs owner acceptance;
+Android physical pairing and power/lifecycle coverage remain pending.
 
 ## Validation
 
@@ -207,3 +207,25 @@ the update and the old app is absent. The owner confirmed on the physical LG
 that the splash, picture and sound all work with 0.2.24 on 18 November 2026.
 Fresh Miqat camera/pairing, phone commands, physical remote and power/lifecycle
 acceptance remain pending.
+
+
+## Physical feedback and refinement (18 November 2026)
+
+Owner confirmed fresh Miqat LG pairing and smooth connected settings/controls;
+QR preparation/approval were slow. The approved Telly reference informs hierarchy,
+floating navigation and settings rows, adapted to Miqat without its product features.
+
+Phone 0.1.1 uses the Miqat label, persistent floating navigation, selected capsules,
+compact native headers/controls and retained content during requests. Drafts,
+explicit Settings reads and Apply/Cancel authority remain unchanged.
+
+LG 0.2.25 uses bounded native RSA-2048 generation on legacy Node, preserves stored
+trust and reuses unchanged QR artwork during approval. The phone removes one
+completion request while retaining authenticated confirmation/lost-ack recovery.
+The LG update is installed with current preferences/input/startup preserved.
+
+Phone build/lint/generator, Arabic/English native UI (including 130% text), native
+TLS and LG service/ES5/browser checks pass. See [EVIDENCE.md](EVIDENCE.md) for the
+65.3 s → 2.0 s physical identity-only measurements and test limits. Next: owner
+review of the new APK and timed full physical pairing. Private evidence remains
+under ignored state/companion/refinement/.

@@ -19,6 +19,30 @@ const load=store=>new Promise((resolve,reject)=>identity.load(store,(error,resul
   }
   await assert.rejects(load({read(){throw Error('EACCES');},write(){throw Error('must not reset');}}),/EACCES/);
   await assert.rejects(load({read:()=>null,write(){throw Error('EACCES');}}),/EACCES/);
+  const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
+  const source=fs.readFileSync(path.join(__dirname,'build/service/companion-identity.js'),'utf8');
+  let legacyCalls=0;
+  function legacy(exec){
+    const module={exports:{}};
+    vm.runInNewContext(source,{module,Buffer,require(name){
+      if(name==='crypto')return {...crypto,generateKeyPair:undefined};
+      if(name==='child_process')return {execFile(file,args,options,done){legacyCalls++;assert.equal(file,'/usr/bin/openssl');assert.equal(args.join(' '),'genrsa 2048');assert.equal(options.timeout,30000);assert.equal(options.maxBuffer,8192);exec(done);}};
+      return require(name.startsWith('./')?path.join(__dirname,'build/service',name):name);
+    }});return module.exports;
+  }
+  let nativeSaved=null;
+  const native=legacy(done=>done(null,crypto.createPrivateKey(first.key).export({format:'pem',type:'pkcs1'})));
+  const nativeLoad=store=>new Promise((resolve,reject)=>native.load(store,(error,value)=>error?reject(error):resolve(value)));
+  const nativeIdentity=await nativeLoad({read:()=>null,write(value){nativeSaved=value;}});
+  assert.ok(new crypto.X509Certificate(Buffer.from(nativeIdentity.certificate,'base64')).checkPrivateKey(crypto.createPrivateKey(nativeSaved.key)));
+  await nativeLoad({read:()=>nativeSaved,write(){throw Error('Existing trust must remain unchanged');}});assert.equal(legacyCalls,1);
+  for(const fault of [done=>done(Object.assign(new Error('timeout'),{killed:true})),done=>done(null,'invalid key')]){
+    const broken=legacy(fault);
+    await assert.rejects(new Promise((resolve,reject)=>broken.load({read:()=>null,write(){throw Error('Failed generation must not write');}},(error,value)=>error?reject(error):resolve(value))));
+  }
+  const fallback=legacy(done=>done(Object.assign(new Error('missing'),{code:'ENOENT'})));
+  const fallbackIdentity=await new Promise((resolve,reject)=>fallback.load({read:()=>null,write(){}},(error,value)=>error?reject(error):resolve(value)));
+  assert.match(fallbackIdentity.pin,/^[0-9a-f]{64}$/);
   const loaded=Object.keys(require.cache).filter(name=>name.includes('vendor')&&name.includes('forge'));
   assert.ok(!loaded.some(name=>/[\\/](tls|http|ed25519)\.js$/.test(name)),'only PKI uses Forge; native TLS and HTTP boundaries stay separate');
   console.log('PASS: LG OS-random RSA/SHA256 identity, public certificate/pin, restart, independent TVs, mismatch/corruption and failed-store rejection.');

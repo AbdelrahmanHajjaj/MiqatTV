@@ -46,14 +46,24 @@ function load(store, callback) {
     crypto.generateKeyPair('rsa', {modulusLength: 2048, publicExponent: 65537,
       publicKeyEncoding: {type: 'spki', format: 'pem'}, privateKeyEncoding: {type: 'pkcs8', format: 'pem'}}, generated);
   } else {
-    try {
-      var pki = library();
-      // Forge yields between key-generation steps; entropy still comes only from the OS.
-      pki.rsa.generateKeyPair({bits: 2048, e: 65537}, function (error, pair) {
-        if (error) { generated(error); return; }
-        generated(null, pki.publicKeyToPem(pair.publicKey), pki.privateKeyToPem(pair.privateKey));
+    // Old LG has native OpenSSL but no Node key-generation API; keep keys in memory.
+    require('child_process').execFile('/usr/bin/openssl', ['genrsa', '2048'],
+      {encoding: 'utf8', timeout: 30000, maxBuffer: 8192}, function (error, key) {
+        if (error && (error.code === 'ENOENT' || error.code === 'ENOTDIR')) {
+          try {
+            library().rsa.generateKeyPair({bits: 2048, e: 65537}, function (failure, pair) {
+              if (failure) { generated(failure); return; }
+              generated(null, pki.publicKeyToPem(pair.publicKey), pki.privateKeyToPem(pair.privateKey));
+            });
+          } catch (failure) { callback(failure); }
+          return;
+        }
+        if (error) { callback(error); return; }
+        try {
+          var keys = library(), privateKey = keys.privateKeyFromPem(key);
+          generated(null, keys.publicKeyToPem(keys.setRsaPublicKey(privateKey.n, privateKey.e)), key);
+        } catch (failure) { callback(failure); }
       });
-    } catch (error) { callback(error); }
   }
 }
 module.exports = {load: load, checked: checked};

@@ -50,6 +50,17 @@ public final class CompanionCheck extends Instrumentation {
         }catch(Throwable error){result.putString("stream",android.util.Log.getStackTraceString(error));finish(0,result);}
     }
     void verify(MainActivity a) {
+        check(getTargetContext().getApplicationInfo().loadLabel(getTargetContext().getPackageManager()).toString().equals("Miqat"),"Phone launcher label must be Miqat");
+        for(String destination:new String[]{"tvs","overview","settings","preferences","pair"}){
+            a.page=destination;a.section="";a.render();
+            View nav=a.getWindow().getDecorView().findViewWithTag("navigation");check(nav!=null,"Persistent navigation missing on "+destination);
+            String selected=destination.equals("settings")?"settings":destination.equals("overview")?"overview":"tvs";
+            check(a.getWindow().getDecorView().findViewWithTag("nav."+selected).isSelected(),"Wrong selected navigation destination");
+        }
+        a.page="overview";a.networkBusy=true;a.render();
+        View home=a.body.findViewWithTag("device.home");check(home!=null&&!home.isEnabled(),"Sending must retain and disable the existing controls");
+        a.networkBusy=false;a.render();
+
         for(int selected=0;selected<2;selected++) {
             a.selected=selected;a.tv().setOnline(true);a.page="overview";a.render();
             int remoteWrites=a.tv().getWriteCount();
