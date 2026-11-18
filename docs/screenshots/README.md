@@ -1,9 +1,10 @@
 # Android launcher screenshots
 
-English and Arabic Home from the native Android TV app, version 0.7.0, source
-e07a609. Captured on 17 November 2026 in an isolated API 37 Android emulator
-configured at 1920×1080 and density 160. These are emulator captures, not
-photographs or captures of a physical TV. They contain only emulator sample apps.
+English and Arabic Home with the default Miqat signature artwork, from the native
+Android TV app reviewed in [PR #3](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/3)
+(source a567978). Captured on 18 November 2026 in an isolated API 37 Android
+emulator at 1920×1080 and density 160. They contain only emulator sample apps.
 
-The PNGs are unmodified copies of the reviewed native captures. The browser
-preview and LG renderer are separate interfaces and are not pictured here.
+The PNGs are unmodified copies of those reviewed captures. They are emulator
+images, not physical-TV acceptance. The browser preview and LG renderer are
+separate interfaces and are not pictured here.
