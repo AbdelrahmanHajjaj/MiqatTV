@@ -15,7 +15,7 @@ $env:TV = '192.168.1.50:5555'
 python -S -B tools/device.py configure
 ```
 
-Linux/macOS: set `TV`, then `bash tools/install.sh`; use `python3 tools/device.py configure`. Install builds source, saves the original state, installs with replacement allowed only for a matching signature, starts Miqat and checks the selected Home. It preserves the screensaver. It never uninstalls an app. Download the optional audio separately for personal use with the existing audio-fetch scripts before building if you want recorded adhan/announcements; the launcher still builds without those recordings.
+Linux/macOS: set `TV`, then `bash tools/install.sh`; use `python3 tools/device.py configure`. Install builds source, saves the original state, installs with replacement allowed only for a matching signature, starts Miqat and checks the selected Home. It preserves the screensaver. It never uninstalls an app. The reviewed adhan and announcement recordings are included under shared/media/.
 
 After checking Home, Settings, HDMI and the remote, disable known stock Home packages:
 

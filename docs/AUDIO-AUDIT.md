@@ -78,7 +78,8 @@ backup fails without overwriting it. Originals and output-hash stamps live under
 `state/media-originals/adhan/`, outside Android/LG packaged media.
 
 Android's pre-build check and LG's build run the same read-only `--check` validator.
-Neither build silently edits recordings. Empty optional Android media stays optional.
+Neither build silently edits recordings. The approved prepared bytes are now
+tracked under shared/media/ for reproducible public builds (18 November 2026).
 The focused `node tools/prepare-adhans.test.mjs` test uses synthetic audio, including
 a deliberately mislabeled cover, and verifies unchanged frames, backups,
 idempotence, read-only checks and rejection of unknown/unsafe edits.

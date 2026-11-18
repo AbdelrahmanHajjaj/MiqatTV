@@ -44,8 +44,16 @@ final class FavouriteUiDeviceCheck {
             headerNavigation(test, apps[0]);
 
             Set<String> menu = open(test, apps[0], original.get(0), bound);
+            int[] refreshGeneration = new int[1];
+            onMain(test, () -> {
+                Object activeMenu = field(apps[0], "menu");
+                refreshGeneration[0] = (Integer) field(apps[0], "loadGeneration");
+                apps[0].build();
+                check(field(apps[0], "menu") == activeMenu, "Catalog refresh preserves the active arrange menu");
+            });
             check(!menu.contains("favourites.remove") && !menu.contains("favourites.move-earlier"), "Minimum and first-slot boundaries");
             key(test, apps[0], KeyEvent.KEYCODE_BACK);
+            onMain(test, () -> check((Integer) field(apps[0], "loadGeneration") > refreshGeneration[0], "Deferred catalog refresh runs after the menu closes"));
             verifyOrder(test, original, apps[0], original.get(0));
 
             String last = original.get(3);
@@ -118,37 +126,47 @@ final class FavouriteUiDeviceCheck {
         test.waitForIdleSync(); waitFocus(activity);
         test.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_UP); test.waitForIdleSync();
         until(test, () -> !packages(activity).isEmpty(), "Actual app catalog loaded");
+        test.waitForIdleSync();
         return activity;
     }
 
     private static void headerNavigation(Instrumentation test, AllAppsActivity apps) {
-        View back = (View) field(apps, "backButton");
-        View prayer = (View) field(apps, "chip");
-        View settings = (View) field(apps, "settingsButton");
-        List<?> tiles = (List<?>) field(apps, "tiles");
-        for (int i = 0; i < Math.min(5, tiles.size()); i++) {
-            View tile = (View) tiles.get(i);
-            onMain(test, tile::requestFocus);
-            key(test, apps, KeyEvent.KEYCODE_DPAD_UP);
-            onMain(test, () -> check(apps.getCurrentFocus() == back, "Every first-row column moves Up to Back"));
-        }
-        int end = apps.rtl ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT;
-        int start = apps.rtl ? KeyEvent.KEYCODE_DPAD_RIGHT : KeyEvent.KEYCODE_DPAD_LEFT;
-        for (View target : new View[] {prayer, settings, back}) {
-            key(test, apps, end);
-            onMain(test, () -> check(apps.getCurrentFocus() == target, "Logical end stays within the Apps header"));
-        }
-        for (View target : new View[] {settings, prayer, back}) {
-            key(test, apps, start);
-            onMain(test, () -> check(apps.getCurrentFocus() == target, "Logical start stays within the Apps header"));
-        }
-        key(test, apps, KeyEvent.KEYCODE_DPAD_DOWN);
-        onMain(test, () -> check(apps.getCurrentFocus() == tiles.get(0), "Back Down returns to the first app"));
-        if (tiles.size() > 5) {
-            onMain(test, () -> ((View) tiles.get(5)).requestFocus());
-            key(test, apps, KeyEvent.KEYCODE_DPAD_UP);
-            onMain(test, () -> check(apps.getCurrentFocus() == tiles.get(0), "Lower-row Up stays in app content"));
-        }
+        onMain(test, () -> {
+            View back = (View) field(apps, "backButton");
+            View prayer = (View) field(apps, "chip");
+            View settings = (View) field(apps, "settingsButton");
+            List<?> tiles = (List<?>) field(apps, "tiles");
+            // Keep these view references and key assertions in one snapshot despite a queued refresh.
+            apps.root.post(apps::build);
+            java.util.function.IntConsumer press = code -> {
+                apps.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, code));
+                apps.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, code));
+            };
+            for (int i = 0; i < Math.min(5, tiles.size()); i++) {
+                View tile = (View) tiles.get(i);
+                check(tile.requestFocus() && apps.getCurrentFocus() == tile, "First-row tile accepts focus");
+                press.accept(KeyEvent.KEYCODE_DPAD_UP);
+                check(apps.getCurrentFocus() == back, "Every first-row column moves Up to Back");
+            }
+            int end = apps.rtl ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT;
+            int start = apps.rtl ? KeyEvent.KEYCODE_DPAD_RIGHT : KeyEvent.KEYCODE_DPAD_LEFT;
+            for (View target : new View[] {prayer, settings, back}) {
+                press.accept(end);
+                check(apps.getCurrentFocus() == target, "Logical end stays within the Apps header");
+            }
+            for (View target : new View[] {settings, prayer, back}) {
+                press.accept(start);
+                check(apps.getCurrentFocus() == target, "Logical start stays within the Apps header");
+            }
+            press.accept(KeyEvent.KEYCODE_DPAD_DOWN);
+            check(apps.getCurrentFocus() == tiles.get(0), "Back Down returns to the first app");
+            if (tiles.size() > 5) {
+                View lower = (View) tiles.get(5);
+                check(lower.requestFocus() && apps.getCurrentFocus() == lower, "Lower-row tile accepts focus");
+                press.accept(KeyEvent.KEYCODE_DPAD_UP);
+                check(apps.getCurrentFocus() == tiles.get(0), "Lower-row Up stays in app content");
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -174,14 +192,15 @@ final class FavouriteUiDeviceCheck {
             key(test, apps, key);
         }
         Map<String, ?> before = Prefs.of(apps).getAll();
-        onMain(test, () -> {
-            check(pkg.equals(focusedPackage(apps)), "Remote focuses requested app");
+        until(test, () -> {
+            if (!pkg.equals(focusedPackage(apps))) return false;
             long time = SystemClock.uptimeMillis();
             apps.dispatchKeyEvent(new KeyEvent(time, time, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, 0));
             apps.dispatchKeyEvent(KeyEvent.changeFlags(new KeyEvent(time, time + 600, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, 1), KeyEvent.FLAG_LONG_PRESS));
             apps.dispatchKeyEvent(new KeyEvent(time, time + 610, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_CENTER, 0));
             check(field(apps, "menu") != null, "Long OK opens the actual menu");
-        });
+            return true;
+        }, "Remote focuses requested app: " + pkg);
         check(Prefs.of(apps).getAll().equals(before), "Opening OK release does not choose an action");
         Set<String> found = new LinkedHashSet<>();
         onMain(test, () -> {
@@ -213,13 +232,16 @@ final class FavouriteUiDeviceCheck {
 
     private static void verifyOrder(Instrumentation test, List<String> expected, AllAppsActivity apps, String focused) {
         check(Apps.favourites(apps).equals(expected), "Exact stored favourite order");
-        until(test, () -> field(apps, "menu") == null && expected.equals(field(apps, "favs")) && focused.equals(focusedPackage(apps)), "Rebuild restores app focus and favourite markers");
-        onMain(test, () -> {
+        until(test, () -> {
+            if (field(apps, "menu") != null || !expected.equals(field(apps, "favs")) || !focused.equals(focusedPackage(apps))) return false;
             FocusTile tile = (FocusTile) apps.getCurrentFocus();
             boolean star = false;
             for (int i = 0; i < tile.getChildCount(); i++) star |= apps.t.favourite().equals(tile.getChildAt(i).getContentDescription());
-            check(star == expected.contains(focused), "Actual tile's favourite marker matches saved state");
-        });
+            check(star == expected.contains(focused), "Actual tile's favourite marker matches saved state: " + focused);
+            // A queued catalog refresh must not split the matching snapshot from its assertions.
+            apps.root.post(apps::build);
+            return true;
+        }, "Rebuild restores app focus and favourite markers");
     }
 
     private static MainActivity replace(Instrumentation test, AllAppsActivity apps, String pkg, Set<String> bound) {

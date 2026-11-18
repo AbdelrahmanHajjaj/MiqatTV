@@ -32,6 +32,14 @@
   palette-matched ink and the same full-screen proportions as Android/preview.
 
 
+- Publish the bilingual interactive preview to GitHub Pages after main passes validation.
+- Update the preview toolchain to include the available Astro security fixes.
+
+- Preserve Android's arrange menu and selected app when the installed-app catalog refreshes.
+
+- Add full-audio CI builds, validation Actions, a manual draft-release workflow
+  and main-branch protection requirements.
+
 - Show English and Arabic Android launcher Home screenshots in the README.
 - Establish Miqat as an independent project with Android TV and LG applications,
   a portable Kotlin JVM/ES5 core, canonical data/design and a browser preview.

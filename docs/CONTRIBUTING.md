@@ -5,7 +5,8 @@ or English. Describe a problem with platform, model, OS, app version and steps t
 reproduce it. Keep private device details out of public reports.
 
 Use a feature branch and submit a PR to this repository's main branch. Keep the
-change coherent, include its affected tests/docs, and use the PR template. Merging,
+change coherent, include its affected tests/docs, and use the PR template. Preserve
+branch commits with a normal merge; never squash. Merging,
 publishing and physical-device operations require the owner's corresponding approval.
 
 ## Implement a change
@@ -41,6 +42,7 @@ or support. Keep raw evidence in ignored state/, with concise durable outcomes
 in [EVIDENCE.md](EVIDENCE.md). Review the staged diff for credentials, keys,
 restricted media, outputs and private device data before committing.
 
-Recordings remain local unless redistribution permission is established. Keep
+Only reviewed, approved recordings belong in shared/media/; originals and review
+material remain under ignored state/. Keep
 the MIT and third-party notices in packaged builds; see [licences](THIRD-PARTY.md).
 No ads, analytics, accounts, feeds or new network behavior belong in incidental work.

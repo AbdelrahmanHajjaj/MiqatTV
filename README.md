@@ -4,6 +4,8 @@
 
 A TV home screen with prayer times, adhan and Quran radio, in Arabic and English.
 
+[Try the interactive preview](https://abdelrahmanhajjaj.github.io/MiqatTV/) · [English](https://abdelrahmanhajjaj.github.io/MiqatTV/en/)
+
 <p dir="rtl">واجهة للتلفاز تعرض مواقيت الصلاة والأذان والقبلة وإذاعة القرآن الكريم، بالعربية والإنجليزية.</p>
 
 - Prayer times work offline, with city, calculation method and individual adjustments.
@@ -36,7 +38,8 @@ are unverified. The companion app is developed separately.
 
 ## Install
 
-Build from source using the [installation and build guide](docs/BUILD.md).
+Build from source or use [CI test builds](docs/CI.md#checks-and-artifacts). See the
+[installation and build guide](docs/BUILD.md).
 Android and LG use different packages. Miqat uses new app identities and installs
 as a new application. No release downloads are published from this repository yet.
 

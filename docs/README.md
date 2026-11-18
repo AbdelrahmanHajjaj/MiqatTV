@@ -13,6 +13,7 @@
 - [Architecture and project boundaries](ARCHITECTURE.md)
 - [Contribution guide](CONTRIBUTING.md)
 - [Test requirements and commands](TESTING.md)
+- [GitHub validation, protection and build artifacts](CI.md)
 - [Shared core API](CORE.md)
 - [Data and generators](DATA.md), [cities](CITIES.md) and [prayer methods](PRAYER-METHODS.md)
 - [Design sources](DESIGN.md) and [artwork exports](../shared/design/branding/miqat-tv-v1/README.md)

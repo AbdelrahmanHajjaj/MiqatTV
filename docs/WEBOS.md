@@ -13,7 +13,7 @@ identities have not been installed on hardware. Newer LG hardware is unverified.
 
 ## Build and install
 
-Use JDK 17 and Node 24, and prepare the local audio inputs in [BUILD.md](BUILD.md).
+Use JDK 17 and Node 24, and prepare the shared audio inputs in [BUILD.md](BUILD.md).
 Run from the repository root:
 
 ```sh

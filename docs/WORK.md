@@ -1,65 +1,31 @@
 # Current work
 
-Updated: 2026-11-17. Checkout: D:/Dev/MiqatTv. Branch: main.
+Updated: 2026-11-18.
 
-## Approved scope
+## Approved scope and next action
 
-Set up the independent MiqatTV repository from the platform-core implementation.
-Use Miqat / ميقات and tv.miqat.* identities, with fresh installation. Retain MIT
-and third-party notices. Remove legacy branding, links, workflows, obsolete
-prototypes and migration diaries. Keep README short and technical guides in docs/.
+The owner approved the complete 20-theme/24-background library and authorized
+commit and normal merge of `design/miqat-themes` into MiqatTV main. Preserve Miqat
+signature as default and Miqat quiet as an additional choice, the 75% next-prayer
+fill, simpler prayer icons and 50–100% Home mihrab control (85% recommended).
+The preset carousel precedes the existing customization controls. Changes cover
+Android, LG and preview; no companion or physical-TV deployment is requested.
 
-## Completed
+The design commit is integrated with current main. Resolve integration checks,
+open the PR, wait for required CI and merge normally. Main's existing Pages
+workflow updates the bilingual preview after successful validation. Essential
+verification belongs in EVIDENCE.md; raw captures stay under ignored state/.
 
-Source import, namespace/design-path renaming, new docs/agent rules and PR template
-are complete. Shared core, Android/installer, LG and preview checks pass; bilingual
-rendered output was inspected. See [EVIDENCE.md](EVIDENCE.md) for commands/results
-and remaining limits. No inherited Actions or companion implementation is included.
-The old checkouts are clean. Private test media and evidence stay ignored.
+## Previous delivery and remaining limits
 
-## Publication and remaining work
+[PR #1](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/1) was normally merged as
+2bb348f. [Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44301830392)
+passed all six jobs; [draft publication](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44304525540)
+created an unpublished full-audio prerelease with verified checksums.
+[PR #2](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/2) added the approved
+GitHub Pages publication and preview security fixes, merged as 3624b10.
 
-The owner approved the initial main commit and push on 17 November 2026. This
-foundation starts a fresh Git history in AbdelrahmanHajjaj/MiqatTV. No release
-or TV deployment is part of that publication. Bootstrap implementation and
-validation are complete; no further bootstrap changes are queued.
-
-Physical new-identity installation, full phone-installer acceptance, portable
-settings transfer, companion integration and preview dependency remediation remain
-separate work. No new platform framework, cloud/accounts, feeds or analytics.
-
-## Appearance review — 18 November 2026
-
-Owner requested background/palette refinement in an isolated worktree, with a
-visual review before committing. Branch `design/miqat-themes`, based on `e612c11`.
-Twenty palettes, all eight masks and scenic backgrounds are refined, including
-seven non-arch ornamental families, one complete-arch composition and a new
-geometric default tile. Six neutral CleanYourTV illustrated landscapes are added
-for review alongside the existing procedural scenery. Six existing presets now
-pair those scenes with handcrafted palettes/surfaces. Appearance puts the complete
-preset carousel first and retains the existing controls under Customize. The
-Miqat default now has original sculpted petrol/jade-and-gold flagship artwork. No mask crops its motifs.
-LG pattern ink/scale follows the chosen palette. Review assets are local under ignored
-`state/theme-review/`. Keep this work uncommitted and unpushed until the owner
-reviews it. Main and companion work stay separate; no TV operation is authorized.
-
-Owner additionally requested a Home mihrab fill-opacity control (50–100% in 5%
-steps; default/recommended 85%), followed by a cohesive rework of all six prayer
-icons. Preserve opaque text/outlines, existing Apply/Cancel semantics and all
-non-Home prayer/alert frames. Continue visual review before committing.
-
-The owner rejected the first decorative icon proposal as unclear. Review revision
-7 replaces it with simpler, heavier solar/lunar symbols and includes actual-size
-samples; acceptance remains pending. Opacity is implemented and checked in all
-three renderers. See EVIDENCE.md for verification and physical-TV limits.
-
-Owner selected 75% next-prayer fill and approved adding Miqat quiet alongside the
-original flagship. Keep Miqat signature as default; no automatic language-based
-background flip. Changes remain uncommitted pending the overall visual review.
-
-## Delivery approval — 18 November 2026
-
-The owner approved the full 20-theme/24-background library and authorized commit
-and normal merge into MiqatTV main. Preserve the current flagship default, quiet
-alternative, 75% next-prayer fill and 50–100% Home mihrab control (85% recommended).
-Run required CI before merging; no release or physical-TV deployment is requested.
+Physical Miqat installation, complete phone-installer testing, settings transfer
+and companion integration remain separate. Browser mocks and emulator captures
+are not physical-TV acceptance. CI APKs use temporary debug keys. EVIDENCE.md
+records the remaining build-tool dependency advisory. No release is requested.

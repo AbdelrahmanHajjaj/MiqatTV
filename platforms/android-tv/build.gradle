@@ -39,7 +39,7 @@ android {
         res.srcDir file('../../shared/design/resources')
         assets.srcDir file('../../shared/design/assets')
         assets.srcDir file('../../shared/core/assets')
-        assets.srcDir file('../../state/media')
+        assets.srcDir file('../../shared/media')
     }
 }
 
@@ -51,7 +51,7 @@ dependencies {
 tasks.withType(JavaCompile).configureEach { dependsOn(unpackAdhan) }
 
 def checkAdhanMedia = tasks.register('checkAdhanMedia', Exec) {
-    onlyIf { file('../../state/media/adhan').isDirectory() }
+    onlyIf { file('../../shared/media/adhan').isDirectory() }
     commandLine 'node', file('../../tools/prepare-adhans.mjs'), '--check'
 }
 tasks.named('preBuild') { dependsOn(checkAdhanMedia) }
