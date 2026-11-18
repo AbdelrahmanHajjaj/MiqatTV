@@ -58,3 +58,10 @@ the default token is read-only and cannot approve PRs.
 and draft-publication workflows. GitHub-hosted checks must pass before merging;
 manual draft publication can be exercised after the workflows reach main.
 CI APKs use ephemeral debug signing keys; stable update signing is not configured.
+
+The API 34 CI run exposed a native-test timing gap between reading focus and
+asserting the selected tile. A queued catalog rebuild reproduced the same marker
+failure before the fix; both reads now share one main-thread snapshot, and the
+queued rebuild remains as a regression. The complete Arabic/English UI check
+passed twice on an isolated API 34 emulator afterward. Temporary probes were
+removed; application behavior and existing assertions are preserved.

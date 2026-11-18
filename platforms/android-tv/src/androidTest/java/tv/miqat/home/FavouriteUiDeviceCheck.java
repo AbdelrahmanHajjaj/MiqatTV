@@ -174,14 +174,15 @@ final class FavouriteUiDeviceCheck {
             key(test, apps, key);
         }
         Map<String, ?> before = Prefs.of(apps).getAll();
-        onMain(test, () -> {
-            check(pkg.equals(focusedPackage(apps)), "Remote focuses requested app");
+        until(test, () -> {
+            if (!pkg.equals(focusedPackage(apps))) return false;
             long time = SystemClock.uptimeMillis();
             apps.dispatchKeyEvent(new KeyEvent(time, time, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, 0));
             apps.dispatchKeyEvent(KeyEvent.changeFlags(new KeyEvent(time, time + 600, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, 1), KeyEvent.FLAG_LONG_PRESS));
             apps.dispatchKeyEvent(new KeyEvent(time, time + 610, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_CENTER, 0));
             check(field(apps, "menu") != null, "Long OK opens the actual menu");
-        });
+            return true;
+        }, "Remote focuses requested app: " + pkg);
         check(Prefs.of(apps).getAll().equals(before), "Opening OK release does not choose an action");
         Set<String> found = new LinkedHashSet<>();
         onMain(test, () -> {
@@ -213,13 +214,16 @@ final class FavouriteUiDeviceCheck {
 
     private static void verifyOrder(Instrumentation test, List<String> expected, AllAppsActivity apps, String focused) {
         check(Apps.favourites(apps).equals(expected), "Exact stored favourite order");
-        until(test, () -> field(apps, "menu") == null && expected.equals(field(apps, "favs")) && focused.equals(focusedPackage(apps)), "Rebuild restores app focus and favourite markers");
-        onMain(test, () -> {
+        until(test, () -> {
+            if (field(apps, "menu") != null || !expected.equals(field(apps, "favs")) || !focused.equals(focusedPackage(apps))) return false;
             FocusTile tile = (FocusTile) apps.getCurrentFocus();
             boolean star = false;
             for (int i = 0; i < tile.getChildCount(); i++) star |= apps.t.favourite().equals(tile.getChildAt(i).getContentDescription());
-            check(star == expected.contains(focused), "Actual tile's favourite marker matches saved state");
-        });
+            check(star == expected.contains(focused), "Actual tile's favourite marker matches saved state: " + focused);
+            // A queued catalog refresh must not split the matching snapshot from its assertions.
+            apps.root.post(apps::build);
+            return true;
+        }, "Rebuild restores app focus and favourite markers");
     }
 
     private static MainActivity replace(Instrumentation test, AllAppsActivity apps, String pkg, Set<String> bound) {
