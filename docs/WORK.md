@@ -11,8 +11,9 @@ decoding and listening checks remain local when media or preparation code change
 
 The change is prepared on `feature/ci-without-ffmpeg`, based on main 5d0e1c2.
 Local workflow/documentation/hash checks passed. Delivery uses a focused PR and
-passing required CI. Normal merge needs the owner's corresponding instruction;
-the PR owns CI and delivery receipts. No further implementation is planned.
+passing required CI. Follow the owner's standing instruction: use gh, normal-merge
+after required checks pass and sync main. The PR owns CI and delivery receipts.
+No further implementation is planned.
 
 ## Delivered and remaining limits
 
