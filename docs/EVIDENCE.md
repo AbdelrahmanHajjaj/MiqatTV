@@ -93,5 +93,7 @@ references resolve under /MiqatTV/. The artifact contains no Node dependencies,
 private state, keys, app binaries or recordings. Edge checks passed for Arabic/
 English Home, language switching, Settings tab changes and return navigation,
 with joined Arabic, loaded branding and no browser console errors.
-Workflow actionlint and documentation checks passed. Live deployment remains
-pending the owner's normal-merge instruction and a successful main run.
+Workflow actionlint and documentation checks passed. The owner authorized a
+normal merge of PR #2 after required checks pass, followed by live publication.
+PR #2 and its Actions runs own the final merge/deployment receipts; initial live
+acceptance follows the successful main run.

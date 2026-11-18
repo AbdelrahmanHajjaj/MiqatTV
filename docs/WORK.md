@@ -17,8 +17,9 @@ uses /MiqatTV/ (Arabic) and /MiqatTV/en/ (English). PRs do not deploy.
 
 Local preview/workflow checks and Arabic/English browser acceptance passed.
 [PR #2](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/2) owns the final CI,
-merge and initial deployment receipts. Await the owner's normal-merge instruction
-and passing required checks, then confirm the live site after the main run.
+merge and initial deployment receipts. The owner authorized a normal merge and
+publication once required checks pass. Merge after those checks, then confirm
+the live site after the main run.
 Essential local evidence belongs in EVIDENCE.md; raw logs and captures stay private.
 
 ## Previous delivery and remaining limits
