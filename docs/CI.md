@@ -3,7 +3,8 @@
 ## Main protection
 
 Protect main requires a pull request, the GitHub Actions Required checks status,
-an up-to-date branch, resolved review conversations and linear history. Force
+an up-to-date branch and resolved review conversations. PRs use normal merge
+commits; squash and rebase merging are disabled. Force
 pushes and deletion are blocked. There is no bypass list or required approving
 reviewer, so a solo maintainer can merge their own passing PR.
 

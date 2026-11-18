@@ -47,6 +47,7 @@ the approved scope. Companion work belongs to its separate project/branch.
 - Browser mocks, emulators, live diagnostics and human TV acceptance are separate
   evidence. Physical remote, picture/sound and power checks need a ready watcher.
 - Use a feature branch and the PR template. Review staged files for private data.
+  Preserve branch commits with a normal merge; never squash.
   Merging, releasing and deploying require the owner's corresponding instruction.
 - Update CHANGELOG.md for visible changes. Keep current support limits accurate.
 - Use Context7 for SDK/library/CLI behavior; prefer official documentation when

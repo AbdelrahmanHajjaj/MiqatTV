@@ -5,7 +5,8 @@ or English. Describe a problem with platform, model, OS, app version and steps t
 reproduce it. Keep private device details out of public reports.
 
 Use a feature branch and submit a PR to this repository's main branch. Keep the
-change coherent, include its affected tests/docs, and use the PR template. Merging,
+change coherent, include its affected tests/docs, and use the PR template. Preserve
+branch commits with a normal merge; never squash. Merging,
 publishing and physical-device operations require the owner's corresponding approval.
 
 ## Implement a change

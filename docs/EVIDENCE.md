@@ -50,7 +50,8 @@ LG app/service IPK packaging also passed. No recording was re-encoded in this pa
 
 The active [Protect main ruleset](https://github.com/AbdelrahmanHajjaj/MiqatTV/settings/rules/27542002)
 requires a PR, the GitHub Actions Required checks result, an up-to-date branch,
-resolved conversations and linear history. It blocks force pushes/deletion, has
+resolved conversations and normal merge commits, as requested by the owner.
+Squash/rebase merging is disabled. It blocks force pushes/deletion, has
 no bypasses and requires zero approving reviewers. Actions requires full SHA pins;
 the default token is read-only and cannot approve PRs.
 
@@ -65,3 +66,9 @@ failure before the fix; both reads now share one main-thread snapshot, and the
 queued rebuild remains as a regression. The complete Arabic/English UI check
 passed twice on an isolated API 34 emulator afterward. Temporary probes were
 removed; application behavior and existing assertions are preserved.
+
+[Validate run 44296900776](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44296900776)
+passed all six jobs for 0229237: core, Android build, API 34 emulator, LG browser/
+package checks, preview and the required aggregate. Full-audio Android/LG artifacts
+were uploaded successfully. The owner then confirmed normal merges, never squash;
+repository and ruleset merge options now match that preference.
