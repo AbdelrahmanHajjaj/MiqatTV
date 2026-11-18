@@ -416,3 +416,14 @@ receipts stay under ignored state/companion/alignment/. LG 0.2.26 is installed
 and launched; current preferences, input and startup were verified preserved
 through live API readback. Physical owner acceptance
 of these fixes remains pending.
+
+### Standalone phone native lifecycle (2026-11-19)
+
+Owned muted emulator: actual AlarmManager delivery starts private foreground
+media service and visible Stop notification; duplicate, early and expired events
+are rejected. Stop, audio-focus interruption and disabling alerts stop/release
+playback; disabled alarms are removed. Native build and lint pass. The suite
+snapshots/restores phone prayer preferences; it does not touch TV credentials.
+Private receiver/service are direct-boot aware; boot/time changes only reschedule.
+Packaged audio playback lifecycle is checked; audible output, manufacturer power
+management and physical reboot acceptance await the owner's combined test.

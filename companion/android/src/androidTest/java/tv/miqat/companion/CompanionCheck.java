@@ -17,12 +17,13 @@ import java.util.*;
 
 /** Run only on an explicitly selected owned phone emulator; no TV/device integration. */
 public final class CompanionCheck extends Instrumentation {
-    boolean lan,live,camera,lg,captures,lgInstall;
-    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
+    boolean lan,live,camera,lg,captures,lgInstall,phoneRuntime;
+    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");phoneRuntime=suite.equals("phone-runtime");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
     static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
     @Override public void onStart() {
         Bundle result=new Bundle(); int count=0;
         try {
+            if(phoneRuntime){PhoneRuntimeCheck.run(this);result.putString("stream","PASS: phone actual alarm delivery, foreground audio/notification, duplicate/early/expired rejection, Stop, audio focus interruption and disabled-alarm cleanup\n");finish(-1,result);return;}
             if(lgInstall){LgInstallCheck.run(this);result.putString("stream","PASS: LG SSH identity rejection, passphrase, IPK upload/hash, failed install, explicit retry, version verification and launch against local fixture\n");finish(-1,result);return;}
             if(camera){CameraCheck.run(this);result.putString("stream","PASS: scanner opens and releases the owned emulator virtual camera; no physical-camera acceptance\n");finish(-1,result);return;}
             if(live){LiveUiCheck.run(this,lg?"lg":"android");result.putString("stream",lg?"PASS: phone UI paired with the native LG TLS/actual settings fixture; capabilities, 5% volume, preview/Apply/Cancel, recreation, reconnect without upload, transport loss and Arabic stale cache\n":"PASS: phone UI paired with the actual TV app in a second owned emulator; real settings, preview/Apply/Cancel, recreation, reconnect without upload, actual transport loss and Arabic stale cache\n");finish(-1,result);return;}

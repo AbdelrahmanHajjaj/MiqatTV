@@ -51,6 +51,11 @@ jobs:
             adb shell am instrument -r -w -e suite lan tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee companion-lan-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' companion-lan-result.log
             grep -q 'PASS: pinned TLS' companion-lan-result.log
+            adb shell pm grant tv.miqat.companion android.permission.POST_NOTIFICATIONS
+            adb shell appops set tv.miqat.companion SCHEDULE_EXACT_ALARM allow
+            adb shell am instrument -r -w -e suite phone-runtime tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-runtime-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-runtime-result.log
+            grep -q 'PASS: phone actual alarm delivery' phone-runtime-result.log
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: companion-debug

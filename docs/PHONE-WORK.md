@@ -78,7 +78,11 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
    DST day and unavailable polar results. Eight generator tests and native
    independent storage/type/range/TZ validation pass. Phone defaults keep alerts
    off and require location confirmation. No prayer UI/alarm playback is exposed yet.
-5. [ ] Native alarm/notification/audio lifecycle and per-prayer controls; permission,
+5. [x] Native alarm/notification/audio lifecycle; UI permission repair and per-prayer
+   controls follow in step 6. Actual owned-emulator alarm delivery, foreground
+   notification/audio, Stop, focus interruption, disabled cleanup and duplicate/
+   early/expired rejection pass. Private receiver recovers on
+   boot/time changes; CI runs the same actual-delivery suite. Permission,
    reboot/time changes, duplicates, stale events and Stop/interruption regressions.
 6. [ ] Independent prayer Home/phone settings/appearance with existing TV areas;
    no TV dependency; bilingual rendered/native behavior checks and persistence.
@@ -89,11 +93,10 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
 
 ## Current resume point
 
-Step 4 foundation is validated locally. Continue step 5: native AlarmManager
-scheduling, permission checks, private receiver/foreground media playback service,
-durable duplicate claims, boot/time/TZ/settings recovery, Stop and audio focus.
-Then step 6 renders independent prayer Home/settings/appearance and updates root
-navigation while preserving nested TV remote/settings behavior.
+Steps 4–5 foundation and native delivery are validated locally. Continue step 6:
+independent prayer Home/settings/appearance, permission repair and root navigation,
+while preserving nested TV remote/settings behavior. Native runtime log:
+state/phone-runtime-native.log; build/lint: state/phone-runtime-build.log.
 
 Chosen Android approach: user-authorized prayer alarms, a service only during
 audio, packaged approved clips, relative alarm volume (never change global volume
