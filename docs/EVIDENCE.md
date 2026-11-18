@@ -40,3 +40,21 @@ clean and unchanged. No companion code, inherited Actions, previous history,
 credentials or private device state are part of this repository's sources.
 The maintainer approved publishing the reviewed 26-clip set on 18 November 2026;
 those copies now live under shared/media/, with exact SHA-256 checksums.
+
+## GitHub delivery setup, 18 November 2026
+
+Local core, Android/installer lint and builds, 43 Python/Java regressions, audio
+preparation fixtures, full LG browser/service tests and preview checks passed.
+The TV APK contains all 26 approved recordings byte-for-byte and is below 25 MB;
+LG app/service IPK packaging also passed. No recording was re-encoded in this pass.
+
+The active [Protect main ruleset](https://github.com/AbdelrahmanHajjaj/MiqatTV/settings/rules/27542002)
+requires a PR, the GitHub Actions Required checks result, an up-to-date branch,
+resolved conversations and linear history. It blocks force pushes/deletion, has
+no bypasses and requires zero approving reviewers. Actions requires full SHA pins;
+the default token is read-only and cannot approve PRs.
+
+[PR #1](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/1) contains the validation
+and draft-publication workflows. GitHub-hosted checks must pass before merging;
+manual draft publication can be exercised after the workflows reach main.
+CI APKs use ephemeral debug signing keys; stable update signing is not configured.
