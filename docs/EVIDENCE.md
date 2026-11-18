@@ -326,3 +326,19 @@ LG mocked browser checks pass; final bilingual QR-cache checks pass at
 80/100/150%. The update is installed/launched with current preferences, input and
 startup preserved by live API readback. New phone UI and timed complete physical
 pairing acceptance remain pending. Private logs/captures remain ignored.
+
+
+## Pairing icon alignment and LG focus (18 November 2026)
+
+Phone 0.1.2 centers Pair TV, Scan QR and pairing Cancel icons with their labels.
+Measured bounds/gaps and native behavior pass in Arabic/English at normal and
+130% text sizes; actual portrait
+renders were inspected. Phone assembleDebug/lintDebug/assembleDebugAndroidTest pass.
+LG Down-from-Back regression failed before the fix and passes with ordered
+vertical navigation, including Reject/Approve without activation. Independent
+control scrolling preserves the complete QR at 150%. LG unit/service/build/ES5
+and bilingual pairing-browser checks at 80/100/150% pass. Raw failures and passing
+receipts stay under ignored state/companion/alignment/. LG 0.2.26 is installed
+and launched; current preferences, input and startup were verified preserved
+through live API readback. Physical owner acceptance
+of these fixes remains pending.

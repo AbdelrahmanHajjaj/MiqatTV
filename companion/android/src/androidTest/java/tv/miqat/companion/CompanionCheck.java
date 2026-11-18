@@ -37,11 +37,12 @@ public final class CompanionCheck extends Instrumentation {
                 runOnMainSync(()->{try{verify(activity);}catch(Throwable failure){error[0]=failure;}});
                 if(error[0]!=null)throw new AssertionError(lang,error[0]);
                 android.os.SystemClock.sleep(4000);
-                runOnMainSync(()->{activity.page="tvs";activity.render();});waitForIdleSync();capture(activity,lang+"-tvs.png");
+                runOnMainSync(()->{activity.page="tvs";activity.render();});waitForIdleSync();capture(activity,lang+"-tvs.png");centeredIcon(activity,"pair.open");
                 runOnMainSync(()->{activity.selected=0;activity.readSettings();activity.page="settings";activity.section="appearance";activity.appearance=null;activity.render();});
                 waitForIdleSync();capture(activity,lang+"-appearance.png");
                 runOnMainSync(()->{activity.appearance=null;activity.page="overview";activity.render();});waitForIdleSync();capture(activity,lang+"-remote.png");
-                runOnMainSync(()->{activity.page="pair";activity.pairState="requesting";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-connecting.png");
+                runOnMainSync(()->{activity.page="pair";activity.pairState="";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-start.png");centeredIcon(activity,"pair.scan");
+                runOnMainSync(()->{activity.page="pair";activity.pairState="requesting";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-connecting.png");centeredIcon(activity,"pair.cancel");
                 runOnMainSync(()->{activity.pairState="waiting";activity.pairCode="123456";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-approval.png");
                 runOnMainSync(activity::finish);count++;
             }
@@ -163,6 +164,18 @@ public final class CompanionCheck extends Instrumentation {
     }
     EditText findInput(View view){if(view instanceof EditText)return (EditText)view;if(view instanceof ViewGroup){ViewGroup group=(ViewGroup)view;for(int i=0;i<group.getChildCount();i++){EditText input=findInput(group.getChildAt(i));if(input!=null)return input;}}return null;}
     void pickChoice(MainActivity a,String id,int index){android.widget.AutoCompleteTextView field=a.getWindow().getDecorView().findViewWithTag(id+".dropdown");android.widget.ListView parent=new android.widget.ListView(a);parent.setAdapter(field.getAdapter());field.getOnItemClickListener().onItemClick(parent,null,index,index);}
+    void centeredIcon(MainActivity activity,String tag) {
+        runOnMainSync(()->{
+            android.widget.Button button=activity.getWindow().getDecorView().findViewWithTag(tag);
+            android.graphics.drawable.Drawable icon=button.getCompoundDrawablesRelative()[0];
+            android.text.Layout label=button.getLayout();check(icon!=null&&label!=null,"Missing inline icon/label: "+tag);
+            float left=activity.ar?button.getCompoundPaddingLeft()+label.getLineLeft(0)-button.getScrollX():button.getPaddingLeft();
+            float right=activity.ar?button.getWidth()-button.getPaddingRight():button.getCompoundPaddingLeft()+label.getLineRight(0)-button.getScrollX();
+            check(Math.abs((left+right)/2-button.getWidth()/2f)<=activity.dp(2),"Icon and label are not centered as a group: "+tag);
+            float gap=activity.ar?button.getWidth()-button.getPaddingRight()-icon.getBounds().width()-(button.getCompoundPaddingLeft()+label.getLineRight(0)-button.getScrollX()):button.getCompoundPaddingLeft()+label.getLineLeft(0)-button.getScrollX()-button.getPaddingLeft()-icon.getBounds().width();
+            check(gap>=activity.dp(6)&&gap<=activity.dp(10),"Icon is separated from its label: "+tag);
+        });
+    }
     void capture(MainActivity activity,String name) throws Exception {
         waitForIdleSync();android.os.SystemClock.sleep(350);
         Bitmap screenshot=getUiAutomation().takeScreenshot();check(screenshot!=null,"No emulator screenshot");

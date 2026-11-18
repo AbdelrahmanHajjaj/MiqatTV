@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Center the phone pairing-button icons beside their labels (0.1.2), and let
+  Up/Down navigate LG pairing from Back through enabled controls while the QR
+  stays visible (0.2.26).
+
 - Refine the Miqat phone companion with persistent floating navigation, clearer
   selection, compact headers, rounded controls and stable in-place loading.
   Capitalize its launcher label to Miqat (phone version 0.1.1).

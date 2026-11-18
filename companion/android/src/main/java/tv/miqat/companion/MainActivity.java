@@ -179,6 +179,16 @@ public final class MainActivity extends Activity {
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(5);lp.bottomMargin=dp(5);
         parent.addView(b,lp); b.setOnClickListener(v->action.run()); return b;
     }
+    void leadingIcon(Button button,String name) {
+        android.graphics.drawable.Drawable icon=Icons.get(this,name,accent);
+        button.setCompoundDrawablesRelative(icon,null,null,null);button.setCompoundDrawablePadding(dp(8));
+        button.setGravity(Gravity.CENTER);button.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);button.setSingleLine(true);button.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        button.addOnLayoutChangeListener((view,left,top,right,bottom,oldLeft,oldTop,oldRight,oldBottom)->{
+            int width=icon.getBounds().width()+button.getCompoundDrawablePadding()+Math.round(button.getPaint().measureText(button.getText().toString()));
+            int inset=Math.max(dp(16),(right-left-width)/2);
+            if(button.getPaddingStart()!=inset||button.getPaddingEnd()!=inset)button.setPaddingRelative(inset,button.getPaddingTop(),inset,button.getPaddingBottom());
+        });
+    }
     Button bindAction(Button button,String id) {
         if(!CompanionContract.INSTANCE.getActions().contains(id))throw new IllegalArgumentException("Unknown companion action: "+id);
         button.setTag(R.id.companion_action,id);return button;
@@ -295,7 +305,7 @@ public final class MainActivity extends Activity {
             final int index=i+2;LanTv tv=lanTvs.get(i);
             navigationRow(body,"tv",tv.phone.name,(tv.phone.profile.equals("android")?"Android TV":"LG webOS")+" · "+t(tv.online?"connected":"disconnected"),()->{selected=index;snapshot=null;appearance=null;section="";clearPending();page="overview";readRemote();render();}).setTag("tv."+tv.key);
         }
-        Button pair=button(body,t("pair"),()->navigate("pair"));pair.setCompoundDrawablesRelative(Icons.get(this,"add",accent),null,null,null);pair.setEnabled(!vaultFailed);pair.setTextColor(ground);pair.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000),background(accent,28),null));pair.setCompoundDrawableTintList(ColorStateList.valueOf(ground));pair.setMinHeight(dp(56));
+        Button pair=button(body,t("pair"),()->navigate("pair"));leadingIcon(pair,"add");pair.setTag("pair.open");pair.setEnabled(!vaultFailed);pair.setTextColor(ground);pair.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000),background(accent,28),null));pair.setCompoundDrawableTintList(ColorStateList.valueOf(ground));pair.setMinHeight(dp(56));
         if(!prefs().getBoolean("show-demo",false))return;
         body.addView(text(t("demo"),13,muted));
         for(int i=0;i<tvs.length;i++) {
@@ -785,7 +795,7 @@ public final class MainActivity extends Activity {
                 body.addView(text(t("pair_match"),16,ink));TextView code=text(pairCode,44,accent);code.setTag("pair.code");code.setLetterSpacing(.16f);code.setTextDirection(View.TEXT_DIRECTION_LTR);code.setGravity(Gravity.CENTER);code.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);body.addView(code);
             }
             TextView status=text(t(waiting?"pair_waiting":"pair_connecting"),15,muted);status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);body.addView(status);
-            Button cancel=button(body,t("cancel"),()->{cancelPairing();render();});cancel.setCompoundDrawablesRelative(Icons.get(this,"close",accent),null,null,null);cancel.setTag("pair.cancel");return;
+            Button cancel=button(body,t("cancel"),()->{cancelPairing();render();});leadingIcon(cancel,"close");cancel.setTag("pair.cancel");return;
         }
         body.addView(text(t("pair_info"),16,ink));
         body.addView(text(t("phone_name"),13,muted));EditText name=new EditText(this);name.setSingleLine(true);name.setText(prefs().getString("phone-name",android.os.Build.MODEL));name.setHint(t("phone_name"));name.setTextColor(ink);name.setHintTextColor(muted);name.setPadding(dp(16),dp(12),dp(16),dp(12));name.setBackground(background(surface,14));body.addView(name);
@@ -793,7 +803,7 @@ public final class MainActivity extends Activity {
             String value=name.getText().toString().trim();if(value.isEmpty()||value.length()>64){name.setError(t("invalid"));return;}
             prefs().edit().putString("phone-name",value).apply();cancelPairing();startActivityForResult(new android.content.Intent(this,ScanActivity.class),71);
         }),"scan-pairing-code");scan.setEnabled(!vaultFailed);scan.setTag("pair.scan");
-        scan.setCompoundDrawablesRelative(Icons.get(this,"scan",accent),null,null,null);
+        leadingIcon(scan,"scan");
         if(prefs().getBoolean("show-demo",false))bindAction(button(body,t("simulate_pair"),()->info(t("pair"),t("pair_done"))),"simulate-pairing");
     }
     void pairStep(LinearLayout parent,String label,boolean complete,boolean active){

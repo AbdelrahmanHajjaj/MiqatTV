@@ -227,6 +227,11 @@ const server = http.createServer((req, res) => {
     async function pairingControls(collect=async()=>{}) {
       await page.locator('[data-action=section][data-value=device]').click();
       await page.locator('[data-action=companion]').click(); await page.waitForSelector('[data-action=pairing-open]:enabled');
+      assert.equal(await page.locator('[data-action=pairing-back]').evaluate(el=>el===document.activeElement),true,'pairing opens at Back');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('[data-action=pairing-open]').evaluate(el=>el===document.activeElement),true,'Down from pairing Back enters the controls');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('[data-action=pairing-back]').evaluate(el=>el===document.activeElement),true,'Up from the first pairing control returns to Back');
       await collect();
       await page.locator('[data-action=pairing-open]').click(); await page.waitForSelector('.pairing-symbol > svg');
       assert.deepEqual(await page.locator('.pairing-symbol > svg').evaluate(el=>[el.getAttribute('width'),el.getAttribute('height'),!!el.getAttribute('viewBox')]),['400','400',true],'old WebKit gets explicit compact QR dimensions');
@@ -245,6 +250,10 @@ const server = http.createServer((req, res) => {
       await page.waitForSelector('[data-action=pairing-reject]');assert.equal(await page.locator(':focus').getAttribute('data-action'),'pairing-reject','new requests default to Reject');
       assert.ok(await page.locator('[data-action=pairing-reject]').evaluate(el=>{const box=el.getBoundingClientRect(),frame=el.closest('.pairing-body').getBoundingClientRect();const scale=window.Miqat.prefs(JSON.parse(localStorage.getItem('fixture')).prefs).uiScale/100;return box.left>=frame.left+10*scale&&box.right<=frame.right-10*scale;}),'focused pairing controls reserve the complete shared focus ring');
       assert.equal(await page.evaluate(()=>window.qrMakes),1,'phone request does not regenerate an unchanged QR while approval waits');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.locator('[data-action=pairing-approve]').evaluate(el=>el===document.activeElement),true,'Down advances from Reject to Approve');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.locator('[data-action=pairing-reject]').evaluate(el=>el===document.activeElement),true,'Up returns to Reject without approving');
       assert.equal(await page.locator('.pairing-code').innerText(),'123456');assert.equal(await page.locator('.pairing-controls h2 b').count(),0,'phone names are escaped');await collect();
       await assertQrVisible();
       if(process.argv.includes('--pairing-only')) {

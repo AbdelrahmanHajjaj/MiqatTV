@@ -1282,6 +1282,14 @@
   }, true);
   function move(key) {
     var current = document.activeElement;
+    if (view === 'pairing' && (key === 38 || key === 40)) {
+      var column = Array.prototype.filter.call(screen.querySelectorAll('[data-action=pairing-back], .pairing-controls button'), function (button) {
+        return !button.disabled && button.getAttribute('tabindex') !== '-1';
+      });
+      var index = column.indexOf(current), next = index < 0 ? 0 : Math.max(0, Math.min(column.length - 1, index + (key === 40 ? 1 : -1)));
+      if (column[next]) { focusControl(column[next]); }
+      return;
+    }
     if (view === 'home' || view === 'apps') {
       var dx = key === 37 ? -1 : key === 39 ? 1 : 0, dy = key === 38 ? -1 : key === 40 ? 1 : 0;
       if (prefs.lang === 'ar') { dx = -dx; }

@@ -229,3 +229,15 @@ TLS and LG service/ES5/browser checks pass. See [EVIDENCE.md](EVIDENCE.md) for t
 65.3 s → 2.0 s physical identity-only measurements and test limits. Next: owner
 review of the new APK and timed full physical pairing. Private evidence remains
 under ignored state/companion/refinement/.
+
+
+## Pairing alignment and focus follow-up (18 November 2026)
+
+Owner reported edge-aligned phone Pair TV/Scan QR icons and Down failing from
+Back on the LG pairing page. Phone 0.1.2 centers each icon/label group, including
+Cancel, with measured Arabic/English checks and visually inspected native renders.
+LG 0.2.26 traverses enabled pairing controls vertically; their independent scroll
+keeps QR artwork visible. The reported Down failure was reproduced before fixing;
+bilingual 80/100/150% pairing regressions and LG service/ES5 checks pass. Phone
+assemble/lint and native behavior checks pass. See EVIDENCE.md for receipts.
+Next: owner retest of the corrected APK and physical TV focus.

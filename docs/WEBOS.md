@@ -149,3 +149,10 @@ passed through shell arguments or temporary files. If the binary is absent, the
 existing OS-random Forge path remains available. One-off physical identity-only
 measurements were 65.3 seconds before and 2.0 seconds after; these are not full
 pairing timings. The app also reuses unchanged QR artwork while awaiting approval.
+
+
+On the pairing page, Down from Back enters the first enabled control; Up returns
+to Back. Up/Down follow the visible control order, including Reject and Approve.
+With a QR open, the controls scroll independently so the complete code remains
+visible. Version 0.2.26 passes bilingual mocked navigation checks; physical remote
+confirmation of this correction remains pending.
