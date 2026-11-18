@@ -13,11 +13,9 @@ $repository = Split-Path -Parent (Resolve-Path -LiteralPath $commonGit).Path
 $destination = Join-Path $repository 'state/builds/companion'
 New-Item -ItemType Directory -Force -Path $destination | Out-Null
 $sourceHash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash
-foreach ($name in @("Miqat-$($artifact.versionName)-debug.apk", 'Miqat-latest.apk')) {
-    $target = Join-Path $destination $name
-    Copy-Item -LiteralPath $source -Destination $target -Force
-    if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ne $sourceHash) {
-        throw "APK export verification failed: $target"
-    }
+$target = Join-Path $destination 'Miqat-latest.apk'
+Copy-Item -LiteralPath $source -Destination $target -Force
+if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ne $sourceHash) {
+    throw "APK export verification failed: $target"
 }
-Write-Output (Join-Path $destination 'Miqat-latest.apk')
+Write-Output $target

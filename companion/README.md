@@ -38,10 +38,10 @@ node companion/android-shared/check.mjs
 pwsh -File companion/export-apk.ps1
 ```
 
-Always export a phone build before sharing it. The export writes verified copies
-to `state/builds/companion/` in the primary repository checkout, even when building
-from a worktree: `Miqat-latest.apk` and `Miqat-VERSION-debug.apk`. The folder is
-ignored; test evidence stays in its task folder.
+Export the latest phone APK to the primary checkout's ignored
+`state/builds/companion/Miqat-latest.apk`, consistently across worktrees. Keep only
+the latest export; do not create per-task evidence folders or duplicate outputs.
+Verification still runs, with concise results in chat.
 
 Native suites use `tv.miqat.companion.test/tv.miqat.companion.CompanionCheck`,
 optionally with `-e suite lan`, `camera`, `live` or `live-lg`. Owned-emulator live
