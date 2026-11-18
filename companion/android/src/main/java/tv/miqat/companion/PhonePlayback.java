@@ -22,18 +22,27 @@ public final class PhonePlayback extends Service {
     private String eventId="";
     private int generation,prayerIndex=-1;
     private double prayerTime;
+    private long startedAt;
     static Intent intent(Context c,int prayer,String voice,boolean preview,String id){return new Intent(c,PhonePlayback.class).putExtra("prayer",prayer).putExtra("voice",voice).putExtra("preview",preview).putExtra("id",id);}
     static boolean playing(){return active!=null;}
+    static boolean scheduled(){return active!=null&&!active.preview;}
     static boolean outputStarted(){return active!=null&&active.started;}
     static String currentId(){return active==null?"":active.eventId;}
     static void stop(Context c){c.stopService(new Intent(c,PhonePlayback.class));}
     static void stopPreview(Context c){if(active!=null&&active.preview)stop(c);}
-    static void applySettings(Context c,PhoneStore settings) {
+    static void applySettings(Context c) {
         PhonePlayback service=active;if(service==null)return;
         service.handler.post(()->{
-            if(active==service&&!service.preview&&(!settings.enabled||!settings.locationReady||service.prayerIndex<0||settings.modes[service.prayerIndex]!=2))stop(c);
+            if(active!=service)return;
+            try {
+                PhoneStore latest=PhoneStore.read(c);
+                if(!service.preview&&(!latest.enabled||!latest.locationReady||service.prayerIndex<0||latest.modes[service.prayerIndex]!=2)){stop(c);return;}
+                if(service.player!=null)service.player.setVolume(latest.volume/100f,latest.volume/100f);
+                if(service.started){service.handler.removeCallbacksAndMessages(null);service.handler.postDelayed(service::stopSelf,Math.max(0,service.limit(latest)-(SystemClock.elapsedRealtime()-service.startedAt)));}
+            }catch(Exception invalid){stop(c);}
         });
     }
+    private long limit(PhoneStore settings){return 1000L*(preview?12:settings.duration==0?600:settings.duration);}
     @Override public IBinder onBind(Intent intent){return null;}
     @Override public int onStartCommand(Intent intent,int flags,int startId) {
         if(intent==null||STOP.equals(intent.getAction())){stopSelf();return START_NOT_STICKY;}
@@ -69,12 +78,14 @@ public final class PhonePlayback extends Service {
             float volume=settings.volume/100f;player.setVolume(volume,volume);
             player.setOnCompletionListener(done->stopSelf());player.setOnErrorListener((failed,what,extra)->{failed();return true;});
             player.setOnPreparedListener(ready->{
-                try{PhoneStore latest=PhoneStore.read(this);if(!preview&&(!latest.enabled||latest.modes[prayer]!=2)){stopSelf();return;}}
-                catch(Exception invalid){failed();return;}
-                handler.removeCallbacksAndMessages(null);started=true;ready.start();
-                PhoneStore.preferences(this).edit().remove("audio-error").apply();
-                if(!preview&&settings.vibrate(prayer))getSystemService(Vibrator.class).vibrate(VibrationEffect.createWaveform(new long[]{0,300,200,300},-1),attributes);
-                handler.postDelayed(this::stopSelf,1000L*(preview?12:settings.duration==0?600:settings.duration));
+                try {
+                    PhoneStore latest=PhoneStore.read(this);if(!preview&&(!latest.enabled||!latest.locationReady||latest.modes[prayer]!=2)){stopSelf();return;}
+                    ready.setVolume(latest.volume/100f,latest.volume/100f);
+                    handler.removeCallbacksAndMessages(null);started=true;startedAt=SystemClock.elapsedRealtime();ready.start();
+                    PhoneStore.preferences(this).edit().remove("audio-error").apply();
+                    if(!preview&&latest.vibrate(prayer))getSystemService(Vibrator.class).vibrate(VibrationEffect.createWaveform(new long[]{0,300,200,300},-1),attributes);
+                    handler.postDelayed(this::stopSelf,limit(latest));
+                }catch(Exception invalid){failed();}
             });
             handler.postDelayed(this::failed,10000);player.prepareAsync();
         }catch(Exception error){failed();}

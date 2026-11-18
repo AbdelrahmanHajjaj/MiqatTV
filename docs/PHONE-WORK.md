@@ -98,16 +98,21 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
 
 ## Current resume point
 
-Steps 1–6 are implemented. Finish step 7: screen-size/large-text matrix, native
-permission recovery suite, full affected checks and CI, optional bounded Apple
-core compilation, final docs/version/PR and fixed review APK export. Do not stop
-for intermediate physical feedback. Current UI evidence: state/phone-independent-ui-3.log
-and state/phone-ui-regression-2.log; denial: state/phone-permission-denied.log.
-Build/lint: state/phone-ui-final-lint.log (localized date cleanup included).
-Recovery broadcast + actual delivery: state/phone-runtime-recovery.log. Portrait
-80–150% both languages passes; landscape with 1.3× OS text also passes, including native navigation geometry.
-All 47 Python/Java regressions and canonical/catalog/QR/LAN helper checks pass.
-Version now phone 0.2.0/code 6, installer 1.1.1/code 4; final rebuild/export pending.
+Steps 1–6 and local step-7 validation are implemented. Final pending actions:
+record latest required CI results, finish PR #9 metadata, export fixed review APK,
+and leave physical acceptance awaiting the owner's combined feedback. No release
+or physical deployment. Keep the PR draft until required human acceptance.
+
+Latest private logs: phone-bounded-preview.log (actual delivery, replacement,
+12-second timeout, Stop/focus/disabled cleanup/global volume), phone-lifecycle-final-ui.log
+(bilingual independent UI), phone-final-lan.log (TLS/credential/LAN),
+phone-size-portrait.log and phone-size-landscape-large.log (80–150%, both languages,
+landscape OS font scale 1.3 restored), phone-final-python.log (47 passes),
+phone-final-catalogs.log, phone-review-build.log and apple-core-ci.log.
+Phone 0.2.0/code 6, installer 1.1.1/code 4. APK checks pass: all 26 approved media
+files and 25 complete notices/source files match packaged bytes. The final small
+lifecycle fix refreshes Prayer after midnight/timezone/clock changes and applies
+current audio settings without changing global alarm volume.
 
 Chosen Android approach: user-authorized prayer alarms, a service only during
 audio, packaged approved clips, relative alarm volume (never change global volume
@@ -117,7 +122,7 @@ the phone prayer store. Device-protected preferences are excluded from transfer.
 Sources checked: Android official alarms, background-FGS restrictions, Direct Boot
 and Auto Backup documentation. An opt-in Apple-core workflow is being added: macOS ARM64 native rule tests and
 iOS device/simulator library compilation only, bounded to 20 minutes. No iOS UI,
-notification/audio adapter or signed build is included. Apple CI result pending.
+notification/audio adapter or signed build is included. Apple CI passed on 68a91fe (run 44414849445); ordinary local JVM/ES5 also pass.
 
 CI ordering issue: a later license-only run still caught the setup fixture opening
 the next activity before the previous finish completed. Local native checks now

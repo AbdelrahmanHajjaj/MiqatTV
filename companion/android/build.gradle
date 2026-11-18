@@ -36,6 +36,8 @@ android {
         java.srcDir file('../../platforms/android-tv/src/main/java/com/batoulapps/adhan/data')
         java.srcDir file('../android-shared/src/main/java')
         assets.srcDir file('../android-shared/src/main/assets')
+        // Reuse the pinned astronomy notices alongside its existing shared source adapter.
+        assets.srcDir file('../../platforms/android-tv/src/main/assets')
         assets.srcDir file('../protocol')
         assets.srcDir layout.buildDirectory.dir('generated/companion')
         assets.srcDir file('../../shared/design/assets')

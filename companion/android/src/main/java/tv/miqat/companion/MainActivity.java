@@ -889,8 +889,7 @@ public final class MainActivity extends Activity {
     }
 
     void playAudio(String voice) {
-        stopAudio();
-        if(PhonePlayback.playing()){notice("phone_stop_first");return;}
+        if(PhonePlayback.scheduled()){notice("phone_stop_first");return;}
         if(!PhoneAlarms.notifications(this)){phoneUi.open("permissions");return;}
         startForegroundService(PhonePlayback.intent(this,0,voice,true,"preview:"+System.nanoTime()));
     }

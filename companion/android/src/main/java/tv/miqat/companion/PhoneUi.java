@@ -25,11 +25,17 @@ final class PhoneUi {
     private String artworkId="";
     private Bitmap artwork;
     private TextView countdown,status,playback;
-    private long nextTime;
+    private long nextTime,lastTick;
+    private int renderedDay;
+    private String renderedZone="";
+    private int civilDay(long now){Calendar day=new GregorianCalendar(settings.zone());day.setTimeInMillis(now);return day.get(Calendar.YEAR)*400+day.get(Calendar.DAY_OF_YEAR);}
     private final Handler clock=new Handler(Looper.getMainLooper());
     private final Runnable tick=new Runnable(){public void run(){
         if(!a.phoneForeground)return;
-        if(a.page.equals("prayers")) {
+        long now=System.currentTimeMillis();
+        if(a.page.equals("prayers")&&settings!=null) {
+            if(renderedDay!=civilDay(now)||!renderedZone.equals(settings.zone().getID())||lastTick!=0&&(now<lastTick||now-lastTick>5000)){lastTick=now;a.render();return;}
+            lastTick=now;
             if(nextTime>0&&System.currentTimeMillis()>=nextTime){a.render();return;}
             if(countdown!=null&&nextTime>0){long minutes=Math.max(0,(nextTime-System.currentTimeMillis()+59999)/60000);countdown.setText(digits(String.format(Locale.US,"%02d:%02d",minutes/60,minutes%60)));}
             if(status!=null&&settings!=null)status.setText(a.t(PhoneAlarms.status(a,settings)));
@@ -62,7 +68,7 @@ final class PhoneUi {
     void open(String section){pending="";a.section=section;a.page="phone-settings";a.render();}
     void home()throws Exception {
         a.navigationRow(a.body,"compass",location(),settings.zone().getID(),()->open("calculation")).setTag("phone.location");
-        long now=System.currentTimeMillis();PhoneSchedule.Day today=settings.day(now,0),tomorrow=settings.day(now,1);tv.miqat.core.PrayerSelection selection=tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(today.times,tomorrow.times,now);
+        long now=System.currentTimeMillis();renderedDay=civilDay(now);renderedZone=settings.zone().getID();lastTick=now;PhoneSchedule.Day today=settings.day(now,0),tomorrow=settings.day(now,1);tv.miqat.core.PrayerSelection selection=tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(today.times,tomorrow.times,now);
         int next=selection==null?-1:selection.getNext();double target=selection==null?0:selection.getNextTime();
         boolean tomorrowNext=target>=tomorrow.start;
         LinearLayout hero=hero();hero.addView(a.text(a.t("phone_next")+(tomorrowNext?" · "+a.t("phone_tomorrow"):""),14,a.muted));
@@ -191,7 +197,7 @@ final class PhoneUi {
     void system(Intent intent){try{a.startActivity(intent);}catch(ActivityNotFoundException missing){a.notice("phone_permission_missing");}}
     void preview(String id){
         if(!PhoneAlarms.notifications(a)){open("permissions");return;}
-        try{a.stopAudio();if(PhonePlayback.playing()){a.notice("phone_stop_first");return;}int prayer=id.startsWith("call.")?Arrays.asList(PhoneStore.PRAYERS).indexOf(id.split("\\.")[1]):0;String voice=id.startsWith("call.")?settings.voice(prayer):settings.value(id);a.startForegroundService(PhonePlayback.intent(a,prayer,voice,true,"preview:"+System.nanoTime()));}catch(Exception error){a.notice("phone_audio_failed");}
+        try{if(PhonePlayback.scheduled()){a.notice("phone_stop_first");return;}int prayer=id.startsWith("call.")?Arrays.asList(PhoneStore.PRAYERS).indexOf(id.split("\\.")[1]):0;String voice=id.startsWith("call.")?settings.voice(prayer):settings.value(id);a.startForegroundService(PhonePlayback.intent(a,prayer,voice,true,"preview:"+System.nanoTime()));}catch(Exception error){a.notice("phone_audio_failed");}
     }
     void reset(LinearLayout parent){a.button(parent,a.t("phone_reset"),()->new AlertDialog.Builder(a).setMessage(a.t("phone_reset_confirm")).setNegativeButton(a.t("cancel"),null).setPositiveButton(a.t("reset"),(d,w)->{try{PhonePlayback.stop(a);PhoneAlarms.cancel(a);if(!PhoneStore.preferences(a).edit().clear().commit())throw new IllegalStateException();pending="";a.section="";a.recreate();}catch(Exception failure){a.notice("phone_save_failed");}}).show());}
 }

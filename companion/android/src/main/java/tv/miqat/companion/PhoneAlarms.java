@@ -47,6 +47,7 @@ final class PhoneAlarms {
         if(!notifications(c)||!exact(c))return "phone_permission_missing";
         if(Arrays.stream(settings.modes).anyMatch(mode->mode==2)&&!channel(c,PLAYBACK)||
            Arrays.stream(settings.modes).anyMatch(mode->mode==1)&&!channel(c,ALERTS))return "phone_permission_missing";
+        for(int i=0;i<6;i++)if(settings.modes[i]>0&&(settings.before[i]>0||settings.after[i]>0)&&!channel(c,REMINDERS))return "phone_permission_missing";
         if(Arrays.stream(settings.modes).noneMatch(mode->mode>0))return "phone_alerts_off";
         String error=PhoneStore.preferences(c).getString("alarm-error","");
         return error.isEmpty()?"phone_alerts_ready":error;
@@ -60,7 +61,7 @@ final class PhoneAlarms {
                 if(c.getSystemService(UserManager.class).isUserUnlocked())PhoneStore.preferences(c).edit()
                     .putString("language-mode",c.getSharedPreferences("companion",0).getString("language","system")).apply();
                 PhoneStore settings=PhoneStore.read(c);String state=status(c,settings);
-                PhonePlayback.applySettings(c,settings);
+                PhonePlayback.applySettings(c);
                 if(!notifications(c))PhonePlayback.stop(c);
                 if(!settings.enabled||!settings.locationReady||!notifications(c)||!exact(c))return state;
                 long now=System.currentTimeMillis();double[][] days=settings.days(now);

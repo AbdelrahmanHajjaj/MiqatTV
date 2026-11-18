@@ -67,3 +67,7 @@ encrypted credential store. Neither store is included in Android backup/transfer
 Android is the standalone deliverable. iOS still needs native UI, persistence,
 astronomy/calendar and notification/audio adapters; portable Kotlin rules alone
 do not establish an iPhone app or iOS background-audio behavior.
+
+The [Apple-core CI check](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/apple-core.yml)
+compiles iOS device/simulator rule libraries and runs native macOS rule tests.
+It is a portability check, without launching an iOS simulator or building an app.

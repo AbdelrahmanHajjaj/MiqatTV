@@ -25,6 +25,8 @@ final class PhoneRuntimeCheck {
     static void run(Instrumentation test)throws Exception {
         Context c=test.getTargetContext();SharedPreferences preferences=PhoneStore.preferences(c);
         Map<String,?> original=new HashMap<>(preferences.getAll());
+        android.media.AudioManager systemAudio=c.getSystemService(android.media.AudioManager.class);
+        int alarmVolume=systemAudio.getStreamVolume(android.media.AudioManager.STREAM_ALARM);
         CompanionCheck.check(PhoneAlarms.exact(c)&&PhoneAlarms.notifications(c),"Grant exact-alarm/notification permissions on the owned emulator before this suite");
         try {
             PhonePlayback.stop(c);PhoneAlarms.cancel(c);
@@ -51,6 +53,7 @@ final class PhoneRuntimeCheck {
                 .anyMatch(n->(n.getNotification().flags&Notification.FLAG_FOREGROUND_SERVICE)!=0),"Foreground playback notification missing");
             CompanionCheck.check(PhoneAlarms.claim(c,event.getId(),System.currentTimeMillis())==null,"Duplicate event was accepted");
             PhonePlayback.stop(c);await(test,()->!PhonePlayback.playing(),5000,"Stop did not release foreground playback");
+            CompanionCheck.check(systemAudio.getStreamVolume(android.media.AudioManager.STREAM_ALARM)==alarmVolume,"Miqat changed global alarm volume");
             // A stale/early fixture event must not be claimed or produce playback.
             now=System.currentTimeMillis();ReminderEvent expired=new ReminderEvent("phone:call:0:expired","call",0,now-120000,now-120000);
             PhoneAlarms.arm(c,expired,now);CompanionCheck.check(PhoneAlarms.claim(c,expired.getId(),now)==null,"Expired prayer accepted");PhoneAlarms.cancel(c);
@@ -59,12 +62,19 @@ final class PhoneRuntimeCheck {
             // User preview uses the same foreground player; an external focus owner stops it.
             test.runOnMainSync(()->c.startForegroundService(PhonePlayback.intent(c,0,"alafasy",true,"preview-fixture")));
             await(test,PhonePlayback::outputStarted,10000,"Preview did not start");
+            test.runOnMainSync(()->c.startForegroundService(PhonePlayback.intent(c,0,"alafasy",true,"replacement-preview")));
+            await(test,()->PhonePlayback.outputStarted()&&PhonePlayback.currentId().equals("replacement-preview"),10000,"Replacing preview did not release/restart the player");
             android.media.AudioManager audio=c.getSystemService(android.media.AudioManager.class);
             android.media.AudioFocusRequest focus=new android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                 .setOnAudioFocusChangeListener(change->{}).setAudioAttributes(new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_VOICE_COMMUNICATION).build()).build();
             test.runOnMainSync(()->audio.requestAudioFocus(focus));
             try{await(test,()->!PhonePlayback.playing(),5000,"Audio focus loss did not release playback");}
             finally{audio.abandonAudioFocusRequest(focus);}
+            test.runOnMainSync(()->c.startForegroundService(PhonePlayback.intent(c,0,"alafasy",true,"bounded-preview")));
+            await(test,PhonePlayback::outputStarted,10000,"Bounded preview did not start");
+            long previewStarted=SystemClock.elapsedRealtime();
+            await(test,()->!PhonePlayback.playing(),16000,"Preview exceeded its twelve-second bound");
+            CompanionCheck.check(SystemClock.elapsedRealtime()-previewStarted>=10000&&!preferences.contains("audio-error"),"Preview failed instead of completing its bounded playback");
             test.runOnMainSync(()->c.startForegroundService(PhonePlayback.intent(c,0,"alafasy",false,"disable-fixture")));
             await(test,PhonePlayback::outputStarted,10000,"Disable fixture did not start");
             PhoneStore.read(c).changed(Collections.singletonMap("reminders.enabled","false")).save(c);PhoneAlarms.rebuild(c);

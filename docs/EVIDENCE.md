@@ -456,3 +456,23 @@ Landscape with 1.3× Android text also passes every 80–150% app scale in both
 languages. Inspected largest Arabic landscape and English portrait captures:
 root navigation stays visible, labels wrap, and content scrolls within the
 remaining viewport. Owned-session display size and font scale were restored.
+
+### Final phone lifecycle/package and Apple boundary (2026-11-19)
+
+Phone 0.2.0/code 6 builds and lints. Native delivery passes with immediate preview
+replacement, twelve-second preview timeout, Stop, focus interruption, disabled
+cleanup and an assertion that Android's global alarm volume is unchanged. The
+Prayer screen refreshes on civil-day/timezone/clock changes; active playback
+uses current phone volume/duration. Reminder channel denial now affects readiness.
+Bilingual native phone UI and pinned TLS/credential/LAN regressions pass after the
+lifecycle changes. The package contains all 26 exact approved recording bytes and
+25 complete notice/source files matching their existing sources, including the
+pinned astronomy and SSH notices. No original audio or private state is packaged.
+
+[Apple core CI on 68a91fe](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44414849445)
+passed native macOS ARM64 common rule tests and iOS ARM64 device/simulator library
+compilation for both cores (roughly four minutes of build steps). No iOS simulator
+was booted, no Swift app exists and no signing/background-audio behavior is claimed.
+The opt-in target configuration also passes ordinary local JVM/ES5 checks,
+including 97 legacy host assertions. Remaining required CI and physical owner
+acceptance are recorded in PHONE-WORK.md.
