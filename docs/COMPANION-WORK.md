@@ -123,3 +123,10 @@ comparisons each pass 144 exact decoder checks at 220/280/400 px with rotations,
 blur and lower contrast. Preview/cutout/evidence live under ignored
 state/companion/qr-centre-transparent/. Runtime QR remains unchanged; physical
 camera and all-theme acceptance are pending selection.
+
+Centre-ring refinement: compare unframed A, fine double rings B and matching-eye
+medallion C. B/C derive rounding, rim colours and gold inlay from the approved
+finder-eye style and keep the transparent gold mark on ivory. All three pass
+144 independent decodes each (432 total; same payload/size/rotation/degradation
+matrix). Candidates/evidence are in ignored state/companion/qr-centre-rings/.
+No runtime change; selection, all-theme and physical-camera acceptance are pending.
