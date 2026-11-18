@@ -273,3 +273,18 @@ check and diff checks passed locally. All workflows were scanned to confirm no
 FFmpeg/ffprobe installation, invocation or audio-processing fixture test remains.
 The existing required-job aggregate, build artifacts and publication guards are
 unchanged. The focused PR owns the GitHub validation result.
+
+
+## README branding refresh, 18 November 2026
+
+The README removes its header icon and uses the reviewed PR #3 native Home captures
+in English/Arabic, showing the default Miqat signature scene and current palette.
+These are 1920×1080 API 37 emulator captures, not physical-TV photographs. The
+capture worktree commit a567978 and main c6ad64f have identical Android, installer,
+core, data and design sources. The PNGs are copied unchanged from the reviewed
+captures; no new app build, emulator session or physical-TV operation was needed.
+The design guide's obsolete uncommitted/review-draft claims are removed.
+
+Both PNGs decode, match the reviewed bytes and retain 1920×1080 dimensions.
+Arabic shaping, RTL placement and the current background/prayer symbols were
+visually inspected. Documentation link/path checks and diff checks passed.
