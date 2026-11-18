@@ -167,7 +167,7 @@ scheduling/playback. `phone-runtime` requires both permissions granted on an own
 muted emulator; it exercises actual AlarmManager delivery, foreground output,
 Stop/focus loss, disabled cleanup, recovery and early/expired/duplicate rejection.
 The fixture saves/restores phone settings; it does not operate a TV. Companion CI
-runs UI, denial and actual-delivery suites in addition to existing TV UI/LAN checks.
+runs UI, portrait sizing, denial and actual-delivery suites in addition to existing TV UI/LAN checks.
 
 ## Apple portability boundary
 

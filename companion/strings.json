@@ -1,5 +1,8 @@
 {
-  "phone_remaining":{"en":"Time remaining","ar":"الوقت المتبقي"},
+  "phone_power_title":{"en":"Battery & background delivery","ar":"البطارية والتنبيهات في الخلفية"},
+  "phone_power_info":{"en":"If alerts stop while the screen is off, review Miqat’s battery and background settings on this phone. Menus vary by manufacturer. After force-stopping Miqat, open it again to restore scheduled alerts.","ar":"إذا توقّفت التنبيهات عند إطفاء الشاشة، راجع إعدادات البطارية والعمل في الخلفية لميقات على هذا الهاتف. تختلف القوائم حسب الشركة. بعد فرض إيقاف ميقات، افتحه مجددًا لاستعادة التنبيهات المجدولة."},
+  "phone_app_settings":{"en":"Open Android app settings","ar":"فتح إعدادات التطبيق في Android"},
+  "phone_remaining":{"en":"Time remaining · %s","ar":"الوقت المتبقي · %s"},
   "prayers":{"en":"Prayer","ar":"الصلاة"},
   "phone-settings":{"en":"Phone settings","ar":"إعدادات الهاتف"},
   "phone_independent":{"en":"Prayer times and alerts on this phone work independently of your TVs, even offline.","ar":"تعمل مواقيت الصلاة وتنبيهاتها على هذا الهاتف باستقلال عن التلفاز، حتى دون إنترنت."},

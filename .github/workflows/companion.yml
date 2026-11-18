@@ -29,6 +29,7 @@ jobs:
           node companion/android-shared/check.mjs
           ./gradlew -p companion/core check jvmJar --no-daemon
           ./gradlew :companion:assembleDebug :companion:lintDebug :companion:assembleDebugAndroidTest --no-daemon
+          python3 tools/check_apk_media.py companion/android/build/outputs/apk/debug/companion-debug.apk
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -54,6 +55,9 @@ jobs:
             adb shell am instrument -r -w -e suite phone-ui tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-ui-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-ui-result.log
             grep -q 'PASS: independent bilingual' phone-ui-result.log
+            adb shell am instrument -r -w -e suite phone-size tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-size-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-size-result.log
+            grep -q 'PASS: bilingual phone sizing' phone-size-result.log
             adb shell appops set tv.miqat.companion SCHEDULE_EXACT_ALARM deny
             adb shell am instrument -r -w -e suite phone-denied tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-denied-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-denied-result.log

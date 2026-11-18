@@ -138,9 +138,23 @@ const server = http.createServer((req, res) => {
       });
     }
     const errors = []; page.on('pageerror', e => errors.push(e.message));
-    await page.goto('http://127.0.0.1:' + server.address().port, {waitUntil: 'domcontentloaded'});
+    // Observe startup before app initialization, independent of the runner's speed.
+    let resumeStartup;
+    const startupGate=new Promise(resolve=>{resumeStartup=resolve;});
+    const holdStartup=async route=>{await startupGate;await route.continue();};
+    await page.route('**/app.js',holdStartup);
+    await page.goto('http://127.0.0.1:' + server.address().port, {waitUntil: 'commit'});
+    await page.locator('#splash').waitFor({state:'visible'});
     assert.equal(await page.locator('#splash').isVisible(), true, 'startup artwork is visible before the first screen');
+    assert.equal(await page.locator('#screen').evaluate(screen=>screen.childElementCount),0,'startup precedes the first screen');
+    assert.equal(await page.locator('#splash').evaluate(async element=>{
+      const image=new Image();image.src=getComputedStyle(element).backgroundImage.match(/url\(["']?(.*?)["']?\)/)[1];
+      await image.decode();return image.naturalWidth>0&&image.naturalHeight>0;
+    }),true,'startup artwork decodes');
+    resumeStartup();await page.waitForLoadState('domcontentloaded');
+    await page.unroute('**/app.js',holdStartup);
     await page.locator('#splash').waitFor({state:'hidden'});
+    assert.notEqual(await page.locator('#stage').getAttribute('data-layout'),null,'startup hands off to the initialized layout');
     assert.match(await page.title(), /^Miqat/);
     await page.evaluate(() => document.fonts.ready);
     await inputRestored();

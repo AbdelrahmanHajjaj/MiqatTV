@@ -13,13 +13,15 @@ prayer app sequentially, without stopping for intermediate physical-device
 feedback. Deliver one combined build for the owner's complete review. The durable
 scope, decisions, ordered checklist and resume point are in [PHONE-WORK.md](PHONE-WORK.md).
 
-Android and LG installation, independent prayer storage/calculation and actual
-native alarm/audio delivery are implemented. The standalone prayer Home/settings
-and appearance now run in both languages; finish their full UI regression,
-permission denial/recovery and screen-size checks, then complete CI, docs and the
-single review APK export. See PHONE-WORK.md for the exact resume point.
-Review owner-supplied LG feedback when available; physical acceptance is pending.
-Android first; iOS runtime remains later.
+Android/LG installation and standalone phone prayer implementation, local
+validation and fixed review export are complete. The owner supplied Athar as a
+mobile reference; adopted patterns and later discussion ideas are durably saved
+in [PHONE-REFERENCE.md](PHONE-REFERENCE.md). Before handoff, require latest PR #9
+checks to pass and record final links in its body. Then wait for the owner's
+combined physical feedback; keep the PR draft while human acceptance is open.
+The exact artifact and resume instructions are in [PHONE-WORK.md](PHONE-WORK.md).
+Android is the standalone deliverable; iOS core compilation/native rule CI passes,
+with native iOS app/platform adapters still future work.
 
 Use gh and the PR template. Preserve commits with a normal merge after required
 checks pass. Physical TV deployment and release publication need specific scope.

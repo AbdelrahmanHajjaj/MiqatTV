@@ -135,7 +135,11 @@ public final class MainActivity extends Activity {
     DemoTv tv() { return tvs[selected]; }
     String name(int i) { return i>=2?lanTvs.get(i-2).phone.name:prefs().getString("name-"+i,t(i==0?"living":"bedroom")); }
     String t(String key) { return catalog.label(catalog.data.optJSONObject("text").optJSONObject(key),ar); }
-    int color(String key) { return Color.parseColor(catalog.data.optJSONObject("colors").optString(key)); }
+    int color(String key) {
+        JSONObject colors=catalog.data.optJSONObject("colors");
+        if(phoneUi!=null&&phoneUi.settings!=null)colors=catalog.data.optJSONObject("themes").optJSONObject(phoneUi.settings.value("appearance.theme")).optJSONObject("colors");
+        return Color.parseColor(colors.optString(key));
+    }
     String title(JSONObject c) { return catalog.label(c.optJSONObject("title"),ar); }
     String sectionTitle(String id) { return catalog.label(catalog.data.optJSONObject("sections").optJSONObject(id),ar); }
     SettingSpec spec(String id) { for(SettingSpec s:backend().getSpecs()) if(s.getId().equals(id)) return s; throw new IllegalArgumentException("Unsupported setting: "+id); }

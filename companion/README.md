@@ -8,7 +8,8 @@ See [scope and evidence](../docs/COMPANION-WORK.md) and the
 
 The phone uses Miqat's shared artwork, tokens, palettes, icons and mihrab geometry.
 Java Views expose inline +/- controls, carousels and anchored choices. Appearance
-keeps a representative phone preview with Apply/Cancel. Optional demo TVs remain
+for a TV keeps a representative phone preview with Apply/Cancel. Phone prayer
+preferences save independently, with inline numeric Done/Cancel. Optional demo TVs remain
 in Preferences; they do not establish hardware support.
 
 Pair on the same home network through Settings / Phones on the active TV, then
@@ -58,7 +59,7 @@ the latest export; do not create per-task evidence folders or duplicate outputs.
 Verification still runs, with concise results in chat.
 
 Native suites use `tv.miqat.companion.test/tv.miqat.companion.CompanionCheck`,
-optionally with `-e suite lan`, `camera`, `live`, `live-lg`, `phone-ui`, `phone-denied` or `phone-runtime`.
+optionally with `-e suite lan`, `camera`, `live`, `live-lg`, `phone-ui`, `phone-size`, `phone-denied` or `phone-runtime`.
 The runtime suite needs explicitly granted notification/exact-alarm access on
 an owned muted emulator; the denied suite requires one of those permissions denied. Owned-emulator live
 fixtures run via `companion/check-live.ps1` and `companion/check-lg.cjs` (historical

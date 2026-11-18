@@ -44,7 +44,8 @@ after boot, clock/timezone changes, app updates and settings changes. Duplicate
 claims persist; events two minutes late or older are skipped. Force-stopping the
 app disables Android delivery until the app is opened again. Manufacturer battery
 restrictions can affect delivery; physical-device reliability remains subject to
-the owner's test. Reopen **Prayer alert permissions** if alerts are not ready.
+the owner's test. Reopen **Prayer alert permissions** if alerts are not ready; its battery/background
+section opens Android app settings. Exact battery menus vary by manufacturer.
 
 ## Appearance and TVs
 
@@ -71,3 +72,23 @@ do not establish an iPhone app or iOS background-audio behavior.
 The [Apple-core CI check](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/apple-core.yml)
 compiles iOS device/simulator rule libraries and runs native macOS rule tests.
 It is a portability check, without launching an iOS simulator or building an app.
+
+## Combined owner review
+
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.2.0) on the Android
+phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
+The phone build includes both standalone prayers and TV setup/control.
+
+- Open Prayer without a TV; confirm location/timezone, inspect daily/tomorrow
+  times, change each prayer and test numeric Done/Cancel plus voice preview/Stop.
+- Grant alert access deliberately. Check the next actual prayer with the screen
+  off, Stop from its notification, and recovery after restarting the phone before
+  another prayer. Preview verifies local playback, not background delivery.
+- Check phone language, portrait/landscape, text size, digits, themes/backgrounds
+  and that changes survive reopening. Phone changes must leave TV settings alone.
+- Use Your TVs for LG Developer Mode install/update and ordinary pairing. Check
+  retained TV settings, Remote, settings save/cancel, disconnect/reconnect and
+  Developer Mode renewal on the actual TV. Physical picture/sound/remote/power
+  acceptance remains an owner observation.
+- Send one feedback list with screen/flow, expected result, actual result and app/
+  OS version. Keep credentials, device addresses and sensitive captures private.

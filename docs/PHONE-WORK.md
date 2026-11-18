@@ -91,28 +91,43 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
    native regressions pass. Hijri month symbols corrected after rendered review.
    Permission denial and private/direct-boot component checks pass; final matrix
    and CI remain in step 7.
-7. [ ] Complete affected tests/CI and final bilingual portrait/landscape/large-text
-   UI checks, inspect packaged media/notices and private-data
-   staged review, rewrite PR for final scope, export fixed `Miqat-latest.apk`.
-   Record physical acceptance as awaiting owner's combined feedback.
+7. [x] Local affected checks, bilingual portrait/landscape/large-text inspection,
+   exact media/notices, private-data staged review, final PR scope and fixed
+   `Miqat-latest.apk` export are complete. Final-head PR checks gate handoff;
+   their authoritative result is recorded on PR #9. Physical acceptance awaits
+   the owner's combined feedback. No release or physical deployment.
+
+## Owner's mobile reference
+
+On 19 November the owner supplied Athar (their daily app) as a standalone mobile
+reference. Sources, learned patterns and future discussion candidates are in
+[PHONE-REFERENCE.md](PHONE-REFERENCE.md). This steers the current phone UI toward
+a compact six-time daily overview and background-delivery repair help; broader
+worship modules are recorded for feedback rather than silently added.
 
 ## Current resume point
 
-Steps 1–6 and local step-7 validation are implemented. Final pending actions:
-record latest required CI results, finish PR #9 metadata, export fixed review APK,
-and leave physical acceptance awaiting the owner's combined feedback. No release
-or physical deployment. Keep the PR draft until required human acceptance.
+Implementation and the review export are complete. Before handing over, require
+all latest PR #9 checks to pass; record their final run links in the PR body.
+Then wait for the owner's combined physical-device feedback, keeping this PR
+draft. Do not merge past the open human acceptance or add broader Athar modules
+without the owner's subsequent direction.
 
-Latest private logs: phone-bounded-preview.log (actual delivery, replacement,
-12-second timeout, Stop/focus/disabled cleanup/global volume), phone-lifecycle-final-ui.log
-(bilingual independent UI), phone-final-lan.log (TLS/credential/LAN),
-phone-size-portrait.log and phone-size-landscape-large.log (80–150%, both languages,
-landscape OS font scale 1.3 restored), phone-final-python.log (47 passes),
-phone-final-catalogs.log, phone-review-build.log and apple-core-ci.log.
-Phone 0.2.0/code 6, installer 1.1.1/code 4. APK checks pass: all 26 approved media
-files and 25 complete notices/source files match packaged bytes. The final small
-lifecycle fix refreshes Prayer after midnight/timezone/clock changes and applies
-current audio settings without changing global alarm volume.
+Phone artifact: primary checkout state/builds/companion/Miqat-latest.apk,
+0.2.0/code 6, SHA256 prefix D6B4983DA58E3CF3. LG artifact remains the existing
+state/builds/webos/Miqat-latest.ipk (0.2.28). Standalone installer: 1.1.1/code 4.
+First-use and combined-review checklist: PHONE.md. Durable reference: PHONE-REFERENCE.md.
+
+Latest private logs: phone-delivery-ui.log, phone-handoff-portrait.log,
+phone-delivery-landscape.log, phone-export-build.log, phone-bounded-preview.log,
+phone-final-lg-live.log, lg-final-tests.log and lg-final-browser-3.log. The clipped
+card assertion reproduced red in phone-card-clip-before.log before the alignment
+fix. LG startup repro red/green: lg-splash-before.log and lg-splash-after.log.
+47 Python/Java checks, canonical/QR/LAN helpers, actual alarm/12-second preview/
+Stop/focus/disabled cleanup and package checks are recorded in EVIDENCE.md.
+All 26 approved media files and 25 notices/source files match packaged bytes.
+Native alarms use current audio settings, refresh after clock/civil-day changes,
+and preserve global alarm volume. Phone and TV settings remain independent.
 
 Chosen Android approach: user-authorized prayer alarms, a service only during
 audio, packaged approved clips, relative alarm volume (never change global volume
@@ -120,14 +135,14 @@ or DND), and phone-only device-protected settings/claims for direct-boot recover
 Pairing credentials remain credential-protected/encrypted; never copy them into
 the phone prayer store. Device-protected preferences are excluded from transfer.
 Sources checked: Android official alarms, background-FGS restrictions, Direct Boot
-and Auto Backup documentation. An opt-in Apple-core workflow is being added: macOS ARM64 native rule tests and
+and Auto Backup documentation. The opt-in Apple-core workflow runs: macOS ARM64 native rule tests and
 iOS device/simulator library compilation only, bounded to 20 minutes. No iOS UI,
 notification/audio adapter or signed build is included. Apple CI passed on 68a91fe (run 44414849445); ordinary local JVM/ES5 also pass.
 
-CI ordering issue: a later license-only run still caught the setup fixture opening
+Resolved earlier CI ordering issue: a later license-only run still caught the setup fixture opening
 the next activity before the previous finish completed. Local native checks now
 wait for destroyed setup + resumed caller at *each* transition, not only the final
-result; they pass. Push this checkpoint and check subsequent CI; do not blindly retry.
+result; they pass locally and on Companion CI for 666ce6a.
 Owned read-only emulator details are in ignored state/emulator-session.json.
 Verify the recorded process/command before stopping it; do not adopt another
 session. Local fixture servers exit after each test.

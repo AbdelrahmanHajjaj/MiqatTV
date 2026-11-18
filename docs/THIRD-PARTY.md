@@ -72,6 +72,6 @@ Source directory: `themes/scenes/wallpapers/`; generator: `tools/scenes_wallpape
 | tea_hills.jpg | 08-tea-hills.jpg |
 | monsoon.jpg | 12-monsoon.jpg |
 
-These are local illustrated scenes, with a 20% black overlay applied by each
-renderer for readability. They do not change color with the theme or lighting
-control. No external image service or runtime image generation is used.
+These are local illustrated scenes. TV renderers apply a 20% black overlay for
+readability; the phone crops the same original JPEGs and adds a palette-colored
+contrast overlay behind prayer text. The JPEG files themselves remain unmodified. No external image service or runtime image generation is used.

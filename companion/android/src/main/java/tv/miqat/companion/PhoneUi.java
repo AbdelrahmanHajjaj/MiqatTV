@@ -37,7 +37,7 @@ final class PhoneUi {
             if(renderedDay!=civilDay(now)||!renderedZone.equals(settings.zone().getID())||lastTick!=0&&(now<lastTick||now-lastTick>5000)){lastTick=now;a.render();return;}
             lastTick=now;
             if(nextTime>0&&System.currentTimeMillis()>=nextTime){a.render();return;}
-            if(countdown!=null&&nextTime>0){long minutes=Math.max(0,(nextTime-System.currentTimeMillis()+59999)/60000);countdown.setText(digits(String.format(Locale.US,"%02d:%02d",minutes/60,minutes%60)));}
+            if(countdown!=null&&nextTime>0){long minutes=Math.max(0,(nextTime-System.currentTimeMillis()+59999)/60000);countdown.setText(String.format(locale(),a.t("phone_remaining"),digits(String.format(Locale.US,"%02d:%02d",minutes/60,minutes%60))));}
             if(status!=null&&settings!=null)status.setText(a.t(PhoneAlarms.status(a,settings)));
         }
         if(playback!=null)playback.setVisibility(PhonePlayback.playing()?View.VISIBLE:View.GONE);
@@ -57,7 +57,7 @@ final class PhoneUi {
     void render(){
         countdown=null;status=null;playback=null;nextTime=0;
         if(settings==null){a.body.addView(a.text(a.t("phone_settings_failed"),16,a.ink));reset(a.body);return;}
-        try{if(a.page.equals("prayers"))home();else preferences();}
+        try{if(a.page.equals("prayers"))home(System.currentTimeMillis());else preferences();}
         catch(Exception invalid){a.body.addView(a.text(a.t("phone_settings_failed"),16,a.ink));reset(a.body);}
         start();
     }
@@ -66,16 +66,16 @@ final class PhoneUi {
     String time(double stamp){SimpleDateFormat f=new SimpleDateFormat(settings.value("display.clock").equals("12")?"h:mm a":"HH:mm",locale());f.setTimeZone(settings.zone());return digits(f.format(new Date((long)stamp)));}
     String location()throws Exception{return settings.value("prayer.location").equals("custom")?a.t("phone_custom_location"):a.catalog.label(data.city(settings.value("prayer.location")),a.ar);}
     void open(String section){pending="";a.section=section;a.page="phone-settings";a.render();}
-    void home()throws Exception {
+    void home(long now)throws Exception {
         a.navigationRow(a.body,"compass",location(),settings.zone().getID(),()->open("calculation")).setTag("phone.location");
-        long now=System.currentTimeMillis();renderedDay=civilDay(now);renderedZone=settings.zone().getID();lastTick=now;PhoneSchedule.Day today=settings.day(now,0),tomorrow=settings.day(now,1);tv.miqat.core.PrayerSelection selection=tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(today.times,tomorrow.times,now);
+        renderedDay=civilDay(now);renderedZone=settings.zone().getID();lastTick=now;PhoneSchedule.Day today=settings.day(now,0),tomorrow=settings.day(now,1);tv.miqat.core.PrayerSelection selection=tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(today.times,tomorrow.times,now);
         int next=selection==null?-1:selection.getNext();double target=selection==null?0:selection.getNextTime();
         boolean tomorrowNext=target>=tomorrow.start;
         LinearLayout hero=hero();hero.addView(a.text(a.t("phone_next")+(tomorrowNext?" · "+a.t("phone_tomorrow"):""),14,a.muted));
-        hero.addView(a.heading(next<0?a.t("phone_unavailable"):data.prayerName(next,a.ar)));
-        if(next>=0){TextView at=a.text(time(target),36,a.ink);at.setTypeface(a.heading);hero.addView(at);countdown=a.text("",24,a.accent);countdown.setTag("phone.countdown");hero.addView(a.text(a.t("phone_remaining"),12,a.muted));hero.addView(countdown);nextTime=(long)target;}
-        status=a.text(a.t(PhoneAlarms.status(a,settings)),13,a.muted);status.setTag("phone.status");hero.addView(status);
-        a.button(hero,a.t(settings.locationReady?"phone_permissions":"phone_choose_location"),()->open(settings.locationReady?"permissions":"calculation")).setTag("phone.setup");
+        TextView upcoming=a.text(next<0?a.t("phone_unavailable"):data.prayerName(next,a.ar)+" · "+time(target),28,a.ink);upcoming.setTypeface(a.heading);hero.addView(upcoming);
+        if(next>=0){countdown=a.text("",18,a.accent);countdown.setTag("phone.countdown");hero.addView(countdown);nextTime=(long)target;}
+        status=a.text(a.t(PhoneAlarms.status(a,settings)),12,a.muted);status.setTag("phone.status");hero.addView(status);
+        a.button(hero,a.t(settings.locationReady?"phone_audio":"phone_choose_location"),()->open(settings.locationReady?"audio":"calculation")).setTag("phone.setup");
         playback=a.button(hero,a.t("phone_stop"),()->{PhonePlayback.stop(a);a.render();});playback.setTag("phone.stop");
         String audioError=PhoneStore.preferences(a).getString("audio-error","");if(!audioError.isEmpty())hero.addView(a.text(a.t(audioError),13,a.accent));
         LinearLayout dateBar=a.horizontal(a.body);
@@ -87,10 +87,22 @@ final class PhoneUi {
         hijri.setCalculationType(android.icu.util.IslamicCalendar.CalculationType.ISLAMIC_UMALQURA);hijri.setTimeInMillis(day.start);hijri.add(android.icu.util.Calendar.DATE,settings.number("prayer.hijri-offset"));
         android.icu.text.DateFormat hf=android.icu.text.DateFormat.getDateInstance(android.icu.text.DateFormat.LONG,new android.icu.util.ULocale((a.ar?"ar":"en")+"@calendar=islamic-umalqura"));hf.setCalendar(hijri);a.body.addView(a.text(digits(hf.format(hijri.getTime())),14,a.muted));
         if(day.times==null)a.body.addView(a.text(a.t("phone_unavailable"),16,a.ink));
-        else for(int i=0;i<6;i++) {
-            final int prayer=i;String subtitle=time(day.times[i]);if(i!=1)subtitle+=" · "+value("call."+PhoneStore.PRAYERS[i]+".mode",settings.value("call."+PhoneStore.PRAYERS[i]+".mode"));
-            LinearLayout row=a.navigationRow(a.body,i==1?"sun":"bell",data.prayerName(i,a.ar),subtitle,()->open(prayer==1?"calculation":PhoneStore.PRAYERS[prayer]));row.setTag("phone.prayer."+PhoneStore.PRAYERS[i]);
-            if(dayOffset==0&&i==next){GradientDrawable shape=a.background(a.surface,20);shape.setStroke(a.dp(2),a.accent);row.setBackground(shape);}
+        else {
+            LinearLayout pair=null;
+            for(int i=0;i<6;i++) {
+                if(i%2==0){pair=a.horizontal(a.body);pair.setGravity(Gravity.TOP);}
+                final int prayer=i;String name=data.prayerName(i,a.ar),at=time(day.times[i]);
+                String mode=i==1?"":value("call."+PhoneStore.PRAYERS[i]+".mode",settings.value("call."+PhoneStore.PRAYERS[i]+".mode"));
+                LinearLayout cell=a.column();cell.setPadding(a.dp(14),a.dp(12),a.dp(14),a.dp(12));cell.setMinimumHeight(a.dp(88));
+                LinearLayout.LayoutParams cellSize=new LinearLayout.LayoutParams(0,-1,1);cellSize.setMarginEnd(a.dp(i%2==0?4:0));cellSize.setMarginStart(a.dp(i%2==1?4:0));cellSize.bottomMargin=a.dp(8);pair.addView(cell,cellSize);
+                cell.setSelected(dayOffset==0&&!tomorrowNext&&i==next);
+                GradientDrawable shape=a.background(a.surface,20);if(cell.isSelected())shape.setStroke(a.dp(2),a.accent);
+                cell.setBackground(new RippleDrawable(ColorStateList.valueOf((a.accent&0xffffff)|0x22000000),shape,null));
+                TextView label=a.text(name,16,a.ink);label.setPadding(0,0,0,0);cell.addView(label);
+                TextView stamp=a.text(at,20,a.accent);stamp.setPadding(0,a.dp(3),0,0);stamp.setTypeface(a.heading);cell.addView(stamp);
+                if(!mode.isEmpty()){TextView state=a.text(mode,11,a.muted);state.setPadding(0,a.dp(3),0,0);cell.addView(state);}
+                cell.setTag("phone.prayer."+PhoneStore.PRAYERS[i]);cell.setFocusable(true);cell.setContentDescription(name+", "+at+(mode.isEmpty()?"":", "+mode));cell.setOnClickListener(v->open(prayer==1?"calculation":PhoneStore.PRAYERS[prayer]));
+            }
         }
         if(tomorrow.times!=null)a.body.addView(a.text(a.t("phone_tomorrow")+" · "+data.prayerName(0,a.ar)+" · "+time(tomorrow.times[0]),15,a.muted));
     }
@@ -101,7 +113,7 @@ final class PhoneUi {
             if(!id.equals(artworkId)){try(java.io.InputStream in=a.getAssets().open("backgrounds/"+id+".jpg")){BitmapFactory.Options opts=new BitmapFactory.Options();opts.inSampleSize=2;artwork=BitmapFactory.decodeStream(in,null,opts);artworkId=id;}}
             ImageView image=new ImageView(a);image.setImageBitmap(artwork);image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);frame.addView(image,new FrameLayout.LayoutParams(-1,-1));
         }
-        LinearLayout content=a.column();content.setPadding(a.dp(22),a.dp(24),a.dp(22),a.dp(24));
+        LinearLayout content=a.column();content.setPadding(a.dp(20),a.dp(16),a.dp(20),a.dp(16));
         content.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{(a.ground&0xffffff)|0xdd000000,(a.ground&0xffffff)|0xf5000000}));frame.addView(content,new FrameLayout.LayoutParams(-1,-2));
         frame.setBackground(a.background(a.surface,28));frame.setClipToOutline(true);return content;
     }
@@ -130,14 +142,15 @@ final class PhoneUi {
     }
     void control(JSONObject c)throws Exception {
         String id=c.getString("id"),label=a.t(c.getString("label")),saved=settings.value(id);SettingSpec spec=data.spec(c);
+        ColorStateList selection=new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{a.accent,a.muted});
         LinearLayout row=a.card(a.body);row.setTag("phone."+id);TextView title=a.text(label,16,a.ink);row.addView(title);
         if(c.getString("kind").equals("toggle")) {
-            Switch toggle=new Switch(a);toggle.setText(a.t(saved.equals("true")?"on":"off"));toggle.setTextColor(a.ink);toggle.setTypeface(a.regular);toggle.setMinHeight(a.dp(48));toggle.setChecked(saved.equals("true"));toggle.setContentDescription(label);row.addView(toggle);toggle.setTag("phone."+id+".edit");
+            Switch toggle=new Switch(a);toggle.setText(a.t(saved.equals("true")?"on":"off"));toggle.setTextColor(a.ink);toggle.setTypeface(a.regular);toggle.setMinHeight(a.dp(48));toggle.setChecked(saved.equals("true"));toggle.setThumbTintList(selection);toggle.setTrackTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{(a.accent&0xffffff)|0x66000000,(a.muted&0xffffff)|0x44000000}));toggle.setContentDescription(label);row.addView(toggle);toggle.setTag("phone."+id+".edit");
             toggle.setOnCheckedChangeListener((button,on)->{if(id.equals("reminders.enabled")&&on&&!settings.locationReady){a.notice("phone_location_needed");open("calculation");return;}save(id,Boolean.toString(on));});return;
         }
         if(c.getString("kind").equals("number")){number(row,spec,saved,label);return;}
         java.util.List<String> options=data.options(c);
-        if(options.size()<=3){RadioGroup group=new RadioGroup(a);row.addView(group);for(String option:options){RadioButton radio=new RadioButton(a);radio.setText(value(id,option));radio.setTextColor(a.ink);radio.setTypeface(a.regular);radio.setMinHeight(a.dp(48));radio.setChecked(saved.equals(option));radio.setTag("phone."+id+".option."+option);group.addView(radio);radio.setOnClickListener(v->save(id,option));}}
+        if(options.size()<=3){RadioGroup group=new RadioGroup(a);row.addView(group);for(String option:options){RadioButton radio=new RadioButton(a);radio.setText(value(id,option));radio.setTextColor(a.ink);radio.setTypeface(a.regular);radio.setMinHeight(a.dp(48));radio.setChecked(saved.equals(option));radio.setButtonTintList(selection);radio.setTag("phone."+id+".option."+option);group.addView(radio);radio.setOnClickListener(v->save(id,option));}}
         else if(id.startsWith("appearance.")){int index=options.indexOf(saved);LinearLayout track=a.horizontal(row);Button previous=a.button(track,a.ar?"›":"‹",()->save(id,options.get(index-1)));a.square(previous);previous.setEnabled(index>0);previous.setContentDescription(a.t("previous")+" "+label);Button selected=a.button(track,value(id,saved),()->choose(id,options));a.flex(selected);selected.setTag("phone."+id+".edit");Button next=a.button(track,a.ar?"‹":"›",()->save(id,options.get(index+1)));a.square(next);next.setEnabled(index+1<options.size());next.setContentDescription(a.t("next")+" "+label);}
         else a.button(row,value(id,saved)+"  ⌄",()->choose(id,options)).setTag("phone."+id+".edit");
         if(id.endsWith(".voice")){a.button(row,a.t("phone_preview"),()->preview(id)).setTag("phone."+id+".preview");a.button(row,a.t("phone_stop"),()->PhonePlayback.stop(a));}
@@ -174,7 +187,7 @@ final class PhoneUi {
     void locationEditor()throws Exception {
         a.body.addView(a.text(a.t("phone_location_needed"),14,a.muted));
         a.button(a.body,location()+"  ⌄",()->{
-            java.util.List<Choices.Option> options=new ArrayList<>();try{for(int i=0;i<data.cities.length();i++){JSONObject c=data.cities.getJSONObject(i);options.add(new Choices.Option(c.getString("id"),a.catalog.label(c,a.ar)));}}catch(Exception invalid){a.notice("invalid");return;}
+            java.util.List<Choices.Option> options=new ArrayList<>();try{for(int i=0;i<data.cities.length();i++){JSONObject c=data.cities.getJSONObject(i);options.add(new Choices.Option(c.getString("id"),a.catalog.label(c,a.ar)+" · "+c.optString(a.ar?"countryAr":"countryEn")));}}catch(Exception invalid){a.notice("invalid");return;}
             picker(a.t("phone_choose_location"),options,id->{try{JSONObject city=data.city(id);Map<String,String> changes=new LinkedHashMap<>();changes.put("prayer.location",id);changes.put("prayer.latitude",city.getString("lat"));changes.put("prayer.longitude",city.getString("lng"));changes.put("prayer.method",city.getString("method"));changes.put("prayer.asr",city.optBoolean("hanafi")?"hanafi":"shafi");changes.put("prayer.location-ready","false");latitude="";longitude="";save(changes,false);}catch(Exception invalid){a.notice("invalid");}});
         }).setTag("phone.city");
         LinearLayout custom=a.card(a.body);custom.addView(a.text(a.t("phone_custom_location"),16,a.ink));
@@ -192,6 +205,9 @@ final class PhoneUi {
         if(!PhoneAlarms.notifications(a))a.button(a.body,a.t("phone_permission_notifications"),()->{if(Build.VERSION.SDK_INT>=33&&a.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED)a.requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},75);else system(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,a.getPackageName()));});
         if(!PhoneAlarms.exact(a))a.button(a.body,a.t("phone_permission_exact"),()->system(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,android.net.Uri.parse("package:"+a.getPackageName()))));
         a.button(a.body,a.t("phone_channel_settings"),()->system(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,a.getPackageName())));
+        a.body.addView(a.heading(a.t("phone_power_title")));
+        a.body.addView(a.text(a.t("phone_power_info"),14,a.muted));
+        a.button(a.body,a.t("phone_app_settings"),()->system(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+a.getPackageName())))).setTag("phone.power-settings");
         a.button(a.body,a.t("phone_audio"),()->open("audio"));
     }
     void system(Intent intent){try{a.startActivity(intent);}catch(ActivityNotFoundException missing){a.notice("phone_permission_missing");}}

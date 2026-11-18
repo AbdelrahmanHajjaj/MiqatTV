@@ -25,6 +25,12 @@ final class PhoneSizeCheck {
                         PhoneUiCheck.check(button!=null&&button.getHeight()>=a.dp(48),"Small navigation touch target");
                         if(button.getLayout()!=null)for(int line=0;line<button.getLayout().getLineCount();line++)PhoneUiCheck.check(button.getLayout().getEllipsisCount(line)==0,"Navigation label truncated");
                     }
+                    for(String prayer:PhoneStore.PRAYERS){
+                        ViewGroup cell=a.body.findViewWithTag("phone.prayer."+prayer);PhoneUiCheck.check(cell!=null&&cell.getHeight()>=a.dp(48),"Prayer card touch target");
+                        PhoneUiCheck.check(cell.getTop()>=0&&cell.getBottom()<=((View)cell.getParent()).getHeight(),"Prayer card outline clipped by its row at "+expected);
+                        int content=0;for(int i=0;i<cell.getChildCount();i++)content+=cell.getChildAt(i).getHeight();
+                        PhoneUiCheck.check(content<=cell.getHeight()-cell.getPaddingTop()-cell.getPaddingBottom(),"Prayer card text clipped at "+expected);
+                    }
                     a.phoneUi.open("audio");View save=a.body.findViewWithTag("phone.reminders.volume.save");PhoneUiCheck.check(save!=null&&save.isEnabled(),"Numeric save missing at scale");
                     a.tab("prayers");
                     a.phoneUi.save("display.digits","western");PhoneUiCheck.check(a.phoneUi.digits("٠١٢٣").equals("0123"),"Western digits ignored in Arabic locale");

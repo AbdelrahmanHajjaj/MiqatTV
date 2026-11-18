@@ -3,9 +3,10 @@
 ## Unreleased
 
 - Expand the phone app into standalone Miqat prayer (0.2.0): independent offline daily
-  times, tomorrow's Fajr, city/custom location and timezone, Hijri display,
+  times in a compact daily overview, tomorrow's Fajr, city/custom location and
+  timezone, Hijri display,
   per-prayer voices/modes/adjustments/reminders, native scheduled alerts and
-  foreground adhan with Stop. Add permission repair and local recovery/duplicate
+  foreground adhan with Stop. Add permission/battery help and local recovery/duplicate
   protection, shared phone themes/artwork and phone display preferences.
   Preserve Android/LG installation and authenticated TV controls.
 

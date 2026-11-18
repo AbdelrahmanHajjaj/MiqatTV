@@ -476,3 +476,37 @@ was booted, no Swift app exists and no signing/background-audio behavior is clai
 The opt-in target configuration also passes ordinary local JVM/ES5 checks,
 including 97 legacy host assertions. Remaining required CI and physical owner
 acceptance are recorded in PHONE-WORK.md.
+
+### Combined review candidate and Athar reference (2026-11-19)
+
+Owner supplied Athar as their mobile reference; findings and future discussion
+ideas are in PHONE-REFERENCE.md. The phone now has a compact two-column daily
+schedule, linked prayer customization, country-qualified city search, battery/
+background repair help, consistent palette tints and raised surfaces. Native
+bilingual checks pass, including explicit before-Fajr/after-Isha rendering: a
+past Fajr is not highlighted as the next prayer after Isha. All 80–150% sizes pass
+in portrait and landscape with 1.3× OS text. A new outline-bounds assertion first
+reproduced clipped card corners at 80%; top-aligning the rows fixes that cause.
+Inspected final English/Arabic portraits and largest Arabic landscape. The final
+countdown uses a translated format placeholder; build/lint passes.
+
+The final phone also passes the actual native LG RSA/TLS/settings fixture:
+normal pairing, full metadata, 5% volume, Apply/Cancel, reconnect without uploads,
+actual transport loss and bilingual stale cache. This is an owned-emulator/local
+LG service fixture, not physical LG acceptance.
+
+LG's startup browser assertion raced its transient splash after DOMContentLoaded.
+A delayed-observer repro failed the exact assertion. Gating app initialization
+makes that observer pass while preserving visible-artwork, image-decode,
+dismissal and initialized-layout assertions. Full LG service and bilingual
+browser/size/audio/HDMI-mock suites pass. No shipped LG app/service source or
+version changed. Prevention: explicitly control transient startup test boundaries.
+
+[Validate](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44415872877),
+[Companion](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44415872904) and
+[Apple core](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44415872954)
+all passed on 666ce6a. The final compact-UI/startup-test checkpoint is gated by the
+[current PR checks](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/9/checks)
+before handoff. The fixed phone export is 0.2.0/code 6, SHA256 prefix
+`D6B4983DA58E3CF3`, with all 26 exact recordings verified. Physical owner review
+remains open; the PR stays draft and no release/device deployment was performed.

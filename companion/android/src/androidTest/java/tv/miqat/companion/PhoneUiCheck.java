@@ -23,6 +23,7 @@ final class PhoneUiCheck {
                 on(test,()->{
                     check(a.page.equals("prayers"),"Standalone prayer must be the default");
                     check(a.body.findViewWithTag("phone.countdown")!=null,"Calculated next prayer missing");
+                    for(String prayer:PhoneStore.PRAYERS)check(a.body.findViewWithTag("phone.prayer."+prayer)!=null,"Daily overview missing "+prayer);
                     check(a.getWindow().getDecorView().findViewWithTag("nav.phone-settings").isEnabled(),"Phone settings must not need a TV");
                     check(a.body.getLayoutDirection()==(lang.equals("ar")?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR),"Phone prayer direction");
                 });
@@ -40,10 +41,21 @@ final class PhoneUiCheck {
                     a.body.findViewWithTag("phone.call.fajr.mode.option.notification").performClick();check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
                     a.phoneUi.open("calculation");a.phoneUi.save("prayer.zone","Asia/Tokyo");check(!a.phoneUi.settings.locationReady,"Changed timezone must need confirmation");
                     a.phoneUi.save("prayer.zone","system");a.body.findViewWithTag("phone.location.confirm").performClick();
-                    a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");check(a.ground==android.graphics.Color.parseColor("#211C32"),"Phone theme not applied");
+                    a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
                     for(JSONObject c:a.phoneUi.data.controls.values()){
                         a.phoneUi.open(c.optString("section"));check(a.body.findViewWithTag("phone."+c.optString("id"))!=null,"Missing phone control "+c.optString("id"));
                     }
+                    a.tab("prayers");
+                    try {
+                        PhoneSchedule.Day day=a.phoneUi.settings.day(System.currentTimeMillis(),0);
+                        a.body.removeAllViews();a.phoneUi.home((long)day.times[5]+1000);
+                        check(!a.body.findViewWithTag("phone.prayer.fajr").isSelected(),"After Isha, today's past Fajr must not be highlighted as next");
+                        a.body.removeAllViews();a.phoneUi.home((long)day.times[0]-60000);
+                        check(a.body.findViewWithTag("phone.prayer.fajr").isSelected(),"Upcoming Fajr must be highlighted");
+                        a.render();
+                    }catch(Exception invalid){throw new AssertionError(invalid);}
+                    a.body.findViewWithTag("phone.prayer.fajr").performClick();check(a.section.equals("fajr"),"Prayer card did not open its customization");
+                    a.phoneUi.open("permissions");check(a.body.findViewWithTag("phone.power-settings")!=null,"Background delivery repair help missing");
                     a.tab("phone-settings");
                 });
                 capture(test,a,lang+"-phone-settings",capture);
