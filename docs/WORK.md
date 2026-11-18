@@ -15,10 +15,11 @@ Pages is enabled with GitHub Actions as its source. feature/github-pages adds a
 main-only deployment job after all required validation passes. The deployed site
 uses /MiqatTV/ (Arabic) and /MiqatTV/en/ (English). PRs do not deploy.
 
-Finish local preview/workflow checks and browser acceptance, open the PR, and
-obtain the owner's normal-merge instruction before its initial deployment.
-Confirm the live site after the successful main run. Essential receipts belong
-in EVIDENCE.md and the PR; raw logs and captures stay under ignored state/.
+Local preview/workflow checks and Arabic/English browser acceptance passed.
+[PR #2](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/2) owns the final CI,
+merge and initial deployment receipts. Await the owner's normal-merge instruction
+and passing required checks, then confirm the live site after the main run.
+Essential local evidence belongs in EVIDENCE.md; raw logs and captures stay private.
 
 ## Previous delivery and remaining limits
 
