@@ -164,6 +164,7 @@ confirmation of this correction remains pending.
 
 
 Version 0.2.27 preserves the QR element while pending/approval controls update.
-Bilingual DOM-retention and focus regressions pass; physical latency retest is
-pending. This legacy TV profile uses Web Inspector console/timeline diagnostics;
+Bilingual DOM-retention and focus regressions pass. The owner confirmed much
+more responsive physical pairing with phone 0.1.3 and accepted the result.
+This legacy TV profile uses Web Inspector console/timeline diagnostics;
 `ares-log` is not supported for the TV profile.

@@ -259,5 +259,8 @@ through request/approval updates, avoiding repeated image decoding. Known-TV
 rescans reuse their stored pinned certificate. No settings are fetched on connect.
 Phone build/lint, bilingual UI, delayed-controls navigation, encrypted removal,
 LG service/ES5 and bilingual 80/100/150% pairing regressions pass. Latest files
-are exported; LG is installed with current settings preserved. Physical retest
-is pending while Developer Mode console/timeline monitoring runs in memory.
+are exported; LG is installed with current settings preserved. The owner retested
+phone 0.1.3 / LG 0.2.27 and confirmed much more responsive pairing, quicker waiting
+status and satisfaction with the result. Phone controls can appear before the
+TV final status because control discovery is independent. Temporary monitoring
+was held in memory and stopped after acceptance.
