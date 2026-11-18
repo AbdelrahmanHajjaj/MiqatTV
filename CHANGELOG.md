@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep FFmpeg audio-processing tests local; CI retains approved media checksum checks.
+
 - Refresh the bilingual website with Miqat branding, current artwork and themes.
   Switch demo screens in place, keep settings and restore focus without page loads.
 

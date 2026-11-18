@@ -4,23 +4,25 @@ Updated: 2026-11-18.
 
 ## Approved scope and next action
 
-Refresh the website for Miqat's current branding and make demo screen navigation
-work in place. Preserve Arabic/English, direct entry links, settings save/cancel,
-remote-style focus and the existing main-only Pages workflow. No app, companion,
-shared product-rule or physical-TV changes are requested.
+Remove FFmpeg installation and the audio-processing fixture test from GitHub
+Actions. The owner chose to keep the existing Ubuntu builds, tests and triggers.
+Retain lightweight approved-media hashes and packaged-file checks. Preparation,
+decoding and listening checks remain local when media or preparation code changes.
 
-Work is on `feature/site-interactive-refresh`, based on main 4ccf0ef after the
-[theme library merge](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/3).
-Local preview, browser and documentation checks passed. Open the PR and wait for
-required CI. Normal
-merge and publication need the owner's corresponding instruction. The PR owns
-CI and delivery receipts; essential local evidence belongs in EVIDENCE.md.
+The change is prepared on `feature/ci-without-ffmpeg`, based on main 5d0e1c2.
+Local workflow/documentation/hash checks passed. Delivery uses a focused PR and
+passing required CI. Follow the owner's standing instruction: use gh, normal-merge
+after required checks pass and sync main. The PR owns CI and delivery receipts.
+No further implementation is planned.
 
-## Remaining limits
+## Delivered and remaining limits
 
-Physical Miqat installation, complete phone-installer testing, settings transfer
-and companion integration remain separate. Browser mocks and emulator captures
-are not physical-TV acceptance. CI APKs use temporary debug keys. EVIDENCE.md
-records the remaining build-tool advisory; PR #2 records earlier Android CI
-intermittency.
-No release or TV deployment is requested.
+The [website refresh](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/4) was normally
+merged as 5d0e1c2. [Main validation and Pages](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44332260024)
+passed all seven jobs. Public Arabic/English screens and in-place navigation were
+verified in Edge; captures remain under ignored state/.
+
+Physical Miqat installation, phone-installer acceptance, settings transfer and
+companion integration remain separate. CI APKs use temporary debug keys. Existing
+build-tool advisories and earlier Android CI intermittency remain documented in
+EVIDENCE.md and PR #2. No release or TV deployment is requested.

@@ -29,8 +29,9 @@ instrumentation, not household installation. Browser/emulator output is not TV
 picture, sound or physical-remote acceptance.
 
 The approved recordings are checked in under shared/media/; no private originals,
-stamps or device state are uploaded. Changes to audio need content review as well
-as checksum and preparation tests.
+stamps or device state are uploaded. Actions verify approved checksums and packaged
+bytes without installing FFmpeg or processing audio. Run preparation/decoding tests
+and content review locally when recordings or preparation code change.
 
 ## Website
 
