@@ -250,3 +250,26 @@ artwork loads and console errors are absent. Captures are under ignored state/.
 Radio streams and online prayer comparison were not requested in these browser
 checks; their existing deterministic regressions passed. This is browser evidence,
 with no physical-TV operations. The PR owns CI, merge and publication receipts.
+
+
+### Website publication
+
+[PR #4](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/4) was normally merged as
+5d0e1c2 after six successful required jobs. [Main run 44332260024](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44332260024)
+passed all seven jobs, including Pages deployment. Public Arabic/English Home,
+same-URL Settings navigation, language links and Arabic appearance rendering were
+verified in Edge with no console errors. Local verification server was stopped.
+
+### CI audio-processing scope
+
+The owner requested removing FFmpeg from Actions and retained the other Ubuntu
+checks/builds. The workflow no longer installs FFmpeg or runs synthetic audio
+processing. Approved-media hashes, prepared-output hashes and packaged APK byte
+checks remain. FFmpeg preparation/decoding and listening remain local checks for
+changed media/preparation code. No recording or package content was changed.
+
+Workflow actionlint, documentation links/paths, the remaining prepared-output hash
+check and diff checks passed locally. All workflows were scanned to confirm no
+FFmpeg/ffprobe installation, invocation or audio-processing fixture test remains.
+The existing required-job aggregate, build artifacts and publication guards are
+unchanged. The focused PR owns the GitHub validation result.
