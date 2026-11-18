@@ -54,7 +54,7 @@ public class AllAppsActivity extends Screen {
     private volatile int loadGeneration;
 
     // Hold-OK handling and the arrange menu.
-    private boolean okDown, okLong;
+    private boolean okDown, okLong, rebuildAfterMenu;
     private FrameLayout menu;
     private final List<FocusTile> menuItems = new ArrayList<>();
     private final List<MenuAction> menuActions = new ArrayList<>();
@@ -85,6 +85,8 @@ public class AllAppsActivity extends Screen {
 
     @Override
     void build() {
+        if (menu != null) { rebuildAfterMenu = true; return; }
+        rebuildAfterMenu = false;
         int selected = current();
         if (focusPkg == null && selected >= 0) focusPkg = apps.get(selected);
         loadGeneration++;
@@ -475,6 +477,10 @@ public class AllAppsActivity extends Screen {
         menu = null;
         if (choice >= 0 && choice < menuActions.size() - 1) menuActions.get(choice).action.run();
         else focusTile(menuFrom);
+        if (rebuildAfterMenu && !isFinishing()) {
+            focusPkg = apps.get(menuFrom);
+            build();
+        }
     }
 
     private void swapFav(int a, int b, String pkg) {

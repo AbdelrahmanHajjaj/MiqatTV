@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve Android's arrange menu and selected app when the installed-app catalog refreshes.
+
 - Add full-audio CI builds, validation Actions, a manual draft-release workflow
   and main-branch protection requirements.
 

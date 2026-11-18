@@ -60,12 +60,13 @@ and draft-publication workflows. GitHub-hosted checks must pass before merging;
 manual draft publication can be exercised after the workflows reach main.
 CI APKs use ephemeral debug signing keys; stable update signing is not configured.
 
-The API 34 CI run exposed a native-test timing gap between reading focus and
-asserting the selected tile. A queued catalog rebuild reproduced the same marker
-failure before the fix; both reads now share one main-thread snapshot, and the
-queued rebuild remains as a regression. The complete Arabic/English UI check
-passed twice on an isolated API 34 emulator afterward. Temporary probes were
-removed; application behavior and existing assertions are preserved.
+API 34 checks exposed split UI observations and an arrange-menu/catalog-refresh
+race. Header navigation and favourite-marker assertions now use coherent UI
+snapshots, with queued-refresh regressions. Android defers catalog rebuilding
+until the menu closes and preserves the originating app's focus. A direct native
+regression failed before the fix; five complete Arabic/English UI runs passed
+afterward on an isolated API 34 emulator. Build/lint, all 43 local regressions and
+the 26-recording APK check passed. Temporary probes were removed.
 
 [Validate run 44296900776](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44296900776)
 passed all six jobs for 0229237: core, Android build, API 34 emulator, LG browser/
