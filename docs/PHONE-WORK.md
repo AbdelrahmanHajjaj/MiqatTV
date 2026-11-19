@@ -281,15 +281,31 @@ pass pass3-guide-spacing-{build,native}.log. The updated Arabic LG guide render
 is state/pass3-spaced-ar-lg-guide.png. Final generator cases pass 8/8 in
 pass3-audition-final-generator.log. No build/check process remains pending.
 
-Next: review touched runtime readability and final diff, then bump phone to
-0.3.0/code 8 and standalone installer to 1.1.3/code 6. Rebuild/lint/export, verify exact
-media/notices/signing and rerun only affected final native smoke/denial/runtime
-checks, including the existing location permission/detection cases after the
-controller move. Update PR #9, push the reviewed commits, wait for final-head Validate,
-Companion and Apple-core CI, export one combined review APK and supply concise
-screenshots/evidence. Keep physical/OEM acceptance separate. Do not start another
-feature, publish, merge or hand over the old 0.2.1 export. Do not hand over 0.2.1 as pass 3.
-Keep the PR draft; no public release, physical deployment, merge or unrelated work.
+Delivery candidate: phone 0.3.0/code 8 and standalone installer 1.1.3/code 6.
+Final playback/import methods have focused validation/session/preparation/output
+jobs; redundant Changed/Picked interfaces use standard Consumer, with callers
+updated. Both hosts build/lint/test APK: state/pass3-delivery-build.log.
+Phone 0.3.0 native default, journey, phone-ui, custom, public-release, location
+denied/approximate checks pass in state/delivery-030-*.log. Precise/travel,
+alarm denial and actual runtime pass in delivery-030-{phone-location,phone-denied,
+phone-runtime}-2.log. The first precise run reached its travel cold-launch case
+while the fixture still represented unseen onboarding; it now sets/restores the
+seen flag for an opted-in existing user. Assertions were retained. No product
+location change or retry masking a failing assertion.
+
+The local fixed APK is exported to primary state/builds/companion/Miqat-latest.apk:
+SHA256 3548858DCCAEF3472324FCD2A3F8E9F2F54584BCFEE19B85D5E049C773763D97,
+34,208,723 bytes. Its certificate matches 0.2.1 (SHA256 D5B22399A9EBDF6181E68DD55EA3C618FCB086EB82B73BDE620AC9B9B0784F02).
+All 26 approved recordings and 25 source notices match packaged bytes. GitHub
+published-release list rechecked empty; no publication was attempted.
+
+Next: commit/push this reviewed candidate, keep PR #9 draft, and wait for its
+Validate/Companion/Apple-core checks. Investigate failures without weakening
+assertions. After source CI passes, record final acceptance/links and candidate
+screenshots in the delivery docs/PR; require the documentation head's checks too.
+Verify the final export/hash, stop only the owned emulator after ownership checks,
+and hand over one combined APK with concise screenshots/evidence. Then wait for
+owner feedback. No further features, merge, release or physical deployment.
 
 Owned read-only muted emulator PID 21468, AVD Medium_Phone_API_37.0, console 5564,
 ADB server 5037. Ownership receipt: ignored state/pass3-emulator-session.json;

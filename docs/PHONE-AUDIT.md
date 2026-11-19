@@ -1,9 +1,9 @@
 # Pass-3 engineering audit
 
-In progress, 19 November 2026. Expected load: one household, local prayers and
+Local implementation audit completed, 19 November 2026. Expected load: one household, local prayers and
 foreground authenticated TV access. Requirements: [PHONE-PASS3.md](PHONE-PASS3.md).
 This is an implementation audit, not physical acceptance or a claim that every
-source line has been inspected. Finish the map and evidence before delivery.
+source line has been inspected. Final CI and hardware limits remain separate.
 
 ## Concrete findings and corrections
 
@@ -65,6 +65,12 @@ source line has been inspected. Finish the map and evidence before delivery.
     are separately spaced. Rendered Arabic instructions now start on the correct
     side and keep English menu names readable; the complete bilingual journey
     and both enlarged-text orientation matrices pass after this change.
+
+11. Final runtime review split PhonePlayback into request validation, media-session/
+    notification setup, player preparation and output start/cleanup. Private audio
+    media validation has its own focused method. Error paths and ownership stay
+    in the service/import owners. Two custom string callback interfaces were
+    replaced by the existing standard Consumer type, including all callers.
 
 ## Boundaries retained
 

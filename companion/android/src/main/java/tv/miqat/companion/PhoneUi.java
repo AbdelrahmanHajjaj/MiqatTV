@@ -632,16 +632,12 @@ final class PhoneUi {
         }
     }
 
-    interface Picked {
-        void accept(String value);
-    }
-
-    void picker(String title, java.util.List<Choices.Option> options, Picked picked) {
+    void picker(String title, java.util.List<Choices.Option> options, java.util.function.Consumer<String> picked) {
         picker(title, options, "", picked);
     }
 
     void picker(
-            String title, java.util.List<Choices.Option> options, String selected, Picked picked) {
+            String title, java.util.List<Choices.Option> options, String selected, java.util.function.Consumer<String> picked) {
         if (choiceDialog != null) choiceDialog.dismiss();
         LinearLayout layout = a.views.column();
         layout.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(8));

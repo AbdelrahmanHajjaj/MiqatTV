@@ -687,3 +687,32 @@ widget host/Qibla orientation events and enlarged-text portrait/verified-landsca
 matrices pass: pass3-explicit-text-direction-build.log and
 pass3-rtl-{journey,portrait-size,wide-size}.log. Arabic preparation and compass
 renders were inspected. The guest display configuration was restored in finally.
+
+
+## Android 0.3.0 delivery candidate — 19 November 2026
+
+Phone 0.3.0/code 8 and standalone installer 1.1.3/code 6 build/lint/test APK pass
+(pass3-delivery-build.log). Final runtime review separates validation, media
+session/notification, player preparation and output; private audio validation is
+focused and standard Consumer replaces redundant callback interfaces. Existing
+native suites cover all changed callers, without new trivial tests.
+
+Owned-emulator checks pass on this APK: default bilingual TV/editor/handoff,
+fresh/resumable first use, widget host, real Qibla sensor callback, phone UI,
+private/v1 migration, staged APK parsing, public channel/integrity failures,
+location denial, approximate and precise detection, calibrated travel refresh,
+alarm permission denial and actual AlarmManager/foreground audio/custom cutoff/
+audition/Stop/focus/duplicate/late/disabled cleanup. Private logs:
+delivery-030-{default,phone-journey,phone-ui,phone-custom,public-release,
+phone-location-denied,phone-location-approx}.log and
+delivery-030-{phone-location,phone-denied,phone-runtime}-2.log. The first precise
+fixture incorrectly expected travel refresh from unseen onboarding; the corrected
+fixture marks/restores the existing-user state and retains all location/calibration
+assertions. No failed result was counted as a pass.
+
+Exported phone APK: 34,208,723 bytes, SHA256
+3548858DCCAEF3472324FCD2A3F8E9F2F54584BCFEE19B85D5E049C773763D97.
+The certificate matches the previous review build. All 26 recordings and 25 notice
+files match canonical/source bytes. GitHub published releases rechecked empty.
+Final-head CI gates handoff; its authoritative results and links belong on draft
+PR #9. Physical/OEM, public binary transfer and iOS-app limits remain unchanged.

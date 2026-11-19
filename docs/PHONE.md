@@ -149,7 +149,7 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (pass-3 version 0.3.0 after export) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.3.0, version code 8) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 

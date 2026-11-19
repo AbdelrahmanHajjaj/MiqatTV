@@ -648,11 +648,7 @@ public final class MainActivity extends Activity {
         else bottomNavigation(shell);
     }
 
-    interface Changed {
-        void accept(String value);
-    }
-
-    static TextWatcher watcher(Changed changed) {
+    static TextWatcher watcher(Consumer<String> changed) {
         return new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
 

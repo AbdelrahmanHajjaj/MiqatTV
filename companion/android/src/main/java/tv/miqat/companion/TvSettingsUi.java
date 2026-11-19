@@ -946,7 +946,7 @@ final class TvSettingsUi {
         refresh[0].run();
     }
 
-    void chooseApp(View anchor, List<String> apps, MainActivity.Changed picked) {
+    void chooseApp(View anchor, List<String> apps, java.util.function.Consumer<String> picked) {
         List<String> names = new ArrayList<>();
         for (String app : apps)
             names.add(a.catalog.value(a.profile(), "favourites.order", app, a.ar));

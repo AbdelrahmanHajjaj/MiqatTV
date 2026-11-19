@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Complete the Android phone review build 0.3.0 (code 8); shared installer changes
+  also ship in standalone installer 1.1.3 (code 6). Physical acceptance remains
+  open for the combined owner review.
+
 - Audition a draft adhan voice before Apply, with Stop/Cancel and private audio
   reuse/import. Keep global and per-prayer custom previews independent of saved
   inheritance. Match widget text to the app and preview its actual system scale.

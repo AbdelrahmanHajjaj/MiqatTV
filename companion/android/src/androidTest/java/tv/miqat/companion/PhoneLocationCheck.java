@@ -17,6 +17,7 @@ final class PhoneLocationCheck {
     }
     static void run(Instrumentation test,boolean capture,boolean approximate)throws Exception {
         Context c=test.getTargetContext();long refresh=PhoneStore.preferences(c).getLong("location-refresh",0);PhoneStore original=PhoneStore.read(c);String language=c.getSharedPreferences("companion",0).getString("language","system");MainActivity[] current={null};
+        SharedPreferences preferences=PhoneStore.preferences(c);boolean hadSeen=preferences.contains("onboarding-seen"),seen=preferences.getBoolean("onboarding-seen",false);
         PhoneUiCheck.check(PhoneLocation.allowed(c),"Grant foreground location and inject London GPS on the owned emulator first");
         Location stale=new Location("fixture");stale.setLatitude(51.5074);stale.setLongitude(-0.1278);stale.setAccuracy(3000);stale.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos()-121000000000L);
         PhoneUiCheck.check(!PhoneLocation.usable(stale,SystemClock.elapsedRealtimeNanos()),"Stale fix accepted");
@@ -54,7 +55,8 @@ final class PhoneLocationCheck {
             }
             if(!approximate){
                 Map<String,String> travel=new LinkedHashMap<>();travel.put("prayer.travel-refresh","true");travel.put("prayer.location-ready","true");travel.put("prayer.location","custom");travel.put("prayer.latitude","0");travel.put("prayer.longitude","0");travel.put("prayer.zone","Asia/Tokyo");travel.put("prayer.method","KARACHI");travel.put("call.fajr.offset","7");original.changed(travel).save(c);
-                PhoneStore.preferences(c).edit().putLong("location-refresh",0).commit();
+                // Cold launch an opted-in user who has already left the first-use guide.
+                preferences.edit().putLong("location-refresh",0).putBoolean("onboarding-seen",true).commit();
                 MainActivity a=(MainActivity)test.startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));current[0]=a;
                 LiveUiCheck.untilUi(test,()->a.phoneUi.settings.value("prayer.location").startsWith("detected"));
                 PhoneUiCheck.check(a.phoneUi.locationUi.locationDialog==null&&!a.phoneUi.locationUi.locator.running,"Opt-in refresh did not release provider");
@@ -62,6 +64,6 @@ final class PhoneLocationCheck {
                 PhoneUiCheck.check(tv.miqat.core.LocationRules.INSTANCE.distanceKm(51.5074,-0.1278,updated.latitude,updated.longitude)<20,"Travel refresh ignored fixture location");
                 PhoneUiCheck.on(test,a::finish);LiveUiCheck.untilUi(test,a::isDestroyed);current[0]=null;
             }
-        }finally{if(mock)manager.removeTestProvider("network");if(current[0]!=null)PhoneUiCheck.on(test,current[0]::finish);original.save(c);PhoneStore.preferences(c).edit().putLong("location-refresh",refresh).commit();c.getSharedPreferences("companion",0).edit().putString("language",language).commit();PhoneAlarms.rebuild(c);}
+        }finally{if(mock)manager.removeTestProvider("network");if(current[0]!=null)PhoneUiCheck.on(test,current[0]::finish);original.save(c);SharedPreferences.Editor restore=preferences.edit().putLong("location-refresh",refresh);if(hadSeen)restore.putBoolean("onboarding-seen",seen);else restore.remove("onboarding-seen");PhoneUiCheck.check(restore.commit(),"Cannot restore travel/onboarding fixture");c.getSharedPreferences("companion",0).edit().putString("language",language).commit();PhoneAlarms.rebuild(c);}
     }
 }
