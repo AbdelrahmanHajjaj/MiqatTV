@@ -17,6 +17,12 @@ public final class PublicReleaseCheck {
     public static void run(Context context)throws Exception {
         String hash="a".repeat(64);JSONObject apk=asset("miqat.apk","sha256:"+hash);JSONObject r=release(new JSONArray().put(apk));
         check(PublicRelease.parse(new JSONArray().put(r).toString(),false).preview,"Published preview not labelled");
+        rejects(()->PublicRelease.parse(new JSONArray().put(r).toString(),false,"stable"));
+        check(PublicRelease.parse(new JSONArray().put(r).toString(),false,"preview").preview,"Preview channel filtered out previews");
+        JSONObject stable=release(new JSONArray().put(asset("miqat.apk","sha256:"+hash))).put("prerelease",false).put("published_at","2026-11-18T10:00:00Z");
+        String mixed=new JSONArray().put(stable).put(r).toString();
+        check(!PublicRelease.parse(mixed,false,"stable").preview&&PublicRelease.parse(mixed,false,"latest").preview,"Channels must distinguish latest and stable");
+        rejects(()->PublicRelease.parse(mixed,false,"other"));
         rejects(()->PublicRelease.parse("[]",false));rejects(()->PublicRelease.parse("broken",false));
         r.put("draft",true);rejects(()->PublicRelease.parse(new JSONArray().put(r).toString(),false));r.put("draft",false);
         apk.put("browser_download_url","https://github.com/another/project/releases/download/v1/miqat.apk");rejects(()->PublicRelease.parse(new JSONArray().put(r).toString(),false));
@@ -34,6 +40,16 @@ public final class PublicReleaseCheck {
         byte[] bytes=new byte[2048];new Random(7).nextBytes(bytes);StringBuilder digest=new StringBuilder();for(byte b:MessageDigest.getInstance("SHA-256").digest(bytes))digest.append(String.format(Locale.US,"%02x",b&255));
         File target=new File(directory,"miqat.apk");byte[] previous={1,2,3};Files.write(target.toPath(),previous);
         try {
+            rejects(()->PackageImport.copy(new ByteArrayInputStream(bytes),target,4096,file->{throw new IOException("Invalid package");}));
+            check(Arrays.equals(previous,Files.readAllBytes(target.toPath())),"Invalid local package replaced the previous selection");
+            rejects(()->PackageImport.copy(new ByteArrayInputStream(bytes),target,1024,file->{}));
+            check(Arrays.equals(previous,Files.readAllBytes(target.toPath())),"Oversized local package replaced the previous selection");
+            InputStream interrupted=new InputStream(){@Override public int read()throws IOException{throw new InterruptedIOException("Lost provider");}};
+            rejects(()->PackageImport.copy(interrupted,target,4096,file->{}));
+            check(Arrays.equals(previous,Files.readAllBytes(target.toPath())),"Interrupted local provider destroyed the selection");
+            check(directory.list().length==1,"Local selection leaked a partial package");
+            try{Thread.currentThread().interrupt();rejects(()->PublicRelease.save(new ByteArrayInputStream(bytes),directory,"miqat.apk",bytes.length,digest.toString(),(done,total)->{}));}finally{Thread.interrupted();}
+            check(Arrays.equals(previous,Files.readAllBytes(target.toPath())),"Cancelled download destroyed the previous package");
             rejects(()->PublicRelease.save(new ByteArrayInputStream(bytes),directory,"miqat.apk",bytes.length,hash,(done,total)->{}));
             check(Arrays.equals(previous,Files.readAllBytes(target.toPath())),"Bad digest destroyed previous file");
             rejects(()->PublicRelease.save(new ByteArrayInputStream(Arrays.copyOf(bytes,1000)),directory,"miqat.apk",bytes.length,digest.toString(),(done,total)->{}));

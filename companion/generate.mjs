@@ -11,7 +11,7 @@ export function generatePhone() {
   const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
   const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
     prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
-  if(contract.version!==2||!cities.some(c=>c.id===contract.defaultCity))throw Error('Invalid phone catalog version/location');
+  if(contract.version!==2||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
   const ids=new Set();
   for(const control of [...contract.controls,...contract.perPrayer]) {
     const id=control.id??control.suffix;
@@ -111,7 +111,7 @@ export function generate(platforms = ['android','lg']) {
     favourites:pair('التطبيقات المفضلة','Favourite apps'),apps:pair('التطبيقات','Apps'),remote:pair('أزرار الريموت','Remote buttons'),pairing:label('companionPhones')};
   const commands=read('companion/protocol/lan.json').commands;
   for(const id of commands)if(!all.some(c=>c.id===id&&c.kind==='action'))throw Error('Unknown canonical command: '+id);
-  return {version:1,commands,profiles,demoSystemLanguage:'ar',sections,colors,themeKeys:read('shared/design/appearance.json').colors,themeSurfaces:read('shared/design/appearance.json').surfaces,themes:themeData,appOptions,prayerNames:strings.prayerNames,text:read('companion/strings.json'), cities:cities.map(c=>({id:c.id,method:c.method,asr:c.hanafi?'hanafi':'shafi'}))};
+  return {version:1,setupPlatforms:read('shared/data/tv-platforms.json'),commands,profiles,demoSystemLanguage:'ar',sections,colors,themeKeys:read('shared/design/appearance.json').colors,themeSurfaces:read('shared/design/appearance.json').surfaces,themes:themeData,appOptions,prayerNames:strings.prayerNames,text:read('companion/strings.json'), cities:cities.map(c=>({id:c.id,method:c.method,asr:c.hanafi?'hanafi':'shafi'}))};
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -134,6 +134,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   writeFileSync(new URL('drawable-nodpi/miqat_icon.png',res),readFileSync(new URL('shared/design/artwork/icon.png',root)));
   for(const [id,svg] of Object.entries(read('shared/design/icons.json')))writeFileSync(new URL('drawable/companion_icon_'+id+'.xml',res),vectorIcon(svg,id==='back'));
   const colors=generate().colors;
-  writeFileSync(new URL('values/companion_colors.xml',res),'<resources>'+['lapis-900','gold-400'].map(id=>'<color name="companion_'+id.replaceAll('-','_')+'">'+colors[id]+'</color>').join('')+'</resources>');
+  writeFileSync(new URL('values/companion_colors.xml',res),'<resources>'+['lapis-900','gold-400','plaster-100'].map(id=>'<color name="companion_'+id.replaceAll('-','_')+'">'+colors[id]+'</color>').join('')+'</resources>');
   console.log('Generated companion catalog from canonical product sources');
 }

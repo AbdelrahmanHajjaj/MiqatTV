@@ -16,7 +16,7 @@ final class PhoneUiCheck {
         Map<String,?> original=new LinkedHashMap<>(prefs.getAll());String language=context.getSharedPreferences("companion",0).getString("language","system");
         MainActivity[] current={null};
         try {
-            PhoneAlarms.cancel(context);prefs.edit().clear().commit();
+            PhoneAlarms.cancel(context);prefs.edit().clear().putBoolean("onboarding-seen",true).commit();
             for(String lang:new String[]{"en","ar"}) {
                 context.getSharedPreferences("companion",0).edit().putString("language",lang).commit();
                 MainActivity a=(MainActivity)test.startActivitySync(new Intent(context,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));current[0]=a;
@@ -53,9 +53,9 @@ final class PhoneUiCheck {
                     a.tab("prayers");
                     try {
                         PhoneSchedule.Day day=a.phoneUi.settings.day(System.currentTimeMillis(),0);
-                        a.body.removeAllViews();a.phoneUi.home((long)day.times[5]+1000);
+                        a.body.removeAllViews();a.phoneUi.home.render((long)day.times[5]+1000);
                         check(!a.body.findViewWithTag("phone.prayer.fajr").isSelected(),"After Isha, today's past Fajr must not be highlighted as next");
-                        a.body.removeAllViews();a.phoneUi.home((long)day.times[0]-60000);
+                        a.body.removeAllViews();a.phoneUi.home.render((long)day.times[0]-60000);
                         check(a.body.findViewWithTag("phone.prayer.fajr").isSelected(),"Upcoming Fajr must be highlighted");
                         a.render();
                     }catch(Exception invalid){throw new AssertionError(invalid);}

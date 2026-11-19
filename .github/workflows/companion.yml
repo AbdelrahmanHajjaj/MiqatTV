@@ -46,6 +46,9 @@ jobs:
           script: |
             adb install -r companion/android/build/outputs/apk/debug/companion-debug.apk
             adb install -r -t companion/android/build/outputs/apk/androidTest/debug/companion-debug-androidTest.apk
+            adb shell am instrument -r -w -e suite phone-journey tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-journey-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-journey-result.log
+            grep -q 'PASS: bilingual fresh-use' phone-journey-result.log
             adb shell am instrument -r -w -e suite phone-custom tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-custom-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-custom-result.log
             grep -q 'PASS: v1 migration' phone-custom-result.log

@@ -37,17 +37,17 @@ final class PhoneLocationCheck {
                     PhoneUiCheck.check(a.body.findViewWithTag("phone_latitude")==null,"Coordinates must stay in Advanced");
                     a.body.findViewWithTag("phone.location.detect").performClick();
                 });
-                LiveUiCheck.untilUi(test,()->a.phoneUi.locationDialog!=null);
-                PhoneUiCheck.check(!a.phoneUi.locator.running,"One-shot detection did not release providers");
-                PhoneUiCheck.on(test,()->a.phoneUi.locationDialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick());
+                LiveUiCheck.untilUi(test,()->a.phoneUi.locationUi.locationDialog!=null);
+                PhoneUiCheck.check(!a.phoneUi.locationUi.locator.running,"One-shot detection did not release providers");
+                PhoneUiCheck.on(test,()->a.phoneUi.locationUi.locationDialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick());
                 LiveUiCheck.untilUi(test,()->a.phoneUi.settings.locationReady&&a.phoneUi.settings.value("prayer.location").startsWith("detected"));
                 PhoneUiCheck.on(test,()->{
                     PhoneUiCheck.check(a.phoneUi.settings.locationReady&&a.phoneUi.settings.value("prayer.location").startsWith("detected"),"Detected location was not confirmed/persisted");
-                    double distance=PhonePrayerRules.INSTANCE.distanceKm(51.5074,-0.1278,a.phoneUi.settings.latitude,a.phoneUi.settings.longitude);
+                    double distance=tv.miqat.core.LocationRules.INSTANCE.distanceKm(51.5074,-0.1278,a.phoneUi.settings.latitude,a.phoneUi.settings.longitude);
                     PhoneUiCheck.check(distance<20,"Detector did not use injected GPS");
                     a.body.findViewWithTag("phone.location.advanced").performClick();
                     PhoneUiCheck.check(a.body.findViewWithTag("phone_latitude")!=null,"Advanced coordinate fallback missing");
-                    a.phoneUi.advancedLocation=false;a.render();
+                    a.phoneUi.locationUi.advancedLocation=false;a.render();
                 });
                 PhoneUiCheck.capture(test,a,lang+"-phone-detected-location",capture);
                 PhoneUiCheck.on(test,a::finish);LiveUiCheck.untilUi(test,a::isDestroyed);current[0]=null;
@@ -57,9 +57,9 @@ final class PhoneLocationCheck {
                 PhoneStore.preferences(c).edit().putLong("location-refresh",0).commit();
                 MainActivity a=(MainActivity)test.startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));current[0]=a;
                 LiveUiCheck.untilUi(test,()->a.phoneUi.settings.value("prayer.location").startsWith("detected"));
-                PhoneUiCheck.check(a.phoneUi.locationDialog==null&&!a.phoneUi.locator.running,"Opt-in refresh did not release provider");
+                PhoneUiCheck.check(a.phoneUi.locationUi.locationDialog==null&&!a.phoneUi.locationUi.locator.running,"Opt-in refresh did not release provider");
                 PhoneStore updated=PhoneStore.read(c);PhoneUiCheck.check(updated.value("prayer.method").equals("KARACHI")&&updated.offsets[0]==7&&updated.zone().getID().equals("Asia/Tokyo")&&updated.locationReady,"Travel refresh lost calibration/fixed timezone");
-                PhoneUiCheck.check(PhonePrayerRules.INSTANCE.distanceKm(51.5074,-0.1278,updated.latitude,updated.longitude)<20,"Travel refresh ignored fixture location");
+                PhoneUiCheck.check(tv.miqat.core.LocationRules.INSTANCE.distanceKm(51.5074,-0.1278,updated.latitude,updated.longitude)<20,"Travel refresh ignored fixture location");
                 PhoneUiCheck.on(test,a::finish);LiveUiCheck.untilUi(test,a::isDestroyed);current[0]=null;
             }
         }finally{if(mock)manager.removeTestProvider("network");if(current[0]!=null)PhoneUiCheck.on(test,current[0]::finish);original.save(c);PhoneStore.preferences(c).edit().putLong("location-refresh",refresh).commit();c.getSharedPreferences("companion",0).edit().putString("language",language).commit();PhoneAlarms.rebuild(c);}

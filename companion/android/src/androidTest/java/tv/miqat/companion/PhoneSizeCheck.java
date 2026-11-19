@@ -22,11 +22,11 @@ final class PhoneSizeCheck {
                     View nav=a.getWindow().getDecorView().findViewWithTag("navigation");Rect visible=new Rect();PhoneUiCheck.check(nav.getGlobalVisibleRect(visible)&&visible.height()==nav.getHeight(),"Navigation clipped at "+expected);
                     for(String destination:new String[]{"prayers","tvs","phone-settings"}){
                         TextView button=a.getWindow().getDecorView().findViewWithTag("nav."+destination);
-                        PhoneUiCheck.check(button!=null&&button.getHeight()>=a.dp(48),"Small navigation touch target");
+                        PhoneUiCheck.check(button!=null&&button.getHeight()>=a.views.dp(48),"Small navigation touch target");
                         if(button.getLayout()!=null)for(int line=0;line<button.getLayout().getLineCount();line++)PhoneUiCheck.check(button.getLayout().getEllipsisCount(line)==0,"Navigation label truncated");
                     }
                     for(String prayer:PhoneStore.PRAYERS){
-                        ViewGroup cell=a.body.findViewWithTag("phone.prayer."+prayer);PhoneUiCheck.check(cell!=null&&cell.getHeight()>=a.dp(48),"Prayer card touch target");
+                        ViewGroup cell=a.body.findViewWithTag("phone.prayer."+prayer);PhoneUiCheck.check(cell!=null&&cell.getHeight()>=a.views.dp(48),"Prayer card touch target");
                         PhoneUiCheck.check(cell.getTop()>=0&&cell.getBottom()<=((View)cell.getParent()).getHeight(),"Prayer card outline clipped by its row at "+expected);
                         int content=0;for(int i=0;i<cell.getChildCount();i++)content+=cell.getChildAt(i).getHeight();
                         PhoneUiCheck.check(content<=cell.getHeight()-cell.getPaddingTop()-cell.getPaddingBottom(),"Prayer card text clipped at "+expected);
@@ -39,7 +39,7 @@ final class PhoneSizeCheck {
                 PhoneUiCheck.on(test,()->a.phoneUi.open("audio"));
                 PhoneUiCheck.on(test,()->{
                     View preview=a.body.findViewWithTag("phone.reminders.voice.preview"),stop=a.body.findViewWithTag("phone.reminders.voice.stop");ViewGroup row=(ViewGroup)preview.getParent();
-                    PhoneUiCheck.check(preview.getWidth()>0&&stop.getWidth()>=a.dp(48)&&preview.getLeft()>=0&&preview.getRight()<=row.getWidth()&&stop.getLeft()>=0&&stop.getRight()<=row.getWidth(),"Voice preview/Stop clipped at "+expected);
+                    PhoneUiCheck.check(preview.getWidth()>0&&stop.getWidth()>=a.views.dp(48)&&preview.getLeft()>=0&&preview.getRight()<=row.getWidth()&&stop.getLeft()>=0&&stop.getRight()<=row.getWidth(),"Voice preview/Stop clipped at "+expected);
                 });
                 if(size==80||size==150){
                     PhoneUiCheck.on(test,()->a.body.findViewWithTag("phone.quiet.start.edit").performClick());

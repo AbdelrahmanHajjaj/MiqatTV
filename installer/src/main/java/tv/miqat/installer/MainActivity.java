@@ -99,6 +99,8 @@ public class MainActivity extends Activity {
         String demo = getIntent().getStringExtra("screen");
         boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         if (demo != null && debuggable) showDemo(demo);
+        else if(getIntent().getBooleanExtra("choose-local",false)){showGuide();chooseLocal();}
+        else if(getIntent().getBooleanExtra("prepared",false))showFind();
         else showGuide();
     }
 
@@ -140,12 +142,20 @@ public class MainActivity extends Activity {
         foot(Ui.secondary(this, getString(R.string.advanced_setup), v -> new AlertDialog.Builder(this)
             .setTitle(R.string.advanced_setup).setItems(new String[]{getString(R.string.choose_local_apk),getString(R.string.use_public_download)}, (d,which) -> {
                 if(which==1){localApk=null;showGuide();}
-                else startActivityForResult(new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT)
-                    .setType("application/vnd.android.package-archive").addCategory(android.content.Intent.CATEGORY_OPENABLE),81);
+                else chooseLocal();
             }).show()));
         foot(Ui.primary(this, getString(R.string.guide_ready), v -> go(this::showFind)));
         recoveryActions();
         back = this::finish;
+    }
+
+    private void chooseLocal(){
+        startActivityForResult(new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT)
+            .setType("application/vnd.android.package-archive").addCategory(android.content.Intent.CATEGORY_OPENABLE),81);
+    }
+
+    private void leavePreparation(){
+        if(getIntent().getBooleanExtra("prepared",false))finish();else go(this::showGuide);
     }
 
     /** A numbered card: its title, then what to find on the TV (in both languages), with the detail after the first. */
@@ -174,12 +184,13 @@ public class MainActivity extends Activity {
     }
 
     private void showFind(boolean search) {
+        if(getIntent().getBooleanExtra("choose-local",false)&&localApk==null){chooseLocal();return;}
         stopFinders();
-        back = () -> go(this::showGuide);
+        back = this::leavePreparation;
         if (Finder.phoneAddress(this) == null) {
             frame(CONNECT, Hero.Mode.PROBLEM, getString(R.string.not_wifi_title), getString(R.string.not_wifi));
             foot(Ui.primary(this, getString(R.string.try_again), v -> go(this::showFind)));
-            foot(Ui.secondary(this, getString(R.string.back), v -> go(this::showGuide)));
+            foot(Ui.secondary(this, getString(R.string.back), v -> back.run()));
             return;
         }
         frame(CONNECT, Hero.Mode.SEARCH, getString(R.string.find_title), getString(R.string.find_lead));
@@ -560,7 +571,7 @@ public class MainActivity extends Activity {
                 tv.recovery = new Recovery(a, getFilesDir(), host, tv);
                 steps = Setup.steps(null);
                 post(g, () -> {timeline=timeline();add(timeline,20);add(Timeline.legend(this),12);timeline.set(0,Timeline.State.WORKING);});
-                PublicRelease.Asset release=localApk==null?PublicRelease.latest(false):null;
+                PublicRelease.Asset release=localApk==null?PublicRelease.latest(false,getIntent().getStringExtra("release-channel")==null?"latest":getIntent().getStringExtra("release-channel")):null;
                 File apk=localApk!=null?localApk:release.download(getCacheDir(),(done,total)->post(g,()->{
                     hero.progress(0.45f*done/total);timeline.note(0,getString(R.string.mb_of,mb(done),mb(total)));
                 }));
@@ -748,26 +759,18 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int request, int result, android.content.Intent data) {
         super.onActivityResult(request, result, data);
+        if(request==81&&(result!=RESULT_OK||data==null||data.getData()==null)&&getIntent().getBooleanExtra("choose-local",false)){finish();return;}
         if (request == 81 && result == RESULT_OK && data != null && data.getData() != null) {
             android.net.Uri uri = data.getData();
+            final int generation=gen;
             work.execute(() -> {
                 try {
-                    File selected = new File(getCacheDir(), "local-miqat.apk");
-                    try (java.io.InputStream in = getContentResolver().openInputStream(uri);
-                         java.io.OutputStream out = new java.io.FileOutputStream(selected)) {
-                        if (in == null) throw new IOException("Cannot open APK");
-                        byte[] bytes = new byte[65536]; int n; long size = 0;
-                        while ((n = in.read(bytes)) != -1) {
-                            size += n;
-                            if (size > 200L * 1024 * 1024) throw new IOException("APK is too large");
-                            out.write(bytes, 0, n);
-                        }
-                    }
-                    android.content.pm.PackageInfo archive = getPackageManager().getPackageArchiveInfo(selected.getPath(), 0);
-                    if (archive == null || !Setup.PACKAGE.equals(archive.packageName)) throw new IOException("Choose a Miqat APK");
-                    localApk = selected;
-                    post(gen, () -> go(this::showFind));
-                } catch (Exception e) { fail(gen, message(e)); }
+                    File selected=PackageImport.copy(getContentResolver().openInputStream(uri),new File(getCacheDir(),"local-miqat.apk"),200L*1024*1024,file->{
+                        android.content.pm.PackageInfo archive=getPackageManager().getPackageArchiveInfo(file.getPath(),0);
+                        if(archive==null||!Setup.PACKAGE.equals(archive.packageName))throw new IOException("Choose a Miqat APK");
+                    });
+                    post(generation,()->{localApk=selected;go(this::showFind);});
+                } catch (Exception e) { fail(generation, message(e)); }
             });
             return;
         }
@@ -801,9 +804,9 @@ public class MainActivity extends Activity {
             card.addView(Ui.small(this, getString(R.string.check_body)), Ui.wide(this, 8));
             add(card, 20);
             foot(Ui.primary(this, getString(R.string.try_again), v -> go(this::showFind)));
-            foot(Ui.secondary(this, getString(R.string.back), v -> go(this::showGuide)));
+            foot(Ui.secondary(this, getString(R.string.back), v -> leavePreparation()));
             recoveryActions();
-            back = () -> go(this::showGuide);
+            back = this::leavePreparation;
         });
     }
 

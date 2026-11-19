@@ -19,9 +19,9 @@ final class PhoneCustomCheck {
             @Override public android.content.SharedPreferences getSharedPreferences(String name,int mode){return base.getSharedPreferences(key+name,mode);}
         };
         try {
-            PhoneStore current=PhoneStore.read(c);Map<String,String> old=new LinkedHashMap<>(current.values);old.keySet().retainAll(current.data.legacyIds());old.put("reminders.volume","35");
+            PhoneStore current=PhoneStore.read(c);Map<String,String> old=new LinkedHashMap<>(current.values);old.keySet().retainAll(current.data.legacyIds());old.put("reminders.volume","35");old.put("call.fajr.voice","inherit");
             PhoneStore.preferences(c).edit().putString("settings",new JSONObject().put("version",1).put("values",new JSONObject(old)).toString()).commit();
-            PhoneStore migrated=PhoneStore.read(c);PhoneUiCheck.check(migrated.volume==35&&migrated.number("call.fajr.weekdays")==127&&migrated.value("call.fajr.default-audio").equals("true"),"v1 settings/default migration");
+            PhoneStore migrated=PhoneStore.read(c);PhoneUiCheck.check(migrated.value("call.fajr.voice").equals("inherit")&&migrated.volume==35&&migrated.number("call.fajr.weekdays")==127&&migrated.value("call.fajr.default-audio").equals("true"),"v1 settings/default migration");
             old.remove("reminders.volume");PhoneStore.preferences(c).edit().putString("settings",new JSONObject().put("version",1).put("values",new JSONObject(old)).toString()).commit();LanCheck.rejects(()->PhoneStore.read(c));migrated.save(c);
             Map<String,String> edits=new LinkedHashMap<>();for(String prayer:PhoneStore.PRAYERS)if(!prayer.equals("sunrise"))edits.put("call."+prayer+".mode","off");
             edits.put("call.fajr.mode","adhan");edits.put("call.fajr.weekdays","1");edits.put("prayer.zone","Africa/Cairo");edits.put("call.fajr.default-audio","false");edits.put("call.fajr.volume","15");edits.put("call.fajr.duration","30");

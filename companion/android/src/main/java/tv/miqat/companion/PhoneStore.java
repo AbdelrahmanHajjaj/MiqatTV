@@ -66,7 +66,7 @@ final class PhoneStore {
     int eventMode(tv.miqat.core.ReminderEvent event){
         Calendar date=new GregorianCalendar(zone());date.setTimeInMillis((long)event.getPrayerTime());int weekday=date.get(Calendar.DAY_OF_WEEK)-1;
         date.setTimeInMillis((long)event.getTime());int minute=date.get(Calendar.HOUR_OF_DAY)*60+date.get(Calendar.MINUTE);
-        return PhonePrayerRules.INSTANCE.alertMode(modes[event.getPrayer()],weekday,number("call."+PRAYERS[event.getPrayer()]+".weekdays"),minute,value("quiet.enabled").equals("true"),number("quiet.start"),number("quiet.end"),quietMode());
+        return tv.miqat.core.ReminderRules.INSTANCE.alertMode(modes[event.getPrayer()],weekday,number("call."+PRAYERS[event.getPrayer()]+".weekdays"),minute,value("quiet.enabled").equals("true"),number("quiet.start"),number("quiet.end"),quietMode());
     }
     tv.miqat.core.ReminderEvent nextEvent(double[][] days,long now,String[] handled){
         List<String> excluded=new ArrayList<>(Arrays.asList(handled));

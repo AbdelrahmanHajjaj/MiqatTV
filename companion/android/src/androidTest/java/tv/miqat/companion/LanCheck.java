@@ -127,19 +127,19 @@ final class LanCheck {
             MainActivity activity=(MainActivity)test.startActivitySync(new android.content.Intent(context,MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
             Throwable[] uiFailure={null};delayRemote[0]=true;
             try {
-                test.runOnMainSync(()->{try{activity.phones=fixture.store;activity.lanTvs.clear();activity.addPhone(adapter.phone);activity.selected=2;activity.real().online=true;activity.page="overview";activity.readRemote();}catch(Throwable error){uiFailure[0]=error;}});
+                test.runOnMainSync(()->{try{activity.phones=fixture.store;activity.lanTvs.clear();activity.addPhone(adapter.phone);activity.selected=2;activity.real().online=true;activity.page="overview";activity.remoteUi.readRemote();}catch(Throwable error){uiFailure[0]=error;}});
                 if(uiFailure[0]!=null)throw new AssertionError(uiFailure[0]);
                 check(remoteStarted.await(5,java.util.concurrent.TimeUnit.SECONDS));
                 test.runOnMainSync(()->{try{
-                    check(activity.remoteLoading&&!activity.networkBusy);
+                    check(activity.remoteUi.remoteLoading&&!activity.networkBusy);
                     check(activity.getWindow().getDecorView().findViewWithTag("tv-nav.settings").isEnabled());
                     activity.tab("tvs");check(activity.page.equals("tvs"));
                     check(activity.body.findViewWithTag(activity.real().key+".forget")!=null);
                 }catch(Throwable error){uiFailure[0]=error;}});
                 if(uiFailure[0]!=null)throw new AssertionError(uiFailure[0]);
                 remoteRelease.countDown();
-                LiveUiCheck.untilUi(test,()->!activity.remoteLoading);
-                test.runOnMainSync(()->activity.forgetTv(activity.real()));
+                LiveUiCheck.untilUi(test,()->!activity.remoteUi.remoteLoading);
+                test.runOnMainSync(()->activity.tvListUi.forgetTv(activity.real()));
                 LiveUiCheck.untilUi(test,()->!activity.networkBusy&&activity.lanTvs.isEmpty());
                 check(fixture.store.read().isEmpty());
             } finally {remoteRelease.countDown();test.runOnMainSync(activity::finish);check(activity.io.awaitTermination(10,java.util.concurrent.TimeUnit.SECONDS));}

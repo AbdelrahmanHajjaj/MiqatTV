@@ -601,3 +601,27 @@ all passed on 666ce6a. The final compact-UI/startup-test checkpoint is gated by 
 before handoff. The fixed phone export is 0.2.0/code 6, SHA256 prefix
 `D6B4983DA58E3CF3`, with all 26 exact recordings verified. Physical owner review
 remains open; the PR stays draft and no release/device deployment was performed.
+
+
+## Phone feedback pass 3 checkpoint — 19 November 2026
+
+Worktree feature/companion-installation, following requirements commit 75f5017;
+not a final build or physical acceptance. Phone build/lint and test APK pass after
+cohesive UI ownership/navigation changes. Shared JVM/JS/Java/legacy-ES5 and
+companion-core rules pass. Both installer hosts build/lint. New native fresh-use,
+resumable onboarding, real appearance Cancel, widget AppWidgetService host
+bind/update, common TV platform/source, Qibla screen and cancelled late-result
+checks pass in English/Arabic. Existing bilingual TV drafts/editor/install
+handoff, phone settings, v1/private-audio migration, release/channel/atomic-import
+failure cases and pinned-TLS/LAN checks pass on the owned muted phone emulator.
+Private logs: pass3-cohesive-{default,journey,phone,custom,public,lan}-2.log,
+pass3-audio-navigation-build.log, pass3-cancel-build.log and
+pass3-shared-final-check.log. An earlier default invocation failed in am argument
+parsing before instrumentation; the successful invocation uses explicit user 0.
+
+Remaining: final phone audio/appearance and installer palette polish, enlarged
+text/landscape visual review, high-risk whole-repository audit completion,
+affected TV/LG/preview union checks, final artifacts/docs/CI. Public binary
+transfer still lacks a published release. No physical sensor/OEM alarm/TV
+picture-sound acceptance or iOS app is established. Exact next action and scope
+remain in PHONE-WORK.md and PHONE-PASS3.md.

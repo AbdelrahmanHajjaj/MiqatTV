@@ -31,15 +31,24 @@ public final class PublicRelease {
         }
     }
     public static Asset latest(boolean lg)throws IOException {
+        return latest(lg,"latest");
+    }
+    public static Asset latest(boolean lg,String channel)throws IOException {
         // shortcut: inspect the newest 30 releases; revisit if platform releases diverge that far.
-        return parse(text("https://api.github.com/repos/"+REPO+"/releases?per_page=30",2*1024*1024),lg);
+        return parse(text("https://api.github.com/repos/"+REPO+"/releases?per_page=30",2*1024*1024),lg,channel);
     }
     static Asset parse(String text,boolean lg)throws IOException {
+        return parse(text,lg,"latest");
+    }
+    static Asset parse(String text,boolean lg,String channel)throws IOException {
+        if(!channel.equals("latest")&&!channel.equals("stable")&&!channel.equals("preview"))throw new IOException("Unknown release channel");
         try {
             JSONArray releases=new JSONArray(text);JSONObject chosen=null;String published="";
             for(int i=0;i<releases.length();i++){
                 JSONObject release=releases.getJSONObject(i);String date=release.optString("published_at","");
                 if(release.optBoolean("draft",true)||!date.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z"))continue;
+                boolean preview=release.getBoolean("prerelease");
+                if(channel.equals("stable")&&preview||channel.equals("preview")&&!preview)continue;
                 JSONArray assets=release.getJSONArray("assets");boolean found=false;
                 for(int j=0;j<assets.length();j++)if(packageName(assets.getJSONObject(j).getString("name"),lg))found=true;
                 if(found&&(chosen==null||date.compareTo(published)>0)){chosen=release;published=date;}
@@ -97,12 +106,13 @@ public final class PublicRelease {
     private static String text(String url,int limit)throws IOException {
         HttpURLConnection c=open(url,url.startsWith("https://api.github.com/"));
         try(InputStream in=c.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){
-            byte[] buffer=new byte[16384];int n;while((n=in.read(buffer))!=-1){if(out.size()+n>limit)throw new IOException("Release response too large");out.write(buffer,0,n);}return out.toString("UTF-8");
+            byte[] buffer=new byte[16384];int n;while((n=in.read(buffer))!=-1){if(Thread.currentThread().isInterrupted())throw new InterruptedIOException("Download cancelled");if(out.size()+n>limit)throw new IOException("Release response too large");out.write(buffer,0,n);}return out.toString("UTF-8");
         }finally{c.disconnect();}
     }
     private static HttpURLConnection open(String address,boolean api)throws IOException {
         URL url=new URL(address);
         for(int redirects=0;redirects<=5;redirects++){
+            if(Thread.currentThread().isInterrupted())throw new InterruptedIOException("Download cancelled");
             String host=url.getHost();if(!url.getProtocol().equals("https")||url.getUserInfo()!=null||url.getPort()!=-1||!(host.equals("api.github.com")||host.equals("github.com")||host.equals("release-assets.githubusercontent.com")||host.equals("objects.githubusercontent.com")))throw new IOException("Untrusted download redirect");
             HttpURLConnection c=(HttpURLConnection)url.openConnection();c.setInstanceFollowRedirects(false);c.setConnectTimeout(15000);c.setReadTimeout(30000);c.setRequestProperty("User-Agent","Miqat-installer");
             if(api){c.setRequestProperty("Accept","application/vnd.github+json");c.setRequestProperty("X-GitHub-Api-Version","2022-11-28");}

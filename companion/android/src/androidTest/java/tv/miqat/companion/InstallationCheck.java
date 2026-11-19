@@ -28,16 +28,9 @@ final class InstallationCheck {
             "Installer did not follow companion language");
         CompanionCheck.check(installer.getResources().getConfiguration().getLayoutDirection() ==
             (language.equals("ar") ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR), "Installer direction");
-        CompanionCheck.check(find(installer.getWindow().getDecorView(), installer.getString(tv.miqat.installer.R.string.guide_title)) != null,
-            "Native setup guide missing");
-        CompanionCheck.check(find(installer.getWindow().getDecorView(),installer.getString(tv.miqat.installer.R.string.choose_local_apk))==null,
-            "Local APK should be under Advanced");
-        CompanionCheck.check(find(installer.getWindow().getDecorView(),installer.getString(tv.miqat.installer.R.string.advanced_setup))!=null,
-            "Advanced setup missing");
-        View ready = find(installer.getWindow().getDecorView(), installer.getString(tv.miqat.installer.R.string.guide_ready));
-        android.graphics.Rect visible = new android.graphics.Rect();
-        CompanionCheck.check(ready != null && ready.getGlobalVisibleRect(visible) && visible.height() == ready.getHeight(),
-            "Setup's primary action is clipped");
+        CompanionCheck.check(find(installer.getWindow().getDecorView(),installer.getString(tv.miqat.installer.R.string.find_title))!=null||
+            find(installer.getWindow().getDecorView(),installer.getString(tv.miqat.installer.R.string.not_wifi_title))!=null,
+            "Prepared TV must continue into native connection setup");
         if (((CompanionCheck)test).captures) {
             android.os.SystemClock.sleep(1000);
             android.graphics.Bitmap screenshot = test.getUiAutomation().takeScreenshot();
@@ -51,7 +44,7 @@ final class InstallationCheck {
         test.runOnMainSync(installer::onBackPressed);
         Activity cancelled = installer;
         await(test, () -> cancelled.isDestroyed() && phone.hasWindowFocus(), "Cancelled setup did not return to its caller");
-        CompanionCheck.check(phone.page.equals("tvs"), "Cancelling setup must return to TVs without pairing");
+        CompanionCheck.check(phone.page.equals("tv-setup"), "Cancelling setup must return to source choice without pairing");
         installer = open(test, phone);
         showDone(test, installer, false);
         Activity partial = installer;
@@ -61,7 +54,7 @@ final class InstallationCheck {
             find(partial.getWindow().getDecorView(), partial.getString(tv.miqat.installer.R.string.finish)).performClick();
         });
         await(test, () -> partial.isDestroyed() && phone.hasWindowFocus(), "Incomplete setup did not return to its caller");
-        CompanionCheck.check(phone.page.equals("tvs"), "Incomplete setup must not open pairing");
+        CompanionCheck.check(phone.page.equals("tv-setup"), "Incomplete setup must not open pairing");
         installer = open(test, phone);
         showDone(test, installer, true);
         Activity completed = installer;
@@ -72,7 +65,7 @@ final class InstallationCheck {
         });
         await(test, () -> completed.isDestroyed() && phone.page.equals("pair") && phone.hasWindowFocus(),
             "Completed setup must open ordinary pairing");
-        CompanionCheck.check(phone.pairing == null, "Setup must not automatically approve a phone");
+        CompanionCheck.check(phone.pairingUi.pairing == null, "Setup must not automatically approve a phone");
         test.runOnMainSync(phone::finish);
         test.waitForIdleSync();
     }
@@ -93,8 +86,11 @@ final class InstallationCheck {
         Instrumentation.ActivityMonitor monitor = test.addMonitor(SetupActivity.class.getName(), null, false);
         try {
             test.runOnMainSync(() -> {
-                View setup = phone.getWindow().getDecorView().findViewWithTag("install.open");
-                CompanionCheck.check(setup != null, "Setup entry missing");setup.performClick();
+                phone.tvSetup.open();
+                phone.body.findViewWithTag("setup.platform.android").performClick();
+                phone.body.findViewWithTag("setup.ready").performClick();
+                CompanionCheck.check(phone.body.findViewWithTag("setup.channel.latest").isSelected(),"Latest release must be the default");
+                phone.body.findViewWithTag("setup.continue").performClick();
             });
             Activity installer = test.waitForMonitorWithTimeout(monitor, 5000);
             CompanionCheck.check(installer != null, "Setup did not launch inside companion");

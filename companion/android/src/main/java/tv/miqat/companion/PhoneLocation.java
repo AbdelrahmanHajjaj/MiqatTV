@@ -21,7 +21,7 @@ final class PhoneLocation {
     PhoneLocation(Context context){this.context=context;manager=context.getSystemService(LocationManager.class);}
     static boolean allowed(Context c){return c.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED||c.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED;}
     static boolean usable(Location value,long elapsedNanos){
-        return value!=null&&value.hasAccuracy()&&PhonePrayerRules.INSTANCE.usableLocation(value.getLatitude(),value.getLongitude(),value.getAccuracy(),(elapsedNanos-value.getElapsedRealtimeNanos())/1000000.0);
+        return value!=null&&value.hasAccuracy()&&tv.miqat.core.LocationRules.INSTANCE.usableLocation(value.getLatitude(),value.getLongitude(),value.getAccuracy(),(elapsedNanos-value.getElapsedRealtimeNanos())/1000000.0);
     }
     void request(Consumer<Location> found,Consumer<String> failed){
         close();if(context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED&&context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED){failed.accept("phone_location_denied");return;}

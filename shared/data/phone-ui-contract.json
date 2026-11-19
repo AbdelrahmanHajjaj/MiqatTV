@@ -1,6 +1,7 @@
 {
   "version": 2,
   "defaultCity": "cairo",
+  "defaultFajrVoice": "chebae_fajr",
   "controls": [
     {"id":"prayer.method","section":"calculation","kind":"choice","label":"phone_method","choices":"methods","default":"EGYPTIAN"},
     {"id":"prayer.asr","section":"calculation","kind":"choice","label":"phone_asr","choices":["shafi","hanafi"],"default":"shafi"},

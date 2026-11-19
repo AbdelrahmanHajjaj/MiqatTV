@@ -7,28 +7,6 @@ class PhonePrayerRulesTest {
     private val none = IntArray(6)
     private val times = doubleArrayOf(600000.0, 900000.0, 1200000.0, 1800000.0, 2400000.0, 3000000.0)
 
-    @Test fun locationQualityAndCityDistancesAreBounded() {
-        assertTrue(PhonePrayerRules.usableLocation(30.0,31.0,3000.0,120000.0))
-        assertFalse(PhonePrayerRules.usableLocation(30.0,31.0,10001.0,0.0))
-        assertFalse(PhonePrayerRules.usableLocation(30.0,31.0,20.0,120001.0))
-        assertFalse(PhonePrayerRules.usableLocation(30.0,31.0,20.0,-1.0))
-        assertFalse(PhonePrayerRules.usableLocation(Double.NaN,31.0,20.0,0.0))
-        assertEquals(0.0,PhonePrayerRules.distanceKm(30.0,31.0,30.0,31.0),0.000001)
-        assertTrue(PhonePrayerRules.distanceKm(0.0,179.9,0.0,-179.9) in 22.0..23.0)
-        assertEquals(20015.09,PhonePrayerRules.distanceKm(90.0,0.0,-90.0,0.0),0.1)
-    }
-
-    @Test fun weekdayAndQuietHoursKeepExplicitBoundaries() {
-        fun mode(day:Int, minute:Int, start:Int=1320, end:Int=420, quietMode:Int=4) =
-            PhonePrayerRules.alertMode(2,day,1 shl 5,minute,true,start,end,quietMode)
-        assertEquals(0,mode(4,800)); assertEquals(2,mode(5,420))
-        assertEquals(4,mode(5,1320)); assertEquals(4,mode(5,0))
-        assertEquals(3,mode(5,100,0,0,3)); assertEquals(0,mode(5,100,0,0,0))
-        assertEquals(2,mode(5,1000,60,120)); assertEquals(4,mode(5,60,60,120))
-        assertEquals(2,mode(5,120,60,120))
-        assertEquals(0,PhonePrayerRules.alertMode(0,5,127,100,false,0,0,4))
-    }
-
     @Test fun nextPrayerSkipsSunriseAndUsesTomorrowWithoutInventingPolarTimes() {
         val tomorrow=times.map { it+86400000 }.toDoubleArray()
         assertEquals(2,PhonePrayerRules.nextPrayer(times,tomorrow,600000.0)!!.next)

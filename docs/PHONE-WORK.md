@@ -46,7 +46,8 @@ validation belongs in EVIDENCE.md. Commit validated milestones; never squash.
 - iOS later: maintain portable boundaries and add a lightweight macOS shared-core
   compile/test check if viable. No uncompiled Swift app or untested iPhone audio
   claim. Android is the first standalone deliverable.
-- No Qibla, Quran reader, accounts, feeds or unrelated product features are implied.
+- Pass 3 explicitly adds Qibla and widgets. Quran/adhkar are locked placeholders;
+  accounts, feeds and unrelated features are outside scope.
 
 ## Ordered implementation and acceptance
 
@@ -186,6 +187,52 @@ or incomplete working screens. Add portable Qibla bearing to shared/core; keep
 sensor calibration in the phone shell. Widgets reuse the offline schedule and
 refresh lifecycle, without another scheduler or idle service.
 Persistent quality rules are in AGENTS.md. No release/physical deployment/merge.
+
+### Active pass-3 implementation / resume
+
+Requirements/guardrails committed as `75f5017`; explicit goal is active. Pass-3
+source is implemented in this worktree, not ready for export. New native owners:
+TvSetup, PhoneOnboarding, PhoneAppearance, PhoneHome, PhoneLocationUi, PairingUi,
+TvSettingsUi, TvRemoteUi, TvListUi and CompanionViews. MainActivity retains host,
+lifecycle and navigation; no compatibility delegation wrappers were retained.
+QiblaUi owns foreground sensors; PrayerWidget uses native RemoteViews and the
+existing refresh lifecycle. Canonical metadata includes supported/locked TV
+platforms, lock artwork and the fresh-install Fajr voice. Existing saved choices
+are preserved. Core LocationRules, ReminderRules quiet policy, DisplayText and
+QiblaRules are shared across JVM/ES5; OS integration stays in native shells.
+
+Current source builds and phone lint pass: state/pass3-audio-navigation-build.log.
+Both installer hosts built/linted in state/pass3-cancel-build.log. Shared JVM/JS,
+Java interop and legacy ES5 pass in state/pass3-shared-final-check.log; companion
+core passes state/pass3-companion-core.log. Canonical/generator checks passed.
+Actual bilingual TV bindings/editor/draft/install handoff checks pass after all
+extractions in state/pass3-cohesive-default-2.log. Fresh-use/resume, appearance
+Cancel, real widget-host bind/update, common TV entry/source, Qibla screen and
+late-success-after-cancel checks pass state/pass3-cohesive-journey-2.log.
+The first cohesive default invocation failed before instrumentation (empty suite
+argument / am user parsing); its replacement supplies explicit user 0. Do not
+count that failed invocation as product evidence. Cohesive phone-ui, phone-custom, public-release and LAN checks also pass,
+sequentially: state/pass3-cohesive-{phone,custom,public,lan}-2.log.
+
+Current concrete fixes include atomic package import preserving previous bytes,
+LG channel/cache identity, embedded Android Back returning to common source,
+cancellable public downloads rejecting late callbacks, pinned onboarding actions,
+real artwork previews without intrinsic-height inflation, accurate auto-digit
+labels, single compass calibration hint and actual phone settings Back history.
+Audio groups general settings, per-prayer effective voices, private import and
+quiet hours. Actual audio/runtime regression still needs rerun after final edits.
+
+Next: continue PHONE-AUDIT.md with high-risk runtime/storage/transport/test findings;
+finish installer following the selected phone palette, audio choice audition UX,
+large-text/landscape and native sensor/widget visual inspection. Then affected
+Android TV/LG/preview union checks, accurate guides/CHANGELOG/versions/evidence,
+PR update, final-head CI and one combined export. Do not hand over 0.2.1 as pass 3.
+Keep the PR draft; no public release, physical deployment, merge or unrelated work.
+
+Owned read-only muted emulator PID 21468, AVD Medium_Phone_API_37.0, console 5564,
+ADB server 5037. Ownership receipt: ignored state/pass3-emulator-session.json;
+verify PID/start time/command before stopping. Guest changed to portrait
+1080x2400/density420, auto-rotation off. Do not adopt an unrelated session.
 
 ## Current resume point (pass 2 history)
 

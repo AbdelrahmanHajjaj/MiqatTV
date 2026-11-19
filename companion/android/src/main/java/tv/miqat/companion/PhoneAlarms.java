@@ -65,6 +65,7 @@ final class PhoneAlarms {
     }
     static String rebuild(Context context) {
         Context c=context.getApplicationContext();
+        PrayerWidget.updateAll(c);
         synchronized(PhoneStore.LOCK) {
             try {
                 cancel(c);
