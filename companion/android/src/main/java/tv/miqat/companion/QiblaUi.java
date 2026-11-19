@@ -57,7 +57,6 @@ final class QiblaUi implements SensorEventListener {
         status = a.views.text(a.t("qibla_wait"), 15, a.ink);
         status.setTag("qibla.status");
         a.body.addView(status);
-        a.body.addView(a.views.text(a.t("qibla_hint"), 15, a.muted));
         declination =
                 new GeomagneticField(
                                 (float) settings.latitude,

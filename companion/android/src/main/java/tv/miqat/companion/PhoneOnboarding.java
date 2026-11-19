@@ -46,38 +46,26 @@ final class PhoneOnboarding {
         a.body.addView(a.views.text(a.phoneUi.digits((step + 1) + " / 6"), 13, a.accent));
         String[] titles = {
             "setup_location",
-            "phone_alerts",
+            "setup_alerts",
             "phone_notifications",
             "phone_exact",
             "phone_theme",
             "phone_background"
         };
-        a.body.addView(a.views.heading(a.t(titles[step])));
+        android.widget.TextView title = a.views.heading(a.t(titles[step]));
+        title.setTag("onboarding.title");
+        a.body.addView(title);
         try {
             switch (step) {
                 case 0:
-                    a.body.addView(a.views.text(a.t("setup_location_short"), 14, a.muted));
                     a.phoneUi.locationUi.locationEditor();
                     a.phoneUi.locationUi.confirmLocation();
                     break;
                 case 1:
-                    a.body.addView(a.views.text(a.t("setup_alert_short"), 14, a.muted));
                     control("reminders.enabled");
                     break;
                 case 2:
-                    a.body.addView(a.views.text(a.t("setup_notification_short"), 14, a.muted));
-                    a.views
-                            .button(
-                                    a.body,
-                                    a.t("phone_notifications"),
-                                    a.phoneUi::requestNotifications)
-                            .setTag("onboarding.permission.notifications");
-                    break;
                 case 3:
-                    a.body.addView(a.views.text(a.t("setup_exact_short"), 14, a.muted));
-                    a.views
-                            .button(a.body, a.t("phone_exact"), a.phoneUi::requestExact)
-                            .setTag("onboarding.permission.exact");
                     break;
                 default:
                     a.phoneUi.appearance.carousel(
@@ -91,34 +79,47 @@ final class PhoneOnboarding {
 
     void footer(LinearLayout shell) {
         int step = step();
-        LinearLayout actions = a.views.horizontal(shell);
-        actions.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(12));
-        android.widget.Button skip =
-                a.views.button(
-                        actions,
+        LinearLayout footer = a.views.actionBar(shell);
+        LinearLayout secondary = a.views.secondaryActions(footer);
+        if (step > 0)
+            a.views
+                    .secondaryAction(secondary, a.t("previous"), this::back)
+                    .setTag("onboarding.previous");
+        a.views
+                .secondaryAction(
+                        secondary,
                         a.t("setup_skip"),
                         () -> {
                             if (step == 5) finish(true);
                             else advance(step + 1);
-                        });
-        a.views.flex(skip);
-        skip.setTag("onboarding.skip");
+                        })
+                .setTag("onboarding.skip");
+        boolean notification = step == 2 && !PhoneAlarms.notifications(a);
+        boolean exact = step == 3 && !PhoneAlarms.exact(a);
+        boolean confirm =
+                step == 0 && a.phoneUi.settings != null && !a.phoneUi.settings.locationReady;
         android.widget.Button next =
-                a.views.button(
-                        actions,
-                        a.t(step == 5 ? "setup_finish" : "setup_next"),
+                a.views.primaryAction(
+                        footer,
+                        a.t(
+                                notification
+                                        ? "phone_permission_notifications"
+                                        : exact
+                                                ? "phone_permission_exact"
+                                                : confirm
+                                                        ? "phone_confirm_location"
+                                                        : step == 5
+                                                                ? "setup_finish"
+                                                                : "setup_next"),
                         () -> {
-                            if (step == 5) finish(true);
+                            if (notification) a.phoneUi.requestNotifications();
+                            else if (exact) a.phoneUi.requestExact();
+                            else if (confirm) a.phoneUi.save("prayer.location-ready", "true");
+                            else if (step == 5) finish(true);
                             else advance(step + 1);
                         });
-        a.views.flex(next);
         next.setTag("onboarding.next");
-        next.setBackground(a.views.background(a.accent, 24));
-        next.setTextColor(a.ground);
-        next.setEnabled(
-                a.phoneUi.settings != null
-                        && (step != 0 || a.phoneUi.settings.locationReady)
-                        && !a.phoneUi.locationUi.locator.running);
+        next.setEnabled(a.phoneUi.settings != null && !a.phoneUi.locationUi.locator.running);
         next.setAlpha(next.isEnabled() ? 1f : .45f);
     }
 

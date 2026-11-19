@@ -1,6 +1,5 @@
 package tv.miqat.companion;
 
-import android.app.AlertDialog;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.RippleDrawable;
 import android.view.*;
@@ -24,7 +23,6 @@ final class TvListUi {
             glyph.setImageDrawable(Icons.get(a, "mihrab", a.accent));
             empty.addView(glyph, new LinearLayout.LayoutParams(-1, a.views.dp(72)));
             empty.addView(a.views.heading(a.t("no_tvs")));
-            empty.addView(a.views.text(a.t("no_tvs_hint"), 15, a.muted));
         }
         for (int i = 0; i < a.lanTvs.size(); i++) {
             final int index = i + 2;
@@ -79,12 +77,7 @@ final class TvListUi {
         pair.setCompoundDrawableTintList(ColorStateList.valueOf(a.ground));
         pair.setMinHeight(a.views.dp(56));
         a.views
-                .navigationRow(
-                        a.body,
-                        "tv",
-                        a.t("tv_setup"),
-                        a.t("tv_platform_hint"),
-                        () -> a.tvSetup.open())
+                .navigationRow(a.body, "tv", a.t("tv_setup"), "", () -> a.tvSetup.open())
                 .setTag("install.open");
         if (!a.prefs().getBoolean("show-demo", false)) return;
         a.body.addView(a.views.text(a.t("demo"), 13, a.muted));
@@ -108,7 +101,8 @@ final class TvListUi {
     }
 
     void confirmForget(LanTv target) {
-        a.views.dialog()
+        a.views
+                .dialog()
                 .setTitle(a.t("forget_tv"))
                 .setMessage(a.t("forget_tv_info"))
                 .setNegativeButton(a.t("cancel"), null)

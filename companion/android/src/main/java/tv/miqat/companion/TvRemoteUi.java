@@ -341,6 +341,9 @@ final class TvRemoteUi {
 
     void renameTv() {
         EditText input = new EditText(a);
+        input.setImeOptions(
+                input.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+
         input.setText(a.name(a.selected));
         input.setSingleLine(true);
         input.setHint(a.t("rename"));

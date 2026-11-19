@@ -174,24 +174,24 @@ final class Choices {
                                 "stop-audio");
                 if (a.settingsUi.isPending(id)) {
                     row.addView(a.views.text(a.t("voice_draft"), 12, a.muted));
-                    LinearLayout actions = a.views.horizontal(row);
+                    a.actionHost.removeAllViews();
+                    LinearLayout actions = a.views.actionBar(a.actionHost);
+                    LinearLayout secondary = a.views.secondaryActions(actions);
                     Button done =
                             a.views.bindAction(
-                                    a.views.button(
+                                    a.views.primaryAction(
                                             actions, a.t("done"), a.settingsUi::commitPending),
                                     "save-edit");
-                    a.views.flex(done);
                     done.setTag(id + ".save");
                     Button cancel =
-                            a.views.button(
-                                    actions,
+                            a.views.secondaryAction(
+                                    secondary,
                                     a.t("cancel"),
                                     () -> {
                                         a.stopAudio();
                                         a.settingsUi.clearPending();
                                         a.render();
                                     });
-                    a.views.flex(cancel);
                     cancel.setTag(id + ".cancel");
                 }
             }

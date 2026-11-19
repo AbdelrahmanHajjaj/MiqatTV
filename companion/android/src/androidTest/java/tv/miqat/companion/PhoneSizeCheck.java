@@ -146,10 +146,30 @@ final class PhoneSizeCheck {
                                 a.phoneUi.open("audio");
                                 a.body.findViewWithTag("phone.reminders.volume.edit")
                                         .performClick();
-                                View save = a.body.findViewWithTag("phone.reminders.volume.save");
+                                View save =
+                                        a.getWindow()
+                                                .getDecorView()
+                                                .findViewWithTag("phone.reminders.volume.save");
                                 PhoneUiCheck.check(
                                         save != null && save.isEnabled(),
                                         "Numeric save missing at scale");
+                            });
+                    PhoneUiCheck.on(
+                            test,
+                            () -> {
+                                View save =
+                                        a.getWindow()
+                                                .getDecorView()
+                                                .findViewWithTag("phone.reminders.volume.save");
+                                visible(save, "Bottom numeric confirmation clipped at scale");
+                                PhoneUiCheck.check(
+                                        a.body.findViewWithTag("phone.reminders.volume.save")
+                                                == null,
+                                        "Confirmation must stay outside scrolling content");
+                            });
+                    PhoneUiCheck.on(
+                            test,
+                            () -> {
                                 a.tab("prayers");
                                 a.phoneUi.save("display.digits", "western");
                                 PhoneUiCheck.check(

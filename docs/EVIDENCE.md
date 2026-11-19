@@ -1,5 +1,26 @@
 # Validation evidence
 
+## Bottom actions and concise phone copy — 19 November 2026
+
+Review APK **0.4.4/code 13**, `state/builds/companion/Miqat-latest.apk`,
+32,559,969 bytes; SHA-256:
+`7B2B69C19F9F56ED42819E345D415B3031E395F2758915895862B841766B098D`.
+Prior signing certificate retained; all 25 recordings and 25 license notices
+match exact approved source bytes. No production dependency added.
+
+Build/test APK/lint pass (0 errors, 43 existing warnings), generator 8/8 and
+canonical catalogs pass. Owned muted emulator verifies bottom gesture accidental
+cancellation, deliberate release and accessible Stop; fixed footers, bilingual
+keyboard visibility and 80–150% app sizing with enlarged Android text pass.
+The landscape keyboard initially exposed fullscreen extraction and then a zero
+height scroll viewport; no-extraction inputs and deferred header collapse now
+keep the real editor and Save/Cancel visible. Corrected native render inspected.
+Final updated journeys/runtime captures and final-head Actions remain pending
+in PHONE-WORK.md/PR #9; earlier runs do not certify this candidate.
+
+No physical OEM, TV, speaker, power-key or iOS acceptance is claimed. Android
+still owns notification styling and background/full-screen policy.
+
 ## Themed adhan and notification metadata — 19 November 2026
 
 Review APK **0.4.3/code 12**, primary `state/builds/companion/Miqat-latest.apk`,

@@ -84,9 +84,12 @@ public final class PhoneAdhanScreen extends Activity {
             ground = Color.parseColor(colors.getString("lapis-900"));
             ink = Color.parseColor(colors.getString("plaster-100"));
             accent = Color.parseColor(colors.getString("gold-400"));
+            LinearLayout shell = new LinearLayout(this);
+            shell.setOrientation(LinearLayout.VERTICAL);
+            shell.setBackground(new AdhanArtwork(this, settings));
             ScrollView scroll = new ScrollView(this);
             scroll.setFillViewport(true);
-            scroll.setBackground(new AdhanArtwork(this, settings));
+            shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
             content = new LinearLayout(this);
             content.setTag("adhan.screen");
             content.setOrientation(LinearLayout.VERTICAL);
@@ -98,35 +101,41 @@ public final class PhoneAdhanScreen extends Activity {
                             ? View.LAYOUT_DIRECTION_RTL
                             : View.LAYOUT_DIRECTION_LTR);
             scroll.addView(content);
-            state = label(PhoneAlarms.text(this, "phone_playing"), 18, ink);
+            state = label(content, PhoneAlarms.text(this, "phone_playing"), 18, ink);
             label(
+                    content,
                     settings.data.prayerName(
                             getIntent().getIntExtra("prayer", 0), PhoneAlarms.arabic(this)),
                     32,
                     accent);
-            label(PhoneAlarms.text(this, "phone_screen_hint"), 14, ink);
-            Button stop = new Button(this);
+            LinearLayout footer = new LinearLayout(this);
+            footer.setOrientation(LinearLayout.VERTICAL);
+            footer.setGravity(Gravity.CENTER_HORIZONTAL);
+            footer.setPadding(padding, 0, padding, padding / 2);
+            footer.setTag("adhan.actions");
+            shell.addView(footer, new LinearLayout.LayoutParams(-1, -2));
+            SwipeStop stop =
+                    new SwipeStop(
+                            this,
+                            accent,
+                            ground,
+                            !settings.value("display.reduce-motion").equals("true"));
             stop.setTag("adhan.stop-close");
-            stop.setText(PhoneAlarms.text(this, "phone_stop_close"));
-            stop.setTextColor(ground);
-            android.graphics.drawable.GradientDrawable shape =
-                    new android.graphics.drawable.GradientDrawable();
-            shape.setColor(accent);
-            shape.setCornerRadius(padding);
-            stop.setBackground(shape);
-            stop.setElevation(0);
-            stop.setStateListAnimator(null);
-            stop.setMinHeight(padding * 2);
-            stop.setAllCaps(false);
+            stop.setContentDescription(PhoneAlarms.text(this, "phone_stop_close"));
             stop.setOnClickListener(v -> stopAndClose());
-            content.addView(stop, new LinearLayout.LayoutParams(-1, -2));
-            setContentView(scroll);
+            float density = getResources().getDisplayMetrics().density;
+            footer.addView(
+                    stop,
+                    new LinearLayout.LayoutParams(
+                            Math.round(80 * density), Math.round(136 * density)));
+            label(footer, PhoneAlarms.text(this, "phone_swipe_stop"), 14, ink);
+            setContentView(shell);
         } catch (Exception unavailable) {
             finish();
         }
     }
 
-    private TextView label(String value, int size, int color) {
+    private TextView label(LinearLayout parent, String value, int size, int color) {
         TextView text = new TextView(this);
         text.setText(value);
         text.setTextSize(size);
@@ -135,7 +144,7 @@ public final class PhoneAdhanScreen extends Activity {
         text.setTypeface(getResources().getFont(R.font.alexandria_regular));
         int padding = Math.round(getResources().getDisplayMetrics().density * 12);
         text.setPadding(0, padding, 0, padding);
-        content.addView(text, new LinearLayout.LayoutParams(-1, -2));
+        parent.addView(text, new LinearLayout.LayoutParams(-1, -2));
         return text;
     }
 
@@ -160,6 +169,7 @@ public final class PhoneAdhanScreen extends Activity {
                                 (dialog, which) -> stopAndClose())
                         .setNegativeButton(PhoneAlarms.text(this, "phone_keep_playing"), null)
                         .show();
+        CompanionViews.bottomDialog(closeDialog, ground, accent);
     }
 
     @Override

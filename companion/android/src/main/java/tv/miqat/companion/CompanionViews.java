@@ -30,7 +30,16 @@ final class CompanionViews {
     }
 
     void styleDialog(AlertDialog dialog) {
-        dialog.getWindow().setBackgroundDrawable(background(a.surface, 24));
+        bottomDialog(dialog, a.surface, a.accent);
+    }
+
+    static void bottomDialog(AlertDialog dialog, int surface, int accent) {
+        GradientDrawable shape = new GradientDrawable();
+        shape.setColor(surface);
+        shape.setCornerRadius(24 * dialog.getContext().getResources().getDisplayMetrics().density);
+        dialog.getWindow().setBackgroundDrawable(shape);
+        dialog.getWindow().setGravity(Gravity.BOTTOM);
+        dialog.getWindow().setLayout(-1, -2);
         for (int which :
                 new int[] {
                     AlertDialog.BUTTON_POSITIVE,
@@ -38,8 +47,52 @@ final class CompanionViews {
                     AlertDialog.BUTTON_NEUTRAL
                 }) {
             Button button = dialog.getButton(which);
-            if (button != null) button.setTextColor(a.accent);
+            if (button != null) button.setTextColor(accent);
         }
+    }
+
+    LinearLayout actionBar(LinearLayout shell) {
+        LinearLayout footer = column();
+        if (a.getResources().getConfiguration().orientation
+                == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
+            footer.setOrientation(LinearLayout.HORIZONTAL);
+        footer.setGravity(Gravity.CENTER_VERTICAL);
+        footer.setTag("screen.actions");
+        footer.setPadding(dp(16), dp(4), dp(16), dp(8));
+        footer.setBackgroundColor(a.ground);
+        shell.addView(footer, new LinearLayout.LayoutParams(-1, -2));
+        return footer;
+    }
+
+    LinearLayout secondaryActions(LinearLayout footer) {
+        LinearLayout row = horizontal(footer);
+        if (footer.getOrientation() == LinearLayout.HORIZONTAL)
+            row.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1));
+        return row;
+    }
+
+    Button secondaryAction(LinearLayout row, String label, Runnable action) {
+        Button button = button(row, label, action);
+        button.setMinWidth(0);
+        button.setBackground(
+                new RippleDrawable(
+                        ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000),
+                        background(Color.TRANSPARENT, 24),
+                        null));
+        flex(button);
+        return button;
+    }
+
+    Button primaryAction(LinearLayout footer, String label, Runnable action) {
+        Button button = button(footer, label, action);
+        if (footer.getOrientation() == LinearLayout.HORIZONTAL) flex(button);
+        button.setBackground(
+                new RippleDrawable(
+                        ColorStateList.valueOf((a.ground & 0xffffff) | 0x33000000),
+                        background(a.accent, 24),
+                        null));
+        button.setTextColor(a.ground);
+        return button;
     }
 
     <T> ArrayAdapter<T> choices(java.util.List<T> options) {

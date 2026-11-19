@@ -96,7 +96,7 @@ final class WidgetHostCheck {
                     () -> {
                         config.body.findViewWithTag("widget.layout.next").performClick();
                         config.body.findViewWithTag("widget.size").performClick();
-                        config.body.findViewWithTag("widget.apply").performClick();
+                        config.getWindow().getDecorView().findViewWithTag("widget.apply").performClick();
                     });
             LiveUiCheck.untilUi(test, config::isDestroyed);
             editor[0] = null;
@@ -159,7 +159,7 @@ final class WidgetHostCheck {
                     test,
                     () -> {
                         strip.body.findViewWithTag("widget.layout.strip").performClick();
-                        strip.body.findViewWithTag("widget.apply").performClick();
+                        strip.getWindow().getDecorView().findViewWithTag("widget.apply").performClick();
                     });
             LiveUiCheck.untilUi(test, strip::isDestroyed);
             editor[0] = null;

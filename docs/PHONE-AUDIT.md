@@ -219,3 +219,15 @@ metadata names the clip playing rather than a later default or current wall time
 Selected artwork failures retain the themed arch and do not prevent playback.
 Focused native checks inspect actual media metadata, SystemUI Stop and selected
 nondefault-theme screen output; physical OEM notification behavior remains open.
+
+## Pass-5 changes
+
+The footer stays in the existing activity shell outside its ScrollView; editors
+reuse that host and shared primary/secondary helpers. SwipeStop is one native
+View with explicit gesture cancellation and standard accessibility activation.
+It delegates to the existing session stop action. No new service, player,
+gesture dependency or portable policy duplication. Widget Cancel clears its
+unsaved draft. Location save failures preserve the editor. Focused native checks
+cover accidental dismissal, actual playback, Save/Cancel, keyboard and text-size
+boundaries; trivial copy changes have no new mirror tests. Redundant narration
+and unused catalog entries were deleted, with the copy rule recorded in AGENTS.

@@ -36,7 +36,11 @@ final class WidgetUi {
     }
 
     boolean cancel() {
-        if (!configuring) return false;
+        draft = null;
+        if (!configuring) {
+            id = AppWidgetManager.INVALID_APPWIDGET_ID;
+            return false;
+        }
         a.finish();
         return true;
     }
@@ -172,10 +176,21 @@ final class WidgetUi {
                                     });
                         });
         }
+    }
+
+    void footer(LinearLayout shell) {
+        LinearLayout actions = a.views.actionBar(shell);
         a.views
-                .button(a.body, a.t(id == -1 ? "widget_add" : "apply"), this::apply)
+                .secondaryAction(
+                        a.views.secondaryActions(actions),
+                        a.t("cancel"),
+                        () -> {
+                            if (!cancel()) a.tab("prayers");
+                        })
+                .setTag("widget.cancel");
+        a.views
+                .primaryAction(actions, a.t(id == -1 ? "widget_add" : "apply"), this::apply)
                 .setTag("widget.apply");
-        if (id == -1) a.body.addView(a.views.text(a.t("widget_manual"), 12, a.muted));
     }
 
     private void toggle(String label, boolean checked, Runnable changed) {

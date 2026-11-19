@@ -144,7 +144,8 @@ final class TvSettingsUi {
 
     void renderSettings() {
         if (!a.online() || a.real() != null && a.real().needsRefresh) {
-            a.body.addView(a.views.text(a.t(snapshot == null ? "no_cache" : "stale"), 14, a.accent));
+            a.body.addView(
+                    a.views.text(a.t(snapshot == null ? "no_cache" : "stale"), 14, a.accent));
             a.views.bindAction(
                     a.views.button(
                             a.body,
@@ -181,6 +182,9 @@ final class TvSettingsUi {
                 a.body.addView(a.views.text(a.t("unsaved"), 13, a.accent));
         }
         EditText search = new EditText(a);
+        search.setImeOptions(
+                search.getImeOptions()
+                        | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
         search.setSingleLine(true);
         search.setHint(a.t("search"));
         search.setText(a.query);
@@ -225,7 +229,8 @@ final class TvSettingsUi {
                         "network",
                         "tests"
                     }) {
-                a.views.navigationRow(
+                a.views
+                        .navigationRow(
                                 content,
                                 a.views.sectionIcon(id),
                                 a.sectionTitle(id),
@@ -416,7 +421,8 @@ final class TvSettingsUi {
         box.setTag("editor");
         box.setPadding(a.views.dp(20), a.views.dp(4), a.views.dp(20), a.views.dp(4));
         AlertDialog.Builder builder =
-                a.views.dialog()
+                a.views
+                        .dialog()
                         .setTitle(a.title(c))
                         .setView(box)
                         .setNegativeButton(a.t("cancel"), (d, w) -> clearPending());
@@ -479,7 +485,8 @@ final class TvSettingsUi {
                 editor = null;
             }
         });
-        editor.show();a.views.styleDialog(editor);
+        editor.show();
+        a.views.styleDialog(editor);
         a.views.bindAction(editor.getButton(-1), "save-edit");
         editor.getButton(-1).setOnClickListener(v -> commitPending());
     }
@@ -541,6 +548,9 @@ final class TvSettingsUi {
 
     EditText input(LinearLayout parent, String label, String value, int type) {
         EditText input = new EditText(a);
+        input.setImeOptions(
+                input.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+
         input.setId(View.generateViewId());
         input.setInputType(type);
         input.setText(value);
@@ -578,6 +588,9 @@ final class TvSettingsUi {
         row.addView(fields);
         LinearLayout track = a.views.horizontal(fields);
         EditText input = new EditText(a);
+        input.setImeOptions(
+                input.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+
         input.setId(View.generateViewId());
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
         input.setText(pendingValue);
@@ -593,10 +606,20 @@ final class TvSettingsUi {
         Button plus = a.views.button(track, "+", () -> adjust(spec, input, 1));
         a.views.square(plus);
         plus.setContentDescription(a.t("increase") + " " + a.title(c));
-        LinearLayout actions = a.views.horizontal(fields);
+        a.actionHost.removeAllViews();
+        LinearLayout actions = a.views.actionBar(a.actionHost);
+        Button cancel =
+                a.views.secondaryAction(
+                        a.views.secondaryActions(actions),
+                        a.t("cancel"),
+                        () -> {
+                            clearPending();
+                            a.render();
+                        });
+        cancel.setTag(id + ".cancel");
         Button done =
                 a.views.bindAction(
-                        a.views.button(
+                        a.views.primaryAction(
                                 actions,
                                 a.t("done"),
                                 () -> {
@@ -619,17 +642,6 @@ final class TvSettingsUi {
                                 }),
                         "save-edit");
         done.setTag(id + ".save");
-        a.views.flex(done);
-        Button cancel =
-                a.views.button(
-                        actions,
-                        a.t("cancel"),
-                        () -> {
-                            clearPending();
-                            a.render();
-                        });
-        cancel.setTag(id + ".cancel");
-        a.views.flex(cancel);
         input.requestFocus();
     }
 
@@ -822,6 +834,9 @@ final class TvSettingsUi {
         for (int i = 0; i < keys.length(); i++) {
             String key = keys.optString(i);
             EditText field = new EditText(a);
+            field.setImeOptions(
+                    field.getImeOptions()
+                            | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
             field.setId(View.generateViewId());
             field.setSingleLine(true);
             field.setTextDirection(View.TEXT_DIRECTION_LTR);
@@ -914,7 +929,8 @@ final class TvSettingsUi {
                     Spinner[] pickers = new Spinner[2];
                     for (int i = 0; i < 2; i++) {
                         TextView label =
-                                a.views.text(a.t(i == 0 ? "source_app" : "target_app"), 14, a.muted);
+                                a.views.text(
+                                        a.t(i == 0 ? "source_app" : "target_app"), 14, a.muted);
                         items.addView(label);
                         Spinner picker = new Spinner(a, Spinner.MODE_DROPDOWN);
                         picker.setId(View.generateViewId());
@@ -928,7 +944,8 @@ final class TvSettingsUi {
                         items.addView(picker);
                         pickers[i] = picker;
                     }
-                    a.views.button(
+                    a.views
+                            .button(
                                     items,
                                     a.t("add"),
                                     () -> {
@@ -1028,7 +1045,8 @@ final class TvSettingsUi {
             a.render();
             a.info(a.t("settings"), a.t(result.getStatus()));
         } else if (result.getStatus().equals("failed")) {
-            a.views.dialog()
+            a.views
+                    .dialog()
                     .setMessage(a.t("failed"))
                     .setNegativeButton(
                             a.t("cancel"),
@@ -1059,7 +1077,8 @@ final class TvSettingsUi {
                         .append(a.t("your_edit"))
                         .append(": ")
                         .append(display(id, changes.getOrDefault(id, base.get(id))));
-            a.views.dialog()
+            a.views
+                    .dialog()
                     .setMessage(detail)
                     .setNegativeButton(
                             a.t("keep_current"),

@@ -177,10 +177,12 @@ final class LgSetup {
 
     void footer(LinearLayout shell) {
         if (connected || a.networkBusy) return;
-        LinearLayout actions = a.views.horizontal(shell);
-        actions.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(12));
+        LinearLayout actions = a.views.actionBar(shell);
+        a.views
+                .secondaryAction(a.views.secondaryActions(actions), a.t("previous"), this::back)
+                .setTag("lg.previous");
         Button next =
-                a.views.button(
+                a.views.primaryAction(
                         actions,
                         a.t(connectionStep == 0 ? "setup_next" : "lg_connect"),
                         () -> {
@@ -200,9 +202,9 @@ final class LgSetup {
                                 connect(address, phrase);
                             }
                         });
-        a.views.flex(next);
         next.setTag(connectionStep == 0 ? "lg.next" : "lg.connect");
         next.setEnabled(!local || selected != null);
+        next.setAlpha(next.isEnabled() ? 1f : .45f);
     }
 
     void back() {
@@ -218,6 +220,9 @@ final class LgSetup {
     private EditText field(LinearLayout parent, String label, String value, boolean secret) {
         parent.addView(a.views.text(label, 13, a.muted));
         EditText field = new EditText(a);
+        field.setImeOptions(
+                field.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+
         field.setSingleLine(true);
         field.setText(value);
         field.setTextColor(a.ink);
@@ -305,7 +310,9 @@ final class LgSetup {
         if (!downloading) return;
         LinearLayout actions = a.views.horizontal(shell);
         actions.setPadding(a.views.dp(20), 0, a.views.dp(20), 0);
-        a.views.button(actions, a.t("cancel"), this::cancelDownload).setTag("lg.download.cancel");
+        a.views
+                .secondaryAction(actions, a.t("cancel"), this::cancelDownload)
+                .setTag("lg.download.cancel");
     }
 
     private void cancelDownload() {

@@ -132,18 +132,27 @@ final class PhoneAdhanCheck {
             enabled.put("reminders.volume-keys", "true");
             enabled.put("appearance.theme", "dusk");
             enabled.put("appearance.background", "dusk_peaks");
+            if (c.getResources().getConfiguration().orientation
+                    == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
+                enabled.put("display.size", "150");
             before.changed(enabled).save(c);
             language.edit().putString("language", "en").commit();
             shown[0] =
                     PhoneAlarms.fullScreenAllowed(c)
                             ? alarmScreen(test, c)
                             : start(test, c, "screen-dismiss");
-            captureScreen(test, shown[0], "en-adhan-screen");
             Notification first = notice(c);
             check(
                     PhoneAlarms.fullScreenAllowed(c) == (first.fullScreenIntent != null),
                     "Full-screen notification ignored Android access");
             PhoneUiCheck.on(test, () -> shown[0].content.performClick());
+            gesture(test, shown[0], 0, 0, false);
+            gesture(test, shown[0], 0, .3f, false);
+            gesture(test, shown[0], 60, 1, false);
+            gesture(test, shown[0], 0, 1, true);
+            check(
+                    PhonePlayback.outputStarted(),
+                    "Tap, short/horizontal/cancelled pull accidentally stopped adhan");
             LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
             await(
                     test,
@@ -159,6 +168,8 @@ final class PhoneAdhanCheck {
                         shown[0].closeDialog.getButton(-2).performClick();
                     });
             check(PhonePlayback.outputStarted(), "Keep playing stopped the session");
+            await(test, shown[0]::hasWindowFocus, 5000, "Adhan did not regain focus after Keep");
+            captureScreen(test, shown[0], "en-adhan-screen");
             first.deleteIntent.send();
             await(
                     test,
@@ -186,14 +197,32 @@ final class PhoneAdhanCheck {
                                     .getStreamVolume(android.media.AudioManager.STREAM_ALARM),
                     "Stop shortcut changed global alarm volume");
             shown[0] = start(test, c, "screen-close");
-            PhoneUiCheck.on(
-                    test,
-                    () -> shown[0].content.findViewWithTag("adhan.stop-close").performClick());
+            gesture(test, shown[0], 0, 1, false);
             await(
                     test,
                     () -> !PhonePlayback.playing() && shown[0].isDestroyed(),
                     5000,
-                    "Explicit Stop-and-close did not release adhan");
+                    "Complete upward release did not stop and close adhan");
+            shown[0] = start(test, c, "screen-accessible");
+            PhoneUiCheck.on(
+                    test,
+                    () -> {
+                        android.view.View stop =
+                                shown[0].getWindow()
+                                        .getDecorView()
+                                        .findViewWithTag("adhan.stop-close");
+                        check(
+                                stop.performAccessibilityAction(
+                                        android.view.accessibility.AccessibilityNodeInfo
+                                                .ACTION_CLICK,
+                                        null),
+                                "Accessible Stop action unavailable");
+                    });
+            await(
+                    test,
+                    () -> !PhonePlayback.playing() && shown[0].isDestroyed(),
+                    5000,
+                    "Accessible Stop did not release adhan");
         } finally {
             if (shown[0] != null) PhoneUiCheck.on(test, shown[0]::finish);
             PhonePlayback.stop(c);
@@ -263,24 +292,63 @@ final class PhoneAdhanCheck {
         return screen;
     }
 
+    private static void gesture(
+            Instrumentation test,
+            PhoneAdhanScreen screen,
+            float horizontalDp,
+            float fraction,
+            boolean cancel) {
+        PhoneUiCheck.on(
+                test,
+                () -> {
+                    android.view.View stop =
+                            screen.getWindow().getDecorView().findViewWithTag("adhan.stop-close");
+                    float density = stop.getResources().getDisplayMetrics().density;
+                    float x = stop.getWidth() / 2f, y = stop.getHeight() - 32 * density;
+                    float endX = x + horizontalDp * density;
+                    float endY = y - fraction * (stop.getHeight() - 64 * density);
+                    long time = SystemClock.uptimeMillis();
+                    for (int action :
+                            new int[] {
+                                android.view.MotionEvent.ACTION_DOWN,
+                                android.view.MotionEvent.ACTION_MOVE,
+                                cancel
+                                        ? android.view.MotionEvent.ACTION_CANCEL
+                                        : android.view.MotionEvent.ACTION_UP
+                            }) {
+                        android.view.MotionEvent event =
+                                android.view.MotionEvent.obtain(
+                                        time,
+                                        SystemClock.uptimeMillis(),
+                                        action,
+                                        action == android.view.MotionEvent.ACTION_DOWN ? x : endX,
+                                        action == android.view.MotionEvent.ACTION_DOWN ? y : endY,
+                                        0);
+                        try {
+                            stop.dispatchTouchEvent(event);
+                        } finally {
+                            event.recycle();
+                        }
+                    }
+                });
+    }
+
     private static void reachable(Instrumentation test, PhoneAdhanScreen screen) {
         PhoneUiCheck.on(
                 test,
                 () -> {
-                    android.view.View stop = screen.content.findViewWithTag("adhan.stop-close");
-                    stop.requestRectangleOnScreen(
-                            new android.graphics.Rect(0, 0, stop.getWidth(), stop.getHeight()),
-                            true);
-                });
-        PhoneUiCheck.on(
-                test,
-                () -> {
-                    android.view.View stop = screen.content.findViewWithTag("adhan.stop-close");
+                    android.view.View stop =
+                            screen.getWindow().getDecorView().findViewWithTag("adhan.stop-close");
                     android.graphics.Rect bounds = new android.graphics.Rect();
                     check(
                             stop.getGlobalVisibleRect(bounds)
                                     && bounds.height() == stop.getHeight(),
-                            "Adhan screen Stop cannot be reached at this window/text size");
+                            "Bottom adhan handle is clipped at this window/text size");
+                    android.graphics.Rect scroll = new android.graphics.Rect();
+                    ((android.view.View) screen.content.getParent()).getGlobalVisibleRect(scroll);
+                    check(
+                            bounds.top >= scroll.bottom,
+                            "Stop handle must stay below scrolling content");
                 });
     }
 }

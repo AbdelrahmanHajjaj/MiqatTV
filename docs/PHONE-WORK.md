@@ -1,7 +1,38 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-19. Worktree state/companion-installation, branch
-feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
+Updated: 2026-11-19. Branch feature/companion-installation, draft PR #9.
+Approved requirements: PHONE-PASS5.md and preceding phone passes.
+
+## Current candidate — 0.4.4/code 13
+
+- Native bottom swipe-up adhan handle replaces centered Stop. Accidental taps,
+  short/horizontal/cancelled pulls keep playing; completed upward release and
+  explicit accessibility activation stop. Background player/session unchanged.
+- Shared bottom actions serve onboarding, phone/TV numeric editors, appearance,
+  widget setup, pairing and LG setup. Portrait primary below secondary actions;
+  short landscape uses a compact row. Dialog actions stay in bottom sheets.
+- Phone text editors request no fullscreen IME extraction. Short landscape
+  headers collapse outside the layout traversal; the focused input and footer
+  remain above the real keyboard. Bilingual native keyboard check now passes.
+- Removed repeated instructional copy and unused hints; concise action labels,
+  actual status and required TV access instructions remain. Future-copy rule
+  recorded in AGENTS.md. Permission requests use onboarding's bottom action.
+- Build/test APK/lint pass (0 errors, 43 existing warnings); generator 8/8 and
+  canonical catalogs pass. Native bilingual UI/keyboard, widget Cancel, actual
+  alarm/swipe/accessibility, portrait/wide sizing pass. Final updated journey,
+  bindings/runtime captures and final-head CI are still being completed.
+- Exported 0.4.4 review APK, 25 exact recordings/notices and retained signing
+  identity checked; exact receipt in EVIDENCE.md. No physical deployment.
+
+Next: finish affected native/rendered checks, preserve/push changes, require
+final-head Validate/Companion/Apple core, update draft PR and private receipt,
+stop the verified task-owned emulator, then stop for owner feedback. No merge,
+release or unrelated new work. Private logs/captures/ownership stay in state/.
+
+## Historical implementation notes
+
+The dated sections below retain prior findings and acceptance limits. Their
+old “active” or “next” wording is superseded by the current checklist above.
 
 ## Bound the diagnosed audition activity launch
 

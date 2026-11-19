@@ -31,21 +31,21 @@ final class PhoneUiCheck {
                 on(test,()->{
                     a.phoneUi.open("audio");Switch enabled=a.body.findViewWithTag("phone.reminders.enabled.edit");
                     if(!a.phoneUi.settings.locationReady){enabled.performClick();check(a.section.equals("calculation")&&!a.phoneUi.settings.enabled,"Alerts require location confirmation");}
-                    a.phoneUi.open("calculation");a.body.findViewWithTag("phone.location.confirm").performClick();check(a.phoneUi.settings.locationReady,"Location confirmation not saved");
+                    a.phoneUi.open("calculation");if(!a.phoneUi.settings.locationReady)a.getWindow().getDecorView().findViewWithTag("phone.location.confirm").performClick();check(a.phoneUi.settings.locationReady,"Location confirmation not saved");check(a.getWindow().getDecorView().findViewWithTag("phone.location.confirm")==null,"Confirmed location retains a redundant confirmation");
                     a.phoneUi.open("audio");
                     check(a.body.findViewWithTag("phone.reminders.volume.input")==null,"Number editor must stay closed until tapped");
                     a.body.findViewWithTag("phone.reminders.volume.edit").performClick();
                     EditText number=a.body.findViewWithTag("phone.reminders.volume.input");String before=a.phoneUi.settings.value("reminders.volume");number.setText("٣٥");
-                    a.body.findViewWithTag("phone.reminders.volume.cancel").performClick();check(a.phoneUi.settings.value("reminders.volume").equals(before),"Cancel changed saved volume");
-                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("٣٥");a.body.findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Arabic numeric Save failed");
-                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("37");a.body.findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Off-step number accepted");
+                    a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.cancel").performClick();check(a.phoneUi.settings.value("reminders.volume").equals(before),"Cancel changed saved volume");
+                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("٣٥");a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Arabic numeric Save failed");
+                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("37");a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Off-step number accepted");
                     a.phoneUi.open("fajr");check(!a.body.findViewWithTag("phone.call.fajr.volume.edit").isEnabled(),"Inherited audio must not expose an active override");
-                    a.body.findViewWithTag("phone.call.fajr.default-audio.edit").performClick();a.body.findViewWithTag("phone.call.fajr.volume.edit").performClick();((EditText)a.body.findViewWithTag("phone.call.fajr.volume.input")).setText("١٥");a.body.findViewWithTag("phone.call.fajr.volume.save").performClick();check(a.phoneUi.settings.audioVolume(0)==15&&a.phoneUi.settings.volume==35,"Per-prayer audio changed default level");a.phoneUi.save("call.fajr.default-audio","true");
+                    a.body.findViewWithTag("phone.call.fajr.default-audio.edit").performClick();a.body.findViewWithTag("phone.call.fajr.volume.edit").performClick();((EditText)a.body.findViewWithTag("phone.call.fajr.volume.input")).setText("١٥");a.getWindow().getDecorView().findViewWithTag("phone.call.fajr.volume.save").performClick();check(a.phoneUi.settings.audioVolume(0)==15&&a.phoneUi.settings.volume==35,"Per-prayer audio changed default level");a.phoneUi.save("call.fajr.default-audio","true");
                     a.body.findViewWithTag("phone.call.fajr.mode.edit").performClick();
                     check(a.phoneUi.choiceDialog!=null,"Per-prayer choice sheet missing");
                     ListView modes=a.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.choice.list");check(modes.getCheckedItemPosition()==(a.phoneUi.settings.modes[0]),"Choice sheet must show saved mode");modes.performItemClick(null,1,1);check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
                     a.phoneUi.open("calculation");a.phoneUi.save("prayer.zone","Asia/Tokyo");check(!a.phoneUi.settings.locationReady,"Changed timezone must need confirmation");
-                    a.phoneUi.save("prayer.zone","system");a.body.findViewWithTag("phone.location.confirm").performClick();
+                    a.phoneUi.save("prayer.zone","system");a.getWindow().getDecorView().findViewWithTag("phone.location.confirm").performClick();
                     a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
                     for(JSONObject c:a.phoneUi.data.controls.values()){
                         a.phoneUi.open(c.optString("section"));check(a.body.findViewWithTag("phone."+c.optString("id"))!=null,"Missing phone control "+c.optString("id"));
@@ -97,6 +97,7 @@ final class PhoneUiCheck {
                 });
                 on(test,()->a.phoneUi.open("calculation"));capture(test,a,lang+"-phone-location",capture);
                 on(test,()->{a.phoneUi.open("fajr");a.tab("prayers");});capture(test,a,lang+"-phone-themed",capture);
+                keyboardFooter(test,a,lang,capture);
                 on(test,a::finish);test.waitForIdleSync();current[0]=null;
             }
             check(PhoneStore.read(context).volume==35&&PhoneStore.read(context).modes[0]==1,"Phone settings did not survive reopening");
@@ -107,6 +108,60 @@ final class PhoneUiCheck {
             check(restore.commit(),"Cannot restore phone fixture");context.getSharedPreferences("companion",0).edit().putString("language",language).commit();PhoneAlarms.rebuild(context);
         }
     }
+    private static void keyboardFooter(Instrumentation test, MainActivity a,
+            String language, boolean capture) throws Exception {
+        if (android.os.Build.VERSION.SDK_INT < 30) return;
+        check(android.os.Build.HARDWARE.contains("ranchu")
+                || android.os.Build.FINGERPRINT.contains("generic"), "Owned emulator keyboard check");
+        String original;
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(
+                new android.os.ParcelFileDescriptor.AutoCloseInputStream(test.getUiAutomation()
+                        .executeShellCommand("settings get secure show_ime_with_hard_keyboard")),
+                java.nio.charset.StandardCharsets.UTF_8))) {
+            original = reader.readLine();
+        }
+        check(original == null || original.equals("null") || original.equals("0")
+                || original.equals("1"), "Unexpected keyboard preference; preserve it unchanged");
+        try {
+            PhoneRuntimeCheck.shell(test, "settings put secure show_ime_with_hard_keyboard 1");
+            on(test, () -> {
+                a.phoneUi.open("audio");
+                a.body.findViewWithTag("phone.reminders.volume.edit").performClick();
+                EditText input = a.body.findViewWithTag("phone.reminders.volume.input");
+                input.requestFocus();
+                a.getSystemService(android.view.inputmethod.InputMethodManager.class)
+                        .showSoftInput(input, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+            });
+            LiveUiCheck.untilUi(test, () -> a.getWindow().getDecorView().getRootWindowInsets()
+                    .isVisible(android.view.WindowInsets.Type.ime())
+                    && !a.contentRoot.isLayoutRequested() && !a.body.isLayoutRequested());
+            capture(test,a,language+"-keyboard-footer",capture);
+            on(test, () -> {
+                check(!a.getSystemService(android.view.inputmethod.InputMethodManager.class)
+                        .isFullscreenMode(), "IME fullscreen extraction hides the app footer");
+                android.graphics.Rect available = new android.graphics.Rect();
+                a.getWindow().getDecorView().getWindowVisibleDisplayFrame(available);
+                for (String tag : new String[] {"phone.reminders.volume.save",
+                        "phone.reminders.volume.cancel", "phone.reminders.volume.input"}) {
+                    View control = a.getWindow().getDecorView().findViewWithTag(tag);
+                    android.graphics.Rect bounds = new android.graphics.Rect();
+                    check(control.getGlobalVisibleRect(bounds)
+                            && bounds.height() == control.getHeight()
+                            && available.contains(bounds), "Keyboard covers " + tag + " bounds=" + bounds + " height=" + control.getHeight() + " frame=" + available + " scroll=" + a.scroll.getHeight() + "/" + a.scroll.getScrollY());
+                }
+            });
+        } finally {
+            PhoneRuntimeCheck.shell(test, original == null || original.equals("null")
+                    ? "settings delete secure show_ime_with_hard_keyboard"
+                    : "settings put secure show_ime_with_hard_keyboard " + original);
+            on(test, () -> {
+                View cancel = a.getWindow().getDecorView()
+                        .findViewWithTag("phone.reminders.volume.cancel");
+                if (cancel != null) cancel.performClick();
+            });
+        }
+    }
+
     static void on(Instrumentation test,Runnable action){Throwable[] failure={null};test.runOnMainSync(()->{try{action.run();}catch(Throwable error){failure[0]=error;}});if(failure[0]!=null)throw new AssertionError(failure[0]);test.waitForIdleSync();}
     static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
     static void capture(Instrumentation test,android.content.Context a,String name,boolean enabled)throws Exception {

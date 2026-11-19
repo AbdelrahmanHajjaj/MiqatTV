@@ -47,7 +47,7 @@ public final class MainActivity extends Activity {
     boolean ar;
     String page = "prayers", section = "", query = "";
     TvSettingsUi settingsUi;
-    LinearLayout body;
+    LinearLayout body, actionHost;
     ScrollView scroll;
     FrameLayout contentRoot;
     String renderedLocation = "";
@@ -443,7 +443,9 @@ public final class MainActivity extends Activity {
         LinearLayout shell = views.column();
         shell.setBackgroundColor(ground);
         shell.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
-        toolbar(shell);
+        LinearLayout heading = views.column();
+        shell.addView(heading, new LinearLayout.LayoutParams(-1, -2));
+        toolbar(heading);
         body = views.column();
         body.setPadding(views.dp(20), views.dp(4), views.dp(20), views.dp(12));
         body.setBackgroundColor(ground);
@@ -460,11 +462,36 @@ public final class MainActivity extends Activity {
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         contentRoot = new FrameLayout(this);
         contentRoot.addView(shell, new FrameLayout.LayoutParams(-1, -1));
+        contentRoot.addOnLayoutChangeListener(
+                (view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                    boolean shortLandscape =
+                            getResources().getConfiguration().orientation
+                                            == android.content.res.Configuration
+                                                    .ORIENTATION_LANDSCAPE
+                                    && bottom - top < views.dp(260);
+                    int visibility = shortLandscape ? View.GONE : View.VISIBLE;
+                    if (heading.getVisibility() != visibility)
+                        heading.post(() -> heading.setVisibility(visibility));
+                });
         setContentView(contentRoot);
         ScrollView current = scroll;
         current.post(() -> current.scrollTo(0, previousY));
+        current.addOnLayoutChangeListener(
+                (view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                    View focused = getCurrentFocus();
+                    if (current == scroll
+                            && bottom - top != oldBottom - oldTop
+                            && focused instanceof EditText
+                            && focused.isAttachedToWindow())
+                        focused.requestRectangleOnScreen(
+                                new android.graphics.Rect(
+                                        0, 0, focused.getWidth(), focused.getHeight()),
+                                true);
+                });
+        actionHost = views.column();
+        shell.addView(actionHost, new LinearLayout.LayoutParams(-1, -2));
         renderPage();
-        renderActions(shell);
+        renderActions(actionHost);
         if (views.motionEnabled() && !location.equals(previousLocation)) {
             body.setAlpha(0f);
             body.animate().alpha(1f).setDuration(160).start();
@@ -630,17 +657,16 @@ public final class MainActivity extends Activity {
     }
 
     private void renderActions(LinearLayout shell) {
-        if (page.equals("settings")
+        boolean editorActions = shell.getChildCount() > 0;
+        if (!editorActions
+                && page.equals("settings")
                 && section.equals("appearance")
                 && settingsUi.appearance != null) {
-            LinearLayout actions = views.horizontal(shell);
-            actions.setPadding(views.dp(20), views.dp(8), views.dp(20), views.dp(8));
-            actions.setBackgroundColor(ground);
+            LinearLayout actions = views.actionBar(shell);
             Button cancel =
                     views.bindAction(
-                            views.iconButton(
-                                    actions,
-                                    "close",
+                            views.secondaryAction(
+                                    views.secondaryActions(actions),
                                     t("cancel"),
                                     () -> {
                                         settingsUi.appearance = null;
@@ -652,19 +678,16 @@ public final class MainActivity extends Activity {
             cancel.setEnabled(!networkBusy);
             Button apply =
                     views.bindAction(
-                            views.button(actions, t("apply"), settingsUi::applyAppearance),
+                            views.primaryAction(actions, t("apply"), settingsUi::applyAppearance),
                             "apply-appearance");
-            views.flex(apply);
             apply.setTag("appearance.apply");
             apply.setEnabled(
                     settingsUi.editable() && !settingsUi.appearance.getChanges().isEmpty());
-            apply.setMinHeight(views.dp(48));
-            apply.setBackground(views.background(accent, 28));
-            apply.setTextColor(ground);
             apply.setAlpha(apply.isEnabled() ? 1f : 0.4f);
         }
         if (networkBusy && !page.equals("pair")) {
             views.disableContent(body);
+            if (editorActions) views.disableContent(shell);
             ProgressBar progress =
                     new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
             progress.setIndeterminate(views.motionEnabled());
@@ -675,9 +698,11 @@ public final class MainActivity extends Activity {
             shell.addView(progress, new LinearLayout.LayoutParams(-1, views.dp(3)));
         }
         if (networkBusy && lgSetup != null) lgSetup.cancellation(shell);
+        if (editorActions) return;
         if (page.equals("onboarding")) onboarding.footer(shell);
         else if (page.equals("tv-setup")) tvSetup.footer(shell);
         else if (page.equals("lg-setup") && lgSetup != null) lgSetup.footer(shell);
+        else if (page.equals("widgets")) widgetUi.footer(shell);
         else if (page.equals("prayers")
                 || page.equals("tvs")
                 || page.equals("phone-settings") && section.isEmpty()) bottomNavigation();

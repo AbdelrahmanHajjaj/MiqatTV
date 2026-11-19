@@ -33,12 +33,15 @@ final class PhoneJourneyCheck {
                                     a.page.equals("onboarding"),
                                     "Fresh install must open guided setup");
                             check(
-                                    !a.getWindow()
-                                            .getDecorView()
-                                            .findViewWithTag("onboarding.next")
-                                            .isEnabled(),
-                                    "Unconfirmed default city must not complete location setup");
-                            a.body.findViewWithTag("phone.location.confirm").performClick();
+                                    !a.phoneUi.settings.locationReady,
+                                    "Default location must require explicit confirmation");
+                            a.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("onboarding.next")
+                                    .performClick();
+                            check(
+                                    a.phoneUi.settings.locationReady && a.page.equals("onboarding"),
+                                    "Bottom confirmation must save location before Continue");
                         });
                 PhoneUiCheck.capture(test, a, lang + "-journey-location", captures);
                 PhoneUiCheck.on(
@@ -49,6 +52,24 @@ final class PhoneJourneyCheck {
                                         .findViewWithTag("onboarding.next")
                                         .performClick());
                 PhoneUiCheck.capture(test, a, lang + "-journey-alerts", captures);
+                PhoneUiCheck.on(
+                        test,
+                        () -> {
+                            a.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("onboarding.previous")
+                                    .performClick();
+                            check(
+                                    a.phoneUi.settings.locationReady,
+                                    "Previous must preserve the confirmed location");
+                            a.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("onboarding.next")
+                                    .performClick();
+                            check(
+                                    a.body.findViewWithTag("phone.reminders.enabled.edit") != null,
+                                    "Footer Previous/Continue did not return to the same step");
+                        });
                 PhoneUiCheck.on(test, a::finish);
                 LiveUiCheck.untilUi(test, a::isDestroyed);
                 MainActivity resumed = launch(test, context);
@@ -67,17 +88,24 @@ final class PhoneJourneyCheck {
                                     .findViewWithTag("onboarding.next")
                                     .performClick();
                             check(
-                                    resumed.body.findViewWithTag(
-                                                    "onboarding.permission.notifications")
-                                            != null,
+                                    ((android.widget.TextView)
+                                                    resumed.body.findViewWithTag(
+                                                            "onboarding.title"))
+                                            .getText()
+                                            .toString()
+                                            .equals(resumed.t("phone_notifications")),
                                     "Notifications must have a dedicated step");
                             resumed.getWindow()
                                     .getDecorView()
                                     .findViewWithTag("onboarding.skip")
                                     .performClick();
                             check(
-                                    resumed.body.findViewWithTag("onboarding.permission.exact")
-                                            != null,
+                                    ((android.widget.TextView)
+                                                    resumed.body.findViewWithTag(
+                                                            "onboarding.title"))
+                                            .getText()
+                                            .toString()
+                                            .equals(resumed.t("phone_exact")),
                                     "Precise alarms must have a dedicated step");
                             resumed.getWindow()
                                     .getDecorView()
@@ -200,6 +228,25 @@ final class PhoneJourneyCheck {
                                     "Widget must render actual RemoteViews");
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-widget", captures);
+                PhoneUiCheck.on(
+                        test,
+                        () -> {
+                            resumed.body.findViewWithTag("widget.layout.strip").performClick();
+                            resumed.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("widget.cancel")
+                                    .performClick();
+                            check(
+                                    resumed.page.equals("prayers"),
+                                    "Widget Cancel did not leave the editor");
+                            resumed.body.findViewWithTag("widgets.open").performClick();
+                            check(
+                                    ((android.view.View)
+                                                    resumed.body.findViewWithTag(
+                                                            "widget.layout.day"))
+                                            .isSelected(),
+                                    "Widget Cancel retained an unsaved layout draft");
+                        });
                 WidgetHostCheck.run(test, resumed, captures);
                 PhoneUiCheck.on(
                         test,
@@ -321,7 +368,7 @@ final class PhoneJourneyCheck {
                                                         check(
                                                                 a.page.equals("tv-setup"),
                                                                 "Pair and setup must start with the"
-                                                                    + " same platform choice");
+                                                                        + " same platform choice");
                                                         a.body.findViewWithTag(
                                                                         "setup.platform.roku")
                                                                 .performClick();
@@ -350,20 +397,27 @@ final class PhoneJourneyCheck {
         }
         dialog.recycle();
         View[] focusedDialog = {null};
-        LiveUiCheck.untilUi(test, () -> {
-            if (a.hasWindowFocus()) return false;
-            if (android.os.Build.VERSION.SDK_INT < 29) return true;
-            for (View window : android.view.inspector.WindowInspector.getGlobalWindowViews()) {
-                if (window != a.getWindow().getDecorView() && window.hasWindowFocus()) {
-                    focusedDialog[0] = window;
-                    return true;
-                }
-            }
-            return false;
-        });
+        LiveUiCheck.untilUi(
+                test,
+                () -> {
+                    if (a.hasWindowFocus()) return false;
+                    if (android.os.Build.VERSION.SDK_INT < 29) return true;
+                    for (View window :
+                            android.view.inspector.WindowInspector.getGlobalWindowViews()) {
+                        if (window != a.getWindow().getDecorView() && window.hasWindowFocus()) {
+                            focusedDialog[0] = window;
+                            return true;
+                        }
+                    }
+                    return false;
+                });
         LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
-        LiveUiCheck.untilUi(test, () -> a.hasWindowFocus()
-                && (focusedDialog[0] == null || !focusedDialog[0].isAttachedToWindow()));
+        LiveUiCheck.untilUi(
+                test,
+                () ->
+                        a.hasWindowFocus()
+                                && (focusedDialog[0] == null
+                                        || !focusedDialog[0].isAttachedToWindow()));
     }
 
     private static void cancelledResult(Instrumentation test, MainActivity a) throws Exception {

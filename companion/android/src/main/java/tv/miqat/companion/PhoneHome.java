@@ -310,7 +310,7 @@ final class PhoneHome {
                             "lock",
                             a.t(module),
                             "",
-                            () -> a.info(a.t("coming_soon"), a.t("locked_hint")));
+                            () -> a.info(a.t("coming_soon"), a.t(module)));
             ((LinearLayout.LayoutParams) locked.getLayoutParams()).bottomMargin = a.views.dp(8);
             locked.setContentDescription(a.t(module) + ", " + a.t("coming_soon"));
         }

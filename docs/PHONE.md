@@ -6,6 +6,10 @@ is not needed for phone prayer times. Minimum Android version: 8 (API 26).
 
 ## First use
 
+Guided actions use one fixed footer: Continue/Finish below Previous/Skip.
+Confirmation and Save/Cancel actions stay at the bottom, outside scrolling
+content; dialogs anchor their actions at the bottom of the sheet.
+
 A fresh install presents one decision at a time: location, prayer alerts,
 notification access, precise-alarm access, theme and background. **Skip** advances
 past an optional step. Back from the first step opens Prayer with a visible
@@ -110,7 +114,10 @@ notification panel layout and colors.
 **Full-screen adhan** uses that same selected scene and mihrab and is off by default. Enabling it allows Android's alarm
 screen when locked; Android 14+ may require **Allow full-screen alarms**. Tapping
 the notification opens that same session. Tapping the screen or switching apps
-does not stop audio. **Stop adhan and close** ends it; Back asks confirmation.
+does not stop audio. Pull the bottom **Swipe up to stop** handle upward and
+release past its threshold to stop and close. A tap, short pull, horizontal
+pull or cancelled gesture keeps playing. TalkBack and keyboard activation offer
+an explicit **Stop adhan and close** action. Back asks confirmation.
 The screen closes when playback finishes. The optional volume-key shortcut
 stops adhan while this screen is visible, including over the lock screen.
 Android reserves the power key: locking or screen timeout does not stop audio.
@@ -178,7 +185,7 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.3, version code 12) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.4, version code 13) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 

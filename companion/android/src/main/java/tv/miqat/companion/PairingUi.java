@@ -69,8 +69,8 @@ final class PairingUi {
             status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
             a.body.addView(status);
             Button cancel =
-                    a.views.button(
-                            a.body,
+                    a.views.secondaryAction(
+                            a.views.secondaryActions(a.views.actionBar(a.actionHost)),
                             a.t("cancel"),
                             () -> {
                                 cancelPairing();
@@ -83,6 +83,9 @@ final class PairingUi {
         a.body.addView(a.views.text(a.t("pair_info"), 16, a.ink));
         a.body.addView(a.views.text(a.t("phone_name"), 13, a.muted));
         EditText name = new EditText(a);
+        name.setImeOptions(
+                name.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+
         name.setSingleLine(true);
         name.setText(a.prefs().getString("phone-name", android.os.Build.MODEL));
         name.setHint(a.t("phone_name"));
@@ -93,8 +96,8 @@ final class PairingUi {
         a.body.addView(name);
         Button scan =
                 a.views.bindAction(
-                        a.views.button(
-                                a.body,
+                        a.views.primaryAction(
+                                a.views.actionBar(a.actionHost),
                                 a.t("scan_qr"),
                                 () -> {
                                     String value = name.getText().toString().trim();

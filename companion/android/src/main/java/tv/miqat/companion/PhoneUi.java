@@ -250,8 +250,6 @@ final class PhoneUi {
         for (JSONObject c : data.controls.values())
             if (c.getString("section").equals("audio") && !c.getString("id").startsWith("quiet."))
                 control(c);
-        a.body.addView(a.views.text(a.t("phone_volume_hint"), 13, a.muted));
-        a.body.addView(a.views.text(a.t("phone_full_screen_hint"), 13, a.muted));
         if (settings.value("reminders.full-screen").equals("true")
                 && !PhoneAlarms.fullScreenAllowed(a))
             a.views.button(
@@ -270,7 +268,6 @@ final class PhoneUi {
         for (JSONObject c : data.controls.values())
             if (c.getString("section").equals("audio") && c.getString("id").startsWith("quiet."))
                 control(c);
-        a.body.addView(a.views.text(a.t("phone_quiet_hint"), 13, a.muted));
     }
 
     String sectionTitle() {
@@ -354,8 +351,6 @@ final class PhoneUi {
                                 save(id, Boolean.toString(on));
                             });
             toggle.setTag("phone." + id + ".edit");
-            if (id.equals("display.reduce-motion"))
-                row.addView(a.views.text(a.t("phone_motion_hint"), 12, a.muted));
             return;
         }
         if (!pending.equals(id)) row.setOrientation(LinearLayout.HORIZONTAL);
@@ -421,7 +416,7 @@ final class PhoneUi {
                             editor.post(() ->
                                     editor.requestRectangleOnScreen(
                                             new Rect(0, 0, editor.getWidth(), editor.getHeight()),
-                                            false));
+                                            true));
                         });
             return;
         }
@@ -502,6 +497,9 @@ final class PhoneUi {
         boolean editing = pending.equals(id);
         LinearLayout track = a.views.horizontal(row);
         EditText input = new EditText(a);
+        input.setImeOptions(
+                input.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+
         input.setSingleLine(true);
         input.setTextColor(a.ink);
         input.setTypeface(a.regular);
@@ -552,9 +550,20 @@ final class PhoneUi {
                         });
         a.views.square(plus);
         plus.setContentDescription(a.t("increase") + " " + label);
-        LinearLayout actions = a.views.horizontal(row);
-        Button apply =
-                a.views.button(
+        a.actionHost.removeAllViews();
+        LinearLayout actions = a.views.actionBar(a.actionHost);
+        a.views
+                .secondaryAction(
+                        a.views.secondaryActions(actions),
+                        a.t("cancel"),
+                        () -> {
+                            pending = "";
+                            a.render();
+                            editorFocus(id);
+                        })
+                .setTag("phone." + id + ".cancel");
+        a.views
+                .primaryAction(
                         actions,
                         a.t("done"),
                         () -> {
@@ -567,20 +576,8 @@ final class PhoneUi {
                             } catch (Exception invalid) {
                                 input.setError(a.t("invalid"));
                             }
-                        });
-        a.views.flex(apply);
-        apply.setTag("phone." + id + ".save");
-        Button cancel =
-                a.views.button(
-                        actions,
-                        a.t("cancel"),
-                        () -> {
-                            pending = "";
-                            a.render();
-                            editorFocus(id);
-                        });
-        a.views.flex(cancel);
-        cancel.setTag("phone." + id + ".cancel");
+                        })
+                .setTag("phone." + id + ".save");
     }
 
     void editorFocus(String id) {
@@ -641,6 +638,9 @@ final class PhoneUi {
         layout.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(8));
         layout.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         EditText search = new EditText(a);
+        search.setImeOptions(
+                search.getImeOptions()
+                        | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
         search.setSingleLine(true);
         search.setTextColor(a.ink);
         search.setHintTextColor(a.muted);
@@ -711,21 +711,22 @@ final class PhoneUi {
                 && (!PhoneAlarms.notifications(a) || !PhoneAlarms.exact(a))) open("permissions");
     }
 
-    void save(Map<String, String> changes, boolean recreate) {
+    boolean save(Map<String, String> changes, boolean recreate) {
         try {
             PhoneStore.read(a).changed(changes).save(a);
             pending = "";
             PhoneAlarms.rebuild(a);
             if (recreate) a.recreate();
             else a.render();
+            return true;
         } catch (Exception failure) {
             a.notice("phone_save_failed");
+            return false;
         }
     }
 
     void permissions() {
         a.body.addView(a.views.text(a.t(PhoneAlarms.status(a, settings)), 18, a.ink));
-        a.body.addView(a.views.text(a.t("phone_permission_info"), 15, a.muted));
         if (!PhoneAlarms.notifications(a))
             a.views.button(
                     a.body, a.t("phone_permission_notifications"), this::requestNotifications);
@@ -739,7 +740,6 @@ final class PhoneUi {
                                 new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                                         .putExtra(Settings.EXTRA_APP_PACKAGE, a.getPackageName())));
         a.body.addView(a.views.heading(a.t("phone_power_title")));
-        a.body.addView(a.views.text(a.t("phone_power_info"), 14, a.muted));
         a.views
                 .button(
                         a.body,

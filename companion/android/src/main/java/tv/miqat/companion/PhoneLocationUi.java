@@ -51,10 +51,6 @@ final class PhoneLocationUi {
                             } else useLocation();
                         })
                 .setTag("phone.location.detect");
-        if (!a.page.equals("onboarding")) {
-            a.body.addView(a.views.text(a.t("phone_location_privacy"), 13, a.muted));
-            a.body.addView(a.views.text(a.t("phone_travel_hint"), 13, a.muted));
-        }
         if (!locationMessage.isEmpty())
             a.body.addView(a.views.text(a.t(locationMessage), 14, a.accent));
         if (locationMessage.equals("phone_location_disabled"))
@@ -141,9 +137,12 @@ final class PhoneLocationUi {
                     lng = coordinate(custom, "phone_longitude", longitude);
             lat.addTextChangedListener(MainActivity.watcher(v -> latitude = v));
             lng.addTextChangedListener(MainActivity.watcher(v -> longitude = v));
+            a.actionHost.removeAllViews();
+            LinearLayout actions = a.views.actionBar(a.actionHost);
+            LinearLayout secondary = a.views.secondaryActions(actions);
             a.views
-                    .button(
-                            custom,
+                    .primaryAction(
+                            actions,
                             a.t("done"),
                             () -> {
                                 try {
@@ -159,18 +158,23 @@ final class PhoneLocationUi {
                                     values.put("prayer.latitude", Double.toString(x));
                                     values.put("prayer.longitude", Double.toString(y));
                                     values.put("prayer.location-ready", "false");
-                                    ui.save(values, false);
+                                    advancedLocation = false;
+                                    if (!ui.save(values, false)) {
+                                        advancedLocation = true;
+                                        a.render();
+                                    }
                                 } catch (Exception invalid) {
                                     lat.setError(a.t("invalid"));
                                 }
                             })
                     .setTag("phone.coordinates.save");
-            a.views.button(
-                    custom,
+            a.views.secondaryAction(
+                    secondary,
                     a.t("cancel"),
                     () -> {
                         latitude = "";
                         longitude = "";
+                        advancedLocation = false;
                         a.render();
                     });
             custom.addView(
@@ -180,9 +184,12 @@ final class PhoneLocationUi {
 
     void confirmLocation() {
         a.body.addView(a.views.text(ui.settings.zone().getID(), 14, a.muted));
+        if (a.page.equals("onboarding")
+                || ui.settings.locationReady
+                || a.actionHost.getChildCount() > 0) return;
         a.views
-                .button(
-                        a.body,
+                .primaryAction(
+                        a.views.actionBar(a.actionHost),
                         a.t("phone_confirm_location"),
                         () -> ui.save("prayer.location-ready", "true"))
                 .setTag("phone.location.confirm");
@@ -310,13 +317,7 @@ final class PhoneLocationUi {
                             .dialog()
                             .setTitle(a.t("phone_location_found"))
                             .setMessage(
-                                    place
-                                            + "\n"
-                                            + TimeZone.getDefault().getID()
-                                            + "\n"
-                                            + method
-                                            + "\n\n"
-                                            + a.t("phone_location_review"))
+                                    place + "\n" + TimeZone.getDefault().getID() + "\n" + method)
                             .setNegativeButton(
                                     a.t("cancel"),
                                     (d, w) -> {
@@ -349,6 +350,9 @@ final class PhoneLocationUi {
         TextView label = a.views.text(a.t(key), 14, a.muted);
         parent.addView(label);
         EditText field = new EditText(a);
+        field.setImeOptions(
+                field.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+
         field.setId(View.generateViewId());
         label.setLabelFor(field.getId());
         field.setTextColor(a.ink);

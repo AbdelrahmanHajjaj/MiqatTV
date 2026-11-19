@@ -23,6 +23,10 @@ the approved scope. Companion work belongs to its separate project/branch.
 
 ## Changes
 
+- Keep product copy brief: labels, useful status and required setup actions.
+  Remove narration, redundant hints and obvious usage tutorials. Do not re-add
+  explanatory filler during later work.
+
 - Use Miqat / ميقات and tv.miqat.* identifiers. Migration from the previous app
   identity uses a fresh installation; do not add legacy aliases.
 - Put deterministic policy in core, with explicit inputs/results. Keep astronomy,

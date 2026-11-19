@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Replace the optional phone adhan Stop button with a deliberate bottom swipe-up
+  handle in 0.4.4/code13. Unify bottom primary/secondary action footers and dialog
+  surfaces, preserving accessibility, large text and keyboard clearance. Remove
+  redundant instructional copy and simplify first-use permission actions.
+
 - Add selected background/theme and canonical mihrab artwork to the optional
   phone adhan screen and notification in 0.4.3/code 12. Show the scheduled prayer
   time and effective playing voice in notification/media metadata, using shared

@@ -59,7 +59,6 @@ final class TvSetup {
     }
 
     void render() {
-        if (step == 0) a.body.addView(a.views.text(a.t("tv_platform_hint"), 14, a.muted));
         if (step == 0) {
             platforms();
             return;
@@ -93,7 +92,7 @@ final class TvSetup {
                             supported ? "" : a.t("coming_soon"),
                             () -> {
                                 if (!supported) {
-                                    a.info(a.t("coming_soon"), a.t("locked_hint"));
+                                    a.info(a.t("coming_soon"), a.catalog.label(item, a.ar));
                                     return;
                                 }
                                 platform = id;
@@ -128,33 +127,32 @@ final class TvSetup {
 
     void footer(LinearLayout shell) {
         if (step == 0) return;
-        LinearLayout actions = a.views.horizontal(shell);
-        actions.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(12));
+        LinearLayout footer = a.views.actionBar(shell);
+        LinearLayout secondary = a.views.secondaryActions(footer);
+        a.views.secondaryAction(secondary, a.t("previous"), this::back).setTag("setup.previous");
         if (step == 1) {
-            Button skip =
-                    a.views.button(
-                            actions,
+            a.views
+                    .secondaryAction(
+                            secondary,
                             a.t("setup_skip"),
                             () -> {
                                 step = 2;
                                 a.render();
-                            });
-            a.views.flex(skip);
-            skip.setTag("setup.skip");
-            Button next =
-                    a.views.button(
-                            actions,
+                            })
+                    .setTag("setup.skip");
+            a.views
+                    .primaryAction(
+                            footer,
                             a.t("setup_next"),
                             () -> {
                                 if (++preparation >= instructions().length) step = 2;
                                 a.render();
-                            });
-            a.views.flex(next);
-            next.setTag("setup.ready");
+                            })
+                    .setTag("setup.ready");
         } else if (!local) {
-            Button next = a.views.button(actions, a.t("tv_continue"), this::proceed);
-            a.views.flex(next);
-            next.setTag("setup.continue");
+            a.views
+                    .primaryAction(footer, a.t("tv_continue"), this::proceed)
+                    .setTag("setup.continue");
         }
     }
 
