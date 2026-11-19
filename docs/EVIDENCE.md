@@ -23,7 +23,12 @@ widget controls and the new portrait signature on the optional adhan screen.
 Actual scheduled background playback, notification controls/metadata, accidental
 swipe cancellation, deliberate/accessibility Stop and screen dismissal pass.
 The exported APK differs from that runtime installation only by removal of three
-unused labels. Final-head CI is tracked on draft PR #9; private command logs,
+unused labels; its bilingual UI/keyboard/location/save smoke check also passes.
+That fixture first reproduced activity reuse (START_DELIVERED_TO_TOP); it now
+uses the existing bounded owned-task launcher with all assertions unchanged.
+An earlier CI TV job failed downloading an invalid emulator ZIP before any app
+ran; phone and Apple-core checks passed. Final-head CI is tracked on draft PR #9;
+private command logs,
 process receipts and versioned captures stay under ignored state/.
 
 Physical launcher/OEM background delivery, speakers/compass, TVs and iOS remain

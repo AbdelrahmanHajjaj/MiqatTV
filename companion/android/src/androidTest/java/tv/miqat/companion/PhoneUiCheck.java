@@ -19,7 +19,7 @@ final class PhoneUiCheck {
             PhoneAlarms.cancel(context);prefs.edit().clear().putBoolean("onboarding-seen",true).commit();
             for(String lang:new String[]{"en","ar"}) {
                 context.getSharedPreferences("companion",0).edit().putString("language",lang).commit();
-                MainActivity a=(MainActivity)test.startActivitySync(new Intent(context,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));current[0]=a;
+                MainActivity a=LiveUiCheck.launch(test);current[0]=a;
                 on(test,()->{
                     check(a.page.equals("prayers"),"Standalone prayer must be the default");
                     check(a.body.findViewWithTag("phone.countdown")!=null,"Calculated next prayer missing");
