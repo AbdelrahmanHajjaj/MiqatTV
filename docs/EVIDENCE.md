@@ -3,8 +3,11 @@
 ## Bottom actions and concise phone copy — 19 November 2026
 
 Review APK **0.4.4/code 13**, `state/builds/companion/Miqat-latest.apk`,
-32,559,624 bytes; SHA-256:
-`AF88BC86827DF9BE074205855D2D2A7EE5F6B55697E927B44286654E7C083897`.
+32,560,100 bytes; SHA-256:
+`EC35F3A1E7AE3D122B404CD58478B5F64FA209896A3FB646E82FF42CBD7310DE`.
+First use now shares the canonical signature portrait composition with a
+readability scrim, consistent brand chrome and a blended sky/artwork transition.
+Bilingual guided theme/background and completed Home renders pass inspection.
 Prior signing certificate retained; all 25 recordings and 25 license notices
 match exact approved source bytes. No production dependency added.
 

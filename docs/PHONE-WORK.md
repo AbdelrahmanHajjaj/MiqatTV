@@ -8,6 +8,13 @@ Approved requirements: PHONE-PASS5.md and preceding phone passes.
 Latest owner refinements: swipe label centered in the prayer area; no duplicate
 footer Next/Previous beside Continue. Top/system Back owns return navigation.
 Native Android notification alignment/control positions remain OS-managed.
+First use now has the canonical signature portrait background on every step,
+with consistent brand chrome, a readability scrim and a smooth artwork join.
+Native bilingual guided previews and Home renders pass. New assets/frameworks
+were unnecessary; the existing background renderer is reused. Final CI remains
+open: 14a8169 created the activity but did not observe window focus within its
+bound. The shared helper now includes active package and lifecycle/power state
+in that failure only; assertions and timeouts stay unchanged.
 API34 repeated journeys pass with CI animation settings. Later CI reached the
 runtime but failed waiting for a new audition activity. Local system logs prove
 START_DELIVERED_TO_TOP: the activity was reused. Reopening after a display change

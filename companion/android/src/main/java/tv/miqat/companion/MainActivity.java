@@ -442,13 +442,14 @@ public final class MainActivity extends Activity {
         renderedLocation = location;
         LinearLayout shell = views.column();
         shell.setBackgroundColor(ground);
+        if (page.equals("onboarding")) onboarding.background(shell);
         shell.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         LinearLayout heading = views.column();
         shell.addView(heading, new LinearLayout.LayoutParams(-1, -2));
         toolbar(heading);
         body = views.column();
         body.setPadding(views.dp(20), views.dp(4), views.dp(20), views.dp(12));
-        body.setBackgroundColor(ground);
+        body.setBackgroundColor(page.equals("onboarding") ? Color.TRANSPARENT : ground);
         String screen =
                 page.equals("settings") && section.equals("appearance") ? "appearance" : page;
         if (!CompanionContract.INSTANCE.getScreens().contains(screen))

@@ -50,7 +50,14 @@ final class LiveUiCheck {
             PhoneRuntimeCheck.shell(test, "am start --activity-multiple-task -n tv.miqat.companion/.MainActivity");
             a = (MainActivity) test.waitForMonitorWithTimeout(monitor, 5000);
             CompanionCheck.check(a != null, "Fixture activity did not open after unlock");
-            PhoneRuntimeCheck.await(test, a::hasWindowFocus, 5000, "Fixture activity did not gain window focus");
+            try {
+                PhoneRuntimeCheck.await(test, a::hasWindowFocus, 5000, "Fixture activity did not gain window focus");
+            } catch (AssertionError failure) {
+                throw new AssertionError("Fixture focus: active=" + PhoneRuntimeCheck.activePackage(test)
+                        + ", foreground=" + a.phoneForeground + ", destroyed=" + a.isDestroyed()
+                        + ", interactive=" + c.getSystemService(android.os.PowerManager.class).isInteractive()
+                        + ", locked=" + c.getSystemService(android.app.KeyguardManager.class).isKeyguardLocked(), failure);
+            }
             return a;
         } finally {
             test.removeMonitor(monitor);

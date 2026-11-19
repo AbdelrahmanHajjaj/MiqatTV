@@ -7,9 +7,25 @@ import org.json.JSONObject;
 /** Resumable first use. Preferences are saved by the same editors as ordinary settings. */
 final class PhoneOnboarding {
     private final MainActivity a;
+    private android.graphics.Bitmap artwork;
 
     PhoneOnboarding(MainActivity activity) {
         a = activity;
+    }
+
+    void background(LinearLayout shell) {
+        try {
+            if (artwork == null) artwork = PhoneBackdrop.read(a, "miqat_signature");
+            shell.setBackground(
+                    new android.graphics.drawable.LayerDrawable(
+                            new android.graphics.drawable.Drawable[] {
+                                new PhoneBackdrop(artwork),
+                                new android.graphics.drawable.ColorDrawable(
+                                        (a.ground & 0xffffff) | 0x66000000)
+                            }));
+        } catch (java.io.IOException unavailable) {
+            android.util.Log.w("MiqatSetup", "Signature background unavailable", unavailable);
+        }
     }
 
     boolean needed() {
@@ -80,6 +96,7 @@ final class PhoneOnboarding {
     void footer(LinearLayout shell) {
         int step = step();
         LinearLayout footer = a.views.actionBar(shell);
+        footer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         LinearLayout secondary = a.views.secondaryActions(footer);
         a.views
                 .secondaryAction(

@@ -6,7 +6,9 @@
   handle in 0.4.4/code13. Unify bottom primary/secondary action footers and dialog
   surfaces, preserving accessibility, large text and keyboard clearance. Remove
   redundant instructional copy and simplify first-use permission actions. Center
-  the swipe label and use contextual actions without duplicate navigation.
+  the swipe label and use contextual actions without duplicate navigation. Use
+  the signature portrait background across first use, with readable controls and
+  a smooth sky/artwork transition.
 
 - Add selected background/theme and canonical mihrab artwork to the optional
   phone adhan screen and notification in 0.4.3/code 12. Show the scheduled prayer

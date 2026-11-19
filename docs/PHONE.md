@@ -6,6 +6,9 @@ is not needed for phone prayer times. Minimum Android version: 8 (API 26).
 
 ## First use
 
+Every first-use step uses Miqat’s signature portrait composition with a subtle
+scrim and consistent brand controls. Theme/background choices remain live previews.
+
 Guided actions use one fixed footer with Continue/Finish and optional Skip.
 The top/system Back control returns to previous steps. Cancel appears for drafts
 or operations; duplicate Next/Previous buttons are omitted.

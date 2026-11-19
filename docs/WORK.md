@@ -9,10 +9,11 @@ keyboard-safe landscape editing, and concise bilingual copy. Product copy rules
 are durable in AGENTS.md. No new dependency, player or unrelated platform work.
 
 Implementation and local acceptance are complete, including centered swipe label
-and contextual actions. Final API34 bilingual portrait journey and actual
+and contextual actions, plus signature portrait artwork throughout first use. Final API34 bilingual portrait journey and actual
 playback pass; screenshots inspected. The test-launch reuse issue is corrected
 in the existing bounded helper, shared by the affected journeys. Temporary
-diagnostics are removed; no feature assertions were weakened.
+diagnostic timers are removed; failure-only focus context remains. No feature
+assertions or timeouts were weakened.
 
 Build/lint, actual alarm/gesture, bilingual UI/journeys/TV bindings, local LG SSH
 fixture and 80–150% sizing pass. EVIDENCE.md owns the exact review APK. PR #9 and

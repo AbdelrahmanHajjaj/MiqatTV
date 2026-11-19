@@ -406,7 +406,7 @@ final class PhoneRuntimeCheck {
         throw new AssertionError("Active window did not return to " + expected);
     }
 
-    private static String activePackage(Instrumentation test) {
+    static String activePackage(Instrumentation test) {
         android.view.accessibility.AccessibilityNodeInfo root =
                 test.getUiAutomation().getRootInActiveWindow();
         if (root == null) return "";

@@ -83,7 +83,10 @@ final class PhoneUi {
                     a.catalog
                             .data
                             .getJSONObject("themes")
-                            .getJSONObject(settings.value("appearance.theme"))
+                            .getJSONObject(
+                                    a.page.equals("onboarding")
+                                            ? "mihrab"
+                                            : settings.value("appearance.theme"))
                             .getJSONObject("colors");
             a.ground = Color.parseColor(c.getString("lapis-900"));
             a.surface = Color.parseColor(c.getString("lapis-800"));

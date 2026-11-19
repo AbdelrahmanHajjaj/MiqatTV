@@ -35,6 +35,18 @@ final class PhoneBackdrop extends Drawable {
             RectF destination =
                     new RectF(bounds.left, bounds.bottom - height, bounds.right, bounds.bottom);
             canvas.drawBitmap(bitmap, null, destination, paint);
+            float fadeEnd = destination.top + height * .25f;
+            paint.setShader(
+                    new LinearGradient(
+                            bounds.left,
+                            destination.top,
+                            bounds.left,
+                            fadeEnd,
+                            sky,
+                            sky & 0xffffff,
+                            Shader.TileMode.CLAMP));
+            canvas.drawRect(bounds.left, destination.top, bounds.right, fadeEnd, paint);
+            paint.setShader(null);
             return;
         }
         float scale =
