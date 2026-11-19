@@ -3,6 +3,16 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## Bound the diagnosed audition activity launch
+
+Replace only audition's unbounded startActivitySync with the existing native
+ActivityMonitor pattern: start on main, require actual MainActivity within 5s,
+then require window focus within 5s. Wake/unlock is checked at this exact call.
+This preserves actual UI audition and fails with a specific launch/focus error
+rather than hanging a whole CI command. No product change, generic wrapper,
+new dependency or skipped assertion. Compile and require final-head CI; stop
+superseded phone runs once their useful diagnostics are preserved.
+
 ## Unlock at UI use, not before delayed playback checks
 
 Move the wake/unlock assertion into audition(), immediately before its

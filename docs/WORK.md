@@ -35,7 +35,8 @@ Diagnostic snapshot: main idle; test blocked in startActivitySync(audition).
 Lock-screen checks leave the owned emulator locked on API34. Wake/dismiss
 keyguard immediately in audition(), after the delayed preview checks, and
 assert interactive/unlocked just before ordinary UI launch.
-Remove temporary thread timer; production APK unchanged.
+Use the existing ActivityMonitor pattern to bound this actual launch and
+require window focus. Temporary thread timer removed; production APK unchanged.
 
 Next: compile corrected fixture, push, require final-head CI, update draft PR/
 private receipt and deliver the saved APK/screenshots. Stop for owner feedback.

@@ -428,11 +428,18 @@ final class PhoneRuntimeCheck {
                         && !c.getSystemService(KeyguardManager.class).isKeyguardLocked(),
                 5000, "Unlock the owned emulator before opening the audition UI");
         String saved = PhoneStore.read(c).value("reminders.voice");
-        MainActivity a =
-                (MainActivity)
-                        test.startActivitySync(
-                                new Intent(c, MainActivity.class)
-                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        Instrumentation.ActivityMonitor monitor =
+                test.addMonitor(MainActivity.class.getName(), null, false);
+        MainActivity a;
+        try {
+            test.runOnMainSync(() -> c.startActivity(new Intent(c, MainActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)));
+            a = (MainActivity) test.waitForMonitorWithTimeout(monitor, 5000);
+            CompanionCheck.check(a != null, "Audition activity did not open after unlock");
+            await(test, a::hasWindowFocus, 5000, "Audition activity did not gain window focus");
+        } finally {
+            test.removeMonitor(monitor);
+        }
         try {
             PhoneUiCheck.on(
                     test,
