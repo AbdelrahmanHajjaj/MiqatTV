@@ -33,7 +33,8 @@ further fix; keep assertions/deadlines. API37 runtime/render already passed.
 
 Diagnostic snapshot: main idle; test blocked in startActivitySync(audition).
 Lock-screen checks leave the owned emulator locked on API34. Wake/dismiss
-keyguard after those checks and assert unlocked before remaining audition UI.
+keyguard immediately in audition(), after the delayed preview checks, and
+assert interactive/unlocked just before ordinary UI launch.
 Remove temporary thread timer; production APK unchanged.
 
 Next: compile corrected fixture, push, require final-head CI, update draft PR/

@@ -3,6 +3,15 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## Unlock at UI use, not before delayed playback checks
+
+Move the wake/unlock assertion into audition(), immediately before its
+startActivitySync. The preceding focus/replacement/twelve-second preview checks
+can let Android's screen timeout expire again; a successful unlock earlier in
+the suite is not the UI launch precondition. Also assert interactive state.
+Production APK/hash unchanged; no new helper or relaxed check. Compile/push and
+require final-head CI. Preserve f29ef78 run result if it finishes; it is not final.
+
 ## API34 runtime root cause and correction
 
 746a73c Validate/Apple pass. Diagnostic Companion was deliberately cancelled

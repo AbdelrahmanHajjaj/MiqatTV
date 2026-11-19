@@ -200,10 +200,6 @@ final class PhoneRuntimeCheck {
             LiveUiCheck.untilUi(test, home[0]::isDestroyed);
             home[0] = null;
             PhoneAdhanCheck.screen(test, c);
-            shell(test, "input keyevent KEYCODE_WAKEUP");
-            shell(test, "wm dismiss-keyguard");
-            await(test, () -> !c.getSystemService(KeyguardManager.class).isKeyguardLocked(),
-                    5000, "Unlock the owned emulator before the remaining audition UI");
             // A stale/early fixture event must not be claimed or produce playback.
             now = System.currentTimeMillis();
             ReminderEvent expired =
@@ -426,6 +422,11 @@ final class PhoneRuntimeCheck {
     }
 
     private static void audition(Instrumentation test, Context c) throws Exception {
+        shell(test, "input keyevent KEYCODE_WAKEUP");
+        shell(test, "wm dismiss-keyguard");
+        await(test, () -> c.getSystemService(android.os.PowerManager.class).isInteractive()
+                        && !c.getSystemService(KeyguardManager.class).isKeyguardLocked(),
+                5000, "Unlock the owned emulator before opening the audition UI");
         String saved = PhoneStore.read(c).value("reminders.voice");
         MainActivity a =
                 (MainActivity)
