@@ -19,14 +19,15 @@ Approved requirements: PHONE-PASS5.md and preceding phone passes.
   recorded in AGENTS.md. Permission requests use onboarding's bottom action.
 - Build/test APK/lint pass (0 errors, 43 existing warnings); generator 8/8 and
   canonical catalogs pass. Native bilingual UI/keyboard, widget Cancel, actual
-  alarm/swipe/accessibility, portrait/wide sizing pass. Final updated journey,
-  bindings/runtime captures and final-head CI are still being completed.
+  alarm/swipe/accessibility, portrait/wide sizing pass. Updated first-use/widget journey,
+  default TV bindings, actual-alarm runtime and local LG SSH fixture also pass.
+  Final-head CI status is tracked in draft PR #9.
 - Exported 0.4.4 review APK, 25 exact recordings/notices and retained signing
   identity checked; exact receipt in EVIDENCE.md. No physical deployment.
 
-Next: finish affected native/rendered checks, preserve/push changes, require
-final-head Validate/Companion/Apple core, update draft PR and private receipt,
-stop the verified task-owned emulator, then stop for owner feedback. No merge,
+Next: require final-head Validate/Companion/Apple core, update draft PR and
+private receipt, stop the verified task-owned emulator, then await owner feedback.
+Local native/rendered acceptance is complete. No merge,
 release or unrelated new work. Private logs/captures/ownership stay in state/.
 
 ## Historical implementation notes

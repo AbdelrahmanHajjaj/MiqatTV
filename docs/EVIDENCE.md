@@ -15,8 +15,10 @@ keyboard visibility and 80–150% app sizing with enlarged Android text pass.
 The landscape keyboard initially exposed fullscreen extraction and then a zero
 height scroll viewport; no-extraction inputs and deferred header collapse now
 keep the real editor and Save/Cancel visible. Corrected native render inspected.
-Final updated journeys/runtime captures and final-head Actions remain pending
-in PHONE-WORK.md/PR #9; earlier runs do not certify this candidate.
+Updated bilingual first-use/widget/TV journeys, default native TV bindings,
+actual scheduled playback and local LG SSH fixture also pass. Final adhan/Home/
+first-use renders inspected. Final-head Actions are tracked in PR #9; earlier
+runs do not certify this candidate.
 
 No physical OEM, TV, speaker, power-key or iOS acceptance is claimed. Android
 still owns notification styling and background/full-screen policy.

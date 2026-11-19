@@ -8,10 +8,11 @@ bottom swipe-up adhan dismissal, fixed primary/secondary action footers,
 keyboard-safe landscape editing, and concise bilingual copy. Product copy rules
 are durable in AGENTS.md. No new dependency, player or unrelated platform work.
 
-Local build/lint, actual gesture/runtime, bilingual journeys and 80–150% sizing
-have passed; final affected native checks and final-head CI remain in progress.
-EVIDENCE.md owns the exact exported review APK. PHONE-WORK.md owns the checklist.
-Finish validation, inspect final screenshots, preserve commits and update draft
-PR/receipt. Stop for owner testing. No merge, release or physical deployment.
+Implementation and local acceptance complete: build/lint, actual alarm/gesture,
+bilingual UI/journeys/TV bindings, local LG SSH fixture and 80–150% sizing pass.
+Final native screenshots inspected. EVIDENCE.md owns the exact review APK; PR #9
+and ignored receipt own final-head CI status. Finish that CI/handoff bookkeeping,
+then await owner testing. No further product work without feedback. No merge,
+release or physical deployment.
 Existing LG review IPK stays 0.2.28. Physical/OEM/TV acceptance and the recorded
 next-TV volume correction remain separate. Do not pick up new work after handoff.
