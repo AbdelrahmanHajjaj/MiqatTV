@@ -4,6 +4,38 @@ Updated: 2026-11-19. Branch `feature/companion-installation`, worktree
 `state/companion-installation` under the primary Miqat checkout. Base: companion
 merge `3c5b38e`. Draft PR #9 owns this work and must describe the final scope.
 
+## Active pass 4 — owner feedback
+
+Approved scope: [PHONE-PASS4.md](PHONE-PASS4.md), all 12 items. Goal tracks the same
+scope. Starting head f04c1c9 passed final pass-3 CI; this is new owner feedback,
+not acceptance of the old UX. Continue in the existing companion worktree/PR #9.
+
+Implemented in working tree: retired voice choices with saved-choice migration;
+compact shared setting rows/toggles; floating main navigation and contextual Back;
+six single-decision first-use steps/Skip; carousel previews and portrait artwork
+composition; guided one-field LG connection; full-screen TV flow; uncropped scan
+geometry; Kaaba compass; per-instance widget variants/theme/background/date/size.
+Widget variants now also have their own launcher entries/default sizes, sharing
+one provider implementation. This last provider addition still needs validation.
+Approved legacy audio bytes remain checksummed but hidden from selectors.
+
+Validation so far: canonical catalog/metadata tests; portable JVM/JS/Java/ES5;
+LG full build/service/TLS suite; preview tokens/data/tests/build; Android TV
+size/lint/test APK and 47 regressions; native bilingual default TV/editor/setup
+handoff, phone UI and saved/private-audio migration all pass. Journey-4 passes
+resume/Skip, draft Cancel, real two-instance widget configuration, resize/restore,
+strip and Qibla/source flows. Portrait phone sizes 80–150% with OS font 1.3 pass.
+A real RemoteViews orientation rejection reproduced in journey-1 and was fixed
+with fixed XML containers. Fixtures now follow visible carousel/setup steps,
+preserving observable behavior and edge assertions.
+
+Next: validate the new launcher widget components/defaults, run wide-size matrix,
+inspect final English/Arabic renders including LG/Android scan, finish audit and
+lint, version/export and final-head CI. No new review APK/version is claimed yet.
+Private logs/captures are state/pass4-*; current owned read-only emulator receipt
+is state/pass4-emulator-session.json. Verify process identity before cleanup.
+No physical device was touched. Keep PR draft; no merge/release/deployment.
+
 ## Authority and delivery
 
 The owner approved continuing sequentially through installation and the fully
