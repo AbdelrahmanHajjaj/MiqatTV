@@ -31,11 +31,13 @@ activity focus loss, then real Back and root detachment/focus restoration.
 still stalls (420s timeout). Emit main/instrumentation stacks at 90s before any
 further fix; keep assertions/deadlines. API37 runtime/render already passed.
 
-Next: compile runtime diagnostics, push, inspect exact blocked stacks, then fix
-and require final-head CI. The fixture
-uses synchronized UiAutomation input for real Back/volume, retaining all dialog/
-focus assertions. Record final head/runs in draft PR and ignored handoff receipt,
-then deliver one APK/screenshots and stop for owner feedback.
+Diagnostic snapshot: main idle; test blocked in startActivitySync(audition).
+Lock-screen checks leave the owned emulator locked on API34. Wake/dismiss
+keyguard after those checks and assert unlocked before remaining audition UI.
+Remove temporary thread timer; production APK unchanged.
+
+Next: compile corrected fixture, push, require final-head CI, update draft PR/
+private receipt and deliver the saved APK/screenshots. Stop for owner feedback.
 
 Keep PR draft. No merge, public release or physical operation in this pass.
 Existing LG review IPK stays 0.2.28. Public installation needs published assets;

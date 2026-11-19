@@ -3,6 +3,20 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## API34 runtime root cause and correction
+
+746a73c Validate/Apple pass. Diagnostic Companion was deliberately cancelled
+after its 90s snapshot: main thread idle, instrumentation blocked in
+Instrumentation.startActivitySync at PhoneRuntimeCheck.audition440/run280.
+Private evidence state/adhan-art-runtime-thread-snapshot.log. The preceding
+show-when-locked adhan checks leave keyguard active; ordinary MainActivity
+cannot resume for audition on API34. Restore test-owned wake/unlocked state
+immediately after lock-screen checks, assert keyguard dismissal within 5s,
+then continue all remaining real audition/custom/channel checks. Production
+playback is not blocked. Remove the now-unneeded diagnostic timer. Preserve
+native assertions and 420s command bounds. Compile and require final-head CI.
+Phone APK/hash unchanged; local emulator remains stopped.
+
 ## Remaining API34 runtime stall
 
 4c7a6d6 Validate and Apple pass. Companion passes every preceding suite, including

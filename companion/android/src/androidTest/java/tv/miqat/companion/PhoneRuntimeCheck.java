@@ -61,17 +61,6 @@ final class PhoneRuntimeCheck {
                 "Grant exact-alarm/notification permissions on the owned emulator before this"
                         + " suite");
         MainActivity[] home = {null};
-        Thread worker = Thread.currentThread();
-        Timer diagnostics = new Timer("phone-runtime-diagnostics", true);
-        diagnostics.schedule(new TimerTask() {
-            @Override public void run() {
-                android.os.Bundle progress = new android.os.Bundle();
-                progress.putString("stream", "Runtime thread snapshot\nMain: "
-                        + Arrays.toString(android.os.Looper.getMainLooper().getThread().getStackTrace())
-                        + "\nInstrumentation: " + Arrays.toString(worker.getStackTrace()) + "\n");
-                test.sendStatus(0, progress);
-            }
-        }, 90000);
         try {
             PhonePlayback.stop(c);
             PhoneAlarms.cancel(c);
@@ -211,6 +200,10 @@ final class PhoneRuntimeCheck {
             LiveUiCheck.untilUi(test, home[0]::isDestroyed);
             home[0] = null;
             PhoneAdhanCheck.screen(test, c);
+            shell(test, "input keyevent KEYCODE_WAKEUP");
+            shell(test, "wm dismiss-keyguard");
+            await(test, () -> !c.getSystemService(KeyguardManager.class).isKeyguardLocked(),
+                    5000, "Unlock the owned emulator before the remaining audition UI");
             // A stale/early fixture event must not be claimed or produce playback.
             now = System.currentTimeMillis();
             ReminderEvent expired =
@@ -381,7 +374,6 @@ final class PhoneRuntimeCheck {
                     !PhonePlayback.playing() && !PhoneStore.preferences(c).contains("next-event"),
                     "Disabled alerts retained active playback/alarm");
         } finally {
-            diagnostics.cancel();
             shell(test, "input keyevent KEYCODE_WAKEUP");
             shell(test, "wm dismiss-keyguard");
             if (home[0] != null) PhoneUiCheck.on(test, home[0]::finish);
