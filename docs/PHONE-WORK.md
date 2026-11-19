@@ -3,6 +3,19 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## Remaining API34 runtime stall
+
+4c7a6d6 Validate and Apple pass. Companion passes every preceding suite, including
+Coming soon event/input-root Back, migration, packages, location, native/LAN/UI,
+sizing and permission denial, then phone-runtime times out at 420s. Private log
+state/adhan-art-phone-window-failure.log. Moving accessibility predicates off
+main was necessary but insufficient. Add one cancellable daemon timer to emit
+main/instrumentation thread stacks at 90s; do not change product behavior,
+assertions or deadlines. Compile and inspect the next CI stack before another
+fix. API37 local runtime/render passed; API34 remains unverified. Only API37 image
+is installed locally and SDK command-line tools are absent; no new SDK downloaded.
+Phone review artifact/hash unchanged. No task emulator running.
+
 ## Dialog input-window readiness
 
 b6db36f Validate passes every required job, including corrected TV emulator;

@@ -27,7 +27,12 @@ b6db36f Validate (including TV) and Apple pass. Intermittent Coming soon
 Back still fails on API34: require actual dialog root input focus, not only
 activity focus loss, then real Back and root detachment/focus restoration.
 
-Next: compile corrected dialog fixture, push and require final-head CI. The fixture
+4c7a6d6 Validate/Apple and every preceding phone suite pass. API34 runtime
+still stalls (420s timeout). Emit main/instrumentation stacks at 90s before any
+further fix; keep assertions/deadlines. API37 runtime/render already passed.
+
+Next: compile runtime diagnostics, push, inspect exact blocked stacks, then fix
+and require final-head CI. The fixture
 uses synchronized UiAutomation input for real Back/volume, retaining all dialog/
 focus assertions. Record final head/runs in draft PR and ignored handoff receipt,
 then deliver one APK/screenshots and stop for owner feedback.
