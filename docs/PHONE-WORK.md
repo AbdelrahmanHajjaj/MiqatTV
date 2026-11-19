@@ -120,7 +120,7 @@ prerelease; there is no anonymous published APK/IPK release yet.
 Ordered work:
 1. [x] One-shot foreground location with approximate permission support, explicit
    location confirmation and city-search fallback; coordinates move to Advanced.
-2. [ ] Canonical GitHub public-release lookup/verified downloads for APK/IPK,
+2. [x] Canonical GitHub public-release lookup/verified downloads for APK/IPK,
    ordinary setup as default and local packages in Advanced. Never embed tokens,
    install unverified/partial files, silently downgrade or uninstall to update.
    Website should link to the same release assets. Handle no public release honestly.
@@ -141,8 +141,9 @@ Ordered work:
 
 Work pass 2 in the existing feature/companion-installation worktree (clean base
 298f195). Location detection is implemented and validated (EVIDENCE.md). Continue
-with public downloads, adhan schedules/audio
-and phone UX. Reuse native Java Views, shared phone contract/core and existing
+with adhan schedules/audio and phone UX. Public package downloads now share a
+verified runtime and default setup actions, with local files in Advanced. Native
+parser/atomic-file and bilingual setup checks pass; publication stays pending. Reuse native Java Views, shared phone contract/core and existing
 installer runtime. The previous 0.2.0 review APK remains the latest delivered
 build until this pass is verified/exported. All final 298f195 CI gates passed;
 links are in PR #9. Keep the PR draft while owner acceptance remains open.

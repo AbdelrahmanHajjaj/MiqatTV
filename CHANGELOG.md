@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Download public Android TV/LG packages from phone setup with size/SHA-256
+  verification, labelled previews and local files under Advanced. Protect newer
+  Android installs using the APK version code rather than the release tag.
+
 - Add one-shot phone location detection with approximate access, confirmation,
   city fallback and manual coordinates under Advanced.
 

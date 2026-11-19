@@ -1,6 +1,6 @@
 # Local TV setup and recovery
 
-These tools install your locally built Miqat. They never fetch or push Git. Python 3.9+, JDK 17 and Android SDK 34 are required. The phone installer can also install an APK you copy to the phone: choose **Install a local launcher APK**.
+The PC tools install your locally built Miqat; they never fetch or push Git. Python 3.9+, JDK 17 and Android SDK 34 are required for PC setup. The phone installer downloads the published TV APK from [Miqat releases](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases), verifies its size/SHA-256 and package identity, and refuses a version-code downgrade. Published previews are labelled. Local APKs are under **Advanced → Install a local launcher APK**; choose **Use public download** to return to the default.
 
 On the Miqat phone companion, choose **Your TVs → Set up Android TV**. This uses
 the same implementation as the standalone installer, including optional cleanup

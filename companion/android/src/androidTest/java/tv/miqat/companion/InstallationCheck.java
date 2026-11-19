@@ -30,6 +30,10 @@ final class InstallationCheck {
             (language.equals("ar") ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR), "Installer direction");
         CompanionCheck.check(find(installer.getWindow().getDecorView(), installer.getString(tv.miqat.installer.R.string.guide_title)) != null,
             "Native setup guide missing");
+        CompanionCheck.check(find(installer.getWindow().getDecorView(),installer.getString(tv.miqat.installer.R.string.choose_local_apk))==null,
+            "Local APK should be under Advanced");
+        CompanionCheck.check(find(installer.getWindow().getDecorView(),installer.getString(tv.miqat.installer.R.string.advanced_setup))!=null,
+            "Advanced setup missing");
         View ready = find(installer.getWindow().getDecorView(), installer.getString(tv.miqat.installer.R.string.guide_ready));
         android.graphics.Rect visible = new android.graphics.Rect();
         CompanionCheck.check(ready != null && ready.getGlobalVisibleRect(visible) && visible.height() == ready.getHeight(),

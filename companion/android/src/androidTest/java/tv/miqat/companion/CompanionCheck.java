@@ -17,12 +17,13 @@ import java.util.*;
 
 /** Run only on an explicitly selected owned phone emulator; no TV/device integration. */
 public final class CompanionCheck extends Instrumentation {
-    boolean lan,live,camera,lg,captures,lgInstall,phoneRuntime,phoneUi,phoneDenied,phoneSize,phoneLocation,locationDenied,locationApprox;
-    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");locationApprox=suite.equals("phone-location-approx");phoneLocation=suite.equals("phone-location");locationDenied=suite.equals("phone-location-denied");phoneSize=suite.equals("phone-size");phoneDenied=suite.equals("phone-denied");phoneUi=suite.equals("phone-ui");phoneRuntime=suite.equals("phone-runtime");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
+    boolean releaseCheck,lan,live,camera,lg,captures,lgInstall,phoneRuntime,phoneUi,phoneDenied,phoneSize,phoneLocation,locationDenied,locationApprox;
+    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");releaseCheck=suite.equals("public-release");locationApprox=suite.equals("phone-location-approx");phoneLocation=suite.equals("phone-location");locationDenied=suite.equals("phone-location-denied");phoneSize=suite.equals("phone-size");phoneDenied=suite.equals("phone-denied");phoneUi=suite.equals("phone-ui");phoneRuntime=suite.equals("phone-runtime");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
     static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
     @Override public void onStart() {
         Bundle result=new Bundle(); int count=0;
         try {
+            if(releaseCheck){tv.miqat.installer.PublicReleaseCheck.run(getTargetContext());result.putString("stream","PASS: public release selection, asset source/checksum bounds and atomic download preservation\n");finish(-1,result);return;}
             if(locationDenied){PhoneLocationCheck.denied(this);result.putString("stream","PASS: denied foreground location leaves detection off\n");finish(-1,result);return;}
             if(phoneLocation||locationApprox){PhoneLocationCheck.run(this,captures,locationApprox);result.putString("stream","PASS: bilingual one-shot GPS detection, approximate/stale quality, confirmation/persistence and Advanced coordinate fallback\n");finish(-1,result);return;}
             if(phoneSize){PhoneSizeCheck.run(this,captures);result.putString("stream","PASS: bilingual phone sizing 80-150, navigation geometry and digit selection\n");finish(-1,result);return;}
@@ -49,6 +50,10 @@ public final class CompanionCheck extends Instrumentation {
                 runOnMainSync(()->{
                     activity.getWindow().getDecorView().findViewWithTag("lg.open").performClick();
                     check(activity.page.equals("lg-setup"),"LG setup entry");
+                    check(activity.body.findViewWithTag("lg.download")!=null&&activity.body.findViewWithTag("lg.choose")==null,"Public download must be default; local package belongs in Advanced");
+                    activity.body.findViewWithTag("lg.advanced").performClick();
+                    check(activity.body.findViewWithTag("lg.choose")!=null,"Advanced local IPK missing");
+                    activity.body.findViewWithTag("lg.advanced").performClick();
                     EditText phrase=activity.getWindow().getDecorView().findViewWithTag("lg.passphrase");
                     check(phrase!=null&&!phrase.isSaveEnabled(),"LG passphrase must not enter saved view state");
                     EditText address=activity.getWindow().getDecorView().findViewWithTag("lg.host");address.setText("127.0.0.1");

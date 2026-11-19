@@ -1,5 +1,21 @@
 # Validation evidence
 
+## Published-package installer feedback — 19 November 2026
+
+Android and LG now share anonymous public-release selection and size/SHA-256
+verification. Native deterministic checks pass for preview/draft selection,
+versioned LG assets, wrong repository/HTTP source, missing/duplicate checksum,
+truncated/wrong-digest download and preservation of the previous file with no
+partial-file leak. Companion/standalone installer assemble and lint pass; no new
+touched-code warnings remain. 47 Python/Java regressions pass. Native bilingual
+setup/navigation checks and inspected renders confirm public download defaults
+and local files under Advanced; no physical TV was contacted. The website builds
+with the canonical public-release link (after installing its locked dependencies).
+The current repository has only a draft, so published-binary end-to-end transfer
+remains unverified; no release was published. Private logs: public-release-native,
+public-release-ui, public-release-final-build, public-release-regressions and
+public-release-site-2 under state/.
+
 ## Phone location feedback pass — 19 November 2026
 
 Foreground one-shot detection, explicit confirmation and Advanced coordinates pass

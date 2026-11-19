@@ -12,6 +12,7 @@ import java.nio.file.*;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import tv.miqat.installer.PublicRelease;
 
 /** Uses the companion's native surfaces/controls; all privileged work is explicit. */
 final class LgSetup {
@@ -20,6 +21,7 @@ final class LgSetup {
     private boolean connected;
     private String version="",message="lg_intro";
     private LgPackage selected;
+    private boolean advanced,preview;
     private volatile boolean destroyed;
     LgSetup(MainActivity activity){a=activity;File cached=new File(a.getCacheDir(),"lg-selected.ipk");if(cached.isFile())try{selected=LgPackage.read(cached);}catch(IOException ignored){/* Ask for a valid package again. */}}
 
@@ -32,7 +34,11 @@ final class LgSetup {
             Uri.parse("https://webostv.developer.lge.com/develop/getting-started/developer-mode-app"))));
         LinearLayout packageCard=a.card(parent);
         packageCard.addView(a.text(selected==null?a.t("lg_no_package"):"Miqat "+selected.version+" · IPK",15,a.ink));
-        a.button(packageCard,a.t("lg_choose"),()->a.startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
+        packageCard.addView(a.text(a.t("tv_public_download_help"),13,a.muted));
+        if(preview)packageCard.addView(a.text(a.t("tv_public_preview"),13,a.accent));
+        a.button(packageCard,a.t("tv_public_download"),this::download).setTag("lg.download");
+        a.button(packageCard,a.t("phone_advanced"),()->{advanced=!advanced;a.render();}).setTag("lg.advanced");
+        if(advanced)a.button(packageCard,a.t("lg_choose"),()->a.startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
             .setType("*/*").addCategory(Intent.CATEGORY_OPENABLE),73)).setTag("lg.choose");
         LinearLayout connect=a.card(parent);
         String saved=a.prefs().getString("lg-host","");
@@ -87,6 +93,22 @@ final class LgSetup {
             a.render();
         });
     }
+    private void download(){
+        close();a.network(()->{
+            try {
+                PublicRelease.Asset asset=PublicRelease.latest(true);
+                File file=asset.download(a.getCacheDir(),(done,total)->{});
+                LgPackage.read(file);
+                File cached=new File(a.getCacheDir(),"lg-selected.ipk");
+                Files.move(file.toPath(),cached.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+                return new Object[]{LgPackage.read(cached),asset.preview};
+            }catch(PublicRelease.Unavailable unavailable){return null;}
+        },result->{
+            if(result==null)message="tv_public_unavailable";
+            else{selected=(LgPackage)result[0];preview=(Boolean)result[1];message="lg_package_ready";}
+            a.render();
+        },()->{message="tv_public_failed";a.render();});
+    }
     void select(Uri uri) {
         close();run(()->{
             File part=new File(a.getCacheDir(),"lg-selected.part"),file=new File(a.getCacheDir(),"lg-selected.ipk");
@@ -97,7 +119,7 @@ final class LgSetup {
                 }
                 LgPackage.read(part);Files.move(part.toPath(),file.toPath(),StandardCopyOption.REPLACE_EXISTING);return LgPackage.read(file);
             } finally {if(part.exists()&&!part.delete())part.deleteOnExit();}
-        },pkg->{selected=pkg;message="lg_package_ready";a.render();});
+        },pkg->{selected=pkg;preview=false;message="lg_package_ready";a.render();});
     }
     private void install() {
         LgPackage pkg=selected;if(!connected||pkg==null)return;

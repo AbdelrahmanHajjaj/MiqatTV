@@ -1,4 +1,10 @@
 {
+  "tv_public_download":{"en":"Download latest TV build","ar":"تنزيل أحدث إصدار للتلفاز"},
+  "tv_public_download_help":{"en":"Downloads and verifies the published Miqat TV package from GitHub. Local files are in Advanced.","ar":"ينزّل حزمة ميقات للتلفاز المنشورة من GitHub ويتحقق منها. الملفات المحلية في الخيارات المتقدمة."},
+  "tv_public_unavailable":{"en":"No published Miqat TV package is available yet. Try later, or choose a local file in Advanced.","ar":"لا تتوفر حزمة ميقات للتلفاز منشورة بعد. حاول لاحقًا أو اختر ملفًا محليًا من الخيارات المتقدمة."},
+  "tv_public_failed":{"en":"Download failed or could not be verified. Your selected package has been kept. Retry or use a local file in Advanced.","ar":"فشل التنزيل أو تعذّر التحقق منه. تم الاحتفاظ بالحزمة المختارة. أعد المحاولة أو استخدم ملفًا محليًا من الخيارات المتقدمة."},
+  "tv_public_preview":{"en":"Published preview build","ar":"إصدار معاينة منشور"},
+
   "phone_use_location":{"en":"Use my location","ar":"استخدام موقعي"},
   "phone_current_location":{"en":"Current location","ar":"الموقع الحالي"},
   "phone_near_city":{"en":"Near %s","ar":"بالقرب من %s"},
@@ -102,7 +108,7 @@
   "lg-setup":{"en":"Set up LG TV","ar":"إعداد تلفاز LG"},
   "lg_setup_hint":{"en":"Install or update Miqat through LG Developer Mode, then pair for everyday control.","ar":"ثبّت ميقات أو حدّثه عبر وضع المطوّر في LG، ثم اقترن للتحكّم اليومي."},
   "lg_intro":{"en":"Install Miqat on LG webOS","ar":"تثبيت ميقات على LG webOS"},
-  "lg_steps":{"en":"On the TV, install LG’s Developer Mode app, sign in to your LG developer account, enable Developer Mode and restart if asked. Reopen it and enable Key Server. Keep both devices on the same trusted home network. Select the Miqat IPK on this phone, then enter the TV’s address and case-sensitive passphrase.","ar":"على التلفاز، ثبّت تطبيق Developer Mode من LG، وسجّل الدخول بحساب مطوّر LG، وفعّل وضع المطوّر وأعد التشغيل إذا طُلب ذلك. افتح التطبيق مجددًا وفعّل Key Server. أبقِ الجهازين على شبكة منزلية موثوقة واحدة. اختر ملف ميقات IPK على الهاتف، ثم أدخل عنوان التلفاز وعبارة المرور مع مراعاة حالة الأحرف."},
+  "lg_steps":{"en":"On the TV, enable LG Developer Mode and Key Server. Keep both devices on the same trusted home network. Download the TV build below, then enter the TV address and case-sensitive passphrase.","ar":"على التلفاز، فعّل وضع المطوّر من LG وخادم Key Server. أبقِ الجهازين على الشبكة المنزلية الموثوقة نفسها. نزّل إصدار التلفاز أدناه، ثم أدخل عنوان التلفاز وعبارة المرور مع مراعاة حالة الأحرف."},
   "lg_expiry":{"en":"LG Developer Mode expires. Use Extend in LG’s app before the session ends; expiry can remove developer-installed apps. This does not replace LG Home or wake a TV from standby.","ar":"تنتهي جلسة وضع المطوّر في LG. استخدم Extend داخل تطبيق LG قبل انتهائها؛ قد تُحذف التطبيقات المثبّتة بوضع المطوّر عند انتهاء الجلسة. لا يستبدل هذا واجهة LG الرئيسية ولا يوقظ التلفاز من الاستعداد."},
   "lg_official":{"en":"LG’s setup instructions","ar":"تعليمات الإعداد الرسمية من LG"},
   "lg_no_package":{"en":"Choose the Miqat webOS package (.ipk)","ar":"اختر حزمة ميقات لنظام webOS ‏(.ipk)"},

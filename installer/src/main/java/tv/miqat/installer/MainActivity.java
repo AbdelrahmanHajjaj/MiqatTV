@@ -136,9 +136,13 @@ public class MainActivity extends Activity {
                 Ui.small(this, getString(R.string.g3_wireless)),
                 Ui.tvText(this, R.string.tv_wireless_en, R.string.tv_wireless_ar)), 10);
         add(step(4, R.string.g4_title, R.string.g4_body), 10);
-        foot(Ui.secondary(this, getString(R.string.choose_local_apk), v -> startActivityForResult(
-            new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT)
-                .setType("application/vnd.android.package-archive").addCategory(android.content.Intent.CATEGORY_OPENABLE), 81)));
+        add(Ui.small(this,getString(localApk==null?R.string.public_download_help:R.string.local_package_selected)),12);
+        foot(Ui.secondary(this, getString(R.string.advanced_setup), v -> new AlertDialog.Builder(this)
+            .setTitle(R.string.advanced_setup).setItems(new String[]{getString(R.string.choose_local_apk),getString(R.string.use_public_download)}, (d,which) -> {
+                if(which==1){localApk=null;showGuide();}
+                else startActivityForResult(new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT)
+                    .setType("application/vnd.android.package-archive").addCategory(android.content.Intent.CATEGORY_OPENABLE),81);
+            }).show()));
         foot(Ui.primary(this, getString(R.string.guide_ready), v -> go(this::showFind)));
         recoveryActions();
         back = this::finish;
@@ -554,22 +558,21 @@ public class MainActivity extends Activity {
                     return;
                 }
                 tv.recovery = new Recovery(a, getFilesDir(), host, tv);
-                String tag = localApk == null ? Setup.latestTag() : null;
-                version = tag == null ? "" : tag.replaceFirst("^v", "");
-                steps = Setup.steps(tag);
-                if (localApk != null) {
-                    android.content.pm.PackageInfo archive = getPackageManager().getPackageArchiveInfo(localApk.getPath(), 0);
-                    if (archive == null || !Setup.PACKAGE.equals(archive.packageName)) throw new IOException("Choose a Miqat APK");
-                    version = archive.versionName;
-                }
-                String onTv = tv.miqatVersion();
-                // Already the latest: nothing to download, but the setup runs again (it is safe to repeat).
-                boolean current = localApk == null && onTv != null && onTv.equals(version);
+                steps = Setup.steps(null);
+                post(g, () -> {timeline=timeline();add(timeline,20);add(Timeline.legend(this),12);timeline.set(0,Timeline.State.WORKING);});
+                PublicRelease.Asset release=localApk==null?PublicRelease.latest(false):null;
+                File apk=localApk!=null?localApk:release.download(getCacheDir(),(done,total)->post(g,()->{
+                    hero.progress(0.45f*done/total);timeline.note(0,getString(R.string.mb_of,mb(done),mb(total)));
+                }));
+                android.content.pm.PackageInfo archive=getPackageManager().getPackageArchiveInfo(apk.getPath(),0);
+                if(archive==null||!Setup.PACKAGE.equals(archive.packageName)||archive.versionName==null)throw new IOException("Choose a Miqat APK");
+                version=archive.versionName;
+                long code=android.os.Build.VERSION.SDK_INT>=28?archive.getLongVersionCode():archive.versionCode;
+                String onTv=tv.miqatVersion();long installedCode=onTv==null?-1:tv.miqatVersionCode();
+                if(onTv!=null&&(installedCode<0||code<installedCode))throw new IOException(getString(R.string.downgrade_kept));
+                boolean current=onTv!=null&&onTv.equals(version)&&code==installedCode;
                 post(g, () -> {
-                    if (!version.isEmpty()) leadView.setText(getString(R.string.install_lead_version, version));
-                    timeline = timeline();
-                    add(timeline, 20);
-                    add(Timeline.legend(this), 12);
+                    leadView.setText(release!=null&&release.preview?getString(R.string.install_preview_version,version):getString(R.string.install_lead_version,version));
                     if (current) {
                         timeline.set(0, Timeline.State.CHECKED);
                         timeline.set(1, Timeline.State.CHECKED);
@@ -582,15 +585,9 @@ public class MainActivity extends Activity {
                     runSteps(g, a);
                     return;
                 }
-                if (localApk != null) { send(g, a, localApk); return; }
-                File apk = Setup.download(getCacheDir(), (done, total) -> post(g, () -> {
-                    if (total <= 0) return;
-                    hero.progress(0.45f * done / total);
-                    timeline.note(0, getString(R.string.mb_of, mb(done), mb(total)));
-                }));
                 send(g, a, apk);
             } catch (Exception e) {
-                fail(g, getString(R.string.error_install, message(e)));
+                fail(g, e instanceof PublicRelease.Unavailable?getString(R.string.public_unavailable):getString(R.string.error_install,message(e)));
             }
         });
     }
