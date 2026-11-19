@@ -19,7 +19,9 @@ Bilingual renders, phone-ui and both enlarged-text matrices pass. Denied-FSI and
 allowed-FSI actual lock-screen opening/real Back checks pass. Final exported
 0.4.2/code11 APK hash and acceptance limits are in EVIDENCE.md.
 
-Next: commit/push final scope, require Validate/Companion/Apple CI on that head,
+Android13+ Stop custom action and actual rendered/clicked SystemUI notification
+control now pass native verification too. Final APK receipt is in EVIDENCE.md.
+Next: push validated final scope, require Validate/Companion/Apple CI on that head,
 record PR receipts and stop only the verified owned emulator. Hand off one APK
 with accepted captures, then await owner feedback. Notification Play/Pause and
 screen-only volume stopping are included; power keys are reserved by Android.

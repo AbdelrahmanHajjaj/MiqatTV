@@ -9,7 +9,10 @@ import android.os.*;
 
 import java.util.*;
 
-/** A foreground service only during a selected local adhan session, including user pause. Never sticky. */
+/**
+ * A foreground service only during a selected local adhan session, including user pause. Never
+ * sticky.
+ */
 public final class PhonePlayback extends Service {
     static final String STOP = "tv.miqat.companion.STOP_ADHAN";
     static final String PAUSE = "tv.miqat.companion.PAUSE_ADHAN",
@@ -193,15 +196,13 @@ public final class PhonePlayback extends Service {
                     public void onPlay() {
                         resumeOutput();
                     }
+
+                    @Override
+                    public void onCustomAction(String action, Bundle extras) {
+                        if (STOP.equals(action)) stopSelf();
+                    }
                 });
-        media.setPlaybackState(
-                new PlaybackState.Builder()
-                        .setActions(
-                                PlaybackState.ACTION_STOP
-                                        | PlaybackState.ACTION_PLAY
-                                        | PlaybackState.ACTION_PAUSE)
-                        .setState(PlaybackState.STATE_PLAYING, 0, 1)
-                        .build());
+        updateMediaState(0);
         media.setActive(true);
         String name = settings.data.prayerName(prayer, PhoneAlarms.arabic(this));
         media.setMetadata(
@@ -294,18 +295,28 @@ public final class PhonePlayback extends Service {
                                     - (SystemClock.elapsedRealtime() - resumedAt)));
     }
 
-    private void playbackState() throws Exception {
+    private void updateMediaState(long position) {
         media.setPlaybackState(
                 new PlaybackState.Builder()
                         .setActions(
                                 PlaybackState.ACTION_STOP
                                         | PlaybackState.ACTION_PLAY
                                         | PlaybackState.ACTION_PAUSE)
+                        // Android 13+ derives extra notification buttons from session custom
+                        // actions.
+                        .addCustomAction(
+                                STOP,
+                                PhoneAlarms.text(this, "phone_stop"),
+                                R.drawable.companion_icon_close)
                         .setState(
                                 paused ? PlaybackState.STATE_PAUSED : PlaybackState.STATE_PLAYING,
-                                player.getCurrentPosition(),
+                                position,
                                 paused ? 0 : 1)
                         .build());
+    }
+
+    private void publishPlayback() throws Exception {
+        updateMediaState(player.getCurrentPosition());
         getSystemService(NotificationManager.class)
                 .notify(NOTIFICATION, notification(PhoneStore.read(this)));
     }
@@ -318,7 +329,7 @@ public final class PhonePlayback extends Service {
             handler.removeCallbacksAndMessages(null);
             player.pause();
             audio.abandonAudioFocusRequest(focus);
-            playbackState();
+            publishPlayback();
         } catch (Exception failure) {
             failed();
         }
@@ -344,7 +355,7 @@ public final class PhonePlayback extends Service {
             paused = false;
             resumedAt = SystemClock.elapsedRealtime();
             armLimit(settings);
-            playbackState();
+            publishPlayback();
         } catch (Exception failure) {
             failed();
         }

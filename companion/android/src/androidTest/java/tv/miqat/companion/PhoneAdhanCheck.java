@@ -32,6 +32,10 @@ final class PhoneAdhanCheck {
                 "Playback must offer pause/stop and dismissal where Android supports it");
         MediaSession.Token token = playing.extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
         MediaController controller = new MediaController(c, token);
+        check(
+                controller.getPlaybackState().getCustomActions().stream()
+                        .anyMatch(action -> action.getAction().equals(PhonePlayback.STOP)),
+                "Modern Android media controls hide Stop");
         playing.actions[0].actionIntent.send();
         await(test, PhonePlayback::paused, 5000, "Notification pause did not pause output");
         long pausedAt = SystemClock.elapsedRealtime();
@@ -49,6 +53,50 @@ final class PhoneAdhanCheck {
                 !PhonePlayback.paused() && controller.getPlaybackState().getPosition() >= position,
                 "Resume restarted the recording");
         return SystemClock.elapsedRealtime() - pausedAt;
+    }
+
+    static void stop(Instrumentation test, Context c) throws Exception {
+        PhoneRuntimeCheck.shell(test, "cmd statusbar expand-notifications");
+        try {
+            LiveUiCheck.until(() -> {
+                android.view.accessibility.AccessibilityNodeInfo control = stopControl(test, c);
+                if (control == null) return false;
+                control.recycle();
+                return true;
+            });
+            PhoneUiCheck.capture(test, c, "adhan-notification-playing", true);
+            android.view.accessibility.AccessibilityNodeInfo control = stopControl(test, c);
+            check(control != null, "Notification Stop disappeared");
+            try {
+                check(
+                        control.performAction(
+                                android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK),
+                        "System notification Stop is not clickable");
+            } finally {
+                control.recycle();
+            }
+        } finally {
+            PhoneRuntimeCheck.shell(test, "cmd statusbar collapse");
+        }
+    }
+
+    private static android.view.accessibility.AccessibilityNodeInfo stopControl(
+            Instrumentation test, Context c) {
+        android.view.accessibility.AccessibilityNodeInfo root =
+                test.getUiAutomation().getRootInActiveWindow();
+        if (root == null) return null;
+        try {
+            if (!"com.android.systemui".contentEquals(root.getPackageName())) return null;
+            android.view.accessibility.AccessibilityNodeInfo selected = null;
+            for (android.view.accessibility.AccessibilityNodeInfo node :
+                    root.findAccessibilityNodeInfosByText(PhoneAlarms.text(c, "phone_stop"))) {
+                if (selected == null && node.isVisibleToUser()) selected = node;
+                else node.recycle();
+            }
+            return selected;
+        } finally {
+            root.recycle();
+        }
     }
 
     static void screen(Instrumentation test, Context c) throws Exception {

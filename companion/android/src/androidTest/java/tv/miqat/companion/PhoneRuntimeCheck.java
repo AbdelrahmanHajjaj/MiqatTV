@@ -186,7 +186,7 @@ final class PhoneRuntimeCheck {
             CompanionCheck.check(
                     PhoneAlarms.claim(c, event.getId(), System.currentTimeMillis()) == null,
                     "Duplicate event was accepted");
-            PhonePlayback.stop(c);
+            PhoneAdhanCheck.stop(test, c);
             await(
                     test,
                     () -> !PhonePlayback.playing(),

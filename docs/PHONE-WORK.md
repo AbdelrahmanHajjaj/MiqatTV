@@ -1,97 +1,70 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-19. Worktree state/companion-installation, branch
-feature/companion-installation, draft PR #9. Owner scope: PHONE-PASS4.md.
+feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
-## Active 0.4.2 card and adhan controls
+## Active 0.4.2 — final CI/handoff
 
-Retain 0.4.1 Home spacing/short scroll, lower locked section and tomorrow Fajr
-before tools. Balance prayer name/time and restore canonical theme highlights;
-update actual appearance previews. Completed Home captures must show the guide
-prompt absent, including after cold launch. 0.4.1 (4aeb82a) was pushed but new
-feedback arrived while CI ran; it is superseded when 0.4.2 is ready.
+All owner steering is implemented: Home allows a short scroll, separates date/
+prayer/actions, lowers locked modules, places tomorrow Fajr before tools and
+integrates location. Setup prompt is absent after completion/cold launch.
+Balanced card uses canonical highlights and explicit text alignment; actual
+appearance preview uses the same labels/palette. No TV/iOS scope expansion.
 
-Scheduled adhan stays in the background, including screen off and while using
-another app. Notification Play/Pause retains position and remaining configured
-duration. Dismissal stops output where Android permits foreground notification
-dismissal; Stop is always available. Do not claim all Android notifications can
-be swiped. Optional full-screen mode defaults off, uses Android FSI access/high
-channel, and notification tap opens the same session. Screen touches or app
-switches do not stop output. Explicit Stop-and-close does; Back confirms. Screen
-closes when that session ends and stale controls cannot stop a newer event.
+Scheduled adhan continues with screen off and other apps. Notification Play/
+Pause retains decoder position and remaining duration; Stop/dismissal ends it
+where Android permits dismissal. A default-off full-screen view uses Android
+alarm access, shares the existing session and closes when it ends. Background
+touch/app switching do not stop audio. Explicit Stop-and-close does; real Back
+confirms. Default-off volume shortcut works on that visible screen over keyguard.
+Power key is OS-reserved; no screen-off heuristic, hidden volume API, overlay,
+accessibility service, second player or idle observer was added. Foreground
+notifications may be pinned by Android; Stop remains available.
 
-Owner clarified volume shortcut is screen/lock-screen only: the optional toggle
-stops output via volume keys while the adhan screen is visible over keyguard.
-Normal locked/background output continues. Power key is OS-reserved; do not use
-screen-off heuristics that would also stop audio at timeout. This limitation was
-explained. No hidden volume APIs, accessibility service, overlay or extra player.
+Strict schema3 migration preserves exact v1/v2 field sets and defaults both new
+toggles off. Runtime/preview/media owners stay separate. Android13+ notification
+buttons derive from PlaybackState: one publisher adds custom Stop for initial/
+paused/resumed states and its callback, alongside legacy notification actions.
 
-Implemented; native runtime and migration now PASS: PhoneHome balanced layout and tagged
-preview color binding; PhoneAdhanScreen private/direct-boot-aware Activity;
-PhonePlayback scoped pause/resume/stop/delete intents, media controls and elapsed
-played-time accounting; optional screen channel/permission UI; schema v3 strict
-v1/v2 migration for two default-off phone toggles. MainActivity.localized reads
-DP language before unlock. Existing test capture accepts any Activity.
+Final source APK0.4.2/code11 exported to primary state/builds/companion/
+Miqat-latest.apk: 32,553,634 bytes, SHA256
+EC4613AF1DA4AA5519178272AB37ADE4FB120BAB42132DE1C40C853955EB62AB.
+25 media/25 notices exact; prior certificate matches. EVIDENCE.md owns receipt.
+No new production dependency. Source-head fb715c2 was pushed, but MediaSession
+Stop fix and final docs/test changes still need their final commit/push.
 
-Focused native coverage is written: PhoneAdhanCheck checks English/Arabic screen,
-background touch, Back/Keep, delete callback, stale controls, volume and explicit
-close, plus pause position and duration in existing 30-second custom case.
-PhoneRuntimeCheck now starts a real alarm with screen off, resumes the other app,
-opens/leaves Miqat and verifies output continues. Existing journey/size checks
-cover the card and setup completion. Generator tests 8/8 pass after the strict
-permission list includes the authorized FSI permission.
+Validation PASS:
+- card-media-final-build.log and card-media-shade-build.log: build/lint/test APK.
+- card-media-shade-runtime.log: actual screen-off alarm, other-app continuity,
+  visible SystemUI Stop clicked and screenshot inspected, pause position/custom
+  remaining duration, deliberate close, real Back, stale callbacks and volume.
+- card-fsi-runtime-allowed.log: actual scheduled allowed-FSI screen opening over
+  keyguard via ActivityMonitor (no manual fallback on failure).
+- card-final-runtime-wide-denied.log: denied-FSI wide/enlarged text still plays,
+  manual screen opens and Stop remains reachable.
+- card-background-custom.log: strict v1/v2 preservation/malformed-record cases.
+- card-final-{phone-ui,journey}.log: final bilingual UI/setup/preview/completion.
+- card-final-size-{portrait,wide}.log: all80-150% with OS font1.3. The later media
+  Stop fix changes no Home/layout rules; its exact APK passes runtime above.
+- generator8/8, canonical/shared validation; lint0 errors/43 existing warnings.
 
-Current build/lint/test APK PASS: state/card-background-fixture-build.log.
-Native runtime PASS: state/card-background-runtime-2.log, including screen-off
-alarm, app switching, notification pause/resume and retained custom duration,
-dismissal/stale callbacks, deliberate screen closing and volume key. Migration
-PASS: state/card-background-custom.log, including strict v1/v2 preservation.
-The first run (card-background-runtime.log) was force-stopped only on this owned
-read-only emulator after a fixture lifecycle stall: a retained MainActivity made
-later startActivitySync wait for an instance Android reused. The fixture now
-finishes/waits for its Activity before later cases. Assertions remain intact.
+Private rendered sources: card-final-portrait (normal Home), card-fsi-review
+(normal optional screen), card-media-shade-review/adhan-notification-playing.png
+(real active system media controls). Accepted copies go to primary screenshots/
+0.4.2-*.png. The initial media capture was premature and is not delivery evidence.
+First runtime stall was fixture Activity reuse before an existing fresh-launch
+case; fixed by finishing/waiting for its Activity. Assertions remain intact.
 
-Bilingual native journey/capture PASS; result is
-state/card-background-journey.log and pull state/card-background-review. Native
-Home/English/Arabic screen renders inspected. Final render review corrected the
-TextView textAlignment override (centering/end gravity alone was ignored) and
-shortened screen copy/rounded its button. Final app build PASS in
-state/card-background-final-build.log. App hash29B43EE0FBFCB6EE4E4A3BE0F89C3467C5409B135E94040CC166334826B99D06,
-32,553,521 bytes; not yet exported. New test-only build adds actual Stop-button
-scroll/reachability assertion. Next: final normal phone-ui/journey then enlarged
-portrait/wide size matrices and wide runtime with FSI denied. Installed version
-will be updated from final build before those checks. Owned
-emulator PID38152, port5564, AVD Medium_Phone_API_37.0; exact creation/command in
-state/card-background-emulator.json. Verify ownership before stopping. Explicit
-1080x2400/density420/font1.0. Prior home-followup emulator was stopped.
+Current owned emulator is alive, idle after all checks: receipt
+state/card-media-emulator.json, PID29728, creation2026-11-19T13:20:39.2795369Z,
+port5564/AVD Medium_Phone_API_37.0, read-only/muted, portrait1080x2400/density420/
+font1.0. Old PID38152 is stopped. Verify exact current process/start/command
+before stopping; save ignored cleanup receipt. No other instrumentation runs.
 
-Final app build is unchanged: 29B43EE0FBFCB6EE4E4A3BE0F89C3467C5409B135E94040CC166334826B99D06,
-32,553,521 bytes. Exported to primary state/builds/companion/Miqat-latest.apk.
-25 media/25 notices exact, prior certificate matches. Final normal phone-ui and
-journey PASS (card-final-{phone-ui,journey}.log), rendered corrected bilingual
-Home inspected in state/card-final-portrait. Both full size matrices PASS with
-OS font1.3 (card-final-size-{portrait,wide}.log). Runtime wide/denied-FSI PASS
-(card-final-runtime-wide-denied.log), including actual Stop reachability.
-Shell session99408 completed and restored1080x2400/font1.0. FSI app-op remains
-ignore until explicitly changed for the next allowed-permission case.
-
-Allowed-FSI native runtime PASS: state/card-fsi-runtime-allowed.log, app-op allow
-receipt state/card-fsi-allowed-op.log. The first optional screen is opened by an
-actual scheduled alarm over keyguard and observed by ActivityMonitor; no direct
-start fallback exists for an allowed failure. Actual Back key confirms closing.
-Final bilingual screen captures are state/card-fsi-review. Source APK is the
-same verified hash above; only test APK changed for this final coverage.
-
-Next: commit/push, require all final-head CI, update draft PR exact receipts,
-export accepted native captures and stop only the verified owned emulator. Then
-hand off 0.4.2 and wait for owner feedback. No merge/release/physical operation.
-Emulator ownership is still state/card-background-emulator.json, PID38152;
-normal portrait/font1.0 are restored, FSI app-op allow is test-owned read-only.
-
-Use Python -X utf8 and write_bytes for consistent UTF-8/LF on Windows. Default
-cp1252 caused a failed initial generator read (only contract changed then), later
-completed safely. Three touched docs had invalid cp1252 dashes repaired; avoid
-CRCRLF by normalizing when starting from read_bytes. No sacred text changed.
+Next: commit/push validated final fix/docs; require final-head Validate,
+Companion and Apple-core CI; update PR exact head/runs; export accepted captures,
+stop only the verified owned emulator, and hand over one APK. Keep PR draft.
+No merge, release or physical operation. Stop after handoff for owner feedback.
 
 ## Active Home spacing follow-up
 

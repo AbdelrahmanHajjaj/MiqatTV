@@ -198,3 +198,10 @@ existing device-protected value before unlock; TV credentials stay separate.
 Tests target real alarm/screen-off/app-switching, media controls/duration,
 stale dismissal, deliberate close, optional key input and migration failures.
 They reuse the existing native runner and add no broad getter/coverage suite.
+
+Android13+ derives media controls from PlaybackState slots, so ACTION_STOP plus
+a Notification action alone does not expose its button. One media-state publisher
+now declares a Stop custom action for initial/resumed states, with a callback to
+end the same service. Older notification actions remain. Native tests invoke the
+actual custom control and capture the expanded system notification. Source:
+https://developer.android.com/media/implement/surfaces/mobile

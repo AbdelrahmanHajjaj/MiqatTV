@@ -3,10 +3,15 @@
 ## Prayer card and background adhan — 19 November 2026
 
 Review APK **0.4.2/code 11**, primary `state/builds/companion/Miqat-latest.apk`,
-32,553,521 bytes; SHA-256:
-`29B43EE0FBFCB6EE4E4A3BE0F89C3467C5409B135E94040CC166334826B99D06`.
+32,553,634 bytes; SHA-256:
+`EC4613AF1DA4AA5519178272AB37ADE4FB120BAB42132DE1C40C853955EB62AB`.
 Certificate matches prior review builds. All 25 approved recordings and 25
 notices match exact source bytes. No production dependency was added.
+Android13+ media controls have an explicit session Stop custom action. The owned
+native run waits for the visible SystemUI control, captures the real expanded
+notification and presses Stop successfully. The same state publisher preserves
+Stop before/after pause. Final build/runtime: card-media-final-build.log and
+card-media-shade-runtime.log; accepted notification render was inspected.
 
 Phone assemble/test APK/lint pass (0 errors, 43 existing warnings); companion
 generator tests 8/8 and canonical/shared validation pass. Native bilingual
