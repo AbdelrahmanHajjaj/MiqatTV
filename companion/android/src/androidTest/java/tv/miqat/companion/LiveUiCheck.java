@@ -54,6 +54,7 @@ final class LiveUiCheck {
                 PhoneRuntimeCheck.await(test, a::hasWindowFocus, 5000, "Fixture activity did not gain window focus");
             } catch (AssertionError failure) {
                 throw new AssertionError("Fixture focus: active=" + PhoneRuntimeCheck.activePackage(test)
+                        + ", dialog=" + focusDialog(test)
                         + ", foreground=" + a.phoneForeground + ", destroyed=" + a.isDestroyed()
                         + ", interactive=" + c.getSystemService(android.os.PowerManager.class).isInteractive()
                         + ", locked=" + c.getSystemService(android.app.KeyguardManager.class).isKeyguardLocked(), failure);
@@ -61,6 +62,23 @@ final class LiveUiCheck {
             return a;
         } finally {
             test.removeMonitor(monitor);
+        }
+    }
+
+    private static String focusDialog(Instrumentation test) {
+        android.view.accessibility.AccessibilityNodeInfo root = test.getUiAutomation().getRootInActiveWindow();
+        if (root == null) return "none";
+        try {
+            StringBuilder text = new StringBuilder();
+            for (String id : new String[] {"android:id/alertTitle", "android:id/message"}) {
+                for (android.view.accessibility.AccessibilityNodeInfo node : root.findAccessibilityNodeInfosByViewId(id)) {
+                    if (node.getText() != null) text.append(node.getText()).append("; ");
+                    node.recycle();
+                }
+            }
+            return text.toString();
+        } finally {
+            root.recycle();
         }
     }
 
