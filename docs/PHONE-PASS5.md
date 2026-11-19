@@ -39,3 +39,8 @@ and exact APK receipt, preserve commits, keep draft PR, stop for owner testing.
 - First-use setup uses the canonical Miqat signature portrait composition on
   every step, with a subtle readability scrim. Keep brand chrome consistent;
   theme/background choices update their previews and saved personalization.
+
+- Signature portrait artwork must be a purpose-generated tall composition, not
+  landscape cropping, sky extension or seam masking. Share it across portrait
+  setup, prayer/appearance previews and adhan screens. Landscape surfaces retain
+  the original wide artwork. Keep the asset canonical and avoid TV package growth.

@@ -319,7 +319,7 @@ final class PhoneSizeCheck {
         boolean hadStep = prefs.contains("onboarding-step");
         int oldStep = prefs.getInt("onboarding-step", 0);
         try {
-            prefs.edit().putInt("onboarding-step", 5).commit();
+            prefs.edit().putInt("onboarding-step", 2).commit();
             PhoneUiCheck.on(test, () -> a.navigate("onboarding"));
             PhoneUiCheck.on(
                     test,
@@ -327,9 +327,6 @@ final class PhoneSizeCheck {
                         visible(
                                 a.getWindow().getDecorView().findViewWithTag("onboarding.next"),
                                 "Onboarding Continue clipped at " + size);
-                        visible(
-                                a.getWindow().getDecorView().findViewWithTag("onboarding.skip"),
-                                "Onboarding Later clipped at " + size);
                     });
             PhoneUiCheck.capture(
                     test, a, (a.ar ? "ar" : "en") + "-journey-appearance-" + size, capture);

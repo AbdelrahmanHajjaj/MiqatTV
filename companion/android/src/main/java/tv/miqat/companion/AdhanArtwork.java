@@ -16,7 +16,7 @@ final class AdhanArtwork extends LayerDrawable {
         JSONObject colors = settings.data.colors(settings.value("appearance.theme"));
         int ground = Color.parseColor(colors.getString("lapis-900"));
         int accent = Color.parseColor(colors.getString("gold-400"));
-        Bitmap photo = null;
+        PhoneBackdrop.Artwork photo = null;
         try {
             photo = PhoneBackdrop.read(context, settings.value("appearance.background"));
         } catch (java.io.IOException unavailable) {

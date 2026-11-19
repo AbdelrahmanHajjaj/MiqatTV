@@ -26,6 +26,7 @@ final class PhoneJourneyCheck {
                         .commit();
                 MainActivity a = LiveUiCheck.launch(test);
                 current[0] = a;
+                PhoneUiCheck.capture(test, a, lang + "-journey-location", captures);
                 PhoneUiCheck.on(
                         test,
                         () -> {
@@ -41,16 +42,8 @@ final class PhoneJourneyCheck {
                                     .performClick();
                             check(
                                     a.phoneUi.settings.locationReady && a.page.equals("onboarding"),
-                                    "Bottom confirmation must save location before Continue");
+                                    "Location confirmation must advance directly to alerts");
                         });
-                PhoneUiCheck.capture(test, a, lang + "-journey-location", captures);
-                PhoneUiCheck.on(
-                        test,
-                        () ->
-                                a.getWindow()
-                                        .getDecorView()
-                                        .findViewWithTag("onboarding.next")
-                                        .performClick());
                 PhoneUiCheck.capture(test, a, lang + "-journey-alerts", captures);
                 PhoneUiCheck.on(
                         test,
@@ -80,41 +73,53 @@ final class PhoneJourneyCheck {
                                                             "phone.reminders.enabled.edit")
                                                     != null,
                                     "First-use progress lost after reopening");
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("onboarding.next")
+                            resumed.body
+                                    .findViewWithTag("phone.reminders.enabled.edit")
                                     .performClick();
                             check(
-                                    ((android.widget.TextView)
-                                                    resumed.body.findViewWithTag(
-                                                            "onboarding.title"))
-                                            .getText()
-                                            .toString()
-                                            .equals(resumed.t("phone_notifications")),
-                                    "Notifications must have a dedicated step");
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("onboarding.skip")
-                                    .performClick();
+                                    resumed.phoneUi.settings.enabled
+                                            && resumed.page.equals("onboarding"),
+                                    "Alert choice left the bundled permission page");
+                            android.widget.Button next =
+                                    resumed.getWindow()
+                                            .getDecorView()
+                                            .findViewWithTag("onboarding.next");
+                            String required =
+                                    !PhoneAlarms.notifications(resumed)
+                                            ? "phone_permission_notifications"
+                                            : !PhoneAlarms.exact(resumed)
+                                                    ? "phone_permission_exact"
+                                                    : "setup_next";
                             check(
-                                    ((android.widget.TextView)
-                                                    resumed.body.findViewWithTag(
-                                                            "onboarding.title"))
-                                            .getText()
-                                            .toString()
-                                            .equals(resumed.t("phone_exact")),
-                                    "Precise alarms must have a dedicated step");
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("onboarding.skip")
-                                    .performClick();
+                                    next.getText().toString().equals(resumed.t(required)),
+                                    "Alert Continue must request only the missing access");
+                            View skip =
+                                    resumed.getWindow()
+                                            .getDecorView()
+                                            .findViewWithTag("onboarding.skip");
+                            if (skip != null) skip.performClick();
+                            else next.performClick();
                             check(
-                                    resumed.body.findViewWithTag("phone.appearance.preview")
-                                            != null,
-                                    "First-use personalization must show a real preview");
+                                    resumed.body.findViewWithTag("phone.appearance.preview") != null
+                                            && resumed.body.findViewWithTag(
+                                                            "phone.appearance.theme")
+                                                    != null
+                                            && resumed.body.findViewWithTag(
+                                                            "phone.appearance.background")
+                                                    != null,
+                                    "Theme and background must share one live-preview page");
+                            check(
+                                    resumed.getWindow()
+                                                    .getDecorView()
+                                                    .findViewWithTag("onboarding.skip")
+                                            == null,
+                                    "Finish already completes appearance without changes");
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-personalization", captures);
                 String before = PhoneStore.read(context).value("appearance.theme");
+                int frostAccent =
+                        android.graphics.Color.parseColor(
+                                resumed.phoneUi.data.colors("frost").getString("gold-400"));
                 PhoneUiCheck.on(
                         test,
                         () -> {
@@ -127,14 +132,21 @@ final class PhoneJourneyCheck {
                                             .value("appearance.theme")
                                             .equals("frost"),
                                     "Guided carousel did not select the previewed theme");
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("onboarding.next")
+                            check(
+                                    ((TextView) resumed.body.findViewWithTag("phone.next.name"))
+                                                    .getCurrentTextColor()
+                                            == frostAccent,
+                                    "Live preview did not apply the selected theme");
+                            resumed.body
+                                    .findViewWithTag(
+                                            "phone.appearance.background.option.dusk_peaks")
                                     .performClick();
                             check(
-                                    resumed.body.findViewWithTag("phone.appearance.background")
-                                            != null,
-                                    "Background must have a dedicated carousel step");
+                                    resumed.phoneUi
+                                            .settings
+                                            .value("appearance.background")
+                                            .equals("dusk_peaks"),
+                                    "Live background selection was not applied");
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-background", captures);
                 PhoneUiCheck.on(

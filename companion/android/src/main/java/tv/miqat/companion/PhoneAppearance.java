@@ -15,7 +15,7 @@ import org.json.JSONObject;
 final class PhoneAppearance {
     private final MainActivity a;
     private String artworkId = "";
-    private Bitmap artwork;
+    private PhoneBackdrop.Artwork artwork;
 
     PhoneAppearance(MainActivity activity) {
         a = activity;
@@ -60,7 +60,6 @@ final class PhoneAppearance {
     }
 
     void preview(LinearLayout parent, PhoneStore settings) throws Exception {
-        parent.addView(a.views.text(a.t("setup_review"), 13, a.muted));
         LinearLayout content = hero(parent, settings);
         content.setTag("phone.appearance.preview");
         a.phoneUi.home.nextPrayer(content, System.currentTimeMillis(), false);
@@ -84,21 +83,22 @@ final class PhoneAppearance {
         TextView heading =
                 a.views.text(a.t(a.phoneUi.data.controls.get(id).getString("label")), 14, a.muted);
         heading.setTag("phone." + id + ".edit");
-        heading.setMinHeight(a.views.dp(48));
+        heading.setMinHeight(a.views.dp(guided ? 32 : 48));
         heading.setGravity(Gravity.CENTER_VERTICAL);
-        heading.setFocusable(true);
-        if (!guided) parent.addView(heading);
+        heading.setFocusable(!guided);
+        parent.addView(heading);
         java.util.List<String> options = a.phoneUi.data.options(a.phoneUi.data.controls.get(id));
         HorizontalScrollView scroll = new HorizontalScrollView(a);
         scroll.setHorizontalScrollBarEnabled(false);
         scroll.setTag("phone." + id);
-        heading.setOnClickListener(v -> {
-            try {
-                choose(id, options);
-            } catch (Exception invalid) {
-                a.notice("invalid");
-            }
-        });
+        if (!guided)
+            heading.setOnClickListener(v -> {
+                try {
+                    choose(id, options);
+                } catch (Exception invalid) {
+                    a.notice("invalid");
+                }
+            });
         LinearLayout track = new LinearLayout(a);
         track.setPadding(a.views.dp(2), a.views.dp(4), a.views.dp(2), a.views.dp(8));
         scroll.addView(track);
@@ -106,35 +106,43 @@ final class PhoneAppearance {
         int selected = options.indexOf(a.phoneUi.settings.value(id));
         long now = System.currentTimeMillis();
         tv.miqat.core.PrayerSelection next =
-                tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(
-                        a.phoneUi.settings.day(now, 0).times,
-                        a.phoneUi.settings.day(now, 1).times,
-                        now);
+                guided
+                        ? null
+                        : tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(
+                                a.phoneUi.settings.day(now, 0).times,
+                                a.phoneUi.settings.day(now, 1).times,
+                                now);
         for (String option : options) {
             PhoneStore candidate =
                     a.phoneUi.settings.changed(java.util.Collections.singletonMap(id, option));
             LinearLayout tile = a.views.column();
             LinearLayout.LayoutParams size =
-                    new LinearLayout.LayoutParams(a.views.dp(guided ? 150 : 104), -2);
+                    new LinearLayout.LayoutParams(a.views.dp(guided ? 112 : 104), -2);
             size.setMarginEnd(a.views.dp(10));
             track.addView(tile, size);
             LinearLayout art = hero(tile, candidate);
-            if (option.equals(a.phoneUi.settings.value(id))) art.setTag("phone.appearance.preview");
+            if (!guided && option.equals(a.phoneUi.settings.value(id)))
+                art.setTag("phone.appearance.preview");
             art.setPadding(a.views.dp(10), a.views.dp(12), a.views.dp(10), a.views.dp(12));
-            art.setMinimumHeight(a.views.dp(guided ? 240 : 140));
-            JSONObject colors =
-                    a.catalog
-                            .data
-                            .getJSONObject("themes")
-                            .getJSONObject(candidate.value("appearance.theme"))
-                            .getJSONObject("colors");
-            int ink = Color.parseColor(colors.getString("plaster-100")),
-                    accent = Color.parseColor(colors.getString("gold-400"));
-            art.addView(a.views.text(a.t("phone_next"), 11, ink));
-            if (next != null) {
-                art.addView(a.views.text(a.phoneUi.data.prayerName(next.getNext(), a.ar), 12, ink));
-                art.addView(
-                        a.views.text(a.phoneUi.time(next.getNextTime()), guided ? 20 : 14, accent));
+            art.setMinimumHeight(
+                    a.views.dp(guided ? (id.equals("appearance.theme") ? 56 : 76) : 140));
+            if (!guided) {
+                JSONObject colors =
+                        a.catalog
+                                .data
+                                .getJSONObject("themes")
+                                .getJSONObject(candidate.value("appearance.theme"))
+                                .getJSONObject("colors");
+                int ink = Color.parseColor(colors.getString("plaster-100")),
+                        accent = Color.parseColor(colors.getString("gold-400"));
+                art.addView(a.views.text(a.t("phone_next"), 11, ink));
+                if (next != null) {
+                    art.addView(
+                            a.views.text(a.phoneUi.data.prayerName(next.getNext(), a.ar), 12, ink));
+                    art.addView(
+                            a.views.text(
+                                    a.phoneUi.time(next.getNextTime()), guided ? 20 : 14, accent));
+                }
             }
             TextView name = a.views.text(a.phoneUi.value(id, option), 12, a.ink);
             name.setMaxLines(2);
@@ -162,7 +170,7 @@ final class PhoneAppearance {
         }
         scroll.post(() -> {
             int limit = Math.max(0, track.getWidth() - scroll.getWidth());
-            int offset = Math.max(0, selected) * a.views.dp(guided ? 160 : 114);
+            int offset = Math.max(0, selected) * a.views.dp(guided ? 122 : 114);
             scroll.scrollTo(Math.max(0, Math.min(limit, a.ar ? limit - offset : offset)), 0);
         });
     }

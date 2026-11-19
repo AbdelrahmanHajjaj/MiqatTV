@@ -6,7 +6,11 @@ is not needed for phone prayer times. Minimum Android version: 8 (API 26).
 
 ## First use
 
-Every first-use step uses Miqat’s signature portrait composition with a subtle
+First use has three pages: Location, Prayer alerts and Appearance. Confirming
+location advances directly; alert permissions stay on their page. Appearance
+combines compact theme/background choices with one live prayer-card preview.
+
+Every first-use step uses Miqat’s dedicated generated portrait signature artwork with a subtle
 scrim and consistent brand controls. Theme/background choices remain live previews.
 
 Guided actions use one fixed footer with Continue/Finish and optional Skip.
@@ -190,7 +194,7 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.4, version code 13) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.4, version code 14) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 

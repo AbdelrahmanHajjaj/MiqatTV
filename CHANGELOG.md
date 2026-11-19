@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add purpose-generated portrait Miqat signature artwork in phone-only packaging
+  for 0.4.5/code 14. Reduce first use to three pages, combining theme/background
+  choices with one live preview and contextual alert permissions.
+
 - Replace the optional phone adhan Stop button with a deliberate bottom swipe-up
   handle in 0.4.4/code13. Unify bottom primary/secondary action footers and dialog
   surfaces, preserving accessibility, large text and keyboard clearance. Remove

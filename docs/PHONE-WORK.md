@@ -3,7 +3,18 @@
 Updated: 2026-11-19. Branch feature/companion-installation, draft PR #9.
 Approved requirements: PHONE-PASS5.md and preceding phone passes.
 
-## Current candidate — 0.4.4/code 13
+## Active candidate — 0.4.5/code 14
+
+Latest owner scope is PHONE-PASS6.md. A dedicated portrait signature artwork
+has been generated from the canonical Miqat design and added under the separate
+phone asset root. Native three-page portrait journey, location-to-alert advance, contextual
+permission Skip, actual live theme/background changes and saved completion
+pass. Combined bilingual renders inspected; build/lint pass. Next: widget-picker
+previews, opacity/shape controls, optional Hijri date and app font/color parity.
+Work sequentially; no new dependencies or unrelated work. Existing pass-5
+requirements remain in force. Do not hand over an older APK as this candidate.
+
+## Previous candidate — 0.4.4/code 13
 
 Latest owner refinements: swipe label centered in the prayer area; no duplicate
 footer Next/Previous beside Continue. Top/system Back owns return navigation.
