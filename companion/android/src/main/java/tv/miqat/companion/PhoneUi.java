@@ -190,7 +190,7 @@ final class PhoneUi {
 
     void preferences() throws Exception {
         if (a.section.isEmpty()) {
-            a.body.addView(a.views.text(a.t("phone_independent"), 14, a.muted));
+
             for (String section :
                     new String[] {"calculation", "audio", "appearance", "permissions"})
                 a.views
@@ -203,7 +203,6 @@ final class PhoneUi {
                                 "",
                                 () -> open(section))
                         .setTag("phone.section." + section);
-            prayerRows();
             a.views.navigationRow(
                     a.body, "gear", a.t("setup_again"), "", () -> a.onboarding.open());
             a.views.navigationRow(
@@ -220,9 +219,14 @@ final class PhoneUi {
             return;
         }
         if (a.section.equals("calculation")) locationUi.locationEditor();
-        if (a.section.equals("appearance")) appearance.preview(a.body, settings);
+        if (a.section.equals("appearance")) {
+            appearance.preview(a.body, settings);
+            appearance.carousel(a.body, "appearance.theme", false);
+            appearance.carousel(a.body, "appearance.background", false);
+        }
         for (JSONObject c : data.controls.values())
-            if (c.getString("section").equals(a.section)) control(c);
+            if (c.getString("section").equals(a.section)
+                    && !c.getString("id").startsWith("appearance.")) control(c);
         if (a.section.equals("calculation")) locationUi.confirmLocation();
     }
 
@@ -253,10 +257,10 @@ final class PhoneUi {
             if (c.getString("section").equals("audio") && !c.getString("id").startsWith("quiet."))
                 control(c);
         a.body.addView(a.views.text(a.t("phone_volume_hint"), 13, a.muted));
-        a.body.addView(a.views.text(a.t("phone_duration_hint"), 13, a.muted));
+
         prayerRows();
-        a.body.addView(a.views.text(a.t("phone_custom_audio_hint"), 13, a.muted));
-        a.body.addView(a.views.heading(a.t("phone_quiet_title")));
+
+        a.body.addView(a.views.text(a.t("phone_quiet_title"), 18, a.ink));
         for (JSONObject c : data.controls.values())
             if (c.getString("section").equals("audio") && c.getString("id").startsWith("quiet."))
                 control(c);
@@ -324,49 +328,42 @@ final class PhoneUi {
                 label = a.t(c.getString("label")),
                 saved = settings.value(id);
         SettingSpec spec = data.spec(c);
-        ColorStateList selection =
-                new ColorStateList(
-                        new int[][] {new int[] {android.R.attr.state_checked}, new int[] {}},
-                        new int[] {a.accent, a.muted});
         LinearLayout row = a.views.column();
-        row.setPadding(a.views.dp(16), a.views.dp(10), a.views.dp(16), a.views.dp(10));
-        row.setBackground(a.views.background(a.surface, 18));
+        row.setPadding(a.views.dp(4), a.views.dp(2), a.views.dp(4), a.views.dp(2));
+        row.setMinimumHeight(a.views.dp(52));
+
         LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-1, -2);
-        size.bottomMargin = a.views.dp(6);
+        size.bottomMargin = a.views.dp(2);
         a.body.addView(row, size);
         row.setTag("phone." + id);
         if (c.getString("kind").equals("toggle")) {
-            Switch toggle = new Switch(a);
-            toggle.setText(label);
-            toggle.setTextColor(a.ink);
-            toggle.setTextSize(15);
-            toggle.setTypeface(a.regular);
-            toggle.setMinHeight(a.views.dp(48));
-            toggle.setChecked(saved.equals("true"));
-            toggle.setThumbTintList(selection);
-            toggle.setTrackTintList(
-                    new ColorStateList(
-                            new int[][] {new int[] {android.R.attr.state_checked}, new int[] {}},
-                            new int[] {
-                                (a.accent & 0xffffff) | 0x66000000,
-                                (a.muted & 0xffffff) | 0x44000000
-                            }));
-            toggle.setContentDescription(label);
-            row.addView(toggle);
+            Switch toggle =
+                    a.views.toggle(
+                            row,
+                            label,
+                            saved.equals("true"),
+                            on -> {
+                                if (id.equals("reminders.enabled")
+                                        && on
+                                        && !settings.locationReady) {
+                                    a.notice("phone_location_needed");
+                                    if (!a.page.equals("onboarding")) open("calculation");
+                                    return;
+                                }
+                                save(id, Boolean.toString(on));
+                            });
             toggle.setTag("phone." + id + ".edit");
-            toggle.setOnCheckedChangeListener((button, on) -> {
-                if (id.equals("reminders.enabled") && on && !settings.locationReady) {
-                    a.notice("phone_location_needed");
-                    open("calculation");
-                    return;
-                }
-                save(id, Boolean.toString(on));
-            });
+            if (id.equals("display.reduce-motion"))
+                row.addView(a.views.text(a.t("phone_motion_hint"), 12, a.muted));
             return;
         }
-        TextView title = a.views.text(label, 13, a.muted);
+        if (!pending.equals(id)) row.setOrientation(LinearLayout.HORIZONTAL);
+        TextView title = a.views.text(label, 14, a.ink);
         title.setPadding(0, 0, 0, a.views.dp(2));
-        row.addView(title);
+        row.addView(
+                title,
+                new LinearLayout.LayoutParams(
+                        pending.equals(id) ? -1 : 0, -2, pending.equals(id) ? 0 : 1));
         if (c.getString("kind").equals("number")) {
             boolean inherited =
                     id.startsWith("call.")
@@ -438,26 +435,15 @@ final class PhoneUi {
                         a.notice("invalid");
                     }
                 });
-        if (id.endsWith(".voice")) {
-            LinearLayout actions = a.views.horizontal(row);
-            Button preview =
-                    a.views.button(
-                            actions,
-                            a.t("phone_preview"),
-                            () -> sound.preview(id, settings.value(id)));
-            a.views.flex(preview);
-            preview.setTag("phone." + id + ".preview");
-            a.views
-                    .iconButton(actions, "close", a.t("phone_stop"), () -> PhonePlayback.stop(a))
-                    .setTag("phone." + id + ".stop");
-        }
     }
 
     void summary(LinearLayout row, String id, String value, Runnable edit) {
-        TextView selected = a.views.text(value + "  ⌄", 16, a.ink);
+        TextView selected = a.views.text(value + "  ›", 14, a.muted);
         selected.setPadding(0, 0, 0, 0);
         selected.setMinHeight(a.views.dp(48));
-        selected.setGravity(Gravity.CENTER_VERTICAL);
+        selected.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
+        selected.setMaxLines(2);
+        selected.setEllipsize(android.text.TextUtils.TruncateAt.END);
         selected.setTag("phone." + id + ".edit");
         selected.setContentDescription(
                 a.t(data.controls.get(id).optString("label")) + ", " + value);
@@ -466,7 +452,12 @@ final class PhoneUi {
                         ColorStateList.valueOf((a.accent & 0xffffff) | 0x22000000), null, null));
         selected.setFocusable(true);
         selected.setOnClickListener(v -> edit.run());
-        row.addView(selected, new LinearLayout.LayoutParams(-1, -2));
+        row.addView(
+                selected,
+                new LinearLayout.LayoutParams(
+                        row.getOrientation() == LinearLayout.HORIZONTAL ? 0 : -1,
+                        -2,
+                        row.getOrientation() == LinearLayout.HORIZONTAL ? 1 : 0));
     }
 
     void showEditor(AlertDialog dialog) {
@@ -632,12 +623,18 @@ final class PhoneUi {
         }
     }
 
-    void picker(String title, java.util.List<Choices.Option> options, java.util.function.Consumer<String> picked) {
+    void picker(
+            String title,
+            java.util.List<Choices.Option> options,
+            java.util.function.Consumer<String> picked) {
         picker(title, options, "", picked);
     }
 
     void picker(
-            String title, java.util.List<Choices.Option> options, String selected, java.util.function.Consumer<String> picked) {
+            String title,
+            java.util.List<Choices.Option> options,
+            String selected,
+            java.util.function.Consumer<String> picked) {
         if (choiceDialog != null) choiceDialog.dismiss();
         LinearLayout layout = a.views.column();
         layout.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(8));
@@ -730,33 +727,9 @@ final class PhoneUi {
         a.body.addView(a.views.text(a.t("phone_permission_info"), 15, a.muted));
         if (!PhoneAlarms.notifications(a))
             a.views.button(
-                    a.body,
-                    a.t("phone_permission_notifications"),
-                    () -> {
-                        if (Build.VERSION.SDK_INT >= 33
-                                && a.checkSelfPermission(
-                                                android.Manifest.permission.POST_NOTIFICATIONS)
-                                        != android.content.pm.PackageManager.PERMISSION_GRANTED)
-                            a.requestPermissions(
-                                    new String[] {android.Manifest.permission.POST_NOTIFICATIONS},
-                                    75);
-                        else
-                            system(
-                                    new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                                            .putExtra(
-                                                    Settings.EXTRA_APP_PACKAGE,
-                                                    a.getPackageName()));
-                    });
+                    a.body, a.t("phone_permission_notifications"), this::requestNotifications);
         if (!PhoneAlarms.exact(a))
-            a.views.button(
-                    a.body,
-                    a.t("phone_permission_exact"),
-                    () ->
-                            system(
-                                    new Intent(
-                                            Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
-                                            android.net.Uri.parse(
-                                                    "package:" + a.getPackageName()))));
+            a.views.button(a.body, a.t("phone_permission_exact"), this::requestExact);
         a.views.button(
                 a.body,
                 a.t("phone_channel_settings"),
@@ -779,6 +752,24 @@ final class PhoneUi {
                 .setTag("phone.power-settings");
         if (!a.page.equals("onboarding"))
             a.views.button(a.body, a.t("phone_audio"), () -> open("audio"));
+    }
+
+    void requestNotifications() {
+        if (Build.VERSION.SDK_INT >= 33
+                && a.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                        != android.content.pm.PackageManager.PERMISSION_GRANTED)
+            a.requestPermissions(new String[] {android.Manifest.permission.POST_NOTIFICATIONS}, 75);
+        else
+            system(
+                    new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, a.getPackageName()));
+    }
+
+    void requestExact() {
+        system(
+                new Intent(
+                        Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                        android.net.Uri.parse("package:" + a.getPackageName())));
     }
 
     void system(Intent intent) {

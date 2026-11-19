@@ -76,7 +76,7 @@ export function validateStations(stations) {
 }
 
 export function validateVoices(voices) {
-  if (!Array.isArray(voices) || voices[0]?.id !== 'alafasy' || !voices.some(voice => voice?.id === 'chebae_fajr')) {
+  if (!Array.isArray(voices) || voices[0]?.id !== 'almalki' || !voices.some(voice => voice?.id === 'chebae_fajr')) {
     throw new Error('Voice catalog must retain regular and Fajr defaults');
   }
   const ids = new Set();

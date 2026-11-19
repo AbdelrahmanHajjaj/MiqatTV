@@ -59,9 +59,8 @@ at handoff and await owner feedback; do not invent additional features.
 
 Al Afasy is removed from canonical selectable voices for phone and the next TV
 build. Existing saved choices migrate at each platform storage boundary to
-Al-Malki (regular) or Chebae (Fajr), preserving unrelated settings. Keep the
-approved checksummed legacy clip packaged for old-runtime compatibility; it is
-not offered in selectors. Radio recitation is a separate catalogue and unchanged.
+Al-Malki (regular) or Chebae (Fajr), preserving unrelated settings. Remove the retired clip from distributed packages. Older TV metadata remains
+readable without changing the TV or offering the retired selection. Radio recitation is a separate catalogue and unchanged.
 Phone portraits preserve the entire artwork scene along the bottom and extend
 its sky above it, with the shared contrast overlay; no stretched TV bitmap or
 new unreviewed raster asset. Reduced motion suppresses page fades and installer

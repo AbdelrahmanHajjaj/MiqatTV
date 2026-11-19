@@ -200,3 +200,13 @@ real appearance Cancel, a temporary native AppWidgetHost bind/update and the
 common TV platform/preparation/source flow, plus rejecting a late cancelled job.
 The widget fixture requires API 29+ and releases its test-owned host and scoped
 shell binding permission in finally. No physical TV or public release is used.
+
+Pass-4 phone journey coverage follows the single-decision/Skip guide and real
+carousel selection, then ordinary Appearance Apply/Cancel. Widget checks bind
+all launcher variants through AppWidgetService, configure independent instances,
+verify Cancel, resize fallback/restoration, strip rendering and missing-location
+updates. The phone-size suite covers their actual previews at both scale edges.
+The native LAN suite accepts an older TV's retired voice baseline without a
+write, rejects an unknown choice and verifies the retired option is hidden in
+the actual native selector. This is compatible read behavior, not a migration
+command sent to a TV. Physical launcher/OEM/TV acceptance remains separate.

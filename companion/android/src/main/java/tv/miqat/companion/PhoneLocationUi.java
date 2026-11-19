@@ -51,8 +51,10 @@ final class PhoneLocationUi {
                             } else useLocation();
                         })
                 .setTag("phone.location.detect");
-        a.body.addView(a.views.text(a.t("phone_location_privacy"), 13, a.muted));
-        a.body.addView(a.views.text(a.t("phone_travel_hint"), 13, a.muted));
+        if (!a.page.equals("onboarding")) {
+            a.body.addView(a.views.text(a.t("phone_location_privacy"), 13, a.muted));
+            a.body.addView(a.views.text(a.t("phone_travel_hint"), 13, a.muted));
+        }
         if (!locationMessage.isEmpty())
             a.body.addView(a.views.text(a.t(locationMessage), 14, a.accent));
         if (locationMessage.equals("phone_location_disabled"))
@@ -70,7 +72,7 @@ final class PhoneLocationUi {
                                             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                                             android.net.Uri.parse(
                                                     "package:" + a.getPackageName()))));
-        a.body.addView(a.views.text(a.t("phone_location_needed"), 14, a.muted));
+
         a.views
                 .button(
                         a.body,
@@ -118,15 +120,16 @@ final class PhoneLocationUi {
                                     });
                         })
                 .setTag("phone.city");
-        a.views
-                .button(
-                        a.body,
-                        a.t("phone_advanced"),
-                        () -> {
-                            advancedLocation = !advancedLocation;
-                            a.render();
-                        })
-                .setTag("phone.location.advanced");
+        if (!a.page.equals("onboarding"))
+            a.views
+                    .button(
+                            a.body,
+                            a.t("phone_advanced"),
+                            () -> {
+                                advancedLocation = !advancedLocation;
+                                a.render();
+                            })
+                    .setTag("phone.location.advanced");
         if (advancedLocation) {
             LinearLayout custom = a.views.card(a.body);
             custom.addView(a.views.text(a.t("phone_custom_location"), 16, a.ink));

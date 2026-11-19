@@ -71,7 +71,7 @@ export function generate(platforms = ['android','lg']) {
   }
   const all = controls.map(c => ({...c, title:label(c.label), options:uiChoices(c).map((value,i) => ({value,...option(c,value,i)})), route:contract.actionRoutes[c.id] || ''}));
   const defaults = {'prayer.location':'cairo','prayer.method':'EGYPTIAN','prayer.asr':'shafi','prayer.zone':'system',
-    'reminders.before':'15','reminders.close':'0','reminders.voice':'alafasy','reminders.fajr-voice':'chebae_fajr','reminders.volume':'60',
+    'reminders.before':'15','reminders.close':'0','reminders.voice':'almalki','reminders.fajr-voice':'chebae_fajr','reminders.volume':'60',
     'radio.station':'cairo','radio.screen-off':'0','display.language':'system','display.digits':'western','display.clock':'24',
     'display.size':'100','display.bar-mode':'hidden','display.bar-position':'top','display.bar-timeout':'20',
     'appearance.countdown':'mihrab','appearance.position':'auto','appearance.prayers':'all','appearance.favourites':'two_rows',

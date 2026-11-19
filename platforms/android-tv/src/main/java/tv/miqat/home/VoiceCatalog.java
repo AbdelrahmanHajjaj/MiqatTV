@@ -5,7 +5,6 @@ final class VoiceCatalog {
     private VoiceCatalog() {}
 
     static final String[][] VOICES = {
-        {"alafasy", "مشاري العفاسي", "Mishary Alafasy"},
         {"almalki", "حمدان المالكي", "Hamdan Al-Malki"},
         {"alarkani", "إبراهيم الأركاني", "Ibrahim Al-Arkani"},
         {"chebae_fajr", "مالك شيباي (أذان الفجر)", "Malek Chebae (Fajr)"},

@@ -20,6 +20,8 @@ final class LgSetup {
     private final MainActivity a;
     private volatile LgInstall client;
     private boolean connected;
+    private int connectionStep;
+    private String address = "";
     private String version = "", message = "lg_intro";
     private LgPackage selected;
     private boolean preview, local, downloading;
@@ -44,10 +46,14 @@ final class LgSetup {
         state.putString("lg-selected-version", selected == null ? "" : selected.version);
         state.putBoolean("lg-preview", preview);
         state.putBoolean("lg-local", local);
+        state.putInt("lg-connection-step", Math.min(1, connectionStep));
+        state.putString("lg-address", address);
     }
 
     void restore(android.os.Bundle state) {
         local = state.getBoolean("lg-local", local);
+        connectionStep = Math.max(0, Math.min(1, state.getInt("lg-connection-step")));
+        address = state.getString("lg-address", "");
         String version = state.getString("lg-selected-version", "");
         if (!version.isEmpty())
             try {
@@ -62,44 +68,44 @@ final class LgSetup {
     }
 
     void render(LinearLayout parent) {
-        LinearLayout source = a.views.card(parent);
-        source.addView(
-                a.views.text(a.t(local ? "tv_local" : "tv_channel_" + channel), 14, a.accent));
-        source.addView(
-                a.views.text(
-                        selected == null
-                                ? a.t("lg_no_package")
-                                : "Miqat " + selected.version + " · IPK",
-                        16,
-                        a.ink));
-        if (preview) source.addView(a.views.text(a.t("tv_public_preview"), 13, a.muted));
-        if (!local && selected == null)
-            source.addView(a.views.text(a.t("lg_download_after_connect"), 13, a.muted));
-        if (message.startsWith("tv_public_")) {
-            source.addView(a.views.text(a.t(message), 14, a.accent));
-            a.views.button(source, a.t("tv_public_download"), this::download).setTag("lg.download");
+        if (!connected) {
+            parent.addView(
+                    a.views.text(a.t(local ? "tv_local" : "tv_channel_" + channel), 13, a.accent));
+            parent.addView(
+                    a.views.heading(a.t(connectionStep == 0 ? "lg_address" : "lg_passphrase")));
+            parent.addView(
+                    a.views.text(
+                            a.t(
+                                    connectionStep == 0
+                                            ? "lg_address_hint_short"
+                                            : "lg_phrase_hint_short"),
+                            15,
+                            a.muted));
+            if (connectionStep == 0) {
+                if (address.isEmpty()) address = a.prefs().getString("lg-host", "");
+                EditText host = field(parent, a.t("lg_address"), address, false);
+                host.setTag("lg.host");
+                host.addTextChangedListener(MainActivity.watcher(value -> address = value));
+            } else {
+                parent.addView(a.views.text(address, 14, a.accent));
+                field(parent, a.t("lg_passphrase"), "", true).setTag("lg.passphrase");
+            }
+            if (!message.equals("lg_intro"))
+                parent.addView(a.views.text(a.t(message), 14, a.accent));
+            a.views
+                    .button(parent, a.t("tv_change_build"), () -> a.navigate("tv-setup"))
+                    .setTag("setup.source.change");
+            return;
         }
-        a.views
-                .button(source, a.t("tv_change_build"), () -> a.navigate("tv-setup"))
-                .setTag("setup.source.change");
-        LinearLayout connect = a.views.card(parent);
-        String saved = a.prefs().getString("lg-host", "");
-        EditText address = field(connect, a.t("lg_address"), saved, false);
-        address.setTag("lg.host");
-        EditText pass = field(connect, a.t("lg_passphrase"), "", true);
-        pass.setTag("lg.passphrase");
-        connect.addView(a.views.text(a.t("lg_session_keys"), 12, a.muted));
-        a.views
-                .button(
-                        connect,
-                        a.t(connected ? "reconnect" : "lg_connect"),
-                        () ->
-                                connect(
-                                        address.getText().toString().trim(),
-                                        pass.getText().toString()))
-                .setTag("lg.connect");
-        if (local && selected == null) connect.findViewWithTag("lg.connect").setEnabled(false);
+        LinearLayout connect = parent;
         connect.addView(a.views.text(a.t(message), 14, a.accent));
+        if (selected != null)
+            connect.addView(a.views.text("Miqat " + selected.version + " · IPK", 16, a.ink));
+        if (preview) connect.addView(a.views.text(a.t("tv_public_preview"), 13, a.muted));
+        if (message.startsWith("tv_public_"))
+            a.views
+                    .button(connect, a.t("tv_public_download"), this::download)
+                    .setTag("lg.download");
         if (connected) {
             connect.addView(
                     a.views.text(
@@ -162,11 +168,51 @@ final class LgSetup {
                                         a.t("lg_forget_key"),
                                         (d, w) -> {
                                             close();
-                                            a.prefs().edit().remove("lg-key-" + saved).apply();
+                                            a.prefs().edit().remove("lg-key-" + address).apply();
                                             message = "lg_intro";
                                             a.render();
                                         })
                                 .show());
+    }
+
+    void footer(LinearLayout shell) {
+        if (connected || a.networkBusy) return;
+        LinearLayout actions = a.views.horizontal(shell);
+        actions.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(12));
+        Button next =
+                a.views.button(
+                        actions,
+                        a.t(connectionStep == 0 ? "setup_next" : "lg_connect"),
+                        () -> {
+                            if (connectionStep == 0) {
+                                try {
+                                    address = LgInstall.host(address.trim());
+                                    connectionStep = 1;
+                                    message = "lg_intro";
+                                } catch (IOException invalid) {
+                                    message = "lg_invalid_host";
+                                }
+                                a.render();
+                            } else {
+                                EditText pass = a.body.findViewWithTag("lg.passphrase");
+                                String phrase = pass.getText().toString();
+                                pass.setText("");
+                                connect(address, phrase);
+                            }
+                        });
+        a.views.flex(next);
+        next.setTag(connectionStep == 0 ? "lg.next" : "lg.connect");
+        next.setEnabled(!local || selected != null);
+    }
+
+    void back() {
+        if (!connected && connectionStep > 0) {
+            connectionStep--;
+            a.render();
+        } else {
+            close();
+            a.navigate("tv-setup");
+        }
     }
 
     private EditText field(LinearLayout parent, String label, String value, boolean secret) {

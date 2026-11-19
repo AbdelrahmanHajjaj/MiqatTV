@@ -98,6 +98,8 @@ timeout and permission/settings cleanup. `PhoneUi` coordinates phone settings;
 PhoneHome, PhoneLocationUi, PhoneAppearance, PhoneOnboarding and PhoneSound own
 their respective native journeys. PairingUi/TvSettingsUi/TvRemoteUi/TvListUi own
 TV workflows, while transports keep networking/trust separate. QiblaUi owns
-foreground sensors; PrayerWidget uses the existing schedule/update lifecycle.
+foreground sensors. WidgetUi owns draft configuration, WidgetOptions per-instance
+presentation, WidgetRenderer native RemoteViews, and PrayerWidget the existing
+schedule/launcher update lifecycle. Native receiver variants share that provider.
 Neither phone settings nor alarm recovery connect to a TV.
 See [phone guide and limits](PHONE.md) and [delivery ledger](PHONE-WORK.md).

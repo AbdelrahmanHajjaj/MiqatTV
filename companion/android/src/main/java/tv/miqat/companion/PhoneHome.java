@@ -102,18 +102,14 @@ final class PhoneHome {
                             a.body, "gear", a.t("setup_resume"), "", () -> a.onboarding.open())
                     .setTag("onboarding.resume");
         a.views
-                .navigationRow(
-                        a.body,
-                        "compass",
-                        ui.location(),
-                        ui.settings.zone().getID(),
-                        () -> ui.open("calculation"))
+                .button(a.body, ui.location(), () -> ui.open("calculation"))
                 .setTag("phone.location");
         renderedDay = civilDay(now);
         renderedZone = ui.settings.zone().getID();
         lastTick = now;
         PhoneSchedule.Day tomorrow = ui.settings.day(now, 1);
         LinearLayout hero = ui.appearance.hero(a.body, ui.settings);
+        hero.setPadding(a.views.dp(16), a.views.dp(12), a.views.dp(16), a.views.dp(12));
         tv.miqat.core.PrayerSelection selection = nextPrayer(hero, now, true);
         int next = selection == null ? -1 : selection.getNext();
         boolean tomorrowNext = selection != null && selection.getNextTime() >= tomorrow.start;
@@ -139,19 +135,20 @@ final class PhoneHome {
         status = a.views.text(a.t(state), 12, a.muted);
         status.setTag("phone.status");
         hero.addView(status);
-        a.views
-                .button(
-                        hero,
-                        a.t(
-                                !ui.settings.locationReady
-                                        ? "phone_use_location"
-                                        : repair ? "phone_repair" : "phone_audio"),
-                        () -> {
-                            if (ui.settings.locationReady)
-                                ui.open(repair ? "permissions" : "audio");
-                            else ui.locationUi.useLocation();
-                        })
-                .setTag("phone.setup");
+        if (!ui.settings.locationReady || repair)
+            a.views
+                    .button(
+                            hero,
+                            a.t(
+                                    !ui.settings.locationReady
+                                            ? "phone_use_location"
+                                            : repair ? "phone_repair" : "phone_audio"),
+                            () -> {
+                                if (ui.settings.locationReady)
+                                    ui.open(repair ? "permissions" : "audio");
+                                else ui.locationUi.useLocation();
+                            })
+                    .setTag("phone.setup");
         if (!ui.locationUi.locationMessage.isEmpty())
             hero.addView(a.views.text(a.t(ui.locationUi.locationMessage), 13, a.muted));
         playback =
@@ -163,6 +160,7 @@ final class PhoneHome {
                             a.render();
                         });
         playback.setTag("phone.stop");
+        playback.setVisibility(PhonePlayback.playing() ? View.VISIBLE : View.GONE);
         String audioError = PhoneStore.preferences(a).getString("audio-error", "");
         if (!audioError.isEmpty()) hero.addView(a.views.text(a.t(audioError), 13, a.accent));
     }
@@ -216,7 +214,8 @@ final class PhoneHome {
                         new android.icu.util.ULocale(
                                 (a.ar ? "ar" : "en") + "@calendar=islamic-umalqura"));
         hf.setCalendar(hijri);
-        a.body.addView(a.views.text(ui.digits(hf.format(hijri.getTime())), 14, a.muted));
+        dateLabel.append("\n" + ui.digits(hf.format(hijri.getTime())));
+        dateLabel.setTextSize(12);
         return day;
     }
 
@@ -224,9 +223,16 @@ final class PhoneHome {
             throws Exception {
         if (day.times == null) a.body.addView(a.views.text(a.t("phone_unavailable"), 16, a.ink));
         else {
+            int columns =
+                    a.getResources().getDisplayMetrics().widthPixels
+                                                    / a.getResources().getDisplayMetrics().density
+                                            >= 360
+                                    && a.getResources().getConfiguration().fontScale <= 1.4f
+                            ? 3
+                            : 2;
             LinearLayout pair = null;
             for (int i = 0; i < 6; i++) {
-                if (i % 2 == 0) {
+                if (i % columns == 0) {
                     pair = a.views.horizontal(a.body);
                     pair.setGravity(Gravity.TOP);
                 }
@@ -240,11 +246,11 @@ final class PhoneHome {
                                         ui.settings.value(
                                                 "call." + PhoneStore.PRAYERS[i] + ".mode"));
                 LinearLayout cell = a.views.column();
-                cell.setPadding(a.views.dp(14), a.views.dp(12), a.views.dp(14), a.views.dp(12));
-                cell.setMinimumHeight(a.views.dp(88));
+                cell.setPadding(a.views.dp(10), a.views.dp(8), a.views.dp(10), a.views.dp(8));
+                cell.setMinimumHeight(a.views.dp(72));
                 LinearLayout.LayoutParams cellSize = new LinearLayout.LayoutParams(0, -1, 1);
-                cellSize.setMarginEnd(a.views.dp(i % 2 == 0 ? 4 : 0));
-                cellSize.setMarginStart(a.views.dp(i % 2 == 1 ? 4 : 0));
+                cellSize.setMarginEnd(a.views.dp(i % columns < columns - 1 ? 4 : 0));
+                cellSize.setMarginStart(a.views.dp(i % columns > 0 ? 4 : 0));
                 cellSize.bottomMargin = a.views.dp(8);
                 pair.addView(cell, cellSize);
                 cell.setSelected(dayOffset == 0 && !tomorrowNext && i == next);
@@ -262,11 +268,6 @@ final class PhoneHome {
                 stamp.setPadding(0, a.views.dp(3), 0, 0);
                 stamp.setTypeface(a.heading);
                 cell.addView(stamp);
-                if (!mode.isEmpty()) {
-                    TextView state = a.views.text(mode, 11, a.muted);
-                    state.setPadding(0, a.views.dp(3), 0, 0);
-                    cell.addView(state);
-                }
                 cell.setTag("phone.prayer." + PhoneStore.PRAYERS[i]);
                 cell.setFocusable(true);
                 cell.setContentDescription(name + ", " + at + (mode.isEmpty() ? "" : ", " + mode));
@@ -277,21 +278,26 @@ final class PhoneHome {
     }
 
     private void destinations() {
-        a.views
-                .navigationRow(a.body, "compass", a.t("phone_qibla"), "", () -> a.navigate("qibla"))
-                .setTag("qibla.open");
-        a.views
-                .navigationRow(
-                        a.body, "mihrab", a.t("phone_widgets"), "", () -> a.navigate("widgets"))
-                .setTag("widgets.open");
-        a.body.addView(a.views.heading(a.t("phone_more")));
-        for (String module : new String[] {"phone_quran", "phone_adhkar", "phone_tasbih"})
-            a.views.navigationRow(
-                    a.body,
-                    "lock",
-                    a.t(module),
-                    a.t("coming_soon"),
-                    () -> a.info(a.t("coming_soon"), a.t("locked_hint")));
+        LinearLayout tools = a.views.horizontal(a.body);
+        Button qibla = a.views.button(tools, a.t("phone_qibla"), () -> a.navigate("qibla"));
+        a.views.flex(qibla);
+        qibla.setTag("qibla.open");
+        Button widgets = a.views.button(tools, a.t("phone_widgets"), () -> a.navigate("widgets"));
+        a.views.flex(widgets);
+        widgets.setTag("widgets.open");
+        LinearLayout more = a.views.horizontal(a.body);
+        for (String module : new String[] {"phone_quran", "phone_adhkar", "phone_tasbih"}) {
+            Button locked =
+                    a.views.button(
+                            more,
+                            a.t(module),
+                            () -> a.info(a.t("coming_soon"), a.t("locked_hint")));
+            a.views.flex(locked);
+            locked.setTextSize(12);
+            locked.setCompoundDrawablesRelative(Icons.get(a, "lock", a.muted), null, null, null);
+            locked.setTextColor(a.muted);
+            locked.setContentDescription(a.t(module) + ", " + a.t("coming_soon"));
+        }
     }
 
     tv.miqat.core.PrayerSelection nextPrayer(LinearLayout hero, long now, boolean live)

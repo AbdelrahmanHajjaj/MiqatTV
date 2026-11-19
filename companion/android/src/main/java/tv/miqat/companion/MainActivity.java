@@ -32,6 +32,7 @@ public final class MainActivity extends Activity {
     TvSetup tvSetup;
     PhoneOnboarding onboarding;
     QiblaUi qibla;
+    WidgetUi widgetUi;
     final DemoTv[] tvs = new DemoTv[2];
     final List<LanTv> lanTvs = new ArrayList<>();
     final ExecutorService io = Executors.newFixedThreadPool(2);
@@ -48,6 +49,7 @@ public final class MainActivity extends Activity {
     TvSettingsUi settingsUi;
     LinearLayout body;
     ScrollView scroll;
+    FrameLayout contentRoot;
     String renderedLocation = "";
     Toast toast;
     Typeface regular, heading;
@@ -118,6 +120,7 @@ public final class MainActivity extends Activity {
             tvSetup = new TvSetup(this);
             onboarding = new PhoneOnboarding(this);
             qibla = new QiblaUi(this);
+            widgetUi = new WidgetUi(this);
             if (state != null) tvSetup.restore(state);
             phones = new Phones(this);
             try {
@@ -154,7 +157,11 @@ public final class MainActivity extends Activity {
                 page = "prayers";
                 section = "";
             }
-            if (state == null && onboarding.shouldStart()) page = "onboarding";
+            boolean widgetConfiguration = widgetUi.configure(getIntent());
+            if (isFinishing()) return;
+            if (state != null) widgetUi.restore(state);
+            if (!widgetConfiguration && state == null && onboarding.shouldStart())
+                page = "onboarding";
             render();
             Object retained = getLastNonConfigurationInstance();
             pairingUi.resume(retained);
@@ -338,7 +345,7 @@ public final class MainActivity extends Activity {
         else change.run();
     }
 
-    void bottomNavigation(LinearLayout shell) {
+    void bottomNavigation() {
         LinearLayout nav = new LinearLayout(this);
         nav.setGravity(Gravity.CENTER_VERTICAL);
         nav.setOrientation(LinearLayout.HORIZONTAL);
@@ -348,9 +355,19 @@ public final class MainActivity extends Activity {
         GradientDrawable material = views.background(surface, 40);
         material.setStroke(views.dp(1), (muted & 0x00ffffff) | 0x33000000);
         nav.setBackground(material);
-        LinearLayout.LayoutParams bar = new LinearLayout.LayoutParams(-1, -2);
-        bar.setMargins(views.dp(16), views.dp(8), views.dp(16), views.dp(14));
-        shell.addView(nav, bar);
+        FrameLayout.LayoutParams bar =
+                new FrameLayout.LayoutParams(
+                        Math.min(
+                                getResources().getDisplayMetrics().widthPixels - views.dp(32),
+                                views.dp(480)),
+                        -2,
+                        Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        bar.bottomMargin = views.dp(12);
+        contentRoot.addView(nav, bar);
+        scroll.setClipToPadding(false);
+        nav.addOnLayoutChangeListener(
+                (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) ->
+                        scroll.setPadding(0, 0, 0, bottom - top + views.dp(28)));
         String active =
                 Arrays.asList("prayers", "qibla", "widgets").contains(page)
                         ? "prayers"
@@ -417,6 +434,7 @@ public final class MainActivity extends Activity {
                 page.equals("onboarding")
                         ? onboarding.locationKey()
                         : page.equals("tv-setup") ? tvSetup.locationKey() : page + ":" + section;
+        String previousLocation = renderedLocation;
         int previousY =
                 scroll != null && location.equals(renderedLocation) ? scroll.getScrollY() : 0;
         renderedLocation = location;
@@ -425,7 +443,7 @@ public final class MainActivity extends Activity {
         shell.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         toolbar(shell);
         body = views.column();
-        body.setPadding(views.dp(20), views.dp(12), views.dp(20), views.dp(20));
+        body.setPadding(views.dp(20), views.dp(4), views.dp(20), views.dp(12));
         body.setBackgroundColor(ground);
         String screen =
                 page.equals("settings") && section.equals("appearance") ? "appearance" : page;
@@ -438,28 +456,37 @@ public final class MainActivity extends Activity {
         scroll.setFillViewport(true);
         scroll.addView(body);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
-        setContentView(shell);
+        contentRoot = new FrameLayout(this);
+        contentRoot.addView(shell, new FrameLayout.LayoutParams(-1, -1));
+        setContentView(contentRoot);
         ScrollView current = scroll;
         current.post(() -> current.scrollTo(0, previousY));
         renderPage();
         renderActions(shell);
+        if (views.motionEnabled() && !location.equals(previousLocation)) {
+            body.setAlpha(0f);
+            body.animate().alpha(1f).setDuration(160).start();
+        }
     }
 
     private void toolbar(LinearLayout shell) {
         LinearLayout toolbar = views.horizontal(shell);
         toolbar.setPadding(views.dp(12), views.dp(6), views.dp(12), views.dp(6));
         toolbar.setMinimumHeight(views.dp(64));
-        if (page.equals("tv-setup")
+        if (page.equals("onboarding")
+                || page.equals("tv-setup")
                 || page.equals("qibla")
                 || page.equals("widgets")
                 || page.equals("pair")
                 || page.equals("lg-setup")
                 || page.equals("preferences")
                 || page.equals("updates")
-                || page.equals("settings") && !section.isEmpty()
+                || page.equals("overview")
+                || page.equals("settings")
                 || page.equals("phone-settings") && !section.isEmpty())
-            views.iconButton(toolbar, "back", t("back"), this::back)
-                    .setEnabled(!networkBusy || page.equals("pair"));
+            views.iconButton(toolbar, "back", t("back"), this::back).setTag("navigation.back");
+        View backButton = toolbar.findViewWithTag("navigation.back");
+        if (backButton != null) backButton.setEnabled(!networkBusy || page.equals("pair"));
         if (page.equals("tvs")) {
             ImageView brand = new ImageView(this);
             brand.setImageResource(R.drawable.miqat_icon);
@@ -475,7 +502,7 @@ public final class MainActivity extends Activity {
                 page.equals("tv-setup")
                         ? t("tv_setup")
                         : page.equals("onboarding")
-                                ? t("welcome")
+                                ? (ar ? "ميقات" : "Miqat")
                                 : page.equals("qibla")
                                         ? t("phone_qibla")
                                         : page.equals("widgets")
@@ -509,6 +536,8 @@ public final class MainActivity extends Activity {
         title.setMaxLines(2);
         title.setEllipsize(android.text.TextUtils.TruncateAt.END);
         titles.addView(title);
+        if (page.equals("prayers"))
+            views.iconButton(toolbar, "bell", t("phone_audio"), () -> phoneUi.open("audio"));
         String subtitle =
                 page.equals("tvs")
                         ? t("tvs")
@@ -569,7 +598,7 @@ public final class MainActivity extends Activity {
                 qibla.render();
                 break;
             case "widgets":
-                PrayerWidget.guide(this);
+                widgetUi.render();
                 break;
             case "lg-setup":
                 if (lgSetup == null) lgSetup = new LgSetup(this);
@@ -645,7 +674,11 @@ public final class MainActivity extends Activity {
         }
         if (networkBusy && lgSetup != null) lgSetup.cancellation(shell);
         if (page.equals("onboarding")) onboarding.footer(shell);
-        else bottomNavigation(shell);
+        else if (page.equals("tv-setup")) tvSetup.footer(shell);
+        else if (page.equals("lg-setup") && lgSetup != null) lgSetup.footer(shell);
+        else if (page.equals("prayers")
+                || page.equals("tvs")
+                || page.equals("phone-settings") && section.isEmpty()) bottomNavigation();
     }
 
     static TextWatcher watcher(Consumer<String> changed) {
@@ -830,12 +863,17 @@ public final class MainActivity extends Activity {
         if (phoneUi != null) phoneUi.locationUi.cancelLocation();
         if (networkBusy && !page.equals("pair")) return;
         stopAudio();
+        if (page.equals("widgets") && widgetUi.cancel()) return;
         if (page.equals("onboarding")) {
             onboarding.back();
             return;
         }
         if (page.equals("tv-setup")) {
             tvSetup.back();
+            return;
+        }
+        if (page.equals("lg-setup") && lgSetup != null) {
+            lgSetup.back();
             return;
         }
         if (page.equals("qibla") || page.equals("widgets")) {
@@ -902,6 +940,7 @@ public final class MainActivity extends Activity {
         super.onSaveInstanceState(state);
         if (tvSetup != null) tvSetup.save(state);
         if (phoneUi != null) phoneUi.save(state);
+        if (widgetUi != null) widgetUi.save(state);
         state.putInt("selected", selected);
         state.putString("page", page);
         state.putString("section", section);

@@ -39,6 +39,8 @@ final class Choices {
                                 ? "list"
                                 : UiContract.INSTANCE.choiceEditor(
                                         control.optString("choiceSource", id));
+        List<String> visible = new ArrayList<>(spec.getOptions());
+        visible.removeIf(option -> Catalog.retiredVoice(id, option));
         if (editor.equals("segments")) {
             HorizontalScrollView viewport = new HorizontalScrollView(a);
             viewport.setHorizontalScrollBarEnabled(false);
@@ -47,7 +49,7 @@ final class Choices {
             track.setPadding(a.views.dp(4), a.views.dp(4), a.views.dp(4), a.views.dp(4));
             track.setBackground(a.views.background(a.ground, 24));
             track.setTag(id + ".segments");
-            for (String option : spec.getOptions()) {
+            for (String option : visible) {
                 RadioButton chip = new RadioButton(a);
                 chip.setButtonDrawable(null);
                 chip.setMinHeight(a.views.dp(48));
@@ -74,7 +76,7 @@ final class Choices {
             viewport.setTag(id + ".edit");
             viewport.setEnabled(a.settingsUi.editable());
         } else if (editor.equals("carousel")) {
-            int index = spec.getOptions().indexOf(value);
+            int index = visible.indexOf(value);
             LinearLayout track = a.views.horizontal(row);
             track.setTag(id + ".edit");
             track.setEnabled(a.settingsUi.editable());
@@ -82,12 +84,13 @@ final class Choices {
                     a.views.button(
                             track,
                             a.ar ? "›" : "‹",
-                            () -> a.settingsUi.selectChoice(id, spec.getOptions().get(index - 1)));
+                            () -> a.settingsUi.selectChoice(id, visible.get(index - 1)));
             a.views.square(previous);
             previous.setTag(id + ".previous");
             previous.setContentDescription(a.t("previous") + " " + a.title(control));
             previous.setEnabled(a.settingsUi.editable() && index > 0);
-            TextView selected = a.views.text(a.catalog.value(a.profile(), id, value, a.ar), 16, a.ink);
+            TextView selected =
+                    a.views.text(a.catalog.value(a.profile(), id, value, a.ar), 16, a.ink);
             selected.setGravity(Gravity.CENTER);
             selected.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             selected.setMinHeight(a.views.dp(48));
@@ -99,11 +102,11 @@ final class Choices {
                     a.views.button(
                             track,
                             a.ar ? "‹" : "›",
-                            () -> a.settingsUi.selectChoice(id, spec.getOptions().get(index + 1)));
+                            () -> a.settingsUi.selectChoice(id, visible.get(index + 1)));
             a.views.square(next);
             next.setTag(id + ".next");
             next.setContentDescription(a.t("next") + " " + a.title(control));
-            next.setEnabled(a.settingsUi.editable() && index + 1 < spec.getOptions().size());
+            next.setEnabled(a.settingsUi.editable() && index + 1 < visible.size());
         } else {
             AutoCompleteTextView field = new AutoCompleteTextView(a);
             field.setId(View.generateViewId());
@@ -117,7 +120,7 @@ final class Choices {
             field.setMinHeight(a.views.dp(48));
             field.setHint(a.t("search"));
             List<Option> options = new ArrayList<>();
-            for (String option : spec.getOptions())
+            for (String option : visible)
                 options.add(new Option(option, a.catalog.value(a.profile(), id, option, a.ar)));
             ArrayAdapter<Option> adapter =
                     new ArrayAdapter<>(a, android.R.layout.simple_dropdown_item_1line, options);
@@ -166,14 +169,16 @@ final class Choices {
                 preview.setTag(id + ".preview");
                 Button stop =
                         a.views.bindAction(
-                                a.views.iconButton(affordance, "stop", a.t("stop_audio"), a::stopAudio),
+                                a.views.iconButton(
+                                        affordance, "stop", a.t("stop_audio"), a::stopAudio),
                                 "stop-audio");
                 if (a.settingsUi.isPending(id)) {
                     row.addView(a.views.text(a.t("voice_draft"), 12, a.muted));
                     LinearLayout actions = a.views.horizontal(row);
                     Button done =
                             a.views.bindAction(
-                                    a.views.button(actions, a.t("done"), a.settingsUi::commitPending),
+                                    a.views.button(
+                                            actions, a.t("done"), a.settingsUi::commitPending),
                                     "save-edit");
                     a.views.flex(done);
                     done.setTag(id + ".save");

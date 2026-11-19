@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ميقات</string>
+    <string name="widget_next_name">ميقات · الصلاة القادمة</string>
+    <string name="widget_strip_name">ميقات · شريط المواقيت</string>
+</resources>

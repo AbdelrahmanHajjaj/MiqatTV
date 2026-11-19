@@ -153,24 +153,55 @@ final class QiblaUi implements SensorEventListener {
             float cx = getWidth() / 2f,
                     cy = getHeight() / 2f,
                     r = Math.min(cx, cy) - a.views.dp(18);
-            paint.setColor(a.surface);
             paint.setStyle(Paint.Style.FILL);
+            paint.setShader(
+                    new RadialGradient(
+                            cx,
+                            cy,
+                            r,
+                            new int[] {a.surface, a.ground},
+                            null,
+                            Shader.TileMode.CLAMP));
             canvas.drawCircle(cx, cy, r, paint);
-            paint.setColor(a.muted);
+            paint.setShader(null);
             paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(a.views.dp(2));
-            canvas.drawCircle(cx, cy, r, paint);
+            paint.setStrokeWidth(a.views.dp(1));
+            paint.setColor((a.accent & 0xffffff) | 0x55000000);
+            canvas.drawCircle(cx, cy, r * .98f, paint);
+            canvas.drawCircle(cx, cy, r * .73f, paint);
+            for (int angle = 0; angle < 360; angle += 5) {
+                int tick = canvas.save();
+                canvas.rotate(angle, cx, cy);
+                paint.setColor(angle % 30 == 0 ? a.accent : (a.muted & 0xffffff) | 0x55000000);
+                canvas.drawLine(
+                        cx, cy - r * .89f, cx, cy - r * (angle % 30 == 0 ? .8f : .85f), paint);
+                canvas.restoreToCount(tick);
+            }
             int save = canvas.save();
             canvas.rotate(direction, cx, cy);
             paint.setStyle(Paint.Style.FILL);
-            paint.setColor(a.accent);
+            paint.setColor((a.accent & 0xffffff) | 0x18000000);
             arrow.reset();
-            arrow.moveTo(cx, cy - r * .78f);
-            arrow.lineTo(cx + r * .24f, cy + r * .4f);
-            arrow.lineTo(cx, cy + r * .22f);
-            arrow.lineTo(cx - r * .24f, cy + r * .4f);
+            arrow.moveTo(cx, cy - r * .65f);
+            arrow.lineTo(cx + r * .23f, cy + r * .25f);
+            arrow.lineTo(cx - r * .23f, cy + r * .25f);
             arrow.close();
             canvas.drawPath(arrow, paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(a.views.dp(2));
+            paint.setColor(a.accent);
+            canvas.drawLine(cx, cy + r * .22f, cx, cy - r * .4f, paint);
+            paint.setStyle(Paint.Style.FILL);
+            float k = r * .17f, top = cy - r * .62f;
+            paint.setColor(a.accent);
+            canvas.drawRoundRect(
+                    cx - k - 3, top - k - 3, cx + k + 3, top + k + 3, k * .18f, k * .18f, paint);
+            paint.setColor(0xff171b1c);
+            canvas.drawRoundRect(cx - k, top - k, cx + k, top + k, k * .12f, k * .12f, paint);
+            paint.setColor(a.accent);
+            canvas.drawRect(cx - k, top - k * .5f, cx + k, top - k * .2f, paint);
+            canvas.drawRect(cx + k * .35f, top + k * .2f, cx + k * .65f, top + k, paint);
+            canvas.drawCircle(cx, cy, a.views.dp(5), paint);
             canvas.restoreToCount(save);
         }
     }

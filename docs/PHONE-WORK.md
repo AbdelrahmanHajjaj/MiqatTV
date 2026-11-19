@@ -4,37 +4,39 @@ Updated: 2026-11-19. Branch `feature/companion-installation`, worktree
 `state/companion-installation` under the primary Miqat checkout. Base: companion
 merge `3c5b38e`. Draft PR #9 owns this work and must describe the final scope.
 
-## Active pass 4 — owner feedback
+## Active pass 4 — final verification/delivery
 
-Approved scope: [PHONE-PASS4.md](PHONE-PASS4.md), all 12 items. Goal tracks the same
-scope. Starting head f04c1c9 passed final pass-3 CI; this is new owner feedback,
-not acceptance of the old UX. Continue in the existing companion worktree/PR #9.
+Approved scope is PHONE-PASS4.md, all 12 items; the active goal tracks the same.
+Implementation is complete locally. Current candidate is phone 0.4.0/code 9,
+installer 1.1.4/code 7. The exported primary APK hash is in EVIDENCE.md and ignored
+state/pass4-artifact.json. Keep PR #9 draft for the owner's combined feedback.
 
-Implemented in working tree: retired voice choices with saved-choice migration;
-compact shared setting rows/toggles; floating main navigation and contextual Back;
-six single-decision first-use steps/Skip; carousel previews and portrait artwork
-composition; guided one-field LG connection; full-screen TV flow; uncropped scan
-geometry; Kaaba compass; per-instance widget variants/theme/background/date/size.
-Widget variants now also have their own launcher entries/default sizes, sharing
-one provider implementation. This last provider addition still needs validation.
-Approved legacy audio bytes remain checksummed but hidden from selectors.
+Compact controls/floating main navigation, one-decision first use/Skip, carousel
+portrait previews, explicit motion effects, Kaaba compass, independently
+configurable native widget variants and full-screen one-step TV/LG setup are
+implemented. Al Afasy is removed from choices and distribution; old local choices
+migrate without resetting other settings. An older TV's reported metadata is
+readable but never silently rewritten or offered again. Radio is separate.
 
-Validation so far: canonical catalog/metadata tests; portable JVM/JS/Java/ES5;
-LG full build/service/TLS suite; preview tokens/data/tests/build; Android TV
-size/lint/test APK and 47 regressions; native bilingual default TV/editor/setup
-handoff, phone UI and saved/private-audio migration all pass. Journey-4 passes
-resume/Skip, draft Cancel, real two-instance widget configuration, resize/restore,
-strip and Qibla/source flows. Portrait phone sizes 80–150% with OS font 1.3 pass.
-A real RemoteViews orientation rejection reproduced in journey-1 and was fixed
-with fixed XML containers. Fixtures now follow visible carousel/setup steps,
-preserving observable behavior and edge assertions.
+Essential local results are in EVIDENCE.md. Owned emulator runs cover real widget
+binding/configuration/Cancel/resize/strip, native LAN/legacy metadata guards,
+bilingual editors/handoff, actual alarms/private audio/denial and cleanup, plus
+all app text sizes with OS font 1.3 in asserted portrait/landscape. Core, shared
+metadata, TV build/47 regressions, LG service/browser and preview checks pass.
+The last clean phone package passes its native journey. Its compiled payloads
+match the previously tested 0.4.0 build, with the retired media bytes removed.
+All 25 recordings/25 notices match canonical source. No private logs/captures ship.
 
-Next: validate the new launcher widget components/defaults, run wide-size matrix,
-inspect final English/Arabic renders including LG/Android scan, finish audit and
-lint, version/export and final-head CI. No new review APK/version is claimed yet.
-Private logs/captures are state/pass4-*; current owned read-only emulator receipt
-is state/pass4-emulator-session.json. Verify process identity before cleanup.
-No physical device was touched. Keep PR draft; no merge/release/deployment.
+Next: final staged review and implementation commit/push; finish final-head
+Validate/Companion/Apple CI and exact PR receipts, and complete the exported
+capture/emulator cleanup. A final size/capture run can finish while CI runs;
+private logs are state/pass4-*. Current owned emulator receipt is
+state/pass4-emulator-session.json; verify its process identity before stopping.
+Normal source captures are state/pass4-040-portrait and state/pass4-040-wide;
+the former's English 80% captures were already overwritten by the wide run.
+Check actual PNG dimensions; selected accepted captures are exported separately.
+After the CI-gated combined handoff, stop and await owner feedback. No merge,
+physical deployment, public release or automatic unrelated follow-up.
 
 ## Authority and delivery
 

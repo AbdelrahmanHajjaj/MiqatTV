@@ -66,6 +66,23 @@ final class PhoneJourneyCheck {
                                     .findViewWithTag("onboarding.next")
                                     .performClick();
                             check(
+                                    resumed.body.findViewWithTag(
+                                                    "onboarding.permission.notifications")
+                                            != null,
+                                    "Notifications must have a dedicated step");
+                            resumed.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("onboarding.skip")
+                                    .performClick();
+                            check(
+                                    resumed.body.findViewWithTag("onboarding.permission.exact")
+                                            != null,
+                                    "Precise alarms must have a dedicated step");
+                            resumed.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("onboarding.skip")
+                                    .performClick();
+                            check(
                                     resumed.body.findViewWithTag("phone.appearance.preview")
                                             != null,
                                     "First-use personalization must show a real preview");
@@ -74,51 +91,26 @@ final class PhoneJourneyCheck {
                 String before = PhoneStore.read(context).value("appearance.theme");
                 PhoneUiCheck.on(
                         test,
-                        () ->
-                                resumed.body
-                                        .findViewWithTag("phone.appearance.theme.edit")
-                                        .performClick());
-                PhoneUiCheck.on(
-                        test,
                         () -> {
-                            ListView list =
-                                    resumed.phoneUi.choiceDialog.findViewById(android.R.id.list);
-                            if (list == null)
-                                list =
-                                        resumed.phoneUi
-                                                .choiceDialog
-                                                .getWindow()
-                                                .getDecorView()
-                                                .findViewWithTag("phone.appearance.choices");
-                            list.performItemClick(null, 1, 1);
+                            resumed.body
+                                    .findViewWithTag("phone.appearance.theme.option.frost")
+                                    .performClick();
                             check(
                                     resumed.phoneUi
-                                                    .choiceDialog
-                                                    .getWindow()
-                                                    .getDecorView()
-                                                    .findViewWithTag("phone.appearance.preview")
-                                            != null,
-                                    "Theme choice preview missing");
-                            resumed.phoneUi.choiceDialog.getButton(-2).performClick();
-                        });
-                check(
-                        PhoneStore.read(context).value("appearance.theme").equals(before),
-                        "Cancel preview changed saved theme");
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            resumed.phoneUi.save("appearance.theme", "frost");
-                            resumed.body
-                                    .findViewWithTag("phone.appearance.background.edit")
+                                            .settings
+                                            .value("appearance.theme")
+                                            .equals("frost"),
+                                    "Guided carousel did not select the previewed theme");
+                            resumed.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("onboarding.next")
                                     .performClick();
+                            check(
+                                    resumed.body.findViewWithTag("phone.appearance.background")
+                                            != null,
+                                    "Background must have a dedicated carousel step");
                         });
-                PhoneUiCheck.capture(test, resumed, lang + "-journey-frost-preview", captures);
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            resumed.phoneUi.choiceDialog.getButton(-2).performClick();
-                            resumed.phoneUi.save("appearance.theme", before);
-                        });
+                PhoneUiCheck.capture(test, resumed, lang + "-journey-background", captures);
                 PhoneUiCheck.on(
                         test,
                         () -> {
@@ -134,6 +126,49 @@ final class PhoneJourneyCheck {
                             check(
                                     !resumed.onboarding.needed() && resumed.page.equals("prayers"),
                                     "Cancelling a repeated guide erased completed setup");
+                            resumed.phoneUi.open("appearance");
+                            resumed.body
+                                    .findViewWithTag("phone.appearance.theme.option.dusk")
+                                    .performClick();
+                        });
+                PhoneUiCheck.on(
+                        test,
+                        () -> {
+                            android.widget.HorizontalScrollView carousel =
+                                    resumed.phoneUi
+                                            .choiceDialog
+                                            .getWindow()
+                                            .getDecorView()
+                                            .findViewWithTag("phone.appearance.choices");
+                            ((android.view.ViewGroup) carousel.getChildAt(0))
+                                    .getChildAt(0)
+                                    .performClick();
+                            check(
+                                    resumed.phoneUi
+                                                    .choiceDialog
+                                                    .getWindow()
+                                                    .getDecorView()
+                                                    .findViewWithTag("phone.appearance.preview")
+                                            != null,
+                                    "Theme choice preview missing");
+                            resumed.phoneUi.choiceDialog.getButton(-2).performClick();
+                        });
+                check(
+                        PhoneStore.read(context).value("appearance.theme").equals("frost"),
+                        "Cancel preview changed saved theme");
+                PhoneUiCheck.on(
+                        test,
+                        () ->
+                                resumed.body
+                                        .findViewWithTag("phone.appearance.background.edit")
+                                        .performClick());
+                PhoneUiCheck.capture(test, resumed, lang + "-journey-frost-preview", captures);
+                PhoneUiCheck.on(
+                        test,
+                        () -> {
+                            resumed.phoneUi.choiceDialog.getButton(-2).performClick();
+                            resumed.phoneUi.save("appearance.theme", before);
+                            resumed.tab("prayers");
                             resumed.body.findViewWithTag("widgets.open").performClick();
                             check(
                                     resumed.body
@@ -143,7 +178,7 @@ final class PhoneJourneyCheck {
                                     "Widget must render actual RemoteViews");
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-widget", captures);
-                WidgetHostCheck.run(test, resumed);
+                WidgetHostCheck.run(test, resumed, captures);
                 PhoneUiCheck.on(
                         test,
                         () -> {
@@ -173,9 +208,15 @@ final class PhoneJourneyCheck {
                         test,
                         () -> {
                             check(
-                                    resumed.body.findViewWithTag("setup.continue") == null,
+                                    resumed.getWindow()
+                                                    .getDecorView()
+                                                    .findViewWithTag("setup.continue")
+                                            == null,
                                     "Source selection must follow preparation");
-                            resumed.body.findViewWithTag("setup.ready").performClick();
+                            resumed.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("setup.skip")
+                                    .performClick();
                             check(
                                     resumed.body
                                             .findViewWithTag("setup.channel.latest")
@@ -195,7 +236,9 @@ final class PhoneJourneyCheck {
                             resumed.body.findViewWithTag("setup.advanced").performClick();
                             check(
                                     resumed.body.findViewWithTag("setup.local") != null
-                                            && resumed.body.findViewWithTag("setup.continue")
+                                            && resumed.getWindow()
+                                                            .getDecorView()
+                                                            .findViewWithTag("setup.continue")
                                                     == null,
                                     "Advanced must switch to local package UI");
                             resumed.tab("prayers");
@@ -205,12 +248,17 @@ final class PhoneJourneyCheck {
                                             && resumed.body.findViewWithTag("qibla.status") != null,
                                     "Qibla screen/bearing unavailable for confirmed location");
                         });
-                LiveUiCheck.untilUi(test, () -> {
-                    View compass = resumed.body.findViewWithTag("qibla.compass");
-                    TextView status = resumed.body.findViewWithTag("qibla.status");
-                    return compass != null && compass.getVisibility() == View.VISIBLE
-                            || status != null && status.getText().toString().equals(resumed.t("qibla_no_sensor"));
-                });
+                LiveUiCheck.untilUi(
+                        test,
+                        () -> {
+                            View compass = resumed.body.findViewWithTag("qibla.compass");
+                            TextView status = resumed.body.findViewWithTag("qibla.status");
+                            return compass != null && compass.getVisibility() == View.VISIBLE
+                                    || status != null
+                                            && status.getText()
+                                                    .toString()
+                                                    .equals(resumed.t("qibla_no_sensor"));
+                        });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-qibla", captures);
                 cancelledResult(test, resumed);
                 PhoneUiCheck.on(test, resumed::finish);

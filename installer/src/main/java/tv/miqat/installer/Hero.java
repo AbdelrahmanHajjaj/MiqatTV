@@ -12,15 +12,29 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 
 /**
- * The arch at the top of every screen: Miqat’s mihrab (the TV app's ArchView shape), with what is happening drawn
- * inside it. Search sends arch-shaped rings outward; progress fills a ring; done and problem show a mark.
+ * The arch at the top of every screen: Miqat’s mihrab (the TV app's ArchView shape), with what is
+ * happening drawn inside it. Search sends arch-shaped rings outward; progress fills a ring; done
+ * and problem show a mark.
  */
 final class Hero extends View {
-    enum Mode { TV, SEARCH, ALLOW, PAIR, PROGRESS, DONE, PROBLEM, CITY, APPS, CLEAN }
+    enum Mode {
+        TV,
+        SEARCH,
+        ALLOW,
+        PAIR,
+        PROGRESS,
+        DONE,
+        PROBLEM,
+        CITY,
+        APPS,
+        CLEAN
+    }
 
     private Mode mode = Mode.TV;
+
     /** 0..1, or below 0 for "working, amount unknown". */
     private float progress = -1;
+
     private float t;
     private final ValueAnimator clock = ValueAnimator.ofFloat(0, 1);
 
@@ -68,32 +82,39 @@ final class Hero extends View {
         invalidate();
     }
 
-    @Override protected void onAttachedToWindow() {
+    @Override
+    protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         animateIfNeeded();
     }
 
-    @Override protected void onDetachedFromWindow() {
+    @Override
+    protected void onDetachedFromWindow() {
         clock.cancel();
         super.onDetachedFromWindow();
     }
 
-    @Override protected void onMeasure(int w, int h) {
-        setMeasuredDimension(MeasureSpec.getSize(w), Ui.dp(getContext(), 72));
+    @Override
+    protected void onMeasure(int w, int h) {
+        setMeasuredDimension(MeasureSpec.getSize(w), Ui.dp(getContext(), 144));
     }
 
     private void animateIfNeeded() {
-        boolean moving=mode==Mode.SEARCH || mode==Mode.PROGRESS&&progress<0;
-        if(isAttachedToWindow()&&Ui.motion(getContext())&&moving){if(!clock.isStarted())clock.start();}
-        else clock.cancel();
+        boolean moving = mode == Mode.SEARCH || mode == Mode.PROGRESS && progress < 0;
+        if (isAttachedToWindow() && Ui.motion(getContext()) && moving) {
+            if (!clock.isStarted()) clock.start();
+        } else clock.cancel();
     }
 
-    @Override protected void onSizeChanged(int w, int h, int ow, int oh) {
-        // The arch is 600×900 in the TV app; here 2/3 of the view's height wide, with room for rings around it.
-        float archH = h * 0.86f;
+    @Override
+    protected void onSizeChanged(int w, int h, int ow, int oh) {
+        // The arch is 600×900 in the TV app; here 2/3 of the view's height wide, with room for
+        // rings around it.
+        // Leave room for the complete 1.55x scan rings, including their stroke.
+        float archH = h * 0.60f;
         k = archH / 900f;
         ox = (w - 600 * k) / 2f;
-        oy = h - archH;
+        oy = h - archH - h * 0.04f;
         arch.reset();
         shape(arch, 0);
         inner.reset();
@@ -101,8 +122,14 @@ final class Hero extends View {
         stroke.setStrokeWidth(Math.max(2f, 8 * k));
         line.setStrokeWidth(Math.max(1f, 3 * k));
         line.setColor(Ui.alpha(Ui.palette(getContext()).accent, 0x73));
-        glow.setShader(new RadialGradient(w / 2f, oy + 480 * k, 560 * k, Ui.alpha(Ui.palette(getContext()).accent, 0x33), Ui.alpha(Ui.palette(getContext()).accent, 0x00),
-                Shader.TileMode.CLAMP));
+        glow.setShader(
+                new RadialGradient(
+                        w / 2f,
+                        oy + 480 * k,
+                        560 * k,
+                        Ui.alpha(Ui.palette(getContext()).accent, 0x33),
+                        Ui.alpha(Ui.palette(getContext()).accent, 0x00),
+                        Shader.TileMode.CLAMP));
     }
 
     /** The arch outline, inset by {@code in} (TV-app units). */
@@ -111,10 +138,16 @@ final class Hero extends View {
         p.offset(ox, oy);
     }
 
-    private float x(float v) { return ox + v * k; }
-    private float y(float v) { return oy + v * k; }
+    private float x(float v) {
+        return ox + v * k;
+    }
 
-    @Override protected void onDraw(Canvas c) {
+    private float y(float v) {
+        return oy + v * k;
+    }
+
+    @Override
+    protected void onDraw(Canvas c) {
         float cx = x(300), cy = y(560);
         c.drawCircle(cx, cy, 560 * k, glow);
         if (mode == Mode.SEARCH) rings(c);
@@ -122,16 +155,36 @@ final class Hero extends View {
         c.drawPath(inner, line);
         c.drawPath(arch, stroke);
         switch (mode) {
-            case TV: tv(c, cx, cy, false); break;
-            case SEARCH: waves(c, cx, cy); break;
-            case ALLOW: tv(c, cx, cy, true); break;
-            case PAIR: code(c, cx, cy); break;
-            case PROGRESS: ring(c, cx, cy); break;
-            case DONE: check(c, cx, cy); break;
-            case PROBLEM: problem(c, cx, cy); break;
-            case CITY: crescent(c, cx, cy); break;
-            case APPS: tiles(c, cx, cy); break;
-            case CLEAN: sparkle(c, cx, cy); break;
+            case TV:
+                tv(c, cx, cy, false);
+                break;
+            case SEARCH:
+                waves(c, cx, cy);
+                break;
+            case ALLOW:
+                tv(c, cx, cy, true);
+                break;
+            case PAIR:
+                code(c, cx, cy);
+                break;
+            case PROGRESS:
+                ring(c, cx, cy);
+                break;
+            case DONE:
+                check(c, cx, cy);
+                break;
+            case PROBLEM:
+                problem(c, cx, cy);
+                break;
+            case CITY:
+                crescent(c, cx, cy);
+                break;
+            case APPS:
+                tiles(c, cx, cy);
+                break;
+            case CLEAN:
+                sparkle(c, cx, cy);
+                break;
         }
     }
 
@@ -176,13 +229,25 @@ final class Hero extends View {
         RectF d = new RectF(cx - 120 * k, r.top + 35 * k, cx + 120 * k, r.bottom - 30 * k);
         c.drawRoundRect(d, 12 * k, 12 * k, box);
         box.setColor(Ui.palette(getContext()).muted);
-        c.drawRoundRect(new RectF(d.left + 24 * k, d.top + 24 * k, d.right - 60 * k, d.top + 38 * k), 7 * k, 7 * k, box);
-        c.drawRoundRect(new RectF(d.left + 24 * k, d.top + 52 * k, d.right - 100 * k, d.top + 64 * k), 6 * k, 6 * k, box);
+        c.drawRoundRect(
+                new RectF(d.left + 24 * k, d.top + 24 * k, d.right - 60 * k, d.top + 38 * k),
+                7 * k,
+                7 * k,
+                box);
+        c.drawRoundRect(
+                new RectF(d.left + 24 * k, d.top + 52 * k, d.right - 100 * k, d.top + 64 * k),
+                6 * k,
+                6 * k,
+                box);
         float pulse = (float) (0.5 + 0.5 * Math.sin(t * Math.PI * 4));
         box.setColor(Ui.palette(getContext()).accent);
         box.setAlpha((int) (170 + 85 * pulse));
-        c.drawRoundRect(new RectF(d.right - 110 * k, d.bottom - 46 * k, d.right - 22 * k, d.bottom - 18 * k),
-                14 * k, 14 * k, box);
+        c.drawRoundRect(
+                new RectF(
+                        d.right - 110 * k, d.bottom - 46 * k, d.right - 22 * k, d.bottom - 18 * k),
+                14 * k,
+                14 * k,
+                box);
     }
 
     /** Wi-Fi arcs filling in one after another. */
@@ -192,7 +257,10 @@ final class Hero extends View {
         for (int i = 0; i < 3; i++) {
             float rad = (70 + i * 65) * k;
             float on = (t * 4f) % 4f - i;
-            ink.setColor(on > 0 && on < 2.2f ? Ui.palette(getContext()).accent : Ui.alpha(Ui.palette(getContext()).ink, 0x59));
+            ink.setColor(
+                    on > 0 && on < 2.2f
+                            ? Ui.palette(getContext()).accent
+                            : Ui.alpha(Ui.palette(getContext()).ink, 0x59));
             r.set(cx - rad, base - rad, cx + rad, base + rad);
             c.drawArc(r, 225, 90, false, ink);
         }
@@ -212,7 +280,10 @@ final class Hero extends View {
         for (int i = 0; i < 6; i++) {
             float l = left + i * (s + gap) + (i >= 3 ? 26 * k : 0);
             r.set(l, cy - s / 2 - 20 * k, l + s, cy + s / 2 - 20 * k);
-            box.setColor(i < lit ? Ui.palette(getContext()).accent : Ui.alpha(Ui.palette(getContext()).ink, 0x59));
+            box.setColor(
+                    i < lit
+                            ? Ui.palette(getContext()).accent
+                            : Ui.alpha(Ui.palette(getContext()).ink, 0x59));
             c.drawRoundRect(r, 12 * k, 12 * k, box);
             if (i < lit) {
                 Paint d = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -279,7 +350,8 @@ final class Hero extends View {
             double a = Math.PI / 2 + i * Math.PI / 5;
             float rr = i % 2 == 0 ? r : r * 0.42f;
             float px = x + (float) (rr * Math.cos(a)), py = y - (float) (rr * Math.sin(a));
-            if (i == 0) p.moveTo(px, py); else p.lineTo(px, py);
+            if (i == 0) p.moveTo(px, py);
+            else p.lineTo(px, py);
         }
         p.close();
         return p;
@@ -291,9 +363,11 @@ final class Hero extends View {
         float s = 96 * k, gap = 26 * k;
         int lit = (int) (t * 4) % 4;
         for (int i = 0; i < 4; i++) {
-            float l = cx - s - gap / 2 + (i % 2) * (s + gap), top = cy - s - gap / 2 + (i / 2) * (s + gap) - 20 * k;
+            float l = cx - s - gap / 2 + (i % 2) * (s + gap),
+                    top = cy - s - gap / 2 + (i / 2) * (s + gap) - 20 * k;
             r.set(l, top, l + s, top + s);
-            p.setColor(i == lit ? Ui.palette(getContext()).accent : Ui.palette(getContext()).raised);
+            p.setColor(
+                    i == lit ? Ui.palette(getContext()).accent : Ui.palette(getContext()).raised);
             c.drawRoundRect(r, 20 * k, 20 * k, p);
         }
     }

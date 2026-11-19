@@ -6,28 +6,23 @@ is not needed for phone prayer times. Minimum Android version: 8 (API 26).
 
 ## First use
 
-A fresh install opens a three-step guide: location/calculation, alert access,
-and personalization with a real preview. Progress survives reopening. **Set up
-later** opens Prayer with a visible **Complete Miqat setup** entry; the guide
-can be resumed without a TV. Completing or revisiting it preserves your settings.
+A fresh install presents one decision at a time: location, prayer alerts,
+notification access, precise-alarm access, theme and background. **Skip** advances
+past an optional step. Back from the first step opens Prayer with a visible
+**Complete Miqat setup** entry. Progress survives reopening; revisiting setup
+preserves saved settings. Phone setup never requires a TV.
 
-1. Tap **Use my location** to request a one-shot foreground fix, then review and
-   confirm it. Approximate Android location is supported. You can choose a city
-   instead; manual latitude/longitude is under **Advanced**. No background location
-   permission or continuous tracking is used.
-2. Select the prayer timezone. **Use phone timezone** follows Android, including
-   changes while travelling; choose an explicit IANA timezone to keep a fixed
-   location. City selection supplies its coordinates, method and Asr school;
-   verify the timezone yourself before confirming the location.
-3. Review calculation method, Asr school, high-latitude rule and adjustments.
-   Confirm the location and selected timezone. Times use the same pinned offline
-   astronomy source and whole-minute flooring as the TV app.
-4. In the guide's alerts step, choose whether to enable prayer alerts. You can
-   also use **Phone settings → Adhan & reminders** later. **Prayer alert
-   permissions** opens Android notification and Alarms & reminders controls.
-   Miqat reports missing access; it does not enable it silently.
-5. Choose a phone theme, background, digits and clock format in personalization.
-   Theme/background sheets show a real prayer-card preview and use Apply/Cancel.
+1. Use **Use my location**, or choose a city, then review/confirm the displayed
+   timezone. Approximate foreground location is supported. No continuous or
+   background location tracking is used. The city supplies its calculation
+   method and Asr school. Manual coordinates and further calculation/timezone
+   adjustments remain under **Phone settings → Location & calculation**.
+2. Choose whether to enable prayer alerts. The next two screens request Android
+   notifications and precise alarms separately; each can be skipped and repaired
+   later in **Prayer alert permissions**. Miqat never grants access silently.
+3. Swipe the theme and portrait background carousels. Select a preview and
+   continue, or skip. Ordinary Appearance settings also offer draft previews
+   with Apply/Cancel. Digits, clock format and interface size remain there.
 
 Alerts default to off. Changing the city, coordinates or timezone requires location
 confirmation again. Review the method and local authority for your location;
@@ -40,7 +35,8 @@ its voice, minute adjustment,
 advance/after reminder and vibration with adhan. Sunrise remains informational.
 Choose **Use default level and duration** or set them independently for that prayer.
 Fresh installs use the dedicated Fajr recording for Fajr; other prayers inherit
-the default voice. Saved voice choices survive updates. The phone has independent
+the default voice. Saved voice choices survive updates, except the retired Al Afasy selection,
+which changes to Al-Malki (regular) or the dedicated Chebae Fajr recording. The phone has independent
 settings; changing them never writes to a TV.
 
 **Alert days** selects weekdays for each prayer. Advance/after reminders follow
@@ -57,8 +53,9 @@ change an upcoming adhan. Select **Custom audio from this phone**, then
 recording can be reused without importing it again. Miqat copies audio-only media into private local storage,
 checks that Android can prepare it, and limits it to 20 MB / 10 minutes. Failed
 imports preserve the previous selection. Original document access is not needed
-after a successful copy. The app still ships only its 14 approved built-in
-recordings; imported files are excluded from backup/transfer and removed by
+after a successful copy. There are 13 selectable approved built-in voices; the
+retired recording is removed from distribution. Imported files
+are excluded from backup/transfer and removed by
 **Reset phone prayer settings**. This reset keeps your paired TVs.
 
 In **Location & calculation**, **Update location when opening Miqat** is opt-in.
@@ -69,8 +66,9 @@ timezone follows Android; an explicitly chosen fixed timezone stays fixed. No
 continuous background tracking or automatic religious travel rulings are applied.
 
 Settings rows show their saved values. Tap a number to edit inline with +/- and
-Done/Cancel; choices open a focused sheet. Prayer / Your TVs / Phone settings stay
-in the root navigation, with Remote and TV settings nested inside a selected TV. Voice previews last up to 12 seconds.
+Done/Cancel; choices open a focused sheet. Prayer / Your TVs / Phone settings use
+a floating main navigation bar. Detail and setup screens use Back and their own
+actions, with Remote and TV settings inside a selected TV. Voice previews last up to 12 seconds.
 Stop is available on the Prayer screen and the playback notification. A scheduled
 adhan continues when the app leaves the foreground; a preview stops. Audio-focus
 loss stops playback and does not automatically restart a missed recording.
@@ -98,13 +96,19 @@ sensor, use the numeric bearing with a separate compass. There is no background
 location or sensor service, and an undefined bearing at the destination is
 reported explicitly. Physical compass accuracy still needs device testing.
 
-**Home-screen widgets** shows a real timetable preview and offers Android's
-pin flow where the launcher supports it. Otherwise use the launcher's Widgets
-menu. The widget follows location, calculation, language, digits, clock and theme;
-Android controls its size and system text scale. It shows today's six times,
-date and last update, rather than promising a continuously fresh countdown.
-Settings/alarm/boot/time changes request updates, with a periodic host refresh
-that may be delayed while idle. Tap the widget to open Prayer.
+**Home-screen widgets** offers next-prayer, daily timetable and compact strip
+layouts with live previews. Each has a launcher entry with a suitable default
+size. Customize each placed widget independently: layout, app/fixed theme,
+solid/transparent background, date and label size. Apply saves only that widget;
+Back cancels. The launcher can reopen configuration. A resized timetable falls
+back to next prayer when short and returns to the chosen layout when enlarged.
+
+The prayer data follows phone location, calculation, language, digits and clock.
+Widget appearance records use the same protected local boundary as phone prayers.
+Use Android's pin flow where supported, or the launcher's Widgets menu. Settings,
+alarm, boot and time changes request updates; the periodic host refresh may be
+late while idle. These are timestamps/timetables, not a continuously fresh
+countdown. Tap a widget to open Prayer.
 
 Quran, adhkar and other broader worship modules are visibly locked Coming soon
 entries; tapping them explains that they are not available in this version.
@@ -112,7 +116,7 @@ entries; tapping them explains that they are not available in this version.
 ## Appearance and TVs
 
 Phone appearance includes real theme/background previews, shared palettes and
-static artwork cropped for portrait, digits, 12/24-hour clock and 80–150% interface size, combined with Android text
+static artwork composed for portrait with its full scene below an extended sky, digits, 12/24-hour clock and 80–150% interface size, combined with Android text
 scaling. The Hijri date uses Android's Umm al-Qura calendar plus the chosen day
 adjustment. This is a display date, independent of prayer astronomy.
 
@@ -123,7 +127,8 @@ to a local APK/IPK. Unsupported Samsung Tizen, Roku and Other TV entries show a
 lock and Coming soon. Already installed Miqat can proceed to ordinary pairing.
 
 Android then opens guarded ADB setup/recovery using your phone theme/language.
-LG requests its Developer Mode connection and explicit SSH identity approval,
+LG asks for the TV address and passphrase on separate guided screens, with
+short contextual instructions and explicit SSH identity approval,
 then downloads the selected public build; a local IPK is selected first in
 Advanced. Downloaded bytes must match size/SHA-256, and downgrades are refused.
 No public release is currently published; the app shows an unavailable state
@@ -149,11 +154,11 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (0.3.0, version code 8) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.0, version code 9) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 
-- On a fresh install, complete or defer/resume the guided setup. Check theme and
+- On a fresh install, complete or skip/resume the guided setup. Check theme and
   background previews before applying them.
 - Open Prayer without a TV; detect/confirm location and timezone, inspect daily/tomorrow
   times, change each prayer and test numeric Done/Cancel plus voice preview/Stop.
@@ -165,8 +170,8 @@ The phone build includes both standalone prayers and TV setup/control.
   another prayer. Preview verifies local playback, not background delivery.
 - Check phone language, portrait/landscape, text size, digits, themes/backgrounds
   and that changes survive reopening. Phone changes must leave TV settings alone.
-- Check Qibla calibration/heading on the physical phone and add/resize a home-screen
-  widget. Quran/adhkar entries should remain locked with Coming soon messages.
+- Check Qibla calibration/heading on the physical phone and add/resize each home-screen
+  widget variant, including independent customization of two instances. Quran/adhkar entries should remain locked with Coming soon messages.
 - Use Your TVs to select a platform, read preparation, choose a release channel
   or Advanced local package, and continue to guarded install/ordinary pairing. Check
   retained TV settings, Remote, settings save/cancel, disconnect/reconnect and

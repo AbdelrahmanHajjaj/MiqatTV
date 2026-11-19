@@ -2,130 +2,98 @@ package tv.miqat.companion;
 
 import android.appwidget.*;
 import android.content.*;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.*;
 
-import org.json.JSONObject;
-
-import java.text.SimpleDateFormat;
 import java.util.*;
 
-/** Offline daily timetable; host refreshes it without another service or exact alarm. */
-public final class PrayerWidget extends AppWidgetProvider {
+/** Offline widget rendering, refreshed by the existing prayer lifecycle and launcher. */
+public class PrayerWidget extends AppWidgetProvider {
+    // Android needs a receiver component per default size in the launcher picker.
+    public static final class Next extends PrayerWidget {}
+
+    public static final class Strip extends PrayerWidget {}
+
+    static ComponentName component(Context context, String layout) {
+        return new ComponentName(
+                context,
+                layout.equals("next")
+                        ? Next.class
+                        : layout.equals("strip") ? Strip.class : PrayerWidget.class);
+    }
+
+    static int[] ids(Context context) {
+        java.util.List<Integer> all = new java.util.ArrayList<>();
+        for (String layout : WidgetOptions.LAYOUTS)
+            for (int id :
+                    AppWidgetManager.getInstance(context)
+                            .getAppWidgetIds(component(context, layout))) all.add(id);
+        int[] ids = new int[all.size()];
+        for (int i = 0; i < ids.length; i++) ids[i] = all.get(i);
+        return ids;
+    }
+
+    static String initialLayout(Context context, int id) {
+        AppWidgetProviderInfo info = AppWidgetManager.getInstance(context).getAppWidgetInfo(id);
+        if (info != null)
+            for (String layout : WidgetOptions.LAYOUTS)
+                if (component(context, layout).equals(info.provider)) return layout;
+        return "day";
+    }
+
+    static final String PINNED = "tv.miqat.companion.WIDGET_PINNED";
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+        if (PINNED.equals(intent.getAction())) {
+            int id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
+            if (owns(context, id)
+                    && WidgetOptions.from(context, intent.getStringExtra("options"))
+                            .save(context, id)) update(context, id);
+        }
+    }
+
+    static boolean owns(Context context, int id) {
+        AppWidgetProviderInfo info = AppWidgetManager.getInstance(context).getAppWidgetInfo(id);
+        if (info != null)
+            for (String layout : WidgetOptions.LAYOUTS)
+                if (component(context, layout).equals(info.provider)) return true;
+        return false;
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
-        if (ids.length > 0) manager.updateAppWidget(ids, views(context));
+        for (int id : ids) update(context, id);
     }
 
     @Override
     public void onAppWidgetOptionsChanged(
             Context context, AppWidgetManager manager, int id, Bundle options) {
-        manager.updateAppWidget(id, views(context));
+        update(context, id);
+    }
+
+    @Override
+    public void onDeleted(Context context, int[] ids) {
+        android.content.SharedPreferences.Editor editor = PhoneStore.preferences(context).edit();
+        for (int id : ids) editor.remove("widget-" + id);
+        editor.apply();
+    }
+
+    static void update(Context context, int id) {
+        Bundle bounds = AppWidgetManager.getInstance(context).getAppWidgetOptions(id);
+        WidgetOptions options = WidgetOptions.read(context, id);
+        int height = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 260);
+        if (height > 0 && height < 200 && options.layout.equals("day")) options.layout = "next";
+        AppWidgetManager.getInstance(context)
+                .updateAppWidget(id, WidgetRenderer.create(context, options, height));
     }
 
     static void updateAll(Context context) {
         try {
-            AppWidgetManager manager = AppWidgetManager.getInstance(context);
-            int[] ids = manager.getAppWidgetIds(new ComponentName(context, PrayerWidget.class));
-            if (ids.length > 0) manager.updateAppWidget(ids, views(context));
+            for (int id : ids(context)) update(context, id);
         } catch (RuntimeException unavailable) {
             android.util.Log.w(
                     "MiqatWidget", "Widget host update failed; the host may retry later");
         }
-    }
-
-    static RemoteViews views(Context context) {
-        RemoteViews view = new RemoteViews(context.getPackageName(), R.layout.prayer_widget);
-        view.setOnClickPendingIntent(R.id.widget_root, PhoneAlarms.open(context));
-        try {
-            PhoneStore settings = PhoneStore.read(context);
-            PhoneData data = PhoneData.get(context);
-            Catalog catalog = new Catalog(context);
-            boolean ar = PhoneAlarms.arabic(context);
-            Locale locale = new Locale(ar ? "ar" : "en");
-            long now = System.currentTimeMillis();
-            JSONObject colors =
-                    catalog.data
-                            .getJSONObject("themes")
-                            .getJSONObject(settings.value("appearance.theme"))
-                            .getJSONObject("colors");
-            int ink = Color.parseColor(colors.getString("plaster-100")),
-                    accent = Color.parseColor(colors.getString("gold-400"));
-            view.setInt(
-                    R.id.widget_root,
-                    "setBackgroundColor",
-                    Color.parseColor(colors.getString("lapis-900")));
-            view.setInt(
-                    R.id.widget_root,
-                    "setLayoutDirection",
-                    ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
-            view.setTextColor(R.id.widget_title, accent);
-            view.setTextColor(R.id.widget_times, ink);
-            view.setTextColor(R.id.widget_updated, ink);
-            String digits = settings.value("display.digits");
-            boolean eastern = digits.equals("eastern") || digits.equals("auto") && ar;
-            SimpleDateFormat date = new SimpleDateFormat("EEE d MMM", locale);
-            date.setTimeZone(settings.zone());
-            view.setTextViewText(
-                    R.id.widget_title,
-                    tv.miqat.core.DisplayText.INSTANCE.digits(
-                            (ar ? "ميقات" : "Miqat") + " · " + date.format(new Date(now)),
-                            eastern));
-            StringBuilder lines = new StringBuilder();
-            PhoneSchedule.Day day = settings.day(now, 0);
-            if (!settings.locationReady) lines.append(data.text("phone_location_needed", ar));
-            else if (day.times == null) lines.append(data.text("phone_unavailable", ar));
-            else {
-                SimpleDateFormat time =
-                        new SimpleDateFormat(
-                                settings.value("display.clock").equals("12") ? "h:mm a" : "HH:mm",
-                                locale);
-                time.setTimeZone(settings.zone());
-                for (int i = 0; i < 6; i++) {
-                    if (i > 0) lines.append('\n');
-                    lines.append(data.prayerName(i, ar))
-                            .append("   ")
-                            .append(time.format(new Date((long) day.times[i])));
-                }
-            }
-            view.setTextViewText(
-                    R.id.widget_times,
-                    tv.miqat.core.DisplayText.INSTANCE.digits(lines.toString(), eastern));
-            SimpleDateFormat updated = new SimpleDateFormat("HH:mm", locale);
-            updated.setTimeZone(settings.zone());
-            view.setTextViewText(
-                    R.id.widget_updated,
-                    tv.miqat.core.DisplayText.INSTANCE.digits(
-                            data.text("widget_updated", ar) + " · " + updated.format(new Date(now)),
-                            eastern));
-        } catch (Exception unavailable) {
-            view.setTextViewText(R.id.widget_title, "Miqat");
-            view.setTextViewText(
-                    R.id.widget_times, PhoneAlarms.text(context, "phone_settings_failed"));
-            view.setTextViewText(R.id.widget_updated, "");
-        }
-        return view;
-    }
-
-    static void guide(MainActivity a) {
-        a.body.addView(a.views.text(a.t("widget_hint"), 15, a.muted));
-        LinearLayout preview = a.views.card(a.body);
-        preview.addView(
-                views(a).apply(a.getApplicationContext(), preview),
-                new LinearLayout.LayoutParams(-1, a.views.dp(300)));
-        preview.setTag("widget.preview");
-        AppWidgetManager manager = AppWidgetManager.getInstance(a);
-        if (manager.isRequestPinAppWidgetSupported())
-            a.views
-                    .button(
-                            a.body,
-                            a.t("widget_add"),
-                            () ->
-                                    manager.requestPinAppWidget(
-                                            new ComponentName(a, PrayerWidget.class), null, null))
-                    .setTag("widget.add");
-        a.body.addView(a.views.text(a.t("widget_manual"), 15, a.muted));
     }
 }

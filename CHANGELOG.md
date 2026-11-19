@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Refine the Android phone review build to 0.4.0 (code 9), with compact settings,
+  floating main navigation, fewer Home rows and responsive prayer columns.
+- Simplify first use to one decision per screen with Skip; add real theme and
+  portrait scene carousels. Explain reduced-motion effects and improve Qibla's
+  Kaaba marker. Preserve sensor/calculation behavior.
+- Add next-prayer, timetable and strip widget entries with independent layout,
+  theme, background, date and text customization, draft Cancel and resize handling.
+- Keep TV setup full screen with one preparation step at a time and separate LG
+  address/passphrase screens. Fit the complete scan artwork; shared installer
+  changes also ship in standalone installer 1.1.4 (code 7).
+- Remove Al Afasy from adhan choices and migrate local saved selections. Read
+  older TVs without rewriting their settings or offering the retired choice.
+
+
 - Complete the Android phone review build 0.3.0 (code 8); shared installer changes
   also ship in standalone installer 1.1.3 (code 6). Physical acceptance remains
   open for the combined owner review.

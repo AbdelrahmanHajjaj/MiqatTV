@@ -21,7 +21,7 @@ final class PhoneOnboarding {
     }
 
     private int step() {
-        return Math.max(0, Math.min(2, PhoneStore.preferences(a).getInt("onboarding-step", 0)));
+        return Math.max(0, Math.min(5, PhoneStore.preferences(a).getInt("onboarding-step", 0)));
     }
 
     void open() {
@@ -43,37 +43,49 @@ final class PhoneOnboarding {
 
     void render() {
         int step = step();
-        a.body.addView(a.views.text(a.t("welcome_hint"), 16, a.muted));
-        a.body.addView(a.views.text(a.phoneUi.digits((step + 1) + " / 3"), 14, a.accent));
-        a.body.addView(
-                a.views.heading(
-                        a.t(
-                                step == 0
-                                        ? "setup_location"
-                                        : step == 1 ? "setup_alerts" : "setup_appearance")));
+        a.body.addView(a.views.text(a.phoneUi.digits((step + 1) + " / 6"), 13, a.accent));
+        String[] titles = {
+            "setup_location",
+            "phone_alerts",
+            "phone_notifications",
+            "phone_exact",
+            "phone_theme",
+            "phone_background"
+        };
+        a.body.addView(a.views.heading(a.t(titles[step])));
         try {
-            if (step == 0) {
-                a.body.addView(a.views.text(a.t("setup_location_hint"), 14, a.muted));
-                a.phoneUi.locationUi.locationEditor();
-                control("prayer.zone");
-                control("prayer.method");
-                control("prayer.asr");
-                a.phoneUi.locationUi.confirmLocation();
-            } else if (step == 1) {
-                a.body.addView(a.views.text(a.t("setup_alert_hint"), 14, a.muted));
-                control("reminders.enabled");
-                control("reminders.voice");
-                a.phoneUi.permissions();
-            } else {
-                a.phoneUi.appearance.preview(a.body, a.phoneUi.settings);
-                control("appearance.theme");
-                control("appearance.background");
-                control("display.digits");
-                control("display.clock");
+            switch (step) {
+                case 0:
+                    a.body.addView(a.views.text(a.t("setup_location_short"), 14, a.muted));
+                    a.phoneUi.locationUi.locationEditor();
+                    a.phoneUi.locationUi.confirmLocation();
+                    break;
+                case 1:
+                    a.body.addView(a.views.text(a.t("setup_alert_short"), 14, a.muted));
+                    control("reminders.enabled");
+                    break;
+                case 2:
+                    a.body.addView(a.views.text(a.t("setup_notification_short"), 14, a.muted));
+                    a.views
+                            .button(
+                                    a.body,
+                                    a.t("phone_notifications"),
+                                    a.phoneUi::requestNotifications)
+                            .setTag("onboarding.permission.notifications");
+                    break;
+                case 3:
+                    a.body.addView(a.views.text(a.t("setup_exact_short"), 14, a.muted));
+                    a.views
+                            .button(a.body, a.t("phone_exact"), a.phoneUi::requestExact)
+                            .setTag("onboarding.permission.exact");
+                    break;
+                default:
+                    a.phoneUi.appearance.carousel(
+                            a.body, step == 4 ? "appearance.theme" : "appearance.background", true);
+                    break;
             }
         } catch (Exception invalid) {
             a.body.addView(a.views.text(a.t("phone_settings_failed"), 16, a.ink));
-            return;
         }
     }
 
@@ -81,16 +93,22 @@ final class PhoneOnboarding {
         int step = step();
         LinearLayout actions = a.views.horizontal(shell);
         actions.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(12));
-        android.widget.Button later =
-                a.views.button(actions, a.t("setup_later"), () -> finish(false));
-        a.views.flex(later);
-        later.setTag("onboarding.later");
+        android.widget.Button skip =
+                a.views.button(
+                        actions,
+                        a.t("setup_skip"),
+                        () -> {
+                            if (step == 5) finish(true);
+                            else advance(step + 1);
+                        });
+        a.views.flex(skip);
+        skip.setTag("onboarding.skip");
         android.widget.Button next =
                 a.views.button(
                         actions,
-                        a.t(step == 2 ? "setup_finish" : "setup_next"),
+                        a.t(step == 5 ? "setup_finish" : "setup_next"),
                         () -> {
-                            if (step == 2) finish(true);
+                            if (step == 5) finish(true);
                             else advance(step + 1);
                         });
         a.views.flex(next);

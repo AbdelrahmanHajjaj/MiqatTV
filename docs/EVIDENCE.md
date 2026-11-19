@@ -1,5 +1,53 @@
 # Validation evidence
 
+## Phone feedback pass 4 — 19 November 2026
+
+Review APK: **0.4.0/code 9**, `state/builds/companion/Miqat-latest.apk`,
+32,358,043 bytes. SHA-256:
+`3634E3D31B4086030393ACC0EDE8300B4573B44713B5282AF22F7D9E41045210`.
+The review signing certificate matches the prior APK; an update needs no uninstall.
+Standalone installer source/build is 1.1.4/code 7. Existing LG review IPK remains
+0.2.28; no physical install or release publication was performed.
+
+Phone/installer assemble and lint pass. Fresh packaging removes the retired
+recording completely: exactly **25 approved recordings** match their canonical
+bytes and all **25 notices** match source. Phone DEX/resources/manifest match
+the fully tested 0.4.0 UI build before media removal; only packaging/media changed.
+Clean Android TV size/lint/test APK, LG build/service/native TLS matrix and the
+preview build pass. Portable JVM/JS/Java/legacy ES5, canonical metadata checks,
+preview tokens/data/tests and 47 repository regressions pass. The LG browser
+matrix passes English/Arabic at every supported size; its voice count follows
+the canonical list and explicitly rejects a selectable Al Afasy entry.
+
+Owned muted Android emulator evidence, separate from hardware acceptance:
+
+- Bilingual first-use resume/Skip, focused notification/precise-alarm steps,
+  real portrait/carousel previews, draft Cancel and independent phone settings.
+- Native AppWidgetService binds all launcher variants. Two configured instances
+  preserve independent settings; Cancel, resize fallback/restoration, strip and
+  missing-location updates pass. Final clean-package journey also passes.
+- Native TV source/guarded Android handoff, LG one-field address/passphrase pages,
+  locked unsupported platforms, selected channel and the complete scan drawing.
+- Actual local TLS/credential recovery and no-replay suite: older retired-voice
+  metadata preserves its real baseline without a write, unknown choices remain
+  rejected, and the native selector hides the retired option.
+- 80–150% app text in both languages, combined with Android font 1.3, passes in
+  asserted portrait and actual 2400×1080 landscape. Native rows/buttons remain
+  reachable. Accepted captures are identified by PNG dimensions, not folder name.
+- Actual AlarmManager/foreground output, private 30-second cutoff, audition,
+  Stop/focus loss, denied access, duplicate/early/expired events and cleanup pass.
+  Global phone volume remains untouched. Migration/import checks preserve valid
+  private audio and unrelated settings on malformed/interrupted/oversized input.
+
+Private commands/logs/captures use the `state/pass4-*` prefix. The final branch
+head must pass Validate, Companion and Apple-core CI before handoff; exact run
+receipts and head are kept in [draft PR #9](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/9).
+Apple verifies portable libraries, not an iOS app. Physical phone/OEM delivery,
+compass calibration and TV picture/sound/remote/power remain owner acceptance.
+Published public release assets are still unavailable; draft release assets are
+not a public installer source. Existing TV volume audit finding remains deferred.
+Requirements and audit boundaries: PHONE-PASS4.md and PHONE-AUDIT.md.
+
 ## Phone feedback pass 2 delivery — 19 November 2026
 
 Phone 0.2.1/code 7 and installer 1.1.2/code 5 assemble/lint pass. Portable quiet

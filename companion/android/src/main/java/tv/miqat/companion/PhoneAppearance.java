@@ -84,13 +84,105 @@ final class PhoneAppearance {
             }
     }
 
+    void carousel(LinearLayout parent, String id, boolean guided) throws Exception {
+        TextView heading =
+                a.views.text(a.t(a.phoneUi.data.controls.get(id).getString("label")), 14, a.muted);
+        heading.setTag("phone." + id + ".edit");
+        heading.setMinHeight(a.views.dp(48));
+        heading.setGravity(Gravity.CENTER_VERTICAL);
+        heading.setFocusable(true);
+        if (!guided) parent.addView(heading);
+        java.util.List<String> options = a.phoneUi.data.options(a.phoneUi.data.controls.get(id));
+        HorizontalScrollView scroll = new HorizontalScrollView(a);
+        scroll.setHorizontalScrollBarEnabled(false);
+        scroll.setTag("phone." + id);
+        heading.setOnClickListener(v -> {
+            try {
+                choose(id, options);
+            } catch (Exception invalid) {
+                a.notice("invalid");
+            }
+        });
+        LinearLayout track = new LinearLayout(a);
+        track.setPadding(a.views.dp(2), a.views.dp(4), a.views.dp(2), a.views.dp(8));
+        scroll.addView(track);
+        parent.addView(scroll, new LinearLayout.LayoutParams(-1, -2));
+        int selected = options.indexOf(a.phoneUi.settings.value(id));
+        long now = System.currentTimeMillis();
+        tv.miqat.core.PrayerSelection next =
+                tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(
+                        a.phoneUi.settings.day(now, 0).times,
+                        a.phoneUi.settings.day(now, 1).times,
+                        now);
+        for (String option : options) {
+            PhoneStore candidate =
+                    a.phoneUi.settings.changed(java.util.Collections.singletonMap(id, option));
+            LinearLayout tile = a.views.column();
+            LinearLayout.LayoutParams size =
+                    new LinearLayout.LayoutParams(a.views.dp(guided ? 150 : 104), -2);
+            size.setMarginEnd(a.views.dp(10));
+            track.addView(tile, size);
+            LinearLayout art = hero(tile, candidate);
+            if (option.equals(a.phoneUi.settings.value(id))) art.setTag("phone.appearance.preview");
+            art.setPadding(a.views.dp(10), a.views.dp(12), a.views.dp(10), a.views.dp(12));
+            art.setMinimumHeight(a.views.dp(guided ? 240 : 140));
+            JSONObject colors =
+                    a.catalog
+                            .data
+                            .getJSONObject("themes")
+                            .getJSONObject(candidate.value("appearance.theme"))
+                            .getJSONObject("colors");
+            int ink = Color.parseColor(colors.getString("plaster-100")),
+                    accent = Color.parseColor(colors.getString("gold-400"));
+            art.addView(a.views.text(a.t("phone_next"), 11, ink));
+            if (next != null) {
+                art.addView(a.views.text(a.phoneUi.data.prayerName(next.getNext(), a.ar), 12, ink));
+                art.addView(
+                        a.views.text(a.phoneUi.time(next.getNextTime()), guided ? 20 : 14, accent));
+            }
+            TextView name = a.views.text(a.phoneUi.value(id, option), 12, a.ink);
+            name.setMaxLines(2);
+            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            tile.addView(name);
+            tile.setTag("phone." + id + ".option." + option);
+            tile.setContentDescription(name.getText());
+            tile.setFocusable(true);
+            tile.setSelected(option.equals(a.phoneUi.settings.value(id)));
+            tile.setAlpha(tile.isSelected() ? 1f : .7f);
+            if (tile.isSelected()) {
+                GradientDrawable border = a.views.background(Color.TRANSPARENT, 24);
+                border.setStroke(a.views.dp(2), a.accent);
+                tile.setForeground(border);
+            }
+            tile.setOnClickListener(v -> {
+                if (guided) a.phoneUi.save(id, option);
+                else
+                    try {
+                        choose(id, options, option);
+                    } catch (Exception invalid) {
+                        a.notice("invalid");
+                    }
+            });
+        }
+        scroll.post(() -> {
+            int limit = Math.max(0, track.getWidth() - scroll.getWidth());
+            int offset = Math.max(0, selected) * a.views.dp(guided ? 160 : 114);
+            scroll.scrollTo(Math.max(0, Math.min(limit, a.ar ? limit - offset : offset)), 0);
+        });
+    }
+
     void choose(String id, java.util.List<String> options) throws Exception {
+        choose(id, options, a.phoneUi.settings.value(id));
+    }
+
+    private void choose(String id, java.util.List<String> options, String initial)
+            throws Exception {
         LinearLayout layout = a.views.column();
         layout.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(8));
         layout.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         LinearLayout sample = a.views.column();
         layout.addView(sample);
-        String[] selected = {a.phoneUi.settings.value(id)};
+        String[] selected = {initial};
         Runnable refresh =
                 () -> {
                     try {
@@ -104,36 +196,41 @@ final class PhoneAppearance {
                     }
                 };
         refresh.run();
-        String[] labels = new String[options.size()];
-        for (int i = 0; i < labels.length; i++) labels[i] = a.phoneUi.value(id, options.get(i));
-        ListView choices = new ListView(a);
-        choices.setTag("phone.appearance.choices");
-        choices.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        ArrayAdapter<String> adapter = a.views.choices(java.util.Arrays.asList(labels));
-        choices.setAdapter(adapter);
-        choices.setItemChecked(options.indexOf(selected[0]), true);
-        choices.setSelection(options.indexOf(selected[0]));
-        layout.addView(
-                choices,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        Math.min(
-                                a.views.dp(240),
-                                a.getResources().getDisplayMetrics().heightPixels / 3)));
-        ScrollView scroller = new ScrollView(a);
-        scroller.addView(layout);
+        HorizontalScrollView scroller = new HorizontalScrollView(a);
+        scroller.setHorizontalScrollBarEnabled(false);
+        scroller.setTag("phone.appearance.choices");
+        LinearLayout choices = new LinearLayout(a);
+        scroller.addView(choices);
+        for (String option : options) {
+            Button choice =
+                    a.views.button(
+                            choices,
+                            a.phoneUi.value(id, option),
+                            () -> {
+                                selected[0] = option;
+                                refresh.run();
+                                for (int i = 0; i < choices.getChildCount(); i++) {
+                                    View item = choices.getChildAt(i);
+                                    item.setSelected(item.getTag().equals(option));
+                                    item.setAlpha(item.isSelected() ? 1f : .55f);
+                                }
+                            });
+            choice.setTag(option);
+            choice.setSelected(option.equals(initial));
+            choice.setAlpha(choice.isSelected() ? 1f : .55f);
+            choice.setLayoutParams(new LinearLayout.LayoutParams(a.views.dp(150), -2));
+        }
+        layout.addView(scroller);
+        ScrollView overflow = new ScrollView(a);
+        overflow.addView(layout);
         AlertDialog dialog =
                 a.views
                         .dialog()
                         .setTitle(a.t(a.phoneUi.data.controls.get(id).getString("label")))
-                        .setView(scroller)
+                        .setView(overflow)
                         .setNegativeButton(a.t("cancel"), null)
                         .setPositiveButton(a.t("apply"), (d, w) -> a.phoneUi.save(id, selected[0]))
                         .create();
-        choices.setOnItemClickListener((parent, view, position, item) -> {
-            selected[0] = options.get(position);
-            refresh.run();
-        });
         a.phoneUi.showEditor(dialog);
         dialog.getWindow().setGravity(Gravity.BOTTOM);
         dialog.getWindow().setLayout(-1, -2);
@@ -153,6 +250,15 @@ final class PhoneAppearance {
         public void draw(Canvas canvas) {
             Rect bounds = getBounds();
             if (bounds.isEmpty()) return;
+            if (bounds.height() > bounds.width()) {
+                int sky = bitmap.getPixel(bitmap.getWidth() / 2, 0);
+                canvas.drawColor(sky);
+                float height = bounds.width() * (float) bitmap.getHeight() / bitmap.getWidth();
+                RectF destination =
+                        new RectF(bounds.left, bounds.bottom - height, bounds.right, bounds.bottom);
+                canvas.drawBitmap(bitmap, null, destination, paint);
+                return;
+            }
             float scale =
                     Math.max(
                             (float) bounds.width() / bitmap.getWidth(),

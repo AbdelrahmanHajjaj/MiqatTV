@@ -1,5 +1,11 @@
 # Local audio audit
 
+Current distribution removes Al Afasy at the owner's request on 19 November 2026.
+The review below preserves the original collection's provenance; it does not
+mean every reviewed recording remains distributed. Current shipped bytes are in
+shared/media/SHA256SUMS.
+
+
 Reviewed 13 November 2026: all 14 catalog adhan recordings and all 12 spoken
 announcements. Audio, transcripts, originals and build outputs remain ignored.
 This is recording maintenance, separate from the completed architecture work.

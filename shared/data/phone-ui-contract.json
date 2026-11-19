@@ -10,7 +10,7 @@
     {"id":"prayer.sunrise-offset","section":"calculation","kind":"number","label":"phone_sunrise_offset","minimum":-30,"maximum":30,"step":1,"default":"0"},
     {"id":"prayer.hijri-offset","section":"calculation","kind":"number","label":"phone_hijri_offset","minimum":-2,"maximum":2,"step":1,"default":"0"},
     {"id":"reminders.enabled","section":"audio","kind":"toggle","label":"phone_alerts","default":"false"},
-    {"id":"reminders.voice","section":"audio","kind":"choice","label":"phone_voice","choices":"voices","default":"alafasy"},
+    {"id":"reminders.voice","section":"audio","kind":"choice","label":"phone_voice","choices":"voices","default":"almalki"},
     {"id":"reminders.volume","section":"audio","kind":"number","label":"phone_volume","minimum":0,"maximum":100,"step":5,"default":"70"},
     {"id":"reminders.duration","section":"audio","kind":"number","label":"phone_duration","minimum":0,"maximum":600,"step":30,"default":"0"},
     {"id":"display.digits","section":"appearance","kind":"choice","label":"phone_digits","choices":["auto","western","eastern"],"default":"auto"},

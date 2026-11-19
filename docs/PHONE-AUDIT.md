@@ -146,3 +146,29 @@ No dependency/security scan or physical acceptance is claimed. High-risk existin
 checks plus affected consumer builds establish regression evidence for this pass;
 they do not erase those limits. Remaining rendered layout and final consumer/CI
 results belong in EVIDENCE.md; raw logs/captures stay under ignored state/.
+
+## Pass-4 change review
+
+Owner scope is PHONE-PASS4.md. The pass keeps Java Views and the existing
+transport/media/storage owners. Compact controls and toggle tint reuse
+CompanionViews; native widget configuration uses WidgetUi, WidgetOptions, WidgetRenderer and
+one PrayerWidget implementation with the receiver components Android requires
+for differently sized launcher entries. No new dependency or idle service.
+Widget options share the phone's device-protected, backup-excluded store; TV
+credentials stay separate. Configuration validates widget ownership, supports
+Cancel, and only persists per-instance presentation after Apply/pin confirmation.
+
+Retiring a canonical voice would reject an older TV's still-valid metadata.
+LanTv therefore accepts that one retired value only for the two known voice
+controls, retaining the true baseline for explicit edits and rejecting unknown
+choices. Catalog/Choices hide it in selectors. Connecting never changes the TV.
+Phone/new-TV storage migrates the retired choice at its own boundary. The
+retired clip is removed from distribution; the remaining approved recordings
+retain their exact checksums. No new audio is distributed.
+
+Rendering remains in shells. Prayer/Qibla/quiet-hour calculations are unchanged.
+The portrait artwork composition preserves the source scene without new raster
+assets. No semantic tests were removed: fixtures follow the new visible steps;
+real widget host/resize and retired-TV metadata regressions cover new boundaries.
+Raw red/green logs and captures remain ignored under state/. Final results are
+recorded in EVIDENCE.md after the final review build passes.

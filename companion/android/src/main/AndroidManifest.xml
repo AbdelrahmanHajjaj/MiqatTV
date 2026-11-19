@@ -25,6 +25,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
         </activity>
         <activity android:name=".ScanActivity" android:exported="false" />
         <activity android:name=".SetupActivity" android:exported="false"
@@ -43,6 +44,14 @@
         </receiver>
         <service android:name=".PhonePlayback" android:exported="false" android:directBootAware="true"
             android:foregroundServiceType="mediaPlayback" />
+        <receiver android:name=".PrayerWidget$Next" android:exported="false" android:label="@string/widget_next_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_next_info" />
+        </receiver>
+        <receiver android:name=".PrayerWidget$Strip" android:exported="false" android:label="@string/widget_strip_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_strip_info" />
+        </receiver>
         <receiver android:name=".PrayerWidget" android:exported="false" android:label="@string/app_name">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/prayer_widget_info" />

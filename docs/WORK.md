@@ -2,21 +2,21 @@
 
 Updated: 2026-11-19.
 
-Owner tested 0.3.0 and requested the 12-item phone UX feedback pass in
-[PHONE-PASS4.md](PHONE-PASS4.md). That is the approved current scope on
-feature/companion-installation / draft PR #9. Preserve the inherited engineering
-requirements in PHONE-PASS3.md and AGENTS.md.
+The twelve-item owner feedback pass is implemented on
+feature/companion-installation / draft PR #9. Requirements and engineering
+constraints are in PHONE-PASS4.md, PHONE-PASS3.md and AGENTS.md. Phone review
+version is **0.4.0/code 9**; standalone installer source/build is 1.1.4/code 7.
+The exported APK is primary checkout state/builds/companion/Miqat-latest.apk.
+Exact hash, local verification and limits are in EVIDENCE.md.
 
-Implementation is in progress. Most affected checks pass, including bilingual
-native journeys, actual widget configuration/resize and the portrait large-text
-matrix. Next: validate widget launcher variants, wide large-text/native renders,
-then final audit/lint/version/CI and one combined APK. Exact progress is in
-PHONE-WORK.md; private logs/captures stay under ignored state/.
+Delivery gate: review/commit/push the validated implementation and require all
+final-head Validate, Companion and Apple-core CI checks to pass. PR #9 owns the
+exact head/run receipts. Finish final capture/owned-emulator cleanup, then hand
+over one combined APK and await the owner's feedback. PHONE-WORK.md owns resume
+status; private logs/receipts stay under ignored state/.
 
-Pass 3 final head f04c1c9 passed Validate, Companion and Apple-core CI. Previous
-review export remains 0.3.0/code 8 until replaced by a validated pass-4 artifact.
-LG IPK stays 0.2.28. No physical acceptance is inferred from emulator evidence.
-
-Keep PR #9 draft for owner feedback. No merge, release publication or physical
-operation. Public releases remain empty; actual public binary transfer awaits
-publication. Do not start unrelated iOS/worship/TV-runtime work after handoff.
+Keep PR draft. No merge, public release or physical operation in this pass.
+Existing LG review IPK stays 0.2.28. Public installation needs published assets;
+draft releases are not public downloads. Hardware/OEM/compass/TV acceptance and
+the recorded next-TV volume correction remain separate. Do not start unrelated
+TV/iOS/worship work or add scaffolding after handoff.

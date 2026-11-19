@@ -11,7 +11,7 @@ final class TvSetup {
     private final MainActivity a;
     private String platform = "";
     String channel = "latest";
-    private int step;
+    private int step, preparation;
     private boolean local;
 
     TvSetup(MainActivity activity) {
@@ -23,6 +23,7 @@ final class TvSetup {
         channel = state.getString("setup-channel", "latest");
         step = state.getInt("setup-step");
         local = state.getBoolean("setup-local");
+        preparation = Math.max(0, state.getInt("setup-preparation", 0));
     }
 
     void save(Bundle state) {
@@ -30,10 +31,12 @@ final class TvSetup {
         state.putString("setup-channel", channel);
         state.putInt("setup-step", step);
         state.putBoolean("setup-local", local);
+        state.putInt("setup-preparation", preparation);
     }
 
     void open() {
         step = 0;
+        preparation = 0;
         platform = "";
         channel = "latest";
         local = false;
@@ -42,7 +45,10 @@ final class TvSetup {
 
     void back() {
         if (step == 0) a.navigate("tvs");
-        else {
+        else if (step == 1 && preparation > 0) {
+            preparation--;
+            a.render();
+        } else {
             step--;
             a.render();
         }
@@ -53,14 +59,7 @@ final class TvSetup {
     }
 
     void render() {
-        a.body.addView(
-                a.views.text(
-                        a.t(
-                                step == 0
-                                        ? "tv_platform_hint"
-                                        : step == 1 ? "tv_guide" : "tv_channel_help"),
-                        15,
-                        a.muted));
+        if (step == 0) a.body.addView(a.views.text(a.t("tv_platform_hint"), 14, a.muted));
         if (step == 0) {
             platforms();
             return;
@@ -98,6 +97,7 @@ final class TvSetup {
                                     return;
                                 }
                                 platform = id;
+                                preparation = 0;
                                 step = 1;
                                 a.render();
                             });
@@ -107,27 +107,55 @@ final class TvSetup {
         }
     }
 
+    private String[] instructions() {
+        return a.t(platform.equals("android") ? "tv_android_steps" : "tv_lg_steps").split("\n");
+    }
+
     private void guide() {
-        LinearLayout guide = a.views.card(a.body);
-        guide.addView(a.views.heading(a.t("tv_guide")));
-        String instructions = a.t(platform.equals("android") ? "tv_android_steps" : "tv_lg_steps");
-        for (String instruction : instructions.split("\n")) {
-            if (instruction.isEmpty()) continue;
-            TextView step = a.views.text(instruction, 15, a.ink);
-            step.setPadding(0, a.views.dp(8), 0, a.views.dp(8));
-            guide.addView(step);
-        }
-        if (platform.equals("lg")) guide.addView(a.views.text(a.t("lg_expiry"), 13, a.muted));
-        a.views
-                .button(
-                        a.body,
-                        a.t("tv_ready"),
-                        () -> {
-                            step = 2;
-                            a.render();
-                        })
-                .setTag("setup.ready");
+        String[] instructions = instructions();
+        preparation = Math.min(preparation, instructions.length - 1);
+        a.body.addView(a.views.text((preparation + 1) + " / " + instructions.length, 13, a.accent));
+        a.body.addView(
+                a.views.text(
+                        instructions[preparation].replaceFirst("^[0-9٠-٩]+[.、]?\\s*", ""),
+                        20,
+                        a.ink));
+        if (platform.equals("lg") && preparation == 2)
+            a.views.button(
+                    a.body, a.t("phone_advanced"), () -> a.info(a.t("tv_guide"), a.t("lg_expiry")));
         a.views.button(a.body, a.t("tv_already"), () -> a.navigate("pair")).setTag("setup.pair");
+    }
+
+    void footer(LinearLayout shell) {
+        if (step == 0) return;
+        LinearLayout actions = a.views.horizontal(shell);
+        actions.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(12));
+        if (step == 1) {
+            Button skip =
+                    a.views.button(
+                            actions,
+                            a.t("setup_skip"),
+                            () -> {
+                                step = 2;
+                                a.render();
+                            });
+            a.views.flex(skip);
+            skip.setTag("setup.skip");
+            Button next =
+                    a.views.button(
+                            actions,
+                            a.t("setup_next"),
+                            () -> {
+                                if (++preparation >= instructions().length) step = 2;
+                                a.render();
+                            });
+            a.views.flex(next);
+            next.setTag("setup.ready");
+        } else if (!local) {
+            Button next = a.views.button(actions, a.t("tv_continue"), this::proceed);
+            a.views.flex(next);
+            next.setTag("setup.continue");
+        }
     }
 
     private void source() {
@@ -176,7 +204,6 @@ final class TvSetup {
                 choice.setBackground(a.views.background(a.accent, 24));
             }
         }
-        a.views.button(a.body, a.t("tv_continue"), this::proceed).setTag("setup.continue");
     }
 
     private void proceed() {

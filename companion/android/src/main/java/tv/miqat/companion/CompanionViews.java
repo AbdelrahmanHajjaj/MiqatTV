@@ -146,6 +146,32 @@ final class CompanionViews {
         return b;
     }
 
+    Switch toggle(
+            LinearLayout parent,
+            String label,
+            boolean checked,
+            java.util.function.Consumer<Boolean> changed) {
+        Switch toggle = new Switch(a);
+        toggle.setText(label);
+        toggle.setTextColor(a.ink);
+        toggle.setTextSize(15);
+        toggle.setTypeface(a.regular);
+        toggle.setMinHeight(dp(48));
+        toggle.setChecked(checked);
+        int[][] states = {new int[] {android.R.attr.state_checked}, new int[] {}};
+        toggle.setThumbTintList(new ColorStateList(states, new int[] {a.accent, a.muted}));
+        toggle.setTrackTintList(
+                new ColorStateList(
+                        states,
+                        new int[] {
+                            (a.accent & 0xffffff) | 0x66000000, (a.muted & 0xffffff) | 0x44000000
+                        }));
+        toggle.setContentDescription(label);
+        parent.addView(toggle, new LinearLayout.LayoutParams(-1, -2));
+        toggle.setOnCheckedChangeListener((button, value) -> changed.accept(value));
+        return toggle;
+    }
+
     void leadingIcon(Button button, String name) {
         android.graphics.drawable.Drawable icon = Icons.get(a, name, a.accent);
         button.setCompoundDrawablesRelative(icon, null, null, null);
@@ -220,15 +246,15 @@ final class CompanionViews {
     LinearLayout navigationRow(
             LinearLayout parent, String icon, String title, String subtitle, Runnable action) {
         LinearLayout row = horizontal(parent);
-        row.setMinimumHeight(dp(72));
-        row.setPadding(dp(18), dp(10), dp(18), dp(10));
+        row.setMinimumHeight(dp(56));
+        row.setPadding(dp(12), dp(5), dp(12), dp(5));
         row.setBackground(
                 new RippleDrawable(
                         ColorStateList.valueOf((a.accent & 0x00ffffff) | 0x22000000),
                         background(a.surface, 20),
                         null));
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) row.getLayoutParams();
-        lp.bottomMargin = dp(8);
+        lp.bottomMargin = dp(4);
         ImageView glyph = new ImageView(a);
         glyph.setImageDrawable(Icons.get(a, icon, a.accent));
         glyph.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
