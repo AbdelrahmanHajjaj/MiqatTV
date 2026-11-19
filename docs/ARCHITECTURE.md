@@ -9,21 +9,29 @@ flowchart TD
   Core[shared/core: JVM and ES5 rules] --> Android[Android TV: Java Views]
   Core --> LG[LG webOS: ES5 UI and service]
   Core --> Preview[Browser preview]
+  Core --> Phone[Android phone: Java Views]
+  PhoneCore[companion/core: settings and phone event rules] --> Phone
+  Installer[installer/runtime: guarded Android TV setup] --> Phone
+  Installer --> Standalone[Standalone installer host]
   Sources[shared/data and shared/design] --> Generators[Validation and generation]
   Generators --> Core
   Generators --> Android
   Sources --> LG
   Sources --> Preview
+  Sources --> Phone
 ```
 
 | Project | Responsibility |
 | --- | --- |
-| shared/core | Prayer minute flooring/selection/offsets, reminder/comparison rules, UI controls and numeric editing, semantic Home/All apps navigation, size policy. |
+| shared/core | Prayer selection/offsets, reminders/comparison, location/quiet/Qibla/digits, UI/input and size rules. |
 | shared/data | Catalog IDs, bilingual strings, calculation methods, cities, stations, voices and religious text. |
 | shared/design | Tokens, themes, mihrab geometry, SVG patterns, icons, artwork, fonts and notices. |
 | platforms/android-tv | Java Views, Adhan Java/ICU adapters, preferences, Home, accessibility/remote keys, scheduling and media. |
 | platforms/webos | ES5 UI, Adhan JS/calendar adapters, preferences, HDMI/audio and Activity Manager service. |
 | site | Browser demonstration and design-resource generators; simulated device integration. |
+| companion/core | Portable settings drafts/session contracts and phone event planning. |
+| companion/android | Independent prayer UI, alerts/media, location/sensors/widgets, and TV setup/control. |
+| companion/android-shared | Native Android LAN trust/transport and QR helpers. |
 | installer | Shared Android ADB setup/recovery library and standalone installer host. |
 
 Core accepts explicit inputs and returns decisions. It has no platform, network,

@@ -178,7 +178,7 @@ reference recordings are not permission to redistribute Athar content.
    responsibilities and tests. Fix concrete duplication/dead code/mixed jobs;
    share deterministic policy without speculative frameworks or weakening checks.
    Record findings, fixes and genuinely uninspected areas.
-5. [ ] Build/lint, focused native journey/failure checks and affected consumers,
+5. [x] Build/lint, focused native journey/failure checks and affected consumers,
    screenshots inspected, accurate docs/PR, final CI and single combined export.
 
 Owner clarified scope: include Qibla and home-screen widgets now. Quran, adhkar
@@ -299,18 +299,32 @@ SHA256 3548858DCCAEF3472324FCD2A3F8E9F2F54584BCFEE19B85D5E049C773763D97,
 All 26 approved recordings and 25 source notices match packaged bytes. GitHub
 published-release list rechecked empty; no publication was attempted.
 
-Next: commit/push this reviewed candidate, keep PR #9 draft, and wait for its
-Validate/Companion/Apple-core checks. Investigate failures without weakening
-assertions. After source CI passes, record final acceptance/links and candidate
-screenshots in the delivery docs/PR; require the documentation head's checks too.
-Verify the final export/hash, stop only the owned emulator after ownership checks,
-and hand over one combined APK with concise screenshots/evidence. Then wait for
-owner feedback. No further features, merge, release or physical deployment.
+Implementation commit `4c8e38d` is pushed and all source-head checks passed:
+Validate [44473850009](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44473850009),
+Companion [44473849927](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44473849927),
+Apple core [44473849807](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44473849807).
+The final documentation head's checks remain the last handoff gate on draft PR #9.
+No further product/code work is pending in this pass; physical/OEM acceptance and
+actual public binary transfer are explicit owner/publication limits, not claimed
+passes. PR title/body now describe the complete final scope and acceptance limits.
 
-Owned read-only muted emulator PID 21468, AVD Medium_Phone_API_37.0, console 5564,
-ADB server 5037. Ownership receipt: ignored state/pass3-emulator-session.json;
-verify PID/start time/command before stopping. Guest changed to portrait
-1080x2400/density420, auto-rotation off. Do not adopt an unrelated session.
+Candidate screenshots are in primary state/builds/companion/screenshots/:
+0.3.0-en-phone-themed.png, 0.3.0-ar-voice.png,
+0.3.0-ar-journey-platforms.png, 0.3.0-ar-journey-personalization.png and
+0.3.0-ar-journey-qibla.png. These are owned Android-emulator renders, not LG TV
+captures. The clean voice screenshot was captured through the actual native UI;
+an earlier fixture screenshot with a transient toast is not a handoff image.
+
+The owned emulator's process, command, AVD/port and creation instant were checked
+against ignored state/pass3-emulator-session.json. It was stopped successfully;
+state/delivery-emulator-stop.json records verification and exit. A first timestamp
+comparison double-parsed PowerShell's auto-converted JSON date; no process was
+stopped until the raw UTC receipt matched. No physical TV was operated.
+
+Next: require final documentation-head CI, verify the unchanged export/hash,
+then hand over one combined APK with screenshots/evidence. After handoff, wait
+for the owner's full feedback. Do not add another feature, automatically fix a
+future TV finding, publish, merge, deploy, or continue implementation after handoff.
 
 ## Current resume point (pass 2 history)
 

@@ -2,36 +2,26 @@
 
 Updated: 2026-11-19.
 
-## Approved scope and next action
+Pass 3 implementation and local acceptance are complete on
+`feature/companion-installation`, based on the companion merge `3c5b38e`.
+The combined Android phone review build is **0.3.0 / code 8**, exported to the
+primary checkout's `state/builds/companion/Miqat-latest.apk`. Standalone installer
+source/build is 1.1.3 / code 6. Existing LG review IPK stays 0.2.28.
 
-The companion branch was normally merged in PR #8, main `3c5b38e`. Continue in
-the isolated `feature/companion-installation` worktree, based on that merge.
-Keep the completed companion polish out of this new work's scope.
+Validate, Companion and Apple-core CI passed on implementation commit `4c8e38d`.
+The final documentation head must also pass the checks on
+[draft PR #9](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/9) before handoff.
+Exact artifact/hash, evidence types and run links are in [EVIDENCE.md](EVIDENCE.md).
+Requirements and engineering guardrails remain in [PHONE-PASS3.md](PHONE-PASS3.md);
+progress and stopping rules are in [PHONE-WORK.md](PHONE-WORK.md). The repository
+boundary/test audit and retained findings are in [PHONE-AUDIT.md](PHONE-AUDIT.md).
 
-Owner approved completing the installation phase and fully standalone Android
-prayer app sequentially, without stopping for intermediate physical-device
-feedback. Deliver one combined build for the owner's complete review. The durable
-scope, decisions, ordered checklist and resume point are in [PHONE-WORK.md](PHONE-WORK.md).
-
-The owner skim-tested 0.2.0 and approved a second pass: substantial phone UX
-polish, foreground location detection, automatic public TV package downloads
-(local files in Advanced), and all three adhan customization groups: per-prayer
-sound controls, custom audio, and weekday/quiet-hour/travel behavior.
-
-Proceed sequentially using [PHONE-WORK.md](PHONE-WORK.md)'s active pass-3 checklist
-and the binding requirements in [PHONE-PASS3.md](PHONE-PASS3.md).
-Pass 2 and its CI passed, but the owner rejected the overall experience as
-incomplete. Continue pass 3 in PHONE-WORK.md: guided first use, unified TV
-platform/preparation/release/setup journey, real phone appearance previews and
-an evidence-led maintainability/test audit. Deliver a combined review build only
-after verifying the complete journeys. Keep PR #9 draft for human acceptance.
-The public repository has only a draft prerelease, so no anonymous published
-release is available yet; implement the download flow and honest unavailable
-state without publishing or embedding credentials. Keep physical acceptance and
-public release publication separate. Retain native TV stacks and independent
-phone/TV settings. Qibla and home-screen widgets are explicitly included in pass 3; Quran, adhkar
-and other broader modules remain locked Coming soon placeholders.
-
-Use gh and the PR template. Preserve commits with a normal merge after required
-checks pass. Physical TV deployment and release publication need specific scope.
-Keep the current slice's essential evidence in [EVIDENCE.md](EVIDENCE.md).
+The next action is the CI-gated combined handoff, then **await the owner's full
+feedback list**. Do not start further implementation, broader worship/iOS work
+or the recorded next-TV volume correction automatically. Keep PR #9 draft for
+human acceptance; no merge, public release or physical deployment in this pass.
+Public GitHub releases are empty, so actual public binary transfer still awaits
+publication; local packages remain in Advanced. Physical phone/OEM reliability,
+compass calibration and TV picture/sound/remote/power acceptance remain separate.
+The task-owned emulator was verified and stopped; private receipts/captures stay
+under ignored state/.

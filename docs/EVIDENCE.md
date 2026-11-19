@@ -716,3 +716,29 @@ The certificate matches the previous review build. All 26 recordings and 25 noti
 files match canonical/source bytes. GitHub published releases rechecked empty.
 Final-head CI gates handoff; its authoritative results and links belong on draft
 PR #9. Physical/OEM, public binary transfer and iOS-app limits remain unchanged.
+
+
+## Combined review handoff validation
+
+Implementation commit **4c8e38d** passed all source-head CI:
+[Validate](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44473850009)
+(including Required checks),
+[Companion](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44473849927)
+(actual API 34 native suites), and
+[Apple core](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44473849807)
+(native macOS rule tests plus iOS device/simulator libraries). Pages correctly
+skips PR deployment. The documentation-only delivery head must also be green;
+its authoritative final results are on [draft PR #9](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/9).
+
+The fixed local export remains phone 0.3.0/code 8, hash and signing identity as
+recorded above. Final native screenshots were inspected at ordinary size and
+kept in ignored primary state/builds/companion/screenshots; enlarged-text examples
+stay in this worktree's state/. No captures, credentials, raw reference media or
+outputs enter Git. The owned emulator was stopped only after matching its launch
+receipt/process/command/creation time; the private stop receipt confirms exit.
+
+This completes the implementation/local/CI review pass, subject to the final
+head gate. The owner will test one combined build and supply feedback. Keep the
+PR draft and stop implementation after handoff. Physical/OEM, actual public binary
+transfer and iOS-app acceptance remain unclaimed; the pre-existing next-TV audio
+finding stays explicitly recorded in PHONE-AUDIT.md.
