@@ -19,7 +19,11 @@ The repeated failure also exposed null focus matching off-screen null tile
 placeholders and a navigation guard shrinking during rebuild. Correct the
 fixture readiness checks; phone APK unchanged.
 
-Next: build the corrected TV test APK, push and require final-head CI. The fixture
+Phone CI reached runtime after earlier suites passed, then stalled. Move
+accessibility window queries out of main-thread predicates and retain their
+five-second deadline; bound CI instrument commands at 420s like local checks.
+
+Next: compile corrected fixtures, push and require final-head CI. The fixture
 uses synchronized UiAutomation input for real Back/volume, retaining all dialog/
 focus assertions. Record final head/runs in draft PR and ignored handoff receipt,
 then deliver one APK/screenshots and stop for owner feedback.

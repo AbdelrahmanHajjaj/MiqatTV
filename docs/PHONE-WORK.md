@@ -3,6 +3,19 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## Phone CI main-thread accessibility correction
+
+Superseded Companion1950827 was cancelled after runtime stalled; logs show all
+preceding suites (including real Coming soon Back) passed and phone-runtime
+started. Runtime await() executes predicates on the app main thread, but three
+predicates call UiAutomation.getRootInActiveWindow, which can synchronously query
+that same process. Move OS accessibility waits to the instrumentation thread;
+retain app-state checks on main and the five-second window deadline. This removes
+a self-query deadlock risk exposed on API34. Bound each CI instrumentation command
+to 420 seconds, matching the local helper limit, so a future stall retains its
+logs and fails instead of waiting hours. No required check skipped or weakened.
+Phone production APK/hash remains unchanged. Compile and require new-head CI.
+
 ## TV fixture readiness follow-up
 
 d7ed95a refresh assertions pass but focus navigation still fails at com.android.stk

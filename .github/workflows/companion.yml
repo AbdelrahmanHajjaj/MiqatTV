@@ -46,48 +46,48 @@ jobs:
           script: |
             adb install -r companion/android/build/outputs/apk/debug/companion-debug.apk
             adb install -r -t companion/android/build/outputs/apk/androidTest/debug/companion-debug-androidTest.apk
-            adb shell am instrument -r -w -e suite phone-journey tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-journey-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-journey tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-journey-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-journey-result.log
             grep -q 'PASS: bilingual fresh-use' phone-journey-result.log
-            adb shell am instrument -r -w -e suite phone-custom tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-custom-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-custom tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-custom-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-custom-result.log
             grep -q 'PASS: v1 migration' phone-custom-result.log
-            adb shell am instrument -r -w -e suite public-release tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee public-release-result.log
+            timeout 420s adb shell am instrument -r -w -e suite public-release tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee public-release-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' public-release-result.log
             grep -q 'PASS: public release selection' public-release-result.log
-            adb shell am instrument -r -w -e suite phone-location-denied tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-denied-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-location-denied tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-denied-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-location-denied-result.log
             grep -q 'PASS: denied foreground location' phone-location-denied-result.log
             adb shell pm grant tv.miqat.companion android.permission.ACCESS_COARSE_LOCATION
             adb shell cmd location set-location-enabled true
             adb shell appops set tv.miqat.companion android:mock_location allow
-            adb shell am instrument -r -w -e suite phone-location-approx tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-approx-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-location-approx tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-approx-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-location-approx-result.log
             grep -q 'PASS: bilingual one-shot location' phone-location-approx-result.log
             adb shell pm grant tv.miqat.companion android.permission.ACCESS_FINE_LOCATION
             adb emu geo fix -0.1278 51.5074
-            adb shell am instrument -r -w -e suite phone-location tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-location tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-location-result.log
             grep -q 'PASS: bilingual one-shot location' phone-location-result.log
-            adb shell am instrument -r -w tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee companion-ui-result.log
+            timeout 420s adb shell am instrument -r -w tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee companion-ui-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' companion-ui-result.log
             grep -q 'PASS: bilingual native bindings' companion-ui-result.log
-            adb shell am instrument -r -w -e suite lan tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee companion-lan-result.log
+            timeout 420s adb shell am instrument -r -w -e suite lan tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee companion-lan-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' companion-lan-result.log
             grep -q 'PASS: pinned TLS' companion-lan-result.log
-            adb shell am instrument -r -w -e suite phone-ui tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-ui-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-ui tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-ui-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-ui-result.log
             grep -q 'PASS: independent bilingual' phone-ui-result.log
-            adb shell am instrument -r -w -e suite phone-size -e orientation portrait tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-size-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-size -e orientation portrait tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-size-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-size-result.log
             grep -q 'PASS: bilingual phone sizing' phone-size-result.log
             adb shell appops set tv.miqat.companion SCHEDULE_EXACT_ALARM deny
-            adb shell am instrument -r -w -e suite phone-denied tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-denied-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-denied tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-denied-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-denied-result.log
             grep -q 'PASS: denied prayer permissions' phone-denied-result.log
             adb shell pm grant tv.miqat.companion android.permission.POST_NOTIFICATIONS
             adb shell appops set tv.miqat.companion SCHEDULE_EXACT_ALARM allow
-            adb shell am instrument -r -w -e suite phone-runtime tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-runtime-result.log
+            timeout 420s adb shell am instrument -r -w -e suite phone-runtime tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-runtime-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-runtime-result.log
             grep -q 'PASS: phone actual alarm delivery' phone-runtime-result.log
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

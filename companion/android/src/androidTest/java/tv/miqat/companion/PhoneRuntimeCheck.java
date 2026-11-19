@@ -115,9 +115,10 @@ final class PhoneRuntimeCheck {
             PhoneUiCheck.on(test, () -> home[0].startActivity(otherApp));
             await(
                     test,
-                    () -> !home[0].phoneForeground && otherPackage.equals(activePackage(test)),
+                    () -> !home[0].phoneForeground,
                     5000,
                     "Other app did not become active before the alarm");
+            awaitPackage(test, otherPackage);
             long now = System.currentTimeMillis(), time = now + 3000;
             ReminderEvent event =
                     new ReminderEvent("phone:call:0:" + time, "call", 0, time, now - 65 * 60000L);
@@ -154,11 +155,7 @@ final class PhoneRuntimeCheck {
                     "Background-only adhan forced the screen on");
             shell(test, "input keyevent KEYCODE_WAKEUP");
             shell(test, "wm dismiss-keyguard");
-            await(
-                    test,
-                    () -> otherPackage.equals(activePackage(test)),
-                    5000,
-                    "Could not resume the other app after screen-off adhan");
+            awaitPackage(test, otherPackage);
             CompanionCheck.check(
                     otherPackage.equals(activePackage(test)),
                     "Scheduled adhan forced a window over the active app");
@@ -178,10 +175,10 @@ final class PhoneRuntimeCheck {
                     test,
                     () ->
                             SystemClock.elapsedRealtime() - switchedAt >= 1500
-                                    && !home[0].phoneForeground
-                                    && otherPackage.equals(activePackage(test)),
+                                    && !home[0].phoneForeground,
                     5000,
                     "Could not continue using another app during adhan");
+            awaitPackage(test, otherPackage);
             CompanionCheck.check(
                     PhonePlayback.outputStarted()
                             && PhonePlayback.currentId().equals(event.getId()),
@@ -401,6 +398,16 @@ final class PhoneRuntimeCheck {
                         test.getUiAutomation().executeShellCommand(command))) {
             while (input.read() != -1) {}
         }
+    }
+
+    private static void awaitPackage(Instrumentation test, String expected) {
+        // Accessibility queries must not block the app main thread serving their requests.
+        long deadline = SystemClock.uptimeMillis() + 5000;
+        do {
+            if (expected.equals(activePackage(test))) return;
+            SystemClock.sleep(50);
+        } while (SystemClock.uptimeMillis() < deadline);
+        throw new AssertionError("Active window did not return to " + expected);
     }
 
     private static String activePackage(Instrumentation test) {
