@@ -198,6 +198,21 @@ final class PhoneJourneyCheck {
                                     "Unsupported TV started setup");
                         });
                 LiveUiCheck.untilUi(test, () -> !resumed.hasWindowFocus());
+                LiveUiCheck.until(() -> {
+                    android.view.accessibility.AccessibilityNodeInfo root =
+                            test.getUiAutomation().getRootInActiveWindow();
+                    if (root == null) return false;
+                    try {
+                        java.util.List<android.view.accessibility.AccessibilityNodeInfo> message =
+                                root.findAccessibilityNodeInfosByText(resumed.t("locked_hint"));
+                        boolean shown = !message.isEmpty();
+                        for (android.view.accessibility.AccessibilityNodeInfo node : message)
+                            node.recycle();
+                        return shown;
+                    } finally {
+                        root.recycle();
+                    }
+                });
                 test.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
                 LiveUiCheck.untilUi(test, resumed::hasWindowFocus);
                 PhoneUiCheck.on(

@@ -219,6 +219,22 @@ final class PhoneSizeCheck {
                         a.body.findViewWithTag("widgets.open").performClick();
                     });
             PhoneUiCheck.on(test, () -> WidgetHostCheck.timetable(a.body, a.phoneUi.data));
+            PhoneUiCheck.on(
+                    test,
+                    () -> {
+                        android.widget.LinearLayout rows = a.body.findViewById(R.id.widget_prayers);
+                        TextView label = rows.getChildAt(0).findViewById(R.id.widget_prayer_name);
+                        float expectedSize =
+                                android.util.TypedValue.applyDimension(
+                                        android.util.TypedValue.COMPLEX_UNIT_SP,
+                                        13,
+                                        a.getApplicationContext()
+                                                .getResources()
+                                                .getDisplayMetrics());
+                        PhoneUiCheck.check(
+                                Math.abs(label.getTextSize() - expectedSize) < 1f,
+                                "Widget preview used app text scale instead of launcher scale");
+                    });
             PhoneUiCheck.capture(
                     test, a, (a.ar ? "ar" : "en") + "-journey-widget-" + size, capture);
             for (String layout : new String[] {"next", "strip"}) {

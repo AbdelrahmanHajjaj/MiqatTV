@@ -4,15 +4,15 @@
 
 Review APK: **0.4.0/code 9**, `state/builds/companion/Miqat-latest.apk`,
 32,358,043 bytes. SHA-256:
-`3634E3D31B4086030393ACC0EDE8300B4573B44713B5282AF22F7D9E41045210`.
+`EE269BC9E18208ABCC8A6F1390161D2F5383CE39DF1F6355F5BA0F702870F435`.
 The review signing certificate matches the prior APK; an update needs no uninstall.
 Standalone installer source/build is 1.1.4/code 7. Existing LG review IPK remains
 0.2.28; no physical install or release publication was performed.
 
 Phone/installer assemble and lint pass. Fresh packaging removes the retired
 recording completely: exactly **25 approved recordings** match their canonical
-bytes and all **25 notices** match source. Phone DEX/resources/manifest match
-the fully tested 0.4.0 UI build before media removal; only packaging/media changed.
+bytes and all **25 notices** match source. The final clean phone build includes
+the widget preview context correction below and passes assemble/test-APK/lint.
 Clean Android TV size/lint/test APK, LG build/service/native TLS matrix and the
 preview build pass. Portable JVM/JS/Java/legacy ES5, canonical metadata checks,
 preview tokens/data/tests and 47 repository regressions pass. The LG browser
@@ -34,6 +34,13 @@ Owned muted Android emulator evidence, separate from hardware acceptance:
 - 80–150% app text in both languages, combined with Android font 1.3, passes in
   asserted portrait and actual 2400×1080 landscape. Native rows/buttons remain
   reachable. Accepted captures are identified by PNG dimensions, not folder name.
+- A native font-size assertion reproduced widget preview double-scaling red;
+  application-context inflation now matches launcher/system text scale. The
+  assertion passes across both complete size/orientation matrices.
+- API-34 CI exposed a Coming soon dialog synchronization race. The fixture now
+  waits for its actual active accessibility window before physical Back and
+  still requires restored Activity focus. No-capture/animations-disabled native
+  verification passes; final-head CI remains the delivery gate.
 - Actual AlarmManager/foreground output, private 30-second cutoff, audition,
   Stop/focus loss, denied access, duplicate/early/expired events and cleanup pass.
   Global phone volume remains untouched. Migration/import checks preserve valid

@@ -172,3 +172,10 @@ assets. No semantic tests were removed: fixtures follow the new visible steps;
 real widget host/resize and retired-TV metadata regressions cover new boundaries.
 Raw red/green logs and captures remain ignored under state/. Final results are
 recorded in EVIDENCE.md after the final review build passes.
+
+Final review caught widget previews using the Activity's compounded app/system
+text scale. They now inflate using application context, matching launcher text.
+A native rendered-font assertion reproduced the fault and passes all 80–150%
+portrait/wide cases in both languages. The API-34 dialog fixture now waits for
+its actual active window before injecting Back; dismissal/focus assertions stay.
+No new production abstraction or dependency was needed for either correction.

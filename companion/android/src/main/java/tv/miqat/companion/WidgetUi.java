@@ -76,14 +76,18 @@ final class WidgetUi {
         preview.setPadding(a.views.dp(4), a.views.dp(8), a.views.dp(4), a.views.dp(8));
         int height = draft.layout.equals("day") ? 260 : draft.layout.equals("next") ? 160 : 110;
         preview.addView(
-                WidgetRenderer.create(a, draft, Integer.MAX_VALUE).apply(a, preview),
+                WidgetRenderer.create(a.getApplicationContext(), draft, Integer.MAX_VALUE)
+                        .apply(a.getApplicationContext(), preview),
                 new LinearLayout.LayoutParams(
                         -1,
                         a.views.dp(
                                 height
                                         * Math.max(
                                                 1f,
-                                                a.getResources().getConfiguration().fontScale))));
+                                                a.getApplicationContext()
+                                                        .getResources()
+                                                        .getConfiguration()
+                                                        .fontScale))));
         a.body.addView(preview);
         String themeLabel = a.t("phone_theme");
         try {

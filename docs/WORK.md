@@ -9,7 +9,11 @@ version is **0.4.0/code 9**; standalone installer source/build is 1.1.4/code 7.
 The exported APK is primary checkout state/builds/companion/Miqat-latest.apk.
 Exact hash, local verification and limits are in EVIDENCE.md.
 
-Delivery gate: review/commit/push the validated implementation and require all
+Final widget-preview scaling and active-dialog synchronization fixes pass native
+verification, including both language/80–150% portrait and landscape matrices.
+The final clean APK is exported; PHONE-WORK.md has exact logs/status.
+
+Delivery gate: commit/push the validated final fixes and require all
 final-head Validate, Companion and Apple-core CI checks to pass. PR #9 owns the
 exact head/run receipts. Finish final capture/owned-emulator cleanup, then hand
 over one combined APK and await the owner's feedback. PHONE-WORK.md owns resume

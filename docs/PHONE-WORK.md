@@ -7,7 +7,26 @@ merge `3c5b38e`. Draft PR #9 owns this work and must describe the final scope.
 ## Active pass 4 — final verification/delivery
 
 Approved scope is PHONE-PASS4.md, all 12 items; the active goal tracks the same.
-Implementation is complete locally. Current candidate is phone 0.4.0/code 9,
+Implementation commit 6acd892 is pushed. Validate (44518150917) and Apple-core
+(44518150929) CI pass. Companion (44518151037) fails in its API-34 journey fixture:
+it injects Back after Activity focus loss but before the Coming soon dialog is
+the active input window. The fixture now waits for that actual dialog message
+through UiAutomation, then still requires Back to restore Activity focus.
+
+Final audit reproduced a real widget-preview scale regression with a new native
+assertion (state/pass4-widget-scale-red.log): the preview used the app's text
+scale instead of the launcher's. WidgetUi now inflates with application context
+and sizes its preview using system font scale. The strict native font assertion
+remains. Current clean build: state/pass4-scale-fix-build.log.
+
+Final native checks pass: state/pass4-widget-scale-portrait-green.log and
+state/pass4-widget-scale-wide-green.log include the strict preview-font assertion
+at every app size in both languages with OS text 1.3. The no-capture,
+animations-disabled journey passes in state/pass4-dialog-journey-green.log.
+Final clean APK has been exported; EVIDENCE.md holds its exact hash. Commit/push
+these fixes and require all new-head CI green before handoff.
+
+The remaining implementation is complete locally. Current candidate is phone 0.4.0/code 9,
 installer 1.1.4/code 7. The exported primary APK hash is in EVIDENCE.md and ignored
 state/pass4-artifact.json. Keep PR #9 draft for the owner's combined feedback.
 
@@ -23,8 +42,8 @@ binding/configuration/Cancel/resize/strip, native LAN/legacy metadata guards,
 bilingual editors/handoff, actual alarms/private audio/denial and cleanup, plus
 all app text sizes with OS font 1.3 in asserted portrait/landscape. Core, shared
 metadata, TV build/47 regressions, LG service/browser and preview checks pass.
-The last clean phone package passes its native journey. Its compiled payloads
-match the previously tested 0.4.0 build, with the retired media bytes removed.
+The final clean phone package includes the preview context correction and
+passes its native journey. The retired media bytes are removed.
 All 25 recordings/25 notices match canonical source. No private logs/captures ship.
 
 Next: final staged review and implementation commit/push; finish final-head
