@@ -23,7 +23,11 @@ Phone CI reached runtime after earlier suites passed, then stalled. Move
 accessibility window queries out of main-thread predicates and retain their
 five-second deadline; bound CI instrument commands at 420s like local checks.
 
-Next: compile corrected fixtures, push and require final-head CI. The fixture
+b6db36f Validate (including TV) and Apple pass. Intermittent Coming soon
+Back still fails on API34: require actual dialog root input focus, not only
+activity focus loss, then real Back and root detachment/focus restoration.
+
+Next: compile corrected dialog fixture, push and require final-head CI. The fixture
 uses synchronized UiAutomation input for real Back/volume, retaining all dialog/
 focus assertions. Record final head/runs in draft PR and ignored handoff receipt,
 then deliver one APK/screenshots and stop for owner feedback.

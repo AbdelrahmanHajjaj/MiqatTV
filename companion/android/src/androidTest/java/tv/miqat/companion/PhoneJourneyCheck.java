@@ -349,9 +349,21 @@ final class PhoneJourneyCheck {
                     "Coming soon dialog window event missing; observed " + windows, timeout);
         }
         dialog.recycle();
-        LiveUiCheck.untilUi(test, () -> !a.hasWindowFocus());
+        View[] focusedDialog = {null};
+        LiveUiCheck.untilUi(test, () -> {
+            if (a.hasWindowFocus()) return false;
+            if (android.os.Build.VERSION.SDK_INT < 29) return true;
+            for (View window : android.view.inspector.WindowInspector.getGlobalWindowViews()) {
+                if (window != a.getWindow().getDecorView() && window.hasWindowFocus()) {
+                    focusedDialog[0] = window;
+                    return true;
+                }
+            }
+            return false;
+        });
         LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
-        LiveUiCheck.untilUi(test, a::hasWindowFocus);
+        LiveUiCheck.untilUi(test, () -> a.hasWindowFocus()
+                && (focusedDialog[0] == null || !focusedDialog[0].isAttachedToWindow()));
     }
 
     private static void cancelledResult(Instrumentation test, MainActivity a) throws Exception {

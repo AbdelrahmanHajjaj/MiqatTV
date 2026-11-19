@@ -3,6 +3,18 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## Dialog input-window readiness
+
+b6db36f Validate passes every required job, including corrected TV emulator;
+Apple passes. Companion hits intermittent Coming soon restored-focus failure
+before runtime. Losing activity focus is not proof the new dialog has gained
+input focus. Keep the actual AlertDialog event, then on API29+ inspect this
+process's public WindowInspector roots and require the dialog root's own focus
+before real Back injection; afterwards require root detachment and activity
+focus. API26-28 retains existing event/focus checks. No click-to-dismiss shortcut,
+sleep, retry or assertion waiver. Test APK compilation and new-head CI required.
+Phone APK/hash unchanged; no emulator running locally.
+
 ## Phone CI main-thread accessibility correction
 
 Superseded Companion1950827 was cancelled after runtime stalled; logs show all
