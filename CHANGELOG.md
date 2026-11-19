@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Give phone Home (0.4.1/code 10) more breathing room and allow short scrolling.
+  Integrate location in the prayer card, show tomorrow Fajr before tools, and
+  move locked features below separately spaced actions. Verify completed setup
+  hides its resume prompt.
 - Refine the Android phone review build to 0.4.0 (code 9), with compact settings,
   floating main navigation, fewer Home rows and responsive prayer columns.
 - Simplify first use to one decision per screen with Skip; add real theme and

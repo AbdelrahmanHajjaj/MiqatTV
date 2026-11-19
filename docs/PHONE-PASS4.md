@@ -65,3 +65,12 @@ Phone portraits preserve the entire artwork scene along the bottom and extend
 its sky above it, with the shared contrast overlay; no stretched TV bitmap or
 new unreviewed raster asset. Reduced motion suppresses page fades and installer
 scan/progress animation and also honors the system animator setting.
+
+## Home follow-up after screenshot review
+
+The owner explicitly allows a short Home scroll. Do not squeeze every control
+into one viewport. Give dates, prayer cells and actions clear gaps; place locked
+modules in a lower section. Keep tomorrow Fajr with prayer information before
+secondary tools, and integrate the location action into the prayer card. The
+setup-resume prompt is only for an unfinished guide; verify disappearance on
+completion and after reopening. Capture the completed state for the next review.

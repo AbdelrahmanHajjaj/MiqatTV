@@ -121,11 +121,27 @@ final class PhoneJourneyCheck {
                             check(
                                     resumed.page.equals("prayers") && !resumed.onboarding.needed(),
                                     "Completed first use did not reach standalone prayers");
+                            check(
+                                    resumed.body.findViewWithTag("onboarding.resume") == null,
+                                    "Completed setup still shows its Home prompt");
+                        });
+                PhoneUiCheck.capture(test, resumed, lang + "-home-complete", captures);
+                PhoneUiCheck.on(
+                        test,
+                        () -> {
+                            resumed.body.findViewWithTag("phone.location").performClick();
+                            check(
+                                    resumed.section.equals("calculation"),
+                                    "Prayer card location action must open location settings");
+                            resumed.tab("prayers");
                             resumed.onboarding.open();
                             resumed.back();
                             check(
                                     !resumed.onboarding.needed() && resumed.page.equals("prayers"),
                                     "Cancelling a repeated guide erased completed setup");
+                            check(
+                                    resumed.body.findViewWithTag("onboarding.resume") == null,
+                                    "Repeated setup restored a completed Home prompt");
                             resumed.phoneUi.open("appearance");
                             resumed.body
                                     .findViewWithTag("phone.appearance.theme.option.dusk")
@@ -278,6 +294,19 @@ final class PhoneJourneyCheck {
                 cancelledResult(test, resumed);
                 PhoneUiCheck.on(test, resumed::finish);
                 LiveUiCheck.untilUi(test, resumed::isDestroyed);
+                MainActivity reopened = launch(test, context);
+                current[0] = reopened;
+                PhoneUiCheck.on(
+                        test,
+                        () -> {
+                            check(
+                                    reopened.page.equals("prayers")
+                                            && reopened.body.findViewWithTag("onboarding.resume")
+                                                    == null,
+                                    "Completed setup prompt returned after cold launch");
+                        });
+                PhoneUiCheck.on(test, reopened::finish);
+                LiveUiCheck.untilUi(test, reopened::isDestroyed);
                 current[0] = null;
             }
         } finally {

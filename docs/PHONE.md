@@ -96,6 +96,11 @@ sensor, use the numeric bearing with a separate compass. There is no background
 location or sensor service, and an undefined bearing at the destination is
 reported explicitly. Physical compass accuracy still needs device testing.
 
+Prayer Home keeps location in the next-prayer card and tomorrow Fajr directly
+below the daily times. Qibla and widgets are separate actions; locked future
+features follow farther down, reachable with a short scroll. Finishing first use
+removes its Home resume prompt, including after reopening the app.
+
 **Home-screen widgets** offers next-prayer, daily timetable and compact strip
 layouts with live previews. Each has a launcher entry with a suitable default
 size. Customize each placed widget independently: layout, app/fixed theme,
@@ -154,7 +159,7 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.0, version code 9) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.1, version code 10) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 

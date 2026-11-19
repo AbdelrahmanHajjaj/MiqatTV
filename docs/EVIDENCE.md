@@ -1,5 +1,30 @@
 # Validation evidence
 
+## Phone Home spacing follow-up — 19 November 2026
+
+Review APK **0.4.1/code 10**, primary `state/builds/companion/Miqat-latest.apk`,
+32,358,047 bytes; SHA-256:
+`41FEE585EB05F5A4EC63C116996C06EA3620A5DCEFB57C7DF39E4E221AF96027`.
+Signing certificate matches 0.4.0; 25 approved recordings match exact source bytes.
+
+Phone assemble/test-APK/lint pass. Owned muted emulator checks both languages at
+80–150% app text plus Android font 1.3 in asserted portrait and landscape. New
+native geometry checks protect separated Home actions, tomorrow Fajr before
+tools, lower locked features and location within the prayer card. The first
+portrait attempt correctly failed its orientation precondition because the AVD
+booted wide; explicit dimensions were then set and both full matrices passed.
+The native journey verifies completed setup removes the prompt, repeated-guide
+cancellation preserves completion, and a cold launch does not restore the prompt.
+The embedded location action still opens calculation/location settings. Normal
+completed English/Arabic portrait renders were inspected; all six times and
+tomorrow Fajr precede separated tools, with locked features below.
+
+Private logs/captures: `state/home-followup-*`. Final-head CI receipts belong to
+[draft PR #9](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/9), and all required
+checks must pass before handoff. No prayer policy, alarm, widget, transport,
+installer or TV runtime change; prior pass evidence below covers those paths.
+Physical phone/OEM/TV acceptance remains separate; no release or deployment.
+
 ## Phone feedback pass 4 â€” 19 November 2026
 
 Review APK: **0.4.0/code 9**, `state/builds/companion/Miqat-latest.apk`,

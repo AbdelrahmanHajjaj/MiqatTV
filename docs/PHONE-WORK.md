@@ -4,6 +4,24 @@ Updated: 2026-11-19. Branch `feature/companion-installation`, worktree
 `state/companion-installation` under the primary Miqat checkout. Base: companion
 merge `3c5b38e`. Draft PR #9 owns this work and must describe the final scope.
 
+## Active Home spacing follow-up
+
+The owner found fused/squashed Home buttons in the 0.4.0 screenshot. Short
+scrolling is explicitly allowed: lower locked destinations, integrate location
+in the prayer card, and show tomorrow Fajr before secondary actions. The setup
+prompt must disappear after completion. This supersedes the earlier density
+interpretation; do not compress every Home element to fit a single viewport.
+
+0.4.1/code 10 implementation is limited to PhoneHome plus focused existing
+journey/size checks. Setup already persists completion; verify prompt absence
+and publish completed-state captures rather than the intentionally unfinished
+phone-ui fixture. Build/lint, bilingual journey and both 80–150% size matrices with OS font 1.3
+pass (state/home-followup-*). Initial portrait precondition caught a wide boot;
+explicit phone metrics fix the harness setup, with strict assertions unchanged.
+Final portrait journey/captures and fixed APK export are verified. Next:
+commit/push, final-head CI and draft PR receipt. Stop
+for owner testing after handoff; no unrelated feature or physical operation.
+
 ## Active pass 4 â€” final verification/delivery
 
 Approved scope is PHONE-PASS4.md, all 12 items; the active goal tracks the same.

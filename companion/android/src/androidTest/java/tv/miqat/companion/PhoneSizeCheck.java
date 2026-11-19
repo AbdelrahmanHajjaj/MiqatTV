@@ -107,6 +107,27 @@ final class PhoneSizeCheck {
                                                             - cell.getPaddingBottom(),
                                             "Prayer card text clipped at " + expected);
                                 }
+                                View tomorrow = a.body.findViewWithTag("phone.tomorrow");
+                                View tools =
+                                        (View) a.body.findViewWithTag("qibla.open").getParent();
+                                PhoneUiCheck.check(
+                                        tomorrow != null && tomorrow.getBottom() <= tools.getTop(),
+                                        "Tomorrow Fajr must precede secondary actions");
+                                View qibla = a.body.findViewWithTag("qibla.open");
+                                View widgets = a.body.findViewWithTag("widgets.open");
+                                int gap =
+                                        Math.max(qibla.getLeft(), widgets.getLeft())
+                                                - Math.min(qibla.getRight(), widgets.getRight());
+                                PhoneUiCheck.check(
+                                        gap >= a.views.dp(12), "Home actions fuse together");
+                                PhoneUiCheck.check(
+                                        a.body.findViewWithTag("phone.coming-soon").getTop()
+                                                >= tools.getBottom(),
+                                        "Locked features must follow prayer tools");
+                                PhoneUiCheck.check(
+                                        a.body.findViewWithTag("phone.location").getParent()
+                                                == a.body.findViewWithTag("phone.hero"),
+                                        "Location must belong to the prayer card");
                                 a.phoneUi.open("audio");
                                 a.body.findViewWithTag("phone.reminders.volume.edit")
                                         .performClick();

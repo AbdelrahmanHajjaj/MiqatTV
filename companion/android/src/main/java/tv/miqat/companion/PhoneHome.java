@@ -96,29 +96,37 @@ final class PhoneHome {
         status = null;
         playback = null;
         nextTime = 0;
-        if (a.onboarding.needed())
+        if (a.onboarding.needed()) {
             a.views
                     .navigationRow(
                             a.body, "gear", a.t("setup_resume"), "", () -> a.onboarding.open())
                     .setTag("onboarding.resume");
-        a.views
-                .button(a.body, ui.location(), () -> ui.open("calculation"))
-                .setTag("phone.location");
+            ((LinearLayout.LayoutParams)
+                                    a.body.findViewWithTag("onboarding.resume").getLayoutParams())
+                            .bottomMargin =
+                    a.views.dp(16);
+        }
         renderedDay = civilDay(now);
         renderedZone = ui.settings.zone().getID();
         lastTick = now;
         PhoneSchedule.Day tomorrow = ui.settings.day(now, 1);
         LinearLayout hero = ui.appearance.hero(a.body, ui.settings);
         hero.setPadding(a.views.dp(16), a.views.dp(12), a.views.dp(16), a.views.dp(12));
+        hero.setTag("phone.hero");
+        Button location = a.views.button(hero, ui.location(), () -> ui.open("calculation"));
+        location.setTag("phone.location");
+        location.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        location.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        location.setPadding(0, 0, 0, 0);
+        location.setTextSize(14);
         tv.miqat.core.PrayerSelection selection = nextPrayer(hero, now, true);
         int next = selection == null ? -1 : selection.getNext();
         boolean tomorrowNext = selection != null && selection.getNextTime() >= tomorrow.start;
         alertStatus(hero);
         PhoneSchedule.Day day = dateNavigation(now);
         renderTimes(day, next, tomorrowNext);
-        destinations();
-        if (tomorrow.times != null)
-            a.body.addView(
+        if (tomorrow.times != null) {
+            TextView fajr =
                     a.views.text(
                             a.t("phone_tomorrow")
                                     + " · "
@@ -126,7 +134,12 @@ final class PhoneHome {
                                     + " · "
                                     + ui.time(tomorrow.times[0]),
                             15,
-                            a.muted));
+                            a.muted);
+            fajr.setTag("phone.tomorrow");
+            fajr.setPadding(0, a.views.dp(4), 0, a.views.dp(16));
+            a.body.addView(fajr);
+        }
+        destinations();
     }
 
     private void alertStatus(LinearLayout hero) {
@@ -167,6 +180,7 @@ final class PhoneHome {
 
     private PhoneSchedule.Day dateNavigation(long now) {
         LinearLayout dateBar = a.views.horizontal(a.body);
+        ((LinearLayout.LayoutParams) dateBar.getLayoutParams()).bottomMargin = a.views.dp(12);
         Button previous =
                 a.views.iconButton(
                         dateBar,
@@ -279,23 +293,29 @@ final class PhoneHome {
 
     private void destinations() {
         LinearLayout tools = a.views.horizontal(a.body);
+        tools.setPadding(0, a.views.dp(8), 0, a.views.dp(8));
         Button qibla = a.views.button(tools, a.t("phone_qibla"), () -> a.navigate("qibla"));
         a.views.flex(qibla);
         qibla.setTag("qibla.open");
         Button widgets = a.views.button(tools, a.t("phone_widgets"), () -> a.navigate("widgets"));
         a.views.flex(widgets);
+        ((LinearLayout.LayoutParams) qibla.getLayoutParams()).setMarginEnd(a.views.dp(8));
+        ((LinearLayout.LayoutParams) widgets.getLayoutParams()).setMarginStart(a.views.dp(8));
         widgets.setTag("widgets.open");
-        LinearLayout more = a.views.horizontal(a.body);
+        LinearLayout more = a.views.column();
+        more.setTag("phone.coming-soon");
+        more.setPadding(0, a.views.dp(24), 0, 0);
+        a.body.addView(more);
+        more.addView(a.views.text(a.t("coming_soon"), 13, a.muted));
         for (String module : new String[] {"phone_quran", "phone_adhkar", "phone_tasbih"}) {
-            Button locked =
-                    a.views.button(
+            LinearLayout locked =
+                    a.views.navigationRow(
                             more,
+                            "lock",
                             a.t(module),
+                            "",
                             () -> a.info(a.t("coming_soon"), a.t("locked_hint")));
-            a.views.flex(locked);
-            locked.setTextSize(12);
-            locked.setCompoundDrawablesRelative(Icons.get(a, "lock", a.muted), null, null, null);
-            locked.setTextColor(a.muted);
+            ((LinearLayout.LayoutParams) locked.getLayoutParams()).bottomMargin = a.views.dp(8);
             locked.setContentDescription(a.t(module) + ", " + a.t("coming_soon"));
         }
     }

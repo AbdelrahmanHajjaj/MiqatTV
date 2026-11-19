@@ -2,22 +2,19 @@
 
 Updated: 2026-11-19.
 
-The twelve-item owner feedback pass is implemented on
-feature/companion-installation / draft PR #9. Requirements and engineering
-constraints are in PHONE-PASS4.md, PHONE-PASS3.md and AGENTS.md. Phone review
-version is **0.4.0/code 9**; standalone installer source/build is 1.1.4/code 7.
-The exported APK is primary checkout state/builds/companion/Miqat-latest.apk.
-Exact hash, local verification and limits are in EVIDENCE.md.
+Active owner follow-up: loosen the phone Home layout from pass 4. Allow short
+scrolling; separate actions, move locked features below useful content, place
+tomorrow Fajr alongside the prayer section and integrate location in its card.
+Verify the completed first-use prompt is absent. Keep prior twelve-item scope
+and engineering rules in PHONE-PASS4.md/PHONE-PASS3.md/AGENTS.md.
 
-Final widget-preview scaling and active-dialog synchronization fixes pass native
-verification, including both language/80–150% portrait and landscape matrices.
-The final clean APK is exported; PHONE-WORK.md has exact logs/status.
-
-Delivery gate: commit/push the validated final fixes and require all
-final-head Validate, Companion and Apple-core CI checks to pass. PR #9 owns the
-exact head/run receipts. Finish final capture/owned-emulator cleanup, then hand
-over one combined APK and await the owner's feedback. PHONE-WORK.md owns resume
-status; private logs/receipts stay under ignored state/.
+Working on feature/companion-installation, draft PR #9; phone candidate
+0.4.1/code 10. Prior 0.4.0 handoff (38052c5) passed all required CI. Current changes
+are limited to Home layout, focused native coverage and delivery records.
+Build/lint, bilingual journey and both enlarged-text size matrices pass. Next:
+final portrait renders and APK export are verified. Push and gate handoff on
+final CI; exact run receipts belong to draft PR #9.
+Exact current progress is in PHONE-WORK.md; private logs/captures stay in state/.
 
 Keep PR draft. No merge, public release or physical operation in this pass.
 Existing LG review IPK stays 0.2.28. Public installation needs published assets;
