@@ -338,13 +338,19 @@ final class PhoneRuntimeCheck {
                         false);
                 String expectedChannel =
                         mode.equals("vibration") ? PhoneAlarms.VIBRATION : PhoneAlarms.SILENT;
-                CompanionCheck.check(
-                        Arrays.stream(
-                                        c.getSystemService(NotificationManager.class)
-                                                .getActiveNotifications())
-                                .anyMatch(n ->
-                                        n.getNotification().getChannelId().equals(expectedChannel)),
-                        "Dedicated silent/vibration output missing");
+                // Android enqueues notification publication on its service worker.
+                await(
+                        test,
+                        () ->
+                                Arrays.stream(
+                                                c.getSystemService(NotificationManager.class)
+                                                        .getActiveNotifications())
+                                        .anyMatch(n ->
+                                                n.getNotification()
+                                                        .getChannelId()
+                                                        .equals(expectedChannel)),
+                        5000,
+                        "Dedicated notification output missing: " + mode);
                 CompanionCheck.check(
                         !PhonePlayback.playing(), "Silent/vibration mode started adhan playback");
             }

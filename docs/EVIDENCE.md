@@ -30,6 +30,11 @@ An earlier CI TV job failed downloading an invalid emulator ZIP before any app
 ran; phone and Apple-core checks passed. Final-head CI is tracked on draft PR #9;
 private command logs,
 process receipts and versioned captures stay under ignored state/.
+A later complete phone run passed setup/widgets/location/UI/LAN/sizing, then
+exposed an immediate post/read race in the silent/vibration fixture. Its exact
+channel predicate now uses the existing bounded await; production is unchanged.
+Android [queues notification publication](https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android14-release/services/core/java/com/android/server/notification/NotificationManagerService.java#L6350)
+on its service handler, so notify returning is not a posted-notification barrier.
 
 Physical launcher/OEM background delivery, speakers/compass, TVs and iOS remain
 owner acceptance. Android controls notification layout and launcher clipping.
