@@ -31,7 +31,7 @@ final class CodeInput extends FrameLayout {
         row.setLayoutDirection(LAYOUT_DIRECTION_LTR);
         row.setGravity(Gravity.CENTER);
         for (int i = 0; i < 6; i++) {
-            TextView b = Ui.text(c, "", Ui.PLASTER, 24, Ui.semibold());
+            TextView b = Ui.text(c, "", Ui.palette(getContext()).ink, 24, Ui.semibold());
             b.setGravity(Gravity.CENTER);
             Ui.latin(b);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, Ui.dp(c, 56), 1f);
@@ -76,9 +76,9 @@ final class CodeInput extends FrameLayout {
         for (int i = 0; i < 6; i++) {
             boxes[i].setText(i < s.length() ? String.valueOf(s.charAt(i)) : "");
             boolean current = focused && (i == s.length() || (s.length() == 6 && i == 5));
-            GradientDrawable bg = Ui.round(Ui.LAPIS_800, 12, getContext());
+            GradientDrawable bg = Ui.round(Ui.palette(getContext()).surface, 12, getContext());
             bg.setStroke(Ui.dp(getContext(), current ? 2 : 1),
-                    current ? Ui.GOLD_400 : i < s.length() ? 0x99EBC678 : Ui.LINE_SOFT);
+                    current ? Ui.palette(getContext()).accent : i < s.length() ? Ui.alpha(Ui.palette(getContext()).accent, 0x99) : Ui.palette(getContext()).lineSoft);
             boxes[i].setBackground(bg);
         }
     }

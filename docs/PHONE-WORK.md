@@ -190,7 +190,8 @@ Persistent quality rules are in AGENTS.md. No release/physical deployment/merge.
 
 ### Active pass-3 implementation / resume
 
-Requirements/guardrails committed as `75f5017`; explicit goal is active. Pass-3
+Requirements/guardrails committed as `75f5017`; explicit goal is active. Guided
+journeys/cohesive ownership checkpoint committed as `eca7a7c`. Pass-3
 source is implemented in this worktree, not ready for export. New native owners:
 TvSetup, PhoneOnboarding, PhoneAppearance, PhoneHome, PhoneLocationUi, PairingUi,
 TvSettingsUi, TvRemoteUi, TvListUi and CompanionViews. MainActivity retains host,
@@ -222,8 +223,18 @@ labels, single compass calibration hint and actual phone settings Back history.
 Audio groups general settings, per-prayer effective voices, private import and
 quiet hours. Actual audio/runtime regression still needs rerun after final edits.
 
+Both installer hosts now follow an immutable per-host palette; the embedded
+host reads the selected canonical phone theme and standalone retains defaults.
+Bilingual themed native handoff, local-picker Cancel and prior bindings pass in
+state/pass3-palette-native.log; English/Arabic rendered setup inspected. Both
+hosts build/lint: state/pass3-palette-build-3.log. Earlier command attempts failed
+before compilation (wrong project selection, then missing process SDK variable);
+the successful command uses root tasks and ANDROID_HOME. Shared Qibla coordinates
+now match the pinned Adhan adapter; JVM/JS/interop/ES5 pass in
+state/pass3-qibla-coordinate-check.log.
+
 Next: continue PHONE-AUDIT.md with high-risk runtime/storage/transport/test findings;
-finish installer following the selected phone palette, audio choice audition UX,
+finish audio choice audition UX,
 large-text/landscape and native sensor/widget visual inspection. Then affected
 Android TV/LG/preview union checks, accurate guides/CHANGELOG/versions/evidence,
 PR update, final-head CI and one combined export. Do not hand over 0.2.1 as pass 3.

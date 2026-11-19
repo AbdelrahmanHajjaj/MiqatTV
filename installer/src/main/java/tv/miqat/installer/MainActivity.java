@@ -42,6 +42,10 @@ import io.github.muntashirakon.adb.AdbPairingRequiredException;
  * to the bottom.
  */
 public class MainActivity extends Activity {
+    InstallerPalette palette = InstallerPalette.DEFAULT;
+
+    protected InstallerPalette createPalette() { return InstallerPalette.DEFAULT; }
+
     static final int PREPARE = 0, CONNECT = 1, INSTALL = 2, PERSONAL = 3;
 
     final ExecutorService work = Executors.newSingleThreadExecutor();
@@ -71,13 +75,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        palette = createPalette();
         Ui.init(this);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        getWindow().setStatusBarColor(Ui.LAPIS_900);
-        getWindow().setNavigationBarColor(Ui.LAPIS_900);
+        getWindow().setStatusBarColor(Ui.palette(this).ground);
+        getWindow().setNavigationBarColor(Ui.palette(this).ground);
 
         LinearLayout root = Ui.column(this);
-        root.setBackgroundColor(Ui.LAPIS_900);
+        root.setBackgroundColor(Ui.palette(this).ground);
         stages = Ui.row(this);
         stages.setPadding(dp(20), dp(18), dp(20), dp(6));
         root.addView(stages, Ui.wide(this, 0));
@@ -198,7 +203,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(dp(14), dp(14));
         sp.setMarginEnd(dp(8));
         heading.addView(Timeline.spinner(this), sp);
-        heading.addView(Ui.text(this, getString(R.string.found_heading), Ui.MIST, 13, Ui.medium()));
+        heading.addView(Ui.text(this, getString(R.string.found_heading), Ui.palette(this).muted, 13, Ui.medium()));
         add(heading, 22);
         tvList = Ui.column(this);
         add(tvList, 0);
@@ -233,16 +238,16 @@ public class MainActivity extends Activity {
 
     private View tvCard(Finder.Tv t) {
         LinearLayout card = Ui.row(this);
-        GradientDrawable bg = Ui.round(Ui.LAPIS_800, 18, this);
-        bg.setStroke(dp(1), 0x66EBC678);
-        Ui.pressable(card, bg, 0x33EBC678);
+        GradientDrawable bg = Ui.round(Ui.palette(this).surface, 18, this);
+        bg.setStroke(dp(1), Ui.alpha(Ui.palette(this).accent, 0x66));
+        Ui.pressable(card, bg, Ui.alpha(Ui.palette(this).accent, 0x33));
         card.setPadding(dp(14), dp(14), dp(14), dp(14));
         card.addView(new TvGlyph(this), new LinearLayout.LayoutParams(dp(48), dp(48)));
 
         LinearLayout words = Ui.column(this);
         words.setPaddingRelative(dp(14), 0, dp(8), 0);
         words.addView(Ui.small(this, getString(R.string.tv_found)));
-        TextView host = Ui.latin(Ui.text(this, t.host, Ui.PLASTER, 18, Ui.semibold()));
+        TextView host = Ui.latin(Ui.text(this, t.host, Ui.palette(this).ink, 18, Ui.semibold()));
         host.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         words.addView(host, Ui.wide(this, 2));
         if (t.tls > 0) words.addView(door(R.string.badge_wireless, t.tls, true), Ui.wide(this, 6));
@@ -250,7 +255,7 @@ public class MainActivity extends Activity {
         if (t.pairing > 0) words.addView(door(R.string.badge_pair, t.pairing, true), Ui.wide(this, 4));
         card.addView(words, Ui.fill(this));
 
-        TextView chevron = Ui.text(this, "›", Ui.GOLD_400, 26, Ui.medium());
+        TextView chevron = Ui.text(this, "›", Ui.palette(this).accent, 26, Ui.medium());
         card.addView(chevron);
         card.setOnClickListener(v -> go(() -> connect(t.host, t.tls, t.classic)));
         return card;
@@ -262,13 +267,13 @@ public class MainActivity extends Activity {
         View dot = new View(this);
         GradientDrawable d = new GradientDrawable();
         d.setShape(GradientDrawable.OVAL);
-        d.setColor(accent ? Ui.GOLD_400 : Ui.MIST);
+        d.setColor(accent ? Ui.palette(this).accent : Ui.palette(this).muted);
         dot.setBackground(d);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(6), dp(6));
         lp.setMarginEnd(dp(8));
         row.addView(dot, lp);
-        row.addView(Ui.text(this, getString(name), accent ? Ui.GOLD_200 : Ui.MIST, 13, Ui.medium()));
-        TextView p = Ui.latin(Ui.text(this, "·  " + number(port), Ui.MIST, 13, Ui.medium()));
+        row.addView(Ui.text(this, getString(name), accent ? Ui.palette(this).accentLight : Ui.palette(this).muted, 13, Ui.medium()));
+        TextView p = Ui.latin(Ui.text(this, "·  " + number(port), Ui.palette(this).muted, 13, Ui.medium()));
         LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         pp.setMarginStart(dp(8));
@@ -287,14 +292,14 @@ public class MainActivity extends Activity {
         LinearLayout row = Ui.row(this);
         EditText field = new EditText(this);
         field.setHint(R.string.manual_hint);
-        field.setHintTextColor(0x80AAC4C7);
-        field.setTextColor(Ui.PLASTER);
+        field.setHintTextColor(Ui.alpha(Ui.palette(this).muted, 0x80));
+        field.setTextColor(Ui.palette(this).ink);
         field.setTextSize(16);
         field.setTypeface(Ui.medium());
         field.setSingleLine();
         field.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         field.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_GO);
-        field.setBackground(Ui.round(Ui.LAPIS_900, 12, this));
+        field.setBackground(Ui.round(Ui.palette(this).ground, 12, this));
         field.setPadding(dp(14), dp(12), dp(14), dp(12));
         Ui.latin(field);
         field.setText(getPreferences(MODE_PRIVATE).getString("last_tv", ""));
@@ -473,12 +478,12 @@ public class MainActivity extends Activity {
         add(wait, 14);
         port.setHint(R.string.pair_port_hint);
         port.setInputType(InputType.TYPE_CLASS_NUMBER);
-        port.setTextColor(Ui.PLASTER);
-        port.setHintTextColor(Ui.MIST);
+        port.setTextColor(Ui.palette(this).ink);
+        port.setHintTextColor(Ui.palette(this).muted);
         port.setTextSize(15);
         port.setTypeface(Ui.medium());
         port.setGravity(Gravity.CENTER);
-        port.setBackground(Ui.round(Ui.LAPIS_800, 12, this));
+        port.setBackground(Ui.round(Ui.palette(this).surface, 12, this));
         port.setPadding(dp(12), dp(12), dp(12), dp(12));
         Ui.latin(port);
         add(port, 10);
@@ -711,10 +716,10 @@ public class MainActivity extends Activity {
             for (int i = 0; i < summary.size(); i++) {
                 LinearLayout row = Ui.row(this);
                 row.setGravity(Gravity.TOP);
-                TextView tick = Ui.text(this, "✓", Ui.GOLD_400, 15, Ui.semibold());
+                TextView tick = Ui.text(this, "✓", Ui.palette(this).accent, 15, Ui.semibold());
                 tick.setPadding(0, 0, dp(10), 0);
                 row.addView(tick);
-                row.addView(Ui.text(this, summary.get(i), Ui.PLASTER, 15, Ui.medium()), Ui.fill(this));
+                row.addView(Ui.text(this, summary.get(i), Ui.palette(this).ink, 15, Ui.medium()), Ui.fill(this));
                 card.addView(row, Ui.wide(this, i == 0 ? 0 : 10));
             }
             add(card, 20);
@@ -934,10 +939,10 @@ public class MainActivity extends Activity {
         for (int i = 0; i < names.length; i++) {
             LinearLayout s = Ui.column(this);
             View bar = new View(this);
-            bar.setBackground(Ui.round(i < now ? Ui.PLASTER : i == now ? Ui.GOLD_400 : Ui.LAPIS_700, 2, this));
+            bar.setBackground(Ui.round(i < now ? Ui.palette(this).ink : i == now ? Ui.palette(this).accent : Ui.palette(this).raised, 2, this));
             s.addView(bar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(4)));
             TextView t = Ui.text(this, number(i + 1) + "  " + getString(names[i]),
-                    i < now ? Ui.PLASTER : i == now ? Ui.GOLD_400 : Ui.MIST, 12, i == now ? Ui.semibold() : Ui.medium());
+                    i < now ? Ui.palette(this).ink : i == now ? Ui.palette(this).accent : Ui.palette(this).muted, 12, i == now ? Ui.semibold() : Ui.medium());
             s.addView(t, Ui.wide(this, 8));
             LinearLayout.LayoutParams lp = Ui.fill(this);
             if (i > 0) lp.setMarginStart(dp(8));
@@ -953,7 +958,7 @@ public class MainActivity extends Activity {
         row.addView(b);
         LinearLayout words = Ui.column(this);
         words.setPaddingRelative(dp(12), dp(4), 0, 0);
-        words.addView(Ui.text(this, text, Ui.PLASTER, 15, Ui.medium()));
+        words.addView(Ui.text(this, text, Ui.palette(this).ink, 15, Ui.medium()));
         if (tv != null) words.addView(tv, Ui.wide(this, 8));
         row.addView(words, Ui.fill(this));
         return row;
@@ -1001,7 +1006,7 @@ public class MainActivity extends Activity {
 
         TvGlyph(Context c) {
             super(c);
-            setBackground(Ui.round(Ui.LAPIS_700, 12, c));
+            setBackground(Ui.round(Ui.palette(getContext()).raised, 12, c));
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeCap(Paint.Cap.ROUND);
         }
@@ -1009,11 +1014,11 @@ public class MainActivity extends Activity {
         @Override protected void onDraw(Canvas c) {
             float w = getWidth(), h = getHeight();
             p.setStrokeWidth(w * 0.05f);
-            p.setColor(Ui.PLASTER);
+            p.setColor(Ui.palette(getContext()).ink);
             r.set(w * 0.2f, h * 0.24f, w * 0.8f, h * 0.66f);
             c.drawRoundRect(r, w * 0.05f, w * 0.05f, p);
             c.drawLine(w * 0.38f, h * 0.78f, w * 0.62f, h * 0.78f, p);
-            p.setColor(Ui.GOLD_400);
+            p.setColor(Ui.palette(getContext()).accent);
             android.graphics.Path a = new android.graphics.Path();
             MiqatShape.set(a, w * .18f, h * .3f, false);
             a.offset(w * .41f, h * .29f);

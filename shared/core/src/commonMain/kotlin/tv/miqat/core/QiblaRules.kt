@@ -12,8 +12,9 @@ object QiblaRules {
         require(latitude.isFinite() && latitude in -90.0..90.0 && longitude.isFinite() && longitude in -180.0..180.0)
         val radians = PI / 180.0
         val origin = latitude * radians
-        val target = 21.4225 * radians
-        val delta = (39.8262 - longitude) * radians
+        // Same Kaaba coordinates as the pinned Adhan 1.2.1 adapter.
+        val target = 21.4225241 * radians
+        val delta = (39.8261818 - longitude) * radians
         val y = sin(delta) * cos(target)
         val x = cos(origin) * sin(target) - sin(origin) * cos(target) * cos(delta)
         // Bearing is undefined at the destination and its antipode.

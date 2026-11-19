@@ -14,6 +14,12 @@ import java.util.Collections;
 /** Native host navigation only: no TV connection, installation or package changes. */
 final class InstallationCheck {
     static void run(Instrumentation test, String language) throws Exception {
+        android.content.SharedPreferences prefs = PhoneStore.preferences(test.getTargetContext());
+        String original = prefs.getString("settings", null);
+        try {
+        PhoneStore.read(test.getTargetContext())
+                .changed(Collections.singletonMap("appearance.theme", "dusk"))
+                .save(test.getTargetContext());
         String host = test.getTargetContext().getPackageName();
         ActivityInfo info = test.getTargetContext().getPackageManager().getActivityInfo(
             new ComponentName(host, SetupActivity.class.getName()), 0);
@@ -40,11 +46,28 @@ final class InstallationCheck {
                 screenshot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
             } finally { screenshot.recycle(); }
         }
+        int ground = android.graphics.Color.parseColor(phone.catalog.data.getJSONObject("themes")
+                .getJSONObject("dusk").getJSONObject("colors").getString("lapis-900"));
+        ViewGroup installedContent = installer.findViewById(android.R.id.content);
+        CompanionCheck.check(((android.graphics.drawable.ColorDrawable)
+                installedContent.getChildAt(0).getBackground()).getColor() == ground,
+                "Embedded installer must keep the phone's selected palette");
         CompanionCheck.check(key.exists() == hadKey, "Opening setup must not create ADB credentials");
         test.runOnMainSync(installer::onBackPressed);
         Activity cancelled = installer;
         await(test, () -> cancelled.isDestroyed() && phone.hasWindowFocus(), "Cancelled setup did not return to its caller");
         CompanionCheck.check(phone.page.equals("tv-setup"), "Cancelling setup must return to source choice without pairing");
+        // Cancelling Advanced's picker must return to source selection, never a public download.
+        Instrumentation.ActivityMonitor picker = test.addMonitor(
+                new android.content.IntentFilter(Intent.ACTION_OPEN_DOCUMENT),
+                new Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null), true);
+        try {
+            test.runOnMainSync(() -> phone.startActivityForResult(new Intent(phone, SetupActivity.class)
+                    .putExtra("prepared", true).putExtra("choose-local", true), 81));
+            await(test, () -> picker.getHits() > 0 && phone.hasWindowFocus(),
+                    "Cancelled local package picker did not return to source selection");
+            CompanionCheck.check(phone.page.equals("tv-setup"), "Local Cancel started pairing");
+        } finally { test.removeMonitor(picker); }
         installer = open(test, phone);
         showDone(test, installer, false);
         Activity partial = installer;
@@ -68,6 +91,11 @@ final class InstallationCheck {
         CompanionCheck.check(phone.pairingUi.pairing == null, "Setup must not automatically approve a phone");
         test.runOnMainSync(phone::finish);
         test.waitForIdleSync();
+        } finally {
+            android.content.SharedPreferences.Editor restore = prefs.edit();
+            if (original == null) restore.remove("settings"); else restore.putString("settings", original);
+            CompanionCheck.check(restore.commit(), "Cannot restore installer palette fixture");
+        }
     }
 
     private static void showDone(Instrumentation test, Activity installer, boolean success) {

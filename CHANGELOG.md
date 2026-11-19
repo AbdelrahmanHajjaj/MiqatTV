@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Add resumable first-use location, alert and personalization setup, real phone
+  appearance previews, a Qibla compass and native prayer timetable widgets.
+  Keep broader worship modules visibly locked as Coming soon.
+- Unify TV setup/pairing through supported-platform preparation and default latest,
+  stable or preview releases; keep local APK/IPK selection in Advanced. Android
+  setup follows the selected phone theme. Unsupported TVs show Coming soon.
+- Preserve valid local packages when a replacement fails validation or is
+  interrupted; cancel downloads without publishing late results. Keep Back and
+  cancelled file selection within the common setup journey.
+
 - Extend phone adhan settings (0.2.1) with per-prayer level/duration, weekday
   schedules, quiet hours, silent/vibration modes and private custom audio imports.
   Preserve existing settings and add opt-in foreground travel-location refresh.

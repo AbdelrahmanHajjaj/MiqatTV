@@ -12,8 +12,8 @@ source line has been inspected. Finish the map and evidence before delivery.
    previously valid selection. `PackageImport` now copies to a unique bounded
    temporary file, syncs, validates and atomically replaces it. LG uses the same
    boundary. Native release/package tests cover invalid, oversized and interrupted
-   providers, retained previous bytes and partial cleanup. Native public-release checks passed before the latest navigation changes; the
-   cohesive rerun remains recorded in PHONE-WORK.md.
+   providers, retained previous bytes and partial cleanup. Post-extraction native
+   public-release/LAN checks pass; exact logs are in PHONE-WORK.md.
 2. `MainActivity` owned pairing polling/approval plus TV draft storage, specialized
    editors and app navigation. `PhoneUi` mixed location sessions, countdown/daily
    rendering, appearance bitmaps and settings editing. Extracted `PairingUi`,
@@ -39,7 +39,14 @@ source line has been inspected. Finish the map and evidence before delivery.
 6. Embedded Android setup returned Back from connection to a second preparation
    page instead of the common source page. The existing handoff fixture exposed
    this after the new entry journey. Prepared hosts now return to their caller;
-   the standalone installer's own preparation flow remains intact. Post-extraction bilingual native handoff recheck passes.
+   the standalone installer's own preparation flow remains intact. Post-extraction
+   bilingual handoff and cancelled Advanced file-picker checks pass.
+
+7. Embedded Android setup used fixed default colours after selecting a different
+   phone theme. InstallerPalette is immutable and owned by its host Activity;
+   runtime controls and artwork use that palette, without mutable global theme
+   state or a new dependency. The standalone default is unchanged. Native
+   bilingual theme/handoff assertions pass; actual Dusk renders inspected.
 
 ## Boundaries retained
 

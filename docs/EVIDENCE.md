@@ -625,3 +625,12 @@ affected TV/LG/preview union checks, final artifacts/docs/CI. Public binary
 transfer still lacks a published release. No physical sensor/OEM alarm/TV
 picture-sound acceptance or iOS app is established. Exact next action and scope
 remain in PHONE-WORK.md and PHONE-PASS3.md.
+
+
+Follow-up checkpoint: both installer hosts build/lint after the per-host palette
+change (pass3-palette-build-3.log). Actual bilingual setup keeps the selected
+Dusk palette; prepared Back, cancelled local picker, incomplete/success handoff
+and existing bindings pass (pass3-palette-native.log). English/Arabic screenshots
+were inspected. Shared Qibla coordinates now match the pinned Adhan source;
+JVM/JS/Java/legacy-ES5 pass (pass3-qibla-coordinate-check.log). This remains an
+intermediate checkpoint, with final acceptance work listed in PHONE-WORK.md.
