@@ -110,11 +110,13 @@ final class TvSetup {
     private void guide() {
         LinearLayout guide = a.views.card(a.body);
         guide.addView(a.views.heading(a.t("tv_guide")));
-        guide.addView(
-                a.views.text(
-                        a.t(platform.equals("android") ? "tv_android_steps" : "tv_lg_steps"),
-                        15,
-                        a.ink));
+        String instructions = a.t(platform.equals("android") ? "tv_android_steps" : "tv_lg_steps");
+        for (String instruction : instructions.split("\n")) {
+            if (instruction.isEmpty()) continue;
+            TextView step = a.views.text(instruction, 15, a.ink);
+            step.setPadding(0, a.views.dp(8), 0, a.views.dp(8));
+            guide.addView(step);
+        }
         if (platform.equals("lg")) guide.addView(a.views.text(a.t("lg_expiry"), 13, a.muted));
         a.views
                 .button(

@@ -48,6 +48,13 @@ public final class PublicReleaseCheck {
             rejects(()->PackageImport.copy(interrupted,target,4096,file->{}));
             check(Arrays.equals(previous,Files.readAllBytes(target.toPath())),"Interrupted local provider destroyed the selection");
             check(directory.list().length==1,"Local selection leaked a partial package");
+            // Exercise Android's real APK parser before the atomic import publishes its temp file.
+            File archive=new File(directory,"archive.apk");
+            PackageImport.copy(new FileInputStream(context.getApplicationInfo().sourceDir),archive,100L*1024*1024,file->{
+                android.content.pm.PackageInfo info=context.getPackageManager().getPackageArchiveInfo(file.getPath(),0);
+                if(info==null||!context.getPackageName().equals(info.packageName))throw new IOException("Android rejected the staged APK");
+            });
+            check(archive.isFile()&&archive.length()>1024,"Native APK import was not committed");Files.delete(archive.toPath());
             try{Thread.currentThread().interrupt();rejects(()->PublicRelease.save(new ByteArrayInputStream(bytes),directory,"miqat.apk",bytes.length,digest.toString(),(done,total)->{}));}finally{Thread.interrupted();}
             check(Arrays.equals(previous,Files.readAllBytes(target.toPath())),"Cancelled download destroyed the previous package");
             rejects(()->PublicRelease.save(new ByteArrayInputStream(bytes),directory,"miqat.apk",bytes.length,hash,(done,total)->{}));

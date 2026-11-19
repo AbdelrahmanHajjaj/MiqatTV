@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Audition a draft adhan voice before Apply, with Stop/Cancel and private audio
+  reuse/import. Keep global and per-prayer custom previews independent of saved
+  inheritance. Match widget text to the app and preview its actual system scale.
+
 - Add resumable first-use location, alert and personalization setup, real phone
   appearance previews, a Qibla compass and native prayer timetable widgets.
   Keep broader worship modules visibly locked as Coming soon.

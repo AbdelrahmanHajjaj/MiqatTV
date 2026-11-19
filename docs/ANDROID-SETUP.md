@@ -2,9 +2,11 @@
 
 The PC tools install your locally built Miqat; they never fetch or push Git. Python 3.9+, JDK 17 and Android SDK 34 are required for PC setup. The phone installer downloads the published TV APK from [Miqat releases](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases), verifies its size/SHA-256 and package identity, and refuses a version-code downgrade. Published previews are labelled. Local APKs are under **Advanced → Install a local launcher APK**; choose **Use public download** to return to the default.
 
-On the Miqat phone companion, choose **Your TVs → Set up Android TV**. This uses
-the same implementation as the standalone installer, including optional cleanup
-and recovery, in the companion's selected language. After successful setup,
+On the Miqat phone companion, choose **Your TVs → Set up my TV** (or **Pair a
+new TV**) → **Android / Google TV**. Read the preparation guide, then choose
+Latest (default), Stable or Preview; the Advanced icon selects a local APK.
+This uses the same guarded runtime as the standalone installer, including optional
+reviewed cleanup and recovery, in the phone's selected language and theme. After successful setup,
 **Pair TV** opens ordinary pairing; confirm access using the TV's remote. Cancelling
 or finishing incomplete setup does not start pairing. This setup entry supports
 Android/Google TV; LG installation still follows [the LG guide](WEBOS.md).

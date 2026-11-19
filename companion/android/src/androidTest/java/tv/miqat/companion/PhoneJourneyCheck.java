@@ -205,6 +205,12 @@ final class PhoneJourneyCheck {
                                             && resumed.body.findViewWithTag("qibla.status") != null,
                                     "Qibla screen/bearing unavailable for confirmed location");
                         });
+                LiveUiCheck.untilUi(test, () -> {
+                    View compass = resumed.body.findViewWithTag("qibla.compass");
+                    TextView status = resumed.body.findViewWithTag("qibla.status");
+                    return compass != null && compass.getVisibility() == View.VISIBLE
+                            || status != null && status.getText().toString().equals(resumed.t("qibla_no_sensor"));
+                });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-qibla", captures);
                 cancelledResult(test, resumed);
                 PhoneUiCheck.on(test, resumed::finish);

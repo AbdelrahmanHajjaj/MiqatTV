@@ -35,7 +35,7 @@ final class PhoneCustomCheck {
             PhoneUiCheck.check(PhoneAlarms.requiredChannels(sunday.changed(edits)).equals(Collections.singleton(PhoneAlarms.VIBRATION)),"All-day quiet hours required unused sound channels");
             edits.clear();edits.put("call.fajr.mode","vibration");edits.put("call.fajr.before","5");PhoneUiCheck.check(PhoneAlarms.requiredChannels(sunday.changed(edits)).equals(Collections.singleton(PhoneAlarms.VIBRATION)),"Vibration reminders required an audible channel");
             PhoneAudio.importFile(c,c.getAssets().open("adhan/alafasy.mp3"),"reminders.voice");PhoneStore imported=PhoneStore.read(c);String hash=imported.value("audio.custom.default");
-            PhoneUiCheck.check(imported.voice(0).equals("custom")&&PhoneAudio.file(c,imported,0,false).isFile(),"Imported global voice not inherited");
+            PhoneUiCheck.check(imported.voice(0).equals("custom")&&PhoneAudio.file(c,imported,0,true).isFile(),"Imported global voice not inherited");
             LanCheck.rejects(()->PhoneAudio.importFile(c,new ByteArrayInputStream(new byte[]{1,2,3}),"reminders.voice"));
             PhoneUiCheck.check(PhoneStore.read(c).value("audio.custom.default").equals(hash),"Invalid audio lost previous selection");
             LanCheck.rejects(()->PhoneAudio.importFile(c,new InputStream(){@Override public int read()throws IOException{throw new IOException("Interrupted fixture copy");}},"reminders.voice"));

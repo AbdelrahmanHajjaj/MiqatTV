@@ -165,16 +165,16 @@ journeys and phone polish, using the actual Athar recording for interaction and
 audio-control references. Shipped audio still requires approved provenance;
 reference recordings are not permission to redistribute Athar content.
 
-1. [ ] Unify Set up my TV / Pair new TV behind platform selection. Android/Google
+1. [x] Unify Set up my TV / Pair new TV behind platform selection. Android/Google
    TV and LG webOS supported; Samsung Tizen/Roku and other unimplemented platforms
    visibly locked Coming soon. Preparation instructions precede release selection
    (latest default, stable/preview choices); Advanced switches to local APK/IPK.
    Continue into guarded setup, then explicit ordinary pairing. Preserve recovery.
-2. [ ] Guided fresh-install location, notifications/alarms and personalization;
+2. [x] Guided fresh-install location, notifications/alarms and personalization;
    explicit permission decisions, resumable progress, no TV requirement.
-3. [ ] Phone theme/background previews and coherent daily prayer, audio/per-prayer,
+3. [x] Phone theme/background previews and coherent daily prayer, audio/per-prayer,
    settings and TV journeys, in Arabic/English at supported text/window sizes.
-4. [ ] Audit repository entry points, contracts, runtime/security/storage, rendering
+4. [x] Audit repository entry points, contracts, runtime/security/storage, rendering
    responsibilities and tests. Fix concrete duplication/dead code/mixed jobs;
    share deterministic policy without speculative frameworks or weakening checks.
    Record findings, fixes and genuinely uninspected areas.
@@ -233,11 +233,62 @@ the successful command uses root tasks and ANDROID_HOME. Shared Qibla coordinate
 now match the pinned Adhan adapter; JVM/JS/interop/ES5 pass in
 state/pass3-qibla-coordinate-check.log.
 
-Next: continue PHONE-AUDIT.md with high-risk runtime/storage/transport/test findings;
-finish audio choice audition UX,
-large-text/landscape and native sensor/widget visual inspection. Then affected
-Android TV/LG/preview union checks, accurate guides/CHANGELOG/versions/evidence,
-PR update, final-head CI and one combined export. Do not hand over 0.2.1 as pass 3.
+Sound selection now uses PhoneSound for draft audition/Stop/Cancel/Apply and
+private import, preserving scheduled settings. Shared native choice-row styling
+replaces duplicate adapters. Global/per-prayer custom audition selects the
+candidate's source, independently of its saved voice or volume override. Native
+UI and actual playback/alarms/custom-source/Stop/focus/cutoff checks pass:
+state/pass3-audition-ui-2.log and pass3-audition-runtime.log. The first UI run
+asserted before Android's posted Apply callback; its replacement waits for actual
+persisted state. No product assertion was weakened.
+
+Widget preview now uses the launcher's system text scale and Alexandria font.
+Extended native 80–150% sizing includes voice, actual six-prayer widget, appearance
+and first-use footer controls. Portrait with enlarged OS text passes in
+state/pass3-widget-portrait-os130.log. A rotation-setting-only run misleadingly
+remained portrait (pass3-widget-landscape-os130.log is NOT landscape evidence).
+The replacement forces 2400x1080 and asserts landscape at each scale: all pass
+state/pass3-verified-landscape-os130.log; captures were dimension-checked and
+inspected. Final wide captures use state/pass3-wide-os130-*.png. Guest restored
+to 1080x2400, density420, user_rotation0, font_scale1.0. Native APK parser also
+accepts the atomic import's staged file: pass3-native-archive-parser.log.
+
+Repository boundary/high-risk/test audit is recorded in PHONE-AUDIT.md, including
+its explicit limits and a pre-existing TV volume intervention finding deferred
+to the next TV runtime correction. LG ES5/service/browser matrix passes:
+pass3-webos-tests.log, pass3-webos-browser.log. Preview tokens/data/tests/build
+pass: pass3-preview-{tokens,data,tests,build}.log. Android TV/installer build,
+size/lint/test-APK and all 47 root regressions pass: pass3-tv-installer-build.log,
+pass3-python-regressions.log. Native live phone-to-LG UI/real TLS/settings fixture also passes:
+state/pass3-lg-phone-live.log (approval injected; no physical TV). Phone build/lint/test APK
+passes pass3-widget-font-build-2.log, with later test-only orientation/parser
+builds in pass3-orientation-build.log. A later common text-direction correction
+also builds/lints in pass3-explicit-text-direction-build.log; it uses the app's
+chosen paragraph direction rather than the system text locale. English/Arabic
+journeys and enlarged-text portrait/verified-wide matrices pass again in
+pass3-rtl-{journey,portrait-size,wide-size}.log. Restored guest display settings;
+Arabic preparation and compass renders inspected in state/pass3-rtl-*.png.
+Guides/architecture describe the new flows;
+version0.3.0 in PHONE.md remains prospective until bumped/built/exported.
+
+Latest native first-use/widget-host/platform journeys and v1/custom import cases
+pass again: pass3-final-journey-local.log and pass3-final-custom-local.log. Qibla
+now waits for a real orientation event/visible arrow (or explicit unavailable
+sensor fallback) before capture; current English/Arabic compass renders were
+inspected, with physical calibration still pending. Preparation instructions now
+render each numbered step with spacing; build/lint and bilingual complete journey
+pass pass3-guide-spacing-{build,native}.log. The updated Arabic LG guide render
+is state/pass3-spaced-ar-lg-guide.png. Final generator cases pass 8/8 in
+pass3-audition-final-generator.log. No build/check process remains pending.
+
+Next: review touched runtime readability and final diff, then bump phone to
+0.3.0/code 8 and standalone installer to 1.1.3/code 6. Rebuild/lint/export, verify exact
+media/notices/signing and rerun only affected final native smoke/denial/runtime
+checks, including the existing location permission/detection cases after the
+controller move. Update PR #9, push the reviewed commits, wait for final-head Validate,
+Companion and Apple-core CI, export one combined review APK and supply concise
+screenshots/evidence. Keep physical/OEM acceptance separate. Do not start another
+feature, publish, merge or hand over the old 0.2.1 export. Do not hand over 0.2.1 as pass 3.
 Keep the PR draft; no public release, physical deployment, merge or unrelated work.
 
 Owned read-only muted emulator PID 21468, AVD Medium_Phone_API_37.0, console 5564,

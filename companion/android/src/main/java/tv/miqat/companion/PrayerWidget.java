@@ -113,7 +113,8 @@ public final class PrayerWidget extends AppWidgetProvider {
         a.body.addView(a.views.text(a.t("widget_hint"), 15, a.muted));
         LinearLayout preview = a.views.card(a.body);
         preview.addView(
-                views(a).apply(a, preview), new LinearLayout.LayoutParams(-1, a.views.dp(300)));
+                views(a).apply(a.getApplicationContext(), preview),
+                new LinearLayout.LayoutParams(-1, a.views.dp(300)));
         preview.setTag("widget.preview");
         AppWidgetManager manager = AppWidgetManager.getInstance(a);
         if (manager.isRequestPinAppWidgetSupported())

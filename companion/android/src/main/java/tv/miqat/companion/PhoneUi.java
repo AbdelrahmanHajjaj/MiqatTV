@@ -27,7 +27,8 @@ final class PhoneUi {
     final PhoneLocationUi locationUi;
     AlertDialog choiceDialog;
     final PhoneHome home;
-    String pending = "", draft = "", audioImport = "";
+    String pending = "", draft = "";
+    final PhoneSound sound;
     final PhoneAppearance appearance;
     private final ArrayList<Bundle> history = new ArrayList<>();
 
@@ -36,6 +37,7 @@ final class PhoneUi {
         home = new PhoneHome(a, this);
         locationUi = new PhoneLocationUi(a, this);
         appearance = new PhoneAppearance(a);
+        sound = new PhoneSound(a, this);
     }
 
     void restore(Bundle b) {
@@ -48,7 +50,7 @@ final class PhoneUi {
                                 .getScreens()
                                 .contains(place.getString("page", ""))) history.add(place);
 
-        audioImport = b.getString("phone-audio-import", "");
+        sound.audioImport = b.getString("phone-audio-import", "");
         locationUi.advancedLocation = b.getBoolean("phone-location-advanced");
         home.dayOffset = Math.max(-366, Math.min(366, b.getInt("phone-day")));
         pending = b.getString("phone-pending", "");
@@ -59,7 +61,7 @@ final class PhoneUi {
 
     void save(Bundle b) {
         b.putParcelableArrayList("phone-history", new ArrayList<>(history));
-        b.putString("phone-audio-import", audioImport);
+        b.putString("phone-audio-import", sound.audioImport);
         b.putBoolean("phone-location-advanced", locationUi.advancedLocation);
         b.putInt("phone-day", home.dayOffset);
         b.putString("phone-pending", pending);
@@ -438,7 +440,11 @@ final class PhoneUi {
                 });
         if (id.endsWith(".voice")) {
             LinearLayout actions = a.views.horizontal(row);
-            Button preview = a.views.button(actions, a.t("phone_preview"), () -> preview(id));
+            Button preview =
+                    a.views.button(
+                            actions,
+                            a.t("phone_preview"),
+                            () -> sound.preview(id, settings.value(id)));
             a.views.flex(preview);
             preview.setTag("phone." + id + ".preview");
             a.views
@@ -614,14 +620,13 @@ final class PhoneUi {
         try {
             java.util.List<Choices.Option> list = new ArrayList<>();
             for (String v : options) list.add(new Choices.Option(v, value(id, v)));
-            picker(
-                    a.t(data.controls.get(id).getString("label")),
-                    list,
-                    settings.value(id),
-                    choice -> {
-                        if (id.endsWith(".voice") && choice.equals("custom")) importAudio(id);
-                        else save(id, choice);
-                    });
+            if (id.endsWith(".voice")) sound.choose(id, list);
+            else
+                picker(
+                        a.t(data.controls.get(id).getString("label")),
+                        list,
+                        settings.value(id),
+                        choice -> save(id, choice));
         } catch (Exception invalid) {
             a.notice("invalid");
         }
@@ -652,23 +657,7 @@ final class PhoneUi {
         ListView list = new ListView(a);
         list.setTag("phone.choice.list");
         list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        ArrayAdapter<Choices.Option> adapter =
-                new ArrayAdapter<Choices.Option>(
-                        a,
-                        android.R.layout.simple_list_item_single_choice,
-                        new ArrayList<>(options)) {
-                    @Override
-                    public View getView(int position, View recycled, ViewGroup parent) {
-                        TextView view = (TextView) super.getView(position, recycled, parent);
-                        view.setTextColor(a.ink);
-                        view.setTypeface(a.regular);
-                        view.setTextSize(16);
-                        view.setMinHeight(a.views.dp(52));
-                        view.setLayoutDirection(
-                                a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
-                        return view;
-                    }
-                };
+        ArrayAdapter<Choices.Option> adapter = a.views.choices(options);
         list.setAdapter(adapter);
         int index = -1;
         for (int i = 0; i < options.size(); i++)
@@ -801,57 +790,6 @@ final class PhoneUi {
             a.startActivity(intent);
         } catch (ActivityNotFoundException missing) {
             a.notice("phone_permission_missing");
-        }
-    }
-
-    void importAudio(String id) {
-        audioImport = id;
-        a.startActivityForResult(
-                new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                        .setType("audio/*")
-                        .addCategory(Intent.CATEGORY_OPENABLE),
-                79);
-    }
-
-    void audioResult(android.net.Uri uri) {
-        String id = audioImport;
-        audioImport = "";
-        if (uri == null || id.isEmpty()) return;
-        a.network(
-                () -> {
-                    PhoneAudio.importFile(a, a.getContentResolver().openInputStream(uri), id);
-                    return true;
-                },
-                done -> {
-                    PhoneAlarms.rebuild(a);
-                    a.render();
-                },
-                () -> {
-                    a.notice("phone_custom_audio_failed");
-                    a.render();
-                });
-    }
-
-    void preview(String id) {
-        if (!PhoneAlarms.notifications(a)) {
-            open("permissions");
-            return;
-        }
-        try {
-            if (PhonePlayback.scheduled()) {
-                a.notice("phone_stop_first");
-                return;
-            }
-            int prayer =
-                    id.startsWith("call.")
-                            ? Arrays.asList(PhoneStore.PRAYERS).indexOf(id.split("\\.")[1])
-                            : 0;
-            String voice = id.startsWith("call.") ? settings.voice(prayer) : settings.value(id);
-            a.startForegroundService(
-                    PhonePlayback.intent(a, prayer, voice, true, "preview:" + System.nanoTime())
-                            .putExtra("default-audio", !id.startsWith("call.")));
-        } catch (Exception error) {
-            a.notice("phone_audio_failed");
         }
     }
 

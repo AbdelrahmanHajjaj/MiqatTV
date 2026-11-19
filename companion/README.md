@@ -28,14 +28,15 @@ extends canonical TV controls, and `generate.mjs` produces ignored profiles and
 Android resources from shared sources. Phone-only controls live in `shared/data/phone-ui-contract.json`; TV controls
 retain their existing shared contract.
 
-**Your TVs → Set up Android TV** opens the shared installer inside this app:
-local APK/download, guarded ADB setup, optional reviewed cleanup and recovery.
-It follows the phone language. Successful setup offers **Pair TV**; cancelling
-or finishing incomplete setup returns to Your TVs. Installation does not grant
-everyday remote access: normal TV approval is still required. LG can be paired
-through **Your TVs → Set up LG TV**, using Developer Mode, SSH host-key approval
-and a local Miqat IPK. SSH credentials are session-only and independent from
-ordinary remote pairing. See [LG setup and limits](../docs/WEBOS.md).
+**Your TVs → Set up my TV** and **Pair a new TV** open the common platform
+chooser, preparation guide and latest/stable/preview channel selection. Advanced
+switches to local APK/IPK selection. Android uses the shared installer runtime
+with optional reviewed cleanup/recovery and the phone's selected theme/language.
+LG uses Developer Mode, explicit SSH host-key approval and verified public/local
+IPKs. Unsupported platforms remain visibly locked Coming soon. Successful setup
+offers ordinary pairing; installation never grants everyday remote access.
+SSH credentials are session-only and separate from normal LAN pairing.
+See [LG setup and limits](../docs/WEBOS.md).
 See [setup and recovery](../docs/ANDROID-SETUP.md).
 
 Miqat uses tv.miqat packages and its own QR prefix. Install/pair fresh; old-app

@@ -634,3 +634,56 @@ and existing bindings pass (pass3-palette-native.log). English/Arabic screenshot
 were inspected. Shared Qibla coordinates now match the pinned Adhan source;
 JVM/JS/Java/legacy-ES5 pass (pass3-qibla-coordinate-check.log). This remains an
 intermediate checkpoint, with final acceptance work listed in PHONE-WORK.md.
+
+
+## Phone sound and layout checkpoint — 19 November 2026
+
+Draft voice sheets audition without saving and stop on Cancel. Actual native
+playback checks pass for global/per-prayer custom audition independent of saved
+inheritance, real alarm delivery, 30-second private audio cutoff, twelve-second
+preview, focus/Stop and disabled cleanup. Bilingual UI Cancel/Apply persistence
+passes (pass3-audition-ui-2.log, pass3-audition-runtime.log). Shared native choice
+styling replaces duplicate adapters. APK import validates a real APK through
+Android PackageManager while staged before atomic publication
+(pass3-native-archive-parser.log).
+
+Extended 80–150% native sizing checks pass with 1.3× OS text in portrait and
+verified 2400×1080 landscape, covering saved editors, voice sheets, actual widget
+timetable, appearance Apply and pinned onboarding actions. Final captures were
+inspected for Arabic shaping/RTL, action visibility and real artwork/times.
+Widget preview uses system text scale and the app font. Exact successful logs:
+pass3-widget-portrait-os130.log and pass3-verified-landscape-os130.log.
+An earlier rotation-setting run stayed portrait; pass3-widget-landscape-os130.log
+does not establish landscape. The runner now supports an explicit orientation
+assertion; CI requests portrait. Session display settings were restored.
+
+LG ES5/service/TLS/browser matrix, preview tokens/data/tests/build, Android TV
+size/lint/test-APK, both installer hosts and 47 root Python/Java regressions pass
+on this source checkpoint. Logs are pass3-webos-{tests,browser}.log,
+pass3-preview-{tokens,data,tests,build}.log, pass3-tv-installer-build.log and
+pass3-python-regressions.log. See PHONE-AUDIT.md for inspected boundaries,
+corrected findings, retained meaningful tests and explicit uninspected areas.
+These are intermediate local results; final-head CI/export and physical acceptance
+remain distinct. No public release or physical operation was performed.
+
+
+The native phone-to-LG UI fixture also passes over actual local RSA/TLS/settings
+patches: Apply/Cancel, 5% volume, reconnect without upload, transport loss and
+bilingual stale cache (pass3-lg-phone-live.log; approval injected, no TV).
+Final local fresh-use/widget-host/TV-source/Qibla sensor-event and custom migration
+rechecks pass (pass3-final-{journey,custom}-local.log). Qibla's visible arrow and
+single calibration guidance were inspected in English/Arabic. Preparation steps
+now have separate spacing; build/lint and the complete bilingual journey pass
+pass3-guide-spacing-{build,native}.log. Generator 8/8 passes after final copy.
+Lint has no errors; retained warnings concern the existing SDK target, dynamic
+icon lookup/resources, launcher artwork and explicitly pinned/custom or upstream
+ADB TLS managers. This is not a dependency upgrade or store-publication pass.
+
+
+Shared phone labels/choice rows now use the app's selected paragraph direction,
+rather than relying on the system text locale. This corrects mixed Arabic/English
+instruction order. After the correction, build/lint, bilingual first use/real
+widget host/Qibla orientation events and enlarged-text portrait/verified-landscape
+matrices pass: pass3-explicit-text-direction-build.log and
+pass3-rtl-{journey,portrait-size,wide-size}.log. Arabic preparation and compass
+renders were inspected. The guest display configuration was restored in finally.

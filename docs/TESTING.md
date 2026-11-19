@@ -160,8 +160,12 @@ separate owner acceptance step.
 
 Standalone phone suites: `-e suite phone-ui` checks actual bilingual prayer views,
 Save/Cancel, location confirmation and persistence. `phone-size` checks every
-80–150% app size in both languages; run in each owned-emulator orientation and
-with enlarged OS text, restoring the session's prior display settings afterwards.
+80–150% app size in both languages, with voice/appearance/first-use/widget edges
+at the smallest/largest sizes. Run in each owned-emulator orientation and with
+enlarged OS text; pass `-e orientation portrait` or `-e orientation landscape`
+to assert the requested configuration. Check screenshot dimensions: changing a
+rotation setting alone may not rotate an emulator. Restore the session's prior
+display settings afterwards.
 `phone-denied` requires exact-alarm or notification access denied and proves no
 scheduling/playback. `phone-runtime` requires both permissions granted on an owned
 muted emulator; it exercises actual AlarmManager delivery, foreground output,
@@ -189,3 +193,10 @@ and compiles both iOS library variants. It boots no iOS simulator and does not
 establish an iPhone application, signed installation or background-audio result.
 Target declarations follow [Kotlin's hierarchy documentation](https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-hierarchy.html).
 The runner/toolchain is recorded in [GitHub's macOS 15 ARM64 image](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md).
+
+
+Phone pass-3 journey: `-e suite phone-journey` exercises fresh/resumable first use,
+real appearance Cancel, a temporary native AppWidgetHost bind/update and the
+common TV platform/preparation/source flow, plus rejecting a late cancelled job.
+The widget fixture requires API 29+ and releases its test-owned host and scoped
+shell binding permission in finally. No physical TV or public release is used.

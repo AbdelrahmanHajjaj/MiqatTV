@@ -75,7 +75,9 @@ public final class PhonePlayback extends Service {
                 .setAudioAttributes(attributes).setAcceptsDelayedFocusGain(false).setOnAudioFocusChangeListener(change->{if(token==generation&&change!=AudioManager.AUDIOFOCUS_GAIN)stopSelf();}).build();
             if(audio.requestAudioFocus(focus)!=AudioManager.AUDIOFOCUS_REQUEST_GRANTED)throw new IllegalStateException("Audio focus unavailable");
             player=new MediaPlayer();player.setAudioAttributes(attributes);player.setWakeMode(this,PowerManager.PARTIAL_WAKE_LOCK);
-            if("custom".equals(voice))player.setDataSource(PhoneAudio.file(this,settings,prayer,defaultAudio).getPath());
+            boolean defaultVoice = settings.value("call." + PhoneStore.PRAYERS[prayer] + ".voice").equals("inherit");
+            if (preview) defaultVoice = intent.getBooleanExtra("default-voice", defaultAudio || defaultVoice);
+            if("custom".equals(voice))player.setDataSource(PhoneAudio.file(this,settings,prayer,defaultVoice).getPath());
             else try(AssetFileDescriptor file=getAssets().openFd("adhan/"+voice+".mp3")){player.setDataSource(file.getFileDescriptor(),file.getStartOffset(),file.getLength());}
             float volume=settings.audioVolume(defaultAudio?-1:prayer)/100f;player.setVolume(volume,volume);
             player.setOnCompletionListener(done->stopSelf());player.setOnErrorListener((failed,what,extra)->{failed();return true;});

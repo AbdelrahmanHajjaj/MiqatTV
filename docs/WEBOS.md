@@ -15,12 +15,13 @@ Detailed physical remote and power/lifecycle acceptance remain pending. Newer LG
 
 ## Build and install
 
-The Android Miqat phone app includes **Your TVs → Set up LG TV**. Enable LG's
-Developer Mode and Key Server on the TV. On the phone, use **Download latest TV
-build** to fetch the published IPK from GitHub with size/SHA-256 verification.
-Local IPKs remain under **Advanced**. If no public build exists, Miqat says so;
-it does not use private CI artifacts. Select a package,
-and enter the TV's private IPv4 address. First confirm the SSH identity on your
+On the Android Miqat phone app, choose **Your TVs → Set up my TV** (or **Pair a
+new TV**) → **LG webOS**. Follow the preparation guide to enable LG Developer
+Mode and Key Server. Select Latest (default), Stable or Preview, or choose a
+local IPK through the Advanced icon. Enter the TV's private IPv4 address; public
+IPK download follows the approved Developer Mode connection, with size/SHA-256
+verification. If no public build exists, Miqat says so; it does not use private
+CI artifacts. First confirm the SSH identity on your
 trusted home network; then enter LG's case-sensitive passphrase and connect.
 Review the installed/selected version before explicitly installing or updating.
 The phone verifies transfer bytes and the installed version, refuses downgrades,

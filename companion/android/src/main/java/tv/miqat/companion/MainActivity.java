@@ -703,7 +703,7 @@ public final class MainActivity extends Activity {
     protected void onActivityResult(int request, int result, android.content.Intent data) {
         super.onActivityResult(request, result, data);
         if (request == 79 && phoneUi != null)
-            phoneUi.audioResult(result == RESULT_OK && data != null ? data.getData() : null);
+            phoneUi.sound.audioResult(result == RESULT_OK && data != null ? data.getData() : null);
         if (request == 71 && result == RESULT_OK && data != null) {
             String qr = data.getStringExtra("qr");
             if (qr != null) pairingUi.beginPairing(qr);

@@ -77,7 +77,8 @@ Phone prayer/iOS work is sequenced in [WORK.md](WORK.md).
 ### Independent phone prayer runtime
 
 Phone-only metadata is canonical in `shared/data/phone-ui-contract.json`, with
-portable reminder/next-prayer policy in `companion/core`. `PhoneSchedule` adapts
+portable phone event/next-prayer policy in `companion/core`. Common location,
+quiet-hour, display-digit and Qibla bearing rules live in `shared/core` for JVM/ES5. `PhoneSchedule` adapts
 the pinned TV Adhan source using explicit civil timezone inputs. `PhoneStore`
 validates and persists phone-only preferences/claims in device-protected storage;
 backup and transfer exclude it. TV credentials stay in their encrypted store.
@@ -85,6 +86,10 @@ backup and transfer exclude it. TV credentials stay in their encrypted store.
 needed. The private receiver reschedules after boot/time changes and durably
 claims eligible events before output. `PhonePlayback` is a private, non-sticky
 foreground service only during approved local playback, with focus loss, Stop,
-timeout and permission/settings cleanup. `PhoneUi` owns native rendering and
-permission repair; neither phone settings nor alarm recovery connect to a TV.
+timeout and permission/settings cleanup. `PhoneUi` coordinates phone settings;
+PhoneHome, PhoneLocationUi, PhoneAppearance, PhoneOnboarding and PhoneSound own
+their respective native journeys. PairingUi/TvSettingsUi/TvRemoteUi/TvListUi own
+TV workflows, while transports keep networking/trust separate. QiblaUi owns
+foreground sensors; PrayerWidget uses the existing schedule/update lifecycle.
+Neither phone settings nor alarm recovery connect to a TV.
 See [phone guide and limits](PHONE.md) and [delivery ledger](PHONE-WORK.md).

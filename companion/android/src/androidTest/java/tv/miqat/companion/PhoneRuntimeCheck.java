@@ -75,6 +75,7 @@ final class PhoneRuntimeCheck {
             long previewStarted=SystemClock.elapsedRealtime();
             await(test,()->!PhonePlayback.playing(),16000,"Preview exceeded its twelve-second bound");
             CompanionCheck.check(SystemClock.elapsedRealtime()-previewStarted>=10000&&!preferences.contains("audio-error"),"Preview failed instead of completing its bounded playback");
+            audition(test, c);
             CompanionCheck.check(PhoneStore.read(c).value("audio.custom.fajr").isEmpty(),"Custom runtime fixture requires an unused Fajr audio slot on the owned emulator");
             PhoneAudio.importFile(c,c.getAssets().open("adhan/alafasy.mp3"),"call.fajr.voice");
             Map<String,String> overrides=new LinkedHashMap<>();overrides.put("call.fajr.default-audio","false");overrides.put("call.fajr.volume","15");overrides.put("call.fajr.duration","30");PhoneStore.read(c).changed(overrides).save(c);
@@ -82,6 +83,26 @@ final class PhoneRuntimeCheck {
             await(test,PhonePlayback::outputStarted,10000,"Private custom audio did not start");long customStarted=SystemClock.elapsedRealtime();
             await(test,()->!PhonePlayback.playing(),34000,"Per-prayer duration did not stop custom audio");
             CompanionCheck.check(SystemClock.elapsedRealtime()-customStarted>=28000&&!preferences.contains("audio-error"),"Custom playback failed instead of reaching its per-prayer bound");
+            PhoneStore beforeDraft = PhoneStore.read(c);
+            try {
+                Map<String,String> draft = new LinkedHashMap<>();
+                draft.put("audio.custom.default", beforeDraft.value("audio.custom.fajr"));
+                draft.put("audio.custom.fajr", "");
+                draft.put("reminders.voice", "custom");
+                draft.put("call.fajr.voice", "alafasy");
+                beforeDraft.changed(draft).save(c);
+                test.runOnMainSync(()->c.startForegroundService(PhonePlayback.intent(c,0,"custom",true,"inherited-custom-draft")
+                        .putExtra("default-voice",true)));
+                await(test,PhonePlayback::outputStarted,10000,"Inherited custom audition used the saved per-prayer slot");
+                PhonePlayback.stop(c);await(test,()->!PhonePlayback.playing(),5000,"Custom draft Stop failed");
+                draft.put("audio.custom.default", "");draft.put("audio.custom.fajr", beforeDraft.value("audio.custom.fajr"));
+                draft.put("reminders.voice","alafasy");draft.put("call.fajr.voice","inherit");
+                beforeDraft.changed(draft).save(c);
+                test.runOnMainSync(()->c.startForegroundService(PhonePlayback.intent(c,0,"custom",true,"per-prayer-custom-draft")
+                        .putExtra("default-voice",false)));
+                await(test,PhonePlayback::outputStarted,10000,"Per-prayer custom audition used the inherited slot");
+                PhonePlayback.stop(c);await(test,()->!PhonePlayback.playing(),5000,"Custom draft cleanup failed");
+            } finally { beforeDraft.save(c); }
             for(String mode:new String[]{"vibration","silent"}){
                 PhoneStore.read(c).changed(Collections.singletonMap("call.fajr.mode",mode)).save(c);long stamp=System.currentTimeMillis();
                 PhoneAlarms.notify(c,new ReminderEvent("mode-fixture:"+mode,"call",0,stamp,stamp),false);
@@ -110,6 +131,25 @@ final class PhoneRuntimeCheck {
             CompanionCheck.check(restore.commit(),"Cannot restore alarm fixture");PhoneAudio.cleanup(c);PhoneAlarms.rebuild(c);
         }
     }
+    private static void audition(Instrumentation test, Context c) throws Exception {
+        String saved = PhoneStore.read(c).value("reminders.voice");
+        MainActivity a=(MainActivity)test.startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        try {
+            PhoneUiCheck.on(test,()->{
+                a.phoneUi.open("audio");
+                a.body.findViewWithTag("phone.reminders.voice.edit").performClick();
+                android.widget.ListView choices = a.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.voice.list");
+                choices.performItemClick(null,0,0);
+                a.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.voice.preview").performClick();
+            });
+            await(test,PhonePlayback::outputStarted,10000,"Voice-sheet audition did not start playback");
+            CompanionCheck.check(PhoneStore.read(c).value("reminders.voice").equals(saved),"Audition committed a voice");
+            PhoneUiCheck.on(test,()->a.phoneUi.choiceDialog.getButton(-2).performClick());
+            await(test,()->!PhonePlayback.playing(),5000,"Voice-sheet Cancel did not stop audition");
+            CompanionCheck.check(PhoneStore.read(c).value("reminders.voice").equals(saved),"Voice-sheet Cancel changed voice");
+        } finally { PhoneUiCheck.on(test,a::finish); }
+    }
+
     private static void await(Instrumentation test,BooleanSupplier condition,long timeout,String error) {
         long until=SystemClock.uptimeMillis()+timeout;boolean[] ready={false};
         do{test.runOnMainSync(()->ready[0]=condition.getAsBoolean());if(ready[0])return;SystemClock.sleep(50);}while(SystemClock.uptimeMillis()<until);

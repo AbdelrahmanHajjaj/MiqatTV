@@ -109,20 +109,7 @@ final class PhoneAppearance {
         ListView choices = new ListView(a);
         choices.setTag("phone.appearance.choices");
         choices.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<String>(
-                        a, android.R.layout.simple_list_item_single_choice, labels) {
-                    @Override
-                    public View getView(
-                            int position, View recycled, android.view.ViewGroup parent) {
-                        TextView view = (TextView) super.getView(position, recycled, parent);
-                        view.setTextColor(a.ink);
-                        view.setTypeface(a.regular);
-                        view.setTextSize(16);
-                        view.setMinHeight(a.views.dp(52));
-                        return view;
-                    }
-                };
+        ArrayAdapter<String> adapter = a.views.choices(java.util.Arrays.asList(labels));
         choices.setAdapter(adapter);
         choices.setItemChecked(options.indexOf(selected[0]), true);
         choices.setSelection(options.indexOf(selected[0]));

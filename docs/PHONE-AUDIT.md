@@ -42,11 +42,29 @@ source line has been inspected. Finish the map and evidence before delivery.
    the standalone installer's own preparation flow remains intact. Post-extraction
    bilingual handoff and cancelled Advanced file-picker checks pass.
 
-7. Embedded Android setup used fixed default colours after selecting a different
+7. Voice sheets previously committed a tap before audition. PhoneSound now owns
+   draft selection, audition/Stop/Cancel/Apply and private import; choice-row
+   styling is shared with ordinary/appearance sheets. Preview source selection
+   is independent of the saved voice and level override. Actual-service cases
+   cover inherited global custom audio and private per-prayer audition while a
+   different inheritance choice is saved.
+8. Widget guide preview inherited the app's extra font scale and system fallback
+   font, unlike the launcher. It now inflates with system text scale and declares
+   the app font. The real six-prayer timetable passes enlarged-text clipping
+   checks in verified portrait/landscape; the actual host bind/update check stays.
+
+9. Embedded Android setup used fixed default colours after selecting a different
    phone theme. InstallerPalette is immutable and owned by its host Activity;
    runtime controls and artwork use that palette, without mutable global theme
    state or a new dependency. The standalone default is unchanged. Native
    bilingual theme/handoff assertions pass; actual Dusk renders inspected.
+
+10. Mixed Arabic/English preparation paragraphs followed the system text locale
+    even after choosing Arabic in Miqat. Shared phone text and choice rows now
+    use the explicitly selected paragraph direction. Numbered preparation steps
+    are separately spaced. Rendered Arabic instructions now start on the correct
+    side and keep English menu names readable; the complete bilingual journey
+    and both enlarged-text orientation matrices pass after this change.
 
 ## Boundaries retained
 
@@ -62,10 +80,63 @@ Retain tests that protect contracts actually consumed across shells, saved data,
 trust/integrity, scheduler boundaries, actual bound controls and runtime lifecycle.
 Do not delete a test because it is small; identify duplicate behavior before
 removing it. New evidence is one complete native journey plus focused Qibla and
-package/channel edge cases, not getter/constant coverage. Full test audit pending.
+package/channel edge cases, not getter/constant coverage. Location/quiet-hour cases were moved to shared common tests instead of duplicated
+in phone core; both JVM and JS now run them. Existing native suites protect actual
+bindings, saved drafts, trust failures, alarms and file preservation. Kept these:
+none was proven redundant merely because it is short. New sound cases cover
+unsaved audition/Cancel/Apply and custom inheritance selecting the correct file.
+Sizing reuses the existing native matrix rather than adding a parallel harness.
 
-Still inspect repository entry/build/dependency map, TV/service/preview integration,
-high-risk persistence/transport/media paths and remaining UI responsibilities.
-Record exact results and limits here/EVIDENCE.md. Screenshots and raw failures
-stay private under ignored state/; do not claim a whole-repo clean bill of health
-from filename searches or passing CI.
+## Repository audit map and retained limits
+
+Inspected root settings/build inclusion and platform manifests/dependencies,
+companion generation, canonical phone/TV catalogs and Apple-core workflow.
+The phone shares installer/runtime and portable rules; Android TV/LG/preview
+retain native shells. No new production dependency or framework was needed.
+Shared generators remain sequential; Apple checks compile/test libraries only.
+
+Traced the following high-risk paths to their callers and focused checks:
+
+- Phone: MainActivity lifecycle → PhoneStore/PhoneAlarms/PrayerAlarm →
+  PhonePlayback/PhoneAudio, plus Qibla sensor and PrayerWidget ownership. Alarm
+  claims commit before output, events recheck current weekday/quiet settings,
+  boot recovery only reschedules, private audio has bounded decode/import and
+  foreground playback has Stop/focus/timeout cleanup. Native runtime covers these
+  boundaries; OEM reliability and sensor calibration remain physical acceptance.
+- Phone TV access: Phones uses atomic AES-GCM records under a shared lock;
+  LanTv/PairingUi retain certificate pins, explicit approval and uncertain writes.
+  HTTP/TlsServer bound headers/body/response/workers/deadlines; private LAN only.
+  Existing native LAN checks cover tamper/recovery and no replay. No need for
+  queues, accounts or infrastructure beyond one household.
+- Installer: PublicRelease source/redirect allowlist, bounded metadata and SHA-256,
+  PackageImport atomic replacement, Android package/version checks and LG
+  LgPackage/LgInstall key pinning, transfer/version readback and explicit retry.
+  Setup credentials remain session-only. Public downloads and physical installs
+  remain separate acceptance; no published package exists yet.
+- Android TV: CompanionApplication foreground listener ownership, PrayerWatch
+  persisted claims, NowActivity/Adhans playback teardown and existing media
+  packaging. Corrected the stale Adhans provenance comment to the approved
+  shared/media source. This is inspection/build evidence, not TV sound acceptance.
+- LG: companion-session foreground subscription/epoch cleanup, companion-server
+  bounded TLS/requests and command uncertainty, companion-files owned POSIX
+  atomic writes, service scheduling generations and volume restoration ownership.
+  Existing ES5/service/browser checks remain required. No TV wake/Home capability
+  or new phone-only UI is inferred from shared metadata.
+- Preview: lifecycle AbortSignal cleanup and navigation replacement/history/focus,
+  canonical shared data and token build. It remains a browser simulation.
+
+One pre-existing TV finding is outside this phone release's runtime changes:
+Android NowActivity restores its saved pre-adhan volume/mute unconditionally,
+where LG checks ownership first. A user changing volume during an automatically
+unmuted TV adhan may have that later change overwritten at Stop. Retain as a
+specific next-TV-release correction with native volume-intervention regression
+and watched hardware acceptance; do not silently change TV audio policy as phone
+polish. Phone playback never changes global volume, verified natively.
+
+This audit covers repository boundaries and the paths named above. It does not
+claim a line-by-line review of every unchanged TV view, every astronomy/media
+vendor source, operating-system implementation or dependency CVE database.
+No dependency/security scan or physical acceptance is claimed. High-risk existing
+checks plus affected consumer builds establish regression evidence for this pass;
+they do not erase those limits. Remaining rendered layout and final consumer/CI
+results belong in EVIDENCE.md; raw logs/captures stay under ignored state/.

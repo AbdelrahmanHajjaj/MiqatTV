@@ -46,7 +46,7 @@ final class PhoneAudio {
         }
     }
     static File file(Context c,PhoneStore settings,int prayer,boolean defaults)throws IOException {
-        String slot=defaults||settings.value("call."+PhoneStore.PRAYERS[prayer]+".voice").equals("inherit")?"default":PhoneStore.PRAYERS[prayer];
+        String slot=defaults?"default":PhoneStore.PRAYERS[prayer];
         String hash=settings.value("audio.custom."+slot);if(!hash.matches("[a-f0-9]{64}"))throw new IOException("No imported audio");
         File file=new File(directory(c),hash+".audio");if(!file.isFile()||file.length()<1||file.length()>MAX_BYTES)throw new IOException("Private audio unavailable");return file;
     }

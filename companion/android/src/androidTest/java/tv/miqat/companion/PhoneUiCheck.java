@@ -76,7 +76,25 @@ final class PhoneUiCheck {
                 capture(test,a,lang+"-phone-settings",capture);
                 on(test,()->a.phoneUi.open("audio"));capture(test,a,lang+"-phone-audio",capture);
                 on(test,()->a.body.findViewWithTag("phone.reminders.voice.edit").performClick());capture(test,a,lang+"-phone-voice-sheet",capture);
-                on(test,()->a.phoneUi.choiceDialog.dismiss());
+                String savedVoice = PhoneStore.read(context).value("reminders.voice");
+                java.util.List<String> voices = a.phoneUi.data.options(a.phoneUi.data.controls.get("reminders.voice"));
+                int candidateIndex = savedVoice.equals(voices.get(0)) ? 1 : 0;
+                String candidateVoice = voices.get(candidateIndex);
+                on(test,()->{
+                    a.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.voice.list")
+                            .performItemClick(null,candidateIndex,candidateIndex);
+                    check(a.phoneUi.settings.value("reminders.voice").equals(savedVoice),"Audition selection changed the saved voice");
+                    a.phoneUi.choiceDialog.getButton(-2).performClick();
+                    a.body.findViewWithTag("phone.reminders.voice.edit").performClick();
+                    a.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.voice.list")
+                            .performItemClick(null,candidateIndex,candidateIndex);
+                    a.phoneUi.choiceDialog.getButton(-1).performClick();
+                });
+                LiveUiCheck.untilUi(test,()->a.phoneUi.choiceDialog == null && a.phoneUi.settings.value("reminders.voice").equals(candidateVoice));
+                on(test,()->{
+                    check(a.phoneUi.settings.value("reminders.voice").equals(candidateVoice),"Apply did not save selected voice");
+                    a.phoneUi.save("reminders.voice",savedVoice);
+                });
                 on(test,()->a.phoneUi.open("calculation"));capture(test,a,lang+"-phone-location",capture);
                 on(test,()->{a.phoneUi.open("fajr");a.tab("prayers");});capture(test,a,lang+"-phone-themed",capture);
                 on(test,a::finish);test.waitForIdleSync();current[0]=null;

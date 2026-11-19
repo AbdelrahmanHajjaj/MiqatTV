@@ -42,6 +42,35 @@ final class CompanionViews {
         }
     }
 
+    <T> ArrayAdapter<T> choices(java.util.List<T> options) {
+        return new ArrayAdapter<T>(
+                a,
+                android.R.layout.simple_list_item_single_choice,
+                new java.util.ArrayList<>(options)) {
+            @Override
+            public View getView(int position, View recycled, ViewGroup parent) {
+                TextView view = (TextView) super.getView(position, recycled, parent);
+                view.setTextColor(a.ink);
+                view.setTypeface(a.regular);
+                view.setTextSize(16);
+                view.setTextDirection(a.ar ? View.TEXT_DIRECTION_RTL : View.TEXT_DIRECTION_LTR);
+                if (view instanceof CheckedTextView)
+                    ((CheckedTextView) view)
+                            .setCheckMarkTintList(
+                                    new ColorStateList(
+                                            new int[][] {
+                                                new int[] {android.R.attr.state_checked},
+                                                new int[] {}
+                                            },
+                                            new int[] {a.accent, a.muted}));
+                view.setMinHeight(dp(52));
+                view.setLayoutDirection(
+                        a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+                return view;
+            }
+        };
+    }
+
     int dp(float value) {
         return Math.round(a.getResources().getDisplayMetrics().density * value);
     }
@@ -63,7 +92,7 @@ final class CompanionViews {
         v.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         v.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         v.setGravity(Gravity.START);
-        v.setTextDirection(View.TEXT_DIRECTION_LOCALE);
+        v.setTextDirection(a.ar ? View.TEXT_DIRECTION_RTL : View.TEXT_DIRECTION_LTR);
         v.setPadding(0, dp(5), 0, dp(5));
         return v;
     }
