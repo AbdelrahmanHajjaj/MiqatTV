@@ -1,5 +1,32 @@
 # Validation evidence
 
+## Themed adhan and notification metadata — 19 November 2026
+
+Review APK **0.4.3/code 12**, primary `state/builds/companion/Miqat-latest.apk`,
+32,358,695 bytes; SHA-256:
+`CBDB11AB24404E85694B25260E897244E5D77ABD599248E523E74CF6D72E69B2`.
+Signing certificate matches prior builds. All 25 approved recordings and 25
+license notices match exact source bytes. No production dependency added.
+
+Build/lint pass (0 errors, 43 existing warnings). Owned muted API37 emulator:
+actual scheduled-alarm/media checks, bilingual phone UI and 80–150% app sizing
+with Android font1.3 in portrait/landscape pass. Runtime deliberately separates
+alarm firing time from scheduled prayer time and verifies the latter in media
+metadata, along with actual voice and artwork. Expanded SystemUI notification
+renders prayer/time/voice and selected artwork; native check presses real Stop.
+Bilingual Dusk/peaks adhan screens inspected, including allowed lock-screen alarm.
+Wide full-screen-denied fallback runtime and completed bilingual setup journey
+also pass; wide screen and completed Home captures inspected. Owned emulator
+PID32500 was verified and stopped after all native checks.
+The first English capture preceded the first submitted frame; frame-commit
+synchronization now yields the actual screen. State logs/captures remain private
+under `state/adhan-art-*`; PHONE-WORK.md owns remaining CI/cleanup state.
+
+The shared scene renderer preserves Home/preview sizing. Native time formatting
+is reused by UI, widgets and media; portable prayer rules/TV contracts unchanged.
+Android owns final notification colors/layout and dismissal availability.
+No physical OEM, speaker, power-key, TV or iOS acceptance is claimed.
+
 ## Prayer card and background adhan — 19 November 2026
 
 Review APK **0.4.2/code 11**, primary `state/builds/companion/Miqat-latest.apk`,

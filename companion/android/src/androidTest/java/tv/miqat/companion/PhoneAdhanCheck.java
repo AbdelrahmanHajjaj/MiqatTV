@@ -5,6 +5,7 @@ import static tv.miqat.companion.PhoneUiCheck.check;
 
 import android.app.*;
 import android.content.*;
+import android.media.MediaMetadata;
 import android.media.session.*;
 import android.os.SystemClock;
 import android.view.KeyEvent;
@@ -55,7 +56,25 @@ final class PhoneAdhanCheck {
         return SystemClock.elapsedRealtime() - pausedAt;
     }
 
-    static void stop(Instrumentation test, Context c) throws Exception {
+    static void stop(Instrumentation test, Context c, tv.miqat.core.ReminderEvent event)
+            throws Exception {
+        PhoneStore settings = PhoneStore.read(c);
+        boolean ar = PhoneAlarms.arabic(c);
+        MediaSession.Token token = notice(c).extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
+        MediaMetadata metadata = new MediaController(c, token).getMetadata();
+        String title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
+        check(
+                title.contains(settings.data.prayerName(event.getPrayer(), ar))
+                        && title.contains(PhoneTime.at(settings, event.getPrayerTime(), ar)),
+                "Notification does not show the actual prayer and scheduled time");
+        check(
+                metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
+                        .equals(settings.data.voiceName(settings.voice(event.getPrayer()), ar)),
+                "Notification does not name the playing voice");
+        check(
+                metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART) != null
+                        && notice(c).getLargeIcon() != null,
+                "Selected notification artwork missing");
         PhoneRuntimeCheck.shell(test, "cmd statusbar expand-notifications");
         try {
             LiveUiCheck.until(() -> {
@@ -111,19 +130,21 @@ final class PhoneAdhanCheck {
             Map<String, String> enabled = new HashMap<>();
             enabled.put("reminders.full-screen", "true");
             enabled.put("reminders.volume-keys", "true");
+            enabled.put("appearance.theme", "dusk");
+            enabled.put("appearance.background", "dusk_peaks");
             before.changed(enabled).save(c);
             language.edit().putString("language", "en").commit();
             shown[0] =
                     PhoneAlarms.fullScreenAllowed(c)
                             ? alarmScreen(test, c)
                             : start(test, c, "screen-dismiss");
-            PhoneUiCheck.capture(test, shown[0], "en-adhan-screen", true);
+            captureScreen(test, shown[0], "en-adhan-screen");
             Notification first = notice(c);
             check(
                     PhoneAlarms.fullScreenAllowed(c) == (first.fullScreenIntent != null),
                     "Full-screen notification ignored Android access");
             PhoneUiCheck.on(test, () -> shown[0].content.performClick());
-            test.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
             await(
                     test,
                     () -> shown[0].closeDialog != null && shown[0].closeDialog.isShowing(),
@@ -146,14 +167,14 @@ final class PhoneAdhanCheck {
                     "Notification dismissal did not stop audio and close its screen");
             language.edit().putString("language", "ar").commit();
             shown[0] = start(test, c, "screen-volume");
-            PhoneUiCheck.capture(test, shown[0], "ar-adhan-screen", true);
+            captureScreen(test, shown[0], "ar-adhan-screen");
             first.deleteIntent.send();
             SystemClock.sleep(500);
             check(
                     PhonePlayback.currentId().equals("screen-volume")
                             && PhonePlayback.outputStarted(),
                     "A stale notification stopped a newer adhan");
-            test.sendKeyDownUpSync(KeyEvent.KEYCODE_VOLUME_DOWN);
+            LiveUiCheck.key(test, KeyEvent.KEYCODE_VOLUME_DOWN);
             await(
                     test,
                     () -> !PhonePlayback.playing() && shown[0].isDestroyed(),
@@ -179,6 +200,25 @@ final class PhoneAdhanCheck {
             before.save(c);
             language.edit().putString("language", originalLanguage).commit();
         }
+    }
+
+    private static void captureScreen(Instrumentation test, PhoneAdhanScreen screen, String name)
+            throws Exception {
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            java.util.concurrent.CountDownLatch frame = new java.util.concurrent.CountDownLatch(1);
+            PhoneUiCheck.on(
+                    test,
+                    () -> {
+                        screen.content
+                                .getViewTreeObserver()
+                                .registerFrameCommitCallback(frame::countDown);
+                        screen.content.invalidate();
+                    });
+            check(
+                    frame.await(5, java.util.concurrent.TimeUnit.SECONDS),
+                    "Adhan screen did not submit its rendered frame");
+        }
+        PhoneUiCheck.capture(test, screen, name, true);
     }
 
     private static PhoneAdhanScreen alarmScreen(Instrumentation test, Context c) throws Exception {

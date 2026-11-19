@@ -350,7 +350,7 @@ final class PhoneJourneyCheck {
         }
         dialog.recycle();
         LiveUiCheck.untilUi(test, () -> !a.hasWindowFocus());
-        test.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+        LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
         LiveUiCheck.untilUi(test, a::hasWindowFocus);
     }
 

@@ -205,3 +205,17 @@ now declares a Stop custom action for initial/resumed states, with a callback to
 end the same service. Older notification actions remain. Native tests invoke the
 actual custom control and capture the expanded system notification. Source:
 https://developer.android.com/media/implement/surfaces/mobile
+
+## 0.4.3 adhan artwork and metadata
+
+PhoneBackdrop extracts the existing scene compositor unchanged, preserving bitmap
+validation and wrap-content sizing. Home, previews and AdhanArtwork reuse it;
+the screen and notification reuse generated MiqatShape geometry and canonical
+palette/voice labels. PhoneTime centralizes the existing native clock/timezone
+formatter used by UI, widgets and notification. No portable calculation or TV
+contract changed, and no dependency or duplicate player/service was added.
+Playback captures the effective voice ID and scheduled prayer timestamp, so media
+metadata names the clip playing rather than a later default or current wall time.
+Selected artwork failures retain the themed arch and do not prevent playback.
+Focused native checks inspect actual media metadata, SystemUI Stop and selected
+nondefault-theme screen output; physical OEM notification behavior remains open.

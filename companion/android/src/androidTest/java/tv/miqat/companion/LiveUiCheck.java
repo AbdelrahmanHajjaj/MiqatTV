@@ -22,6 +22,15 @@ final class LiveUiCheck {
     static void untilUi(Instrumentation test,Callable<Boolean> condition)throws Exception {
         until(()->{boolean[] value={false};Throwable[] failure={null};test.runOnMainSync(()->{try{value[0]=condition.call();}catch(Throwable error){failure[0]=error;}});if(failure[0]!=null)throw new AssertionError(failure[0]);return value[0];});
     }
+    static void key(Instrumentation test, int code) {
+        long down = SystemClock.uptimeMillis();
+        android.app.UiAutomation input = test.getUiAutomation();
+        // UiAutomation waits for window surface operations before dispatching input.
+        check(input.injectInputEvent(new android.view.KeyEvent(down, down,
+                android.view.KeyEvent.ACTION_DOWN, code, 0), true), "Key down was not injected");
+        check(input.injectInputEvent(new android.view.KeyEvent(down, SystemClock.uptimeMillis(),
+                android.view.KeyEvent.ACTION_UP, code, 0), true), "Key up was not injected");
+    }
     static MainActivity launch(Instrumentation test){return (MainActivity)test.startActivitySync(new Intent(test.getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}
     static void click(Instrumentation test,MainActivity a,String tag){test.runOnMainSync(()->{View control=a.getWindow().getDecorView().findViewWithTag(tag);check(control!=null&&control.isEnabled(),"Missing enabled phone control: "+tag);control.performClick();});}
     static void run(Instrumentation test,String expectedProfile)throws Exception {

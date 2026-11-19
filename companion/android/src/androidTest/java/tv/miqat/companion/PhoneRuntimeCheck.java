@@ -72,6 +72,8 @@ final class PhoneRuntimeCheck {
             changes.put("reminders.full-screen", "false");
             changes.put("reminders.volume-keys", "false");
             changes.put("call.fajr.mode", "adhan");
+            changes.put("call.fajr.weekdays", "127");
+            changes.put("quiet.enabled", "false");
             changes.put("prayer.latitude", "30.0444");
             changes.put("prayer.longitude", "31.2357");
             changes.put("prayer.method", "EGYPTIAN");
@@ -117,7 +119,8 @@ final class PhoneRuntimeCheck {
                     5000,
                     "Other app did not become active before the alarm");
             long now = System.currentTimeMillis(), time = now + 3000;
-            ReminderEvent event = new ReminderEvent("phone:call:0:" + time, "call", 0, time, time);
+            ReminderEvent event =
+                    new ReminderEvent("phone:call:0:" + time, "call", 0, time, now - 65 * 60000L);
             PhoneAlarms.arm(c, event, now);
             AlarmManager.AlarmClockInfo system =
                     c.getSystemService(AlarmManager.class).getNextAlarmClock();
@@ -186,7 +189,7 @@ final class PhoneRuntimeCheck {
             CompanionCheck.check(
                     PhoneAlarms.claim(c, event.getId(), System.currentTimeMillis()) == null,
                     "Duplicate event was accepted");
-            PhoneAdhanCheck.stop(test, c);
+            PhoneAdhanCheck.stop(test, c, event);
             await(
                     test,
                     () -> !PhonePlayback.playing(),

@@ -37,14 +37,8 @@ final class PhoneAppearance {
         String id = settings.value("appearance.background");
         if (!id.equals("plain")) {
             if (!id.equals(artworkId)) {
-                try (java.io.InputStream in = a.getAssets().open("backgrounds/" + id + ".jpg")) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = 2;
-                    Bitmap next = BitmapFactory.decodeStream(in, null, options);
-                    if (next == null) throw new java.io.IOException("Invalid artwork");
-                    artwork = next;
-                    artworkId = id;
-                }
+                artwork = PhoneBackdrop.read(a, id);
+                artworkId = id;
             }
         }
         LinearLayout content = a.views.column();
@@ -60,7 +54,7 @@ final class PhoneAppearance {
         frame.setBackground(
                 id.equals("plain")
                         ? shape
-                        : new LayerDrawable(new Drawable[] {shape, new Backdrop(artwork)}));
+                        : new LayerDrawable(new Drawable[] {shape, new PhoneBackdrop(artwork)}));
         frame.setClipToOutline(true);
         return content;
     }
@@ -236,57 +230,5 @@ final class PhoneAppearance {
         a.phoneUi.showEditor(dialog);
         dialog.getWindow().setGravity(Gravity.BOTTOM);
         dialog.getWindow().setLayout(-1, -2);
-    }
-
-    /** A background must not give a wrap-content card the bitmap's intrinsic height. */
-    private static final class Backdrop extends Drawable {
-        private final Bitmap bitmap;
-        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-        private final Rect source = new Rect();
-
-        Backdrop(Bitmap bitmap) {
-            this.bitmap = bitmap;
-        }
-
-        @Override
-        public void draw(Canvas canvas) {
-            Rect bounds = getBounds();
-            if (bounds.isEmpty()) return;
-            if (bounds.height() > bounds.width()) {
-                int sky = bitmap.getPixel(bitmap.getWidth() / 2, 0);
-                canvas.drawColor(sky);
-                float height = bounds.width() * (float) bitmap.getHeight() / bitmap.getWidth();
-                RectF destination =
-                        new RectF(bounds.left, bounds.bottom - height, bounds.right, bounds.bottom);
-                canvas.drawBitmap(bitmap, null, destination, paint);
-                return;
-            }
-            float scale =
-                    Math.max(
-                            (float) bounds.width() / bitmap.getWidth(),
-                            (float) bounds.height() / bitmap.getHeight());
-            int width = Math.min(bitmap.getWidth(), Math.round(bounds.width() / scale)),
-                    height = Math.min(bitmap.getHeight(), Math.round(bounds.height() / scale));
-            int x = (bitmap.getWidth() - width) / 2, y = (bitmap.getHeight() - height) / 2;
-            source.set(x, y, x + width, y + height);
-            canvas.drawBitmap(bitmap, source, bounds, paint);
-        }
-
-        @Override
-        public void setAlpha(int alpha) {
-            paint.setAlpha(alpha);
-            invalidateSelf();
-        }
-
-        @Override
-        public void setColorFilter(ColorFilter filter) {
-            paint.setColorFilter(filter);
-            invalidateSelf();
-        }
-
-        @Override
-        public int getOpacity() {
-            return PixelFormat.TRANSLUCENT;
-        }
     }
 }

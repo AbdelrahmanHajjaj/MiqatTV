@@ -84,6 +84,19 @@ final class PhoneData {
                 .getString(prayer);
     }
 
+    JSONObject colors(String theme) throws Exception {
+        return catalog.data.getJSONObject("themes").getJSONObject(theme).getJSONObject("colors");
+    }
+
+    String voiceName(String id, boolean ar) throws Exception {
+        if (id.equals("custom")) return text("phone_custom", ar);
+        for (int i = 0; i < voices.length(); i++) {
+            JSONObject voice = voices.getJSONObject(i);
+            if (voice.getString("id").equals(id)) return catalog.label(voice, ar);
+        }
+        throw new IllegalArgumentException("Unknown adhan voice");
+    }
+
     JSONObject city(String id) throws Exception {
         for (int i = 0; i < cities.length(); i++)
             if (cities.getJSONObject(i).getString("id").equals(id)) return cities.getJSONObject(i);

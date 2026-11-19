@@ -97,3 +97,11 @@ is optional; clarify screen-only versus cross-app capture before adding special
 access. Use documented APIs; no hidden volume listener or silent accessibility
 service. Notification Stop/dismissal and explicit screen close target the current
 event so stale controls cannot silence a later adhan.
+
+Latest visual/notification requirements: the optional adhan screen uses the
+canonical mihrab arch with the selected phone background and theme. Notification
+artwork uses that same selected scene/theme; Android controls final media panel
+styling. Notification title/media metadata show actual prayer name, its scheduled
+time (phone clock/digit/timezone settings) and the effective playing voice name,
+including inherited/per-prayer/custom selection. Do not show generic Miqat in
+place of the voice or the current wall clock in place of prayer time.

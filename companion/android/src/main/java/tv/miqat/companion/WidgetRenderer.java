@@ -73,10 +73,7 @@ final class WidgetRenderer {
                         .getJSONObject("colors");
         ink = Color.parseColor(colors.getString("plaster-100"));
         accent = Color.parseColor(colors.getString("gold-400"));
-        time =
-                new SimpleDateFormat(
-                        settings.value("display.clock").equals("12") ? "h:mm a" : "HH:mm", locale);
-        time.setTimeZone(settings.zone());
+        time = PhoneTime.formatter(settings, locale);
     }
 
     private void render() throws Exception {

@@ -16,7 +16,6 @@ import org.json.*;
 import tv.miqat.companion.core.CompanionContract;
 import tv.miqat.companion.core.SettingSpec;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /** Independent phone screens; TV settings never enter this controller. */
@@ -125,12 +124,7 @@ final class PhoneUi {
     }
 
     String time(double stamp) {
-        SimpleDateFormat f =
-                new SimpleDateFormat(
-                        settings.value("display.clock").equals("12") ? "h:mm a" : "HH:mm",
-                        locale());
-        f.setTimeZone(settings.zone());
-        return digits(f.format(new Date((long) stamp)));
+        return PhoneTime.at(settings, stamp, a.ar);
     }
 
     String location() throws Exception {
@@ -320,12 +314,7 @@ final class PhoneUi {
             for (int i = 0; i < 7; i++) if ((mask & (1 << i)) != 0) names.add(weekdays[i + 1]);
             return android.text.TextUtils.join(" · ", names);
         }
-        if (id.endsWith(".voice")) {
-            for (int i = 0; i < data.voices.length(); i++) {
-                JSONObject voice = data.voices.getJSONObject(i);
-                if (voice.getString("id").equals(value)) return a.catalog.label(voice, a.ar);
-            }
-        }
+        if (id.endsWith(".voice")) return data.voiceName(value, a.ar);
         String source = id.startsWith("call.") ? "reminders.voice" : id;
         try {
             String label = a.catalog.value("android", source, value, a.ar);

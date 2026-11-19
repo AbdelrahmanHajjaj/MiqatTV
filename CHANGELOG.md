@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add selected background/theme and canonical mihrab artwork to the optional
+  phone adhan screen and notification in 0.4.3/code 12. Show the scheduled prayer
+  time and effective playing voice in notification/media metadata, using shared
+  native scene composition and clock formatting.
 - Restore balanced, theme-highlighted prayer-card text in phone 0.4.2/code 11.
   Add notification Play/Pause/Stop and dismissal cancellation where Android
   supports it, with pause preserving position and remaining playback duration.

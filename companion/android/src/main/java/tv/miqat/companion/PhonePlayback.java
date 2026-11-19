@@ -25,7 +25,8 @@ public final class PhonePlayback extends Service {
     private MediaSession media;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean preview, started, paused, defaultAudio;
-    private String eventId = "";
+    private String eventId = "", voiceId = "";
+    private android.graphics.Bitmap artwork;
     private int generation, prayerIndex = -1;
     private double prayerTime;
     private long resumedAt, playedMs;
@@ -170,7 +171,8 @@ public final class PhonePlayback extends Service {
             if (preview)
                 defaultVoice =
                         intent.getBooleanExtra("default-voice", defaultAudio || defaultVoice);
-            startSession(settings, prayer);
+            voiceId = voice;
+            startSession(settings);
             preparePlayer(settings, prayer, voice, defaultVoice, token);
         } catch (Exception error) {
             failed();
@@ -178,7 +180,7 @@ public final class PhonePlayback extends Service {
         return START_NOT_STICKY;
     }
 
-    private void startSession(PhoneStore settings, int prayer) throws Exception {
+    private void startSession(PhoneStore settings) throws Exception {
         media = new MediaSession(this, "Miqat adhan");
         media.setCallback(
                 new MediaSession.Callback() {
@@ -204,13 +206,15 @@ public final class PhonePlayback extends Service {
                 });
         updateMediaState(0);
         media.setActive(true);
-        String name = settings.data.prayerName(prayer, PhoneAlarms.arabic(this));
+        artwork = new AdhanArtwork(this, settings).cover();
         media.setMetadata(
                 new MediaMetadata.Builder()
+                        .putString(MediaMetadata.METADATA_KEY_TITLE, title(settings))
                         .putString(
-                                MediaMetadata.METADATA_KEY_TITLE,
-                                preview ? PhoneAlarms.text(this, "phone_preview") : name)
-                        .putString(MediaMetadata.METADATA_KEY_ARTIST, "Miqat")
+                                MediaMetadata.METADATA_KEY_ARTIST,
+                                settings.data.voiceName(voiceId, PhoneAlarms.arabic(this)))
+                        .putString(MediaMetadata.METADATA_KEY_ALBUM, "Miqat")
+                        .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, artwork)
                         .build());
         startForeground(NOTIFICATION, notification(settings));
     }
@@ -231,8 +235,15 @@ public final class PhonePlayback extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
+    private String title(PhoneStore settings) throws Exception {
+        if (preview) return PhoneAlarms.text(this, "phone_preview");
+        boolean ar = PhoneAlarms.arabic(this);
+        return settings.data.prayerName(prayerIndex, ar)
+                + " \u00b7 "
+                + PhoneTime.at(settings, prayerTime, ar);
+    }
+
     private Notification notification(PhoneStore settings) throws Exception {
-        String name = settings.data.prayerName(prayerIndex, PhoneAlarms.arabic(this));
         boolean screen = !preview && settings.value("reminders.full-screen").equals("true");
         PendingIntent open =
                 screen
@@ -241,15 +252,14 @@ public final class PhonePlayback extends Service {
         Notification.Builder notice =
                 new Notification.Builder(this, PhoneAlarms.playbackChannel(this, screen))
                         .setSmallIcon(R.drawable.companion_icon_mihrab)
-                        .setContentTitle(
-                                preview
-                                        ? PhoneAlarms.text(this, "phone_preview")
-                                        : String.format(
-                                                Locale.getDefault(),
-                                                PhoneAlarms.text(this, "phone_adhan_title"),
-                                                name))
-                        .setContentText(
-                                PhoneAlarms.text(this, paused ? "phone_paused" : "phone_playing"))
+                        .setContentTitle(title(settings))
+                        .setContentText(settings.data.voiceName(voiceId, PhoneAlarms.arabic(this)))
+                        .setLargeIcon(artwork)
+                        .setColor(
+                                android.graphics.Color.parseColor(
+                                        settings.data
+                                                .colors(settings.value("appearance.theme"))
+                                                .getString("gold-400")))
                         .setContentIntent(open)
                         .setDeleteIntent(command(STOP, 42501))
                         .setOngoing(false)
@@ -449,6 +459,8 @@ public final class PhonePlayback extends Service {
         started = false;
         paused = false;
         playedMs = 0;
+        artwork = null;
+        voiceId = "";
         if (player != null) {
             player.setOnPreparedListener(null);
             player.setOnCompletionListener(null);

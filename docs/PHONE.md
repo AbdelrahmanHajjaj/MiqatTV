@@ -102,7 +102,12 @@ configured duration. Dismissing it stops playback where Android allows active
 service notifications to be dismissed. Some versions pin this notification;
 Stop remains available there.
 
-**Full-screen adhan** is off by default. Enabling it allows Android's alarm
+The playback notification shows the prayer name, its scheduled time in the selected
+clock/digit format, and the voice actually playing. Its media artwork uses the
+selected background, theme and canonical mihrab. Android controls the final
+notification panel layout and colors.
+
+**Full-screen adhan** uses that same selected scene and mihrab and is off by default. Enabling it allows Android's alarm
 screen when locked; Android 14+ may require **Allow full-screen alarms**. Tapping
 the notification opens that same session. Tapping the screen or switching apps
 does not stop audio. **Stop adhan and close** ends it; Back asks confirmation.
@@ -173,7 +178,7 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.2, version code 11) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.3, version code 12) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 

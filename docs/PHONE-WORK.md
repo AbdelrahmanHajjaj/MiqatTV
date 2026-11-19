@@ -3,6 +3,41 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## Active 0.4.3 artwork/metadata and input barrier
+
+Owner requirements are implemented: optional adhan screen uses the canonical
+mihrab, selected background and theme; notification supplies matching media
+artwork, prayer name, scheduled time and actual playing voice. PhoneBackdrop
+reuses the existing compositor; PhoneTime shares native formatting across UI,
+widgets and media. No new dependency, renderer policy, player or service.
+
+Build/lint pass (0 errors, 43 existing warnings). Native actual-alarm/media suite
+passes with scheduled timestamp deliberately different from wall clock, actual
+SystemUI Stop, pause/resume, allowed full-screen alarm, Back confirmation,
+stale callbacks and volume shortcut. Notification and bilingual Dusk/peaks
+screens were visually inspected. English lock-screen capture initially caught
+the transition; a real frame-commit barrier now precedes screenshots and its
+render is confirmed. Logs: state/adhan-art-{final-build,runtime-frame,phone-ui,
+size-portrait,size-wide}.log. Both 80–150% matrices pass at Android font1.3.
+
+CI3235806 had passed the dialog event but failed restored focus after
+Instrumentation Back. Real Back/volume input now uses synchronized
+UiAutomation.injectInputEvent; assertions remain unchanged. Local no-capture,
+animations-disabled journey passes. Final captured bilingual journey also passes (adhan-art-journey-capture.log).
+New-head CI is still required.
+
+Wide full-screen-denied runtime passes (adhan-art-runtime-wide-denied.log);
+its large-text render was inspected. Final completed Home captures checked.
+Owned read-only emulator5564/PID32500 was verified by PID/start/AVD/port and
+stopped; state/adhan-art-emulator-stop.json records cleanup. No task emulator
+remains. Accepted 0.4.3 screen/notification captures exported beside the APK. APK0.4.3/code12 exported: 32,358,695 bytes, SHA256
+CBDB11AB24404E85694B25260E897244E5D77ABD599248E523E74CF6D72E69B2.
+25 exact media and 25 notices verified; signing certificate unchanged.
+
+Next: commit/push, require final-head
+Validate/Companion/Apple CI, update draft PR and private receipt, hand over one
+APK and stop for owner feedback. No physical deployment/release/merge or new work.
+
 ## Active 0.4.2 — final CI/handoff
 
 All owner steering is implemented: Home allows a short scroll, separates date/

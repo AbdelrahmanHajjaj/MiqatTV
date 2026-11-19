@@ -80,18 +80,13 @@ public final class PhoneAdhanScreen extends Activity {
                         .addFlags(
                                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                                         | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-            JSONObject colors =
-                    new Catalog(this)
-                            .data
-                            .getJSONObject("themes")
-                            .getJSONObject(settings.value("appearance.theme"))
-                            .getJSONObject("colors");
+            JSONObject colors = settings.data.colors(settings.value("appearance.theme"));
             ground = Color.parseColor(colors.getString("lapis-900"));
             ink = Color.parseColor(colors.getString("plaster-100"));
             accent = Color.parseColor(colors.getString("gold-400"));
             ScrollView scroll = new ScrollView(this);
             scroll.setFillViewport(true);
-            scroll.setBackgroundColor(ground);
+            scroll.setBackground(new AdhanArtwork(this, settings));
             content = new LinearLayout(this);
             content.setTag("adhan.screen");
             content.setOrientation(LinearLayout.VERTICAL);
@@ -103,10 +98,6 @@ public final class PhoneAdhanScreen extends Activity {
                             ? View.LAYOUT_DIRECTION_RTL
                             : View.LAYOUT_DIRECTION_LTR);
             scroll.addView(content);
-            ImageView mark = new ImageView(this);
-            mark.setImageResource(R.drawable.miqat_icon);
-            mark.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            content.addView(mark, new LinearLayout.LayoutParams(padding * 3, padding * 3));
             state = label(PhoneAlarms.text(this, "phone_playing"), 18, ink);
             label(
                     settings.data.prayerName(
