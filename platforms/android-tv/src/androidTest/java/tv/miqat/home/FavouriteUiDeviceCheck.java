@@ -173,16 +173,20 @@ final class FavouriteUiDeviceCheck {
     private static List<String> packages(AllAppsActivity apps) { return (List<String>) field(apps, "apps"); }
 
     private static String focusedPackage(AllAppsActivity apps) {
-        int index = ((List<?>) field(apps, "tiles")).indexOf(apps.getCurrentFocus());
+        View focus = apps.getCurrentFocus();
+        int index = focus == null ? -1 : ((List<?>) field(apps, "tiles")).indexOf(focus);
         return index < 0 ? null : packages(apps).get(index);
     }
 
     private static Set<String> open(Instrumentation test, AllAppsActivity apps, String pkg, Set<String> bound) {
         until(test, () -> packages(apps).contains(pkg), "Requested app is loaded");
-        for (int guard = 0; guard < packages(apps).size() + 5; guard++) {
+        int limit = packages(apps).size() + 5;
+        for (int guard = 0; guard < limit; guard++) {
+            until(test, () -> packages(apps).contains(pkg), "Catalog ready before remote input");
             int[] position = new int[2];
             onMain(test, () -> {
-                position[0] = ((List<?>) field(apps, "tiles")).indexOf(apps.getCurrentFocus());
+                View focus = apps.getCurrentFocus();
+                position[0] = focus == null ? -1 : ((List<?>) field(apps, "tiles")).indexOf(focus);
                 position[1] = packages(apps).indexOf(pkg);
             });
             if (position[0] == position[1]) break;

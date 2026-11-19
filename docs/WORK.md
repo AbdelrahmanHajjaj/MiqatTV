@@ -15,7 +15,9 @@ PID32500 was verified and stopped; no active task emulator remains.
 
 1950827 CI exposed a TV test fixture racing its own queued catalog refresh.
 Keep the refresh and assertions, await its restored focus before returning;
-test-only correction leaves the phone APK unchanged.
+The repeated failure also exposed null focus matching off-screen null tile
+placeholders and a navigation guard shrinking during rebuild. Correct the
+fixture readiness checks; phone APK unchanged.
 
 Next: build the corrected TV test APK, push and require final-head CI. The fixture
 uses synchronized UiAutomation input for real Back/volume, retaining all dialog/

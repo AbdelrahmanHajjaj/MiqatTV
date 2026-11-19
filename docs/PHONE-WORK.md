@@ -3,6 +3,17 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## TV fixture readiness follow-up
+
+d7ed95a refresh assertions pass but focus navigation still fails at com.android.stk
+in Arabic. The fixture uses tiles.indexOf(getCurrentFocus()) while tiles contains
+null placeholders for off-screen apps: transient null focus can falsely equal a
+target slot. It also recomputes its guard limit from a catalog temporarily cleared
+by rebuild. Match production's null-focus handling, capture the fixed finite step
+budget once, and await a loaded catalog before each real remote step. Preserve
+all focus/order/menu assertions; no arbitrary sleep, direct target focus or test
+waiver. Compile and require new-head CI; artifact/hash unchanged.
+
 ## Final-head CI follow-up
 
 1950827: Apple/core/preview/Android build/LG pass; Validate TV emulator fails in
