@@ -232,16 +232,18 @@ final class FavouriteUiDeviceCheck {
 
     private static void verifyOrder(Instrumentation test, List<String> expected, AllAppsActivity apps, String focused) {
         check(Apps.favourites(apps).equals(expected), "Exact stored favourite order");
-        until(test, () -> {
+        BooleanSupplier restored = () -> {
             if (field(apps, "menu") != null || !expected.equals(field(apps, "favs")) || !focused.equals(focusedPackage(apps))) return false;
             FocusTile tile = (FocusTile) apps.getCurrentFocus();
             boolean star = false;
             for (int i = 0; i < tile.getChildCount(); i++) star |= apps.t.favourite().equals(tile.getChildAt(i).getContentDescription());
             check(star == expected.contains(focused), "Actual tile's favourite marker matches saved state: " + focused);
-            // A queued catalog refresh must not split the matching snapshot from its assertions.
-            apps.root.post(apps::build);
             return true;
-        }, "Rebuild restores app focus and favourite markers");
+        };
+        until(test, restored, "Rebuild restores app focus and favourite markers");
+        // Complete this fixture's extra catalog refresh before the next remote navigation.
+        onMain(test, apps::build);
+        until(test, restored, "Catalog refresh preserves app focus and favourite markers");
     }
 
     private static MainActivity replace(Instrumentation test, AllAppsActivity apps, String pkg, Set<String> bound) {

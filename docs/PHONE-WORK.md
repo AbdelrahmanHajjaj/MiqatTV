@@ -3,6 +3,19 @@
 Updated: 2026-11-19. Worktree state/companion-installation, branch
 feature/companion-installation, draft PR #9. Requirements: PHONE-PASS4.md.
 
+## Final-head CI follow-up
+
+1950827: Apple/core/preview/Android build/LG pass; Validate TV emulator fails in
+FavouriteUiDeviceCheck.open at com.android.stk. Its verifyOrder predicate posts
+an extra catalog rebuild but returns before the rebuild finishes. The next
+remote-navigation loop can run while packages/tiles are cleared, exhaust its
+guard and then only poll without navigating. Keep the extra refresh and all
+order/focus/marker assertions: explicitly build after the matching snapshot,
+then await that same snapshot again before returning. Test-only correction;
+phone APK/hash unchanged. Build test APK then require a new-head full CI run.
+Companion1950827 is still running; preserve its result separately. No blind retry,
+production TV change or waived test. All local emulators remain stopped.
+
 ## Active 0.4.3 artwork/metadata and input barrier
 
 Owner requirements are implemented: optional adhan screen uses the canonical

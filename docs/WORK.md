@@ -13,7 +13,11 @@ Rendered Home, notification and adhan screens inspected. Review APK exported;
 PHONE-WORK.md and EVIDENCE.md own exact version/hash/results. Owned emulator
 PID32500 was verified and stopped; no active task emulator remains.
 
-Next: commit/push and require final-head Validate/Companion/Apple CI. The fixture
+1950827 CI exposed a TV test fixture racing its own queued catalog refresh.
+Keep the refresh and assertions, await its restored focus before returning;
+test-only correction leaves the phone APK unchanged.
+
+Next: build the corrected TV test APK, push and require final-head CI. The fixture
 uses synchronized UiAutomation input for real Back/volume, retaining all dialog/
 focus assertions. Record final head/runs in draft PR and ignored handoff receipt,
 then deliver one APK/screenshots and stop for owner feedback.
