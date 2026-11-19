@@ -21,7 +21,10 @@ allowed-FSI actual lock-screen opening/real Back checks pass. Final exported
 
 Android13+ Stop custom action and actual rendered/clicked SystemUI notification
 control now pass native verification too. Final APK receipt is in EVIDENCE.md.
-Next: push validated final scope, require Validate/Companion/Apple CI on that head,
+API34 Companion CI caught stale active-root lookup in an existing dialog fixture.
+The window-event replacement passes native bilingual no-capture/animations-off
+checks while retaining real Back/focus assertions. Source APK is unchanged.
+Next: push that validated test-only fix and require all final-head CI,
 record PR receipts and stop only the verified owned emulator. Hand off one APK
 with accepted captures, then await owner feedback. Notification Play/Pause and
 screen-only volume stopping are included; power keys are reserved by Android.

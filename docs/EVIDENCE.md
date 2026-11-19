@@ -37,6 +37,11 @@ later fresh-launch audition, then stalled; its owned process was stopped.
 The fixture now finishes/waits for that Activity before later cases and passes;
 no assertion was removed. An explicit allowed-FSI run passes an actual scheduled alarm opening the
 Activity over keyguard through ActivityMonitor, with real Back confirmation.
+API34 CI later exposed stale active-root polling in an existing Coming soon
+fixture. It now waits for the actual AlertDialog window event registered before
+the click, retains real Back/focus checks and reports observed events on failure.
+The bilingual no-capture/animations-disabled journey passes locally in
+card-dialog-event-native.log; source APK is unchanged.
 All required final-head CI checks remain the delivery gate; exact receipts/head
 belong to draft PR #9.
 

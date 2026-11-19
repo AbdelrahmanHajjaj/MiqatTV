@@ -61,6 +61,23 @@ port5564/AVD Medium_Phone_API_37.0, read-only/muted, portrait1080x2400/density42
 font1.0. Old PID38152 is stopped. Verify exact current process/start/command
 before stopping; save ignored cleanup receipt. No other instrumentation runs.
 
+Final media fix was pushed as de346927e48bc5558dbc876aef06b24a18804fe1.
+Apple CI passed; Companion44534299812 failed before runtime at the existing
+Coming soon active-root text poll (PhoneJourneyCheck222). Prior4aeb had the same
+snapshot timeout. No product assertion was waived and no blind retry.
+The fixture now registers executeAndWaitForEvent before the Roku click, requires
+the actual AlertDialog event/title, and retains focus loss, real Back and restored
+focus. It reports observed window events if the expected event is absent.
+Native no-capture/animations-disabled bilingual journey PASS:
+state/card-dialog-event-native.log; test build/lint PASS:
+state/card-dialog-event-final-build.log. Source APK is unchanged EC4613.
+
+The final dialog-only verification emulator is currently alive/idle: exact
+receipt state/card-dialog-emulator.json, PID4460, creation
+2026-11-19T13:39:55.4718108Z, port5564, same AVD/read-only/muted. Old PID29728 is
+stopped; do not reuse that receipt. Finish final test/docs commit/push and new-head
+CI, then stop only this verified emulator and update private cleanup receipt.
+
 Next: commit/push validated final fix/docs; require final-head Validate,
 Companion and Apple-core CI; update PR exact head/runs; export accepted captures,
 stop only the verified owned emulator, and hand over one APK. Keep PR draft.

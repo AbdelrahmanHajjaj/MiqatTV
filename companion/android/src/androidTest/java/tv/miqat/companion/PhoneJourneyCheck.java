@@ -3,6 +3,7 @@ package tv.miqat.companion;
 import android.app.Instrumentation;
 import android.content.*;
 import android.view.*;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.*;
 
 import java.util.*;
@@ -207,35 +208,7 @@ final class PhoneJourneyCheck {
                             resumed.body.findViewWithTag("pair.open").performClick();
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-platforms", captures);
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            check(
-                                    resumed.page.equals("tv-setup"),
-                                    "Pair and setup must start with the same platform choice");
-                            resumed.body.findViewWithTag("setup.platform.roku").performClick();
-                            check(
-                                    resumed.page.equals("tv-setup") && !resumed.networkBusy,
-                                    "Unsupported TV started setup");
-                        });
-                LiveUiCheck.untilUi(test, () -> !resumed.hasWindowFocus());
-                LiveUiCheck.until(() -> {
-                    android.view.accessibility.AccessibilityNodeInfo root =
-                            test.getUiAutomation().getRootInActiveWindow();
-                    if (root == null) return false;
-                    try {
-                        java.util.List<android.view.accessibility.AccessibilityNodeInfo> message =
-                                root.findAccessibilityNodeInfosByText(resumed.t("locked_hint"));
-                        boolean shown = !message.isEmpty();
-                        for (android.view.accessibility.AccessibilityNodeInfo node : message)
-                            node.recycle();
-                        return shown;
-                    } finally {
-                        root.recycle();
-                    }
-                });
-                test.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
-                LiveUiCheck.untilUi(test, resumed::hasWindowFocus);
+                comingSoon(test, resumed);
                 PhoneUiCheck.on(
                         test,
                         () -> resumed.body.findViewWithTag("setup.platform.lg").performClick());
@@ -332,6 +305,53 @@ final class PhoneJourneyCheck {
                     .commit();
             PhoneAlarms.rebuild(context);
         }
+    }
+
+    private static void comingSoon(Instrumentation test, MainActivity a) throws Exception {
+        List<String> windows = new ArrayList<>();
+        AccessibilityEvent dialog;
+        try {
+            dialog =
+                    test.getUiAutomation()
+                            .executeAndWaitForEvent(
+                                    () ->
+                                            PhoneUiCheck.on(
+                                                    test,
+                                                    () -> {
+                                                        check(
+                                                                a.page.equals("tv-setup"),
+                                                                "Pair and setup must start with the"
+                                                                    + " same platform choice");
+                                                        a.body.findViewWithTag(
+                                                                        "setup.platform.roku")
+                                                                .performClick();
+                                                        check(
+                                                                a.page.equals("tv-setup")
+                                                                        && !a.networkBusy,
+                                                                "Unsupported TV started setup");
+                                                    }),
+                                    event -> {
+                                        if (event.getEventType()
+                                                != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
+                                            return false;
+                                        windows.add(event.getClassName() + ": " + event.getText());
+                                        return "android.app.AlertDialog"
+                                                        .equals(
+                                                                String.valueOf(
+                                                                        event.getClassName()))
+                                                && event.getText()
+                                                        .toString()
+                                                        .contains(a.t("coming_soon"));
+                                    },
+                                    10000);
+        } catch (java.util.concurrent.TimeoutException timeout) {
+            throw new AssertionError(
+                    "Coming soon dialog window event missing; observed " + windows, timeout);
+        }
+        dialog.recycle();
+        LiveUiCheck.untilUi(test, () -> !a.hasWindowFocus());
+        test.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+        LiveUiCheck.untilUi(test, a::hasWindowFocus);
     }
 
     private static void cancelledResult(Instrumentation test, MainActivity a) throws Exception {
