@@ -3,8 +3,8 @@
 ## Bottom actions and concise phone copy — 19 November 2026
 
 Review APK **0.4.4/code 13**, `state/builds/companion/Miqat-latest.apk`,
-32,559,969 bytes; SHA-256:
-`7B2B69C19F9F56ED42819E345D415B3031E395F2758915895862B841766B098D`.
+32,559,624 bytes; SHA-256:
+`AF88BC86827DF9BE074205855D2D2A7EE5F6B55697E927B44286654E7C083897`.
 Prior signing certificate retained; all 25 recordings and 25 license notices
 match exact approved source bytes. No production dependency added.
 
@@ -17,7 +17,11 @@ height scroll viewport; no-extraction inputs and deferred header collapse now
 keep the real editor and Save/Cancel visible. Corrected native render inspected.
 Updated bilingual first-use/widget/TV journeys, default native TV bindings,
 actual scheduled playback and local LG SSH fixture also pass. Final adhan/Home/
-first-use renders inspected. Final-head Actions are tracked in PR #9; earlier
+first-use renders inspected. Later owner refinements center the swipe label and
+remove duplicate Next/Previous; native Android notification layout is retained.
+Updated API34 portrait journey and actual runtime pass. Android delivered a
+fixture launch to an existing activity; the shared bounded test launcher now
+owns a new task. No production launch logic or assertions were changed for this. Final-head Actions are tracked in PR #9; earlier
 runs do not certify this candidate.
 
 No physical OEM, TV, speaker, power-key or iOS acceptance is claimed. Android

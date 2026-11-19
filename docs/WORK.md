@@ -8,14 +8,15 @@ bottom swipe-up adhan dismissal, fixed primary/secondary action footers,
 keyboard-safe landscape editing, and concise bilingual copy. Product copy rules
 are durable in AGENTS.md. No new dependency, player or unrelated platform work.
 
-Latest refinement in progress: centered swipe label and contextual actions
-without duplicate Next/Previous. Diagnose API34 CI Coming soon focus timeout
-using actual window/power state; three local API34 journeys pass unchanged.
+Implementation and local acceptance are complete, including centered swipe label
+and contextual actions. Final API34 bilingual portrait journey and actual
+playback pass; screenshots inspected. The test-launch reuse issue is corrected
+in the existing bounded helper, shared by the affected journeys. Temporary
+diagnostics are removed; no feature assertions were weakened.
 
-Previous slice local acceptance complete: build/lint, actual alarm/gesture,
-bilingual UI/journeys/TV bindings, local LG SSH fixture and 80–150% sizing pass.
-Final native screenshots inspected. EVIDENCE.md owns the exact review APK; PR #9
-and ignored receipt own final-head CI status. Finish that CI/handoff bookkeeping,
+Build/lint, actual alarm/gesture, bilingual UI/journeys/TV bindings, local LG SSH
+fixture and 80–150% sizing pass. EVIDENCE.md owns the exact review APK. PR #9 and
+ignored receipt own final-head CI status. Finish that CI/handoff bookkeeping,
 then await owner testing. No further product work without feedback. No merge,
 release or physical deployment.
 Existing LG review IPK stays 0.2.28. Physical/OEM/TV acceptance and the recorded

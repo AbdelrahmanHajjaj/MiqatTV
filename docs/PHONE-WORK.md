@@ -8,11 +8,17 @@ Approved requirements: PHONE-PASS5.md and preceding phone passes.
 Latest owner refinements: swipe label centered in the prayer area; no duplicate
 footer Next/Previous beside Continue. Top/system Back owns return navigation.
 Native Android notification alignment/control positions remain OS-managed.
-Updated builds and native acceptance are in progress. Final-head phone CI on
-11a2346 hit Coming soon input-focus timeout; local API34 repeated journey passed
-three times with CI animation settings. Existing assertion now reports actual
-activity/window/power state to distinguish background, sleep and dialog failure.
-No assertion or product behavior was weakened to hide it.
+API34 repeated journeys pass with CI animation settings. Later CI reached the
+runtime but failed waiting for a new audition activity. Local system logs prove
+START_DELIVERED_TO_TOP: the activity was reused. Reopening after a display change
+reproduced the same blocked first launch. The existing native launch helper now
+owns a separate task and bounded creation/focus; both runtime entry/audition and
+first-use reuse it. Local actual runtime and portrait journey pass. Temporary
+window diagnostics were removed; original focus/Back/playback assertions remain.
+Final API34 portrait runtime and bilingual journey pass; centered English/Arabic
+adhan and contextual first-use renders inspected. Final-head CI is pending. Prior
+Validate and Apple core on 138c3f5 passed; prior phone CI failed at the diagnosed
+launch and does not certify the fix.
 
 - Native bottom swipe-up adhan handle replaces centered Stop. Accidental taps,
   short/horizontal/cancelled pulls keep playing; completed upward release and

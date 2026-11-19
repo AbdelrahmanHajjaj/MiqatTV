@@ -31,7 +31,32 @@ final class LiveUiCheck {
         check(input.injectInputEvent(new android.view.KeyEvent(down, SystemClock.uptimeMillis(),
                 android.view.KeyEvent.ACTION_UP, code, 0), true), "Key up was not injected");
     }
-    static MainActivity launch(Instrumentation test){return (MainActivity)test.startActivitySync(new Intent(test.getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}
+    static MainActivity launch(Instrumentation test) throws Exception {
+        android.content.Context c = test.getTargetContext();
+        PhoneRuntimeCheck.shell(test, "input keyevent KEYCODE_WAKEUP");
+        PhoneRuntimeCheck.shell(test, "wm dismiss-keyguard");
+        PhoneRuntimeCheck.await(
+                test,
+                () ->
+                        c.getSystemService(android.os.PowerManager.class).isInteractive()
+                                && !c.getSystemService(android.app.KeyguardManager.class).isKeyguardLocked(),
+                5000,
+                "Unlock the owned emulator before opening the test UI");
+        Instrumentation.ActivityMonitor monitor =
+                test.addMonitor(MainActivity.class.getName(), null, false);
+        MainActivity a;
+        try {
+            // Own a new fixture task; launcher reuse does not notify ActivityMonitor.
+            PhoneRuntimeCheck.shell(test, "am start --activity-multiple-task -n tv.miqat.companion/.MainActivity");
+            a = (MainActivity) test.waitForMonitorWithTimeout(monitor, 5000);
+            CompanionCheck.check(a != null, "Fixture activity did not open after unlock");
+            PhoneRuntimeCheck.await(test, a::hasWindowFocus, 5000, "Fixture activity did not gain window focus");
+            return a;
+        } finally {
+            test.removeMonitor(monitor);
+        }
+    }
+
     static void click(Instrumentation test,MainActivity a,String tag){test.runOnMainSync(()->{View control=a.getWindow().getDecorView().findViewWithTag(tag);check(control!=null&&control.isEnabled(),"Missing enabled phone control: "+tag);control.performClick();});}
     static void run(Instrumentation test,String expectedProfile)throws Exception {
         check(android.os.Build.HARDWARE.contains("ranchu")||android.os.Build.FINGERPRINT.contains("generic"),"Owned emulator only");

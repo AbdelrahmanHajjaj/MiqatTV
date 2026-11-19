@@ -105,11 +105,7 @@ final class PhoneRuntimeCheck {
                     preferences.edit().putString("handled", "[]").remove("audio-error").commit(),
                     "Cannot initialize alarm fixture");
             preferences.edit().putBoolean("onboarding-seen", true).commit();
-            home[0] =
-                    (MainActivity)
-                            test.startActivitySync(
-                                    new Intent(c, MainActivity.class)
-                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            home[0] = LiveUiCheck.launch(test);
             Intent otherApp = new Intent(android.provider.Settings.ACTION_SETTINGS);
             String otherPackage = otherApp.resolveActivity(c.getPackageManager()).getPackageName();
             PhoneUiCheck.on(test, () -> home[0].startActivity(otherApp));
@@ -422,28 +418,8 @@ final class PhoneRuntimeCheck {
     }
 
     private static void audition(Instrumentation test, Context c) throws Exception {
-        shell(test, "input keyevent KEYCODE_WAKEUP");
-        shell(test, "wm dismiss-keyguard");
-        await(
-                test,
-                () ->
-                        c.getSystemService(android.os.PowerManager.class).isInteractive()
-                                && !c.getSystemService(KeyguardManager.class).isKeyguardLocked(),
-                5000,
-                "Unlock the owned emulator before opening the audition UI");
         String saved = PhoneStore.read(c).value("reminders.voice");
-        Instrumentation.ActivityMonitor monitor =
-                test.addMonitor(MainActivity.class.getName(), null, false);
-        MainActivity a;
-        try {
-            // Simulate the user reopening Miqat; a background media service cannot launch UI.
-            shell(test, "am start -n tv.miqat.companion/.MainActivity");
-            a = (MainActivity) test.waitForMonitorWithTimeout(monitor, 5000);
-            CompanionCheck.check(a != null, "Audition activity did not open after unlock");
-            await(test, a::hasWindowFocus, 5000, "Audition activity did not gain window focus");
-        } finally {
-            test.removeMonitor(monitor);
-        }
+        MainActivity a = LiveUiCheck.launch(test);
         try {
             PhoneUiCheck.on(
                     test,

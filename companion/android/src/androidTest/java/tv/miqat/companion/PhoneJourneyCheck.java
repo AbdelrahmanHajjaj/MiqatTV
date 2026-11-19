@@ -24,7 +24,7 @@ final class PhoneJourneyCheck {
                         .edit()
                         .putString("language", lang)
                         .commit();
-                MainActivity a = launch(test, context);
+                MainActivity a = LiveUiCheck.launch(test);
                 current[0] = a;
                 PhoneUiCheck.on(
                         test,
@@ -69,7 +69,7 @@ final class PhoneJourneyCheck {
                         });
                 PhoneUiCheck.on(test, a::finish);
                 LiveUiCheck.untilUi(test, a::isDestroyed);
-                MainActivity resumed = launch(test, context);
+                MainActivity resumed = LiveUiCheck.launch(test);
                 current[0] = resumed;
                 PhoneUiCheck.on(
                         test,
@@ -316,7 +316,7 @@ final class PhoneJourneyCheck {
                 cancelledResult(test, resumed);
                 PhoneUiCheck.on(test, resumed::finish);
                 LiveUiCheck.untilUi(test, resumed::isDestroyed);
-                MainActivity reopened = launch(test, context);
+                MainActivity reopened = LiveUiCheck.launch(test);
                 current[0] = reopened;
                 PhoneUiCheck.on(
                         test,
@@ -394,52 +394,20 @@ final class PhoneJourneyCheck {
         }
         dialog.recycle();
         View[] focusedDialog = {null};
-        String[] focusState = {""};
-        try {
-            LiveUiCheck.untilUi(
-                    test,
-                    () -> {
-                        StringBuilder state =
-                                new StringBuilder(
-                                        "activity="
-                                                + a.hasWindowFocus()
-                                                + ", destroyed="
-                                                + a.isDestroyed()
-                                                + ", foreground="
-                                                + a.phoneForeground
-                                                + ", interactive="
-                                                + a.getSystemService(android.os.PowerManager.class)
-                                                        .isInteractive()
-                                                + ", locked="
-                                                + a.getSystemService(
-                                                                android.app.KeyguardManager.class)
-                                                        .isKeyguardLocked());
-                        for (View window :
-                                android.view.inspector.WindowInspector.getGlobalWindowViews())
-                            state.append("; ")
-                                    .append(window.getClass().getSimpleName())
-                                    .append(" focus=")
-                                    .append(window.hasWindowFocus())
-                                    .append(" shown=")
-                                    .append(window.isShown())
-                                    .append(" attached=")
-                                    .append(window.isAttachedToWindow());
-                        focusState[0] = state.toString();
-                        if (a.hasWindowFocus()) return false;
-                        if (android.os.Build.VERSION.SDK_INT < 29) return true;
-                        for (View window :
-                                android.view.inspector.WindowInspector.getGlobalWindowViews()) {
-                            if (window != a.getWindow().getDecorView() && window.hasWindowFocus()) {
-                                focusedDialog[0] = window;
-                                return true;
-                            }
+        LiveUiCheck.untilUi(
+                test,
+                () -> {
+                    if (a.hasWindowFocus()) return false;
+                    if (android.os.Build.VERSION.SDK_INT < 29) return true;
+                    for (View window :
+                            android.view.inspector.WindowInspector.getGlobalWindowViews()) {
+                        if (window != a.getWindow().getDecorView() && window.hasWindowFocus()) {
+                            focusedDialog[0] = window;
+                            return true;
                         }
-                        return false;
-                    });
-        } catch (AssertionError timeout) {
-            throw new AssertionError(
-                    "Coming soon window did not gain focus: " + focusState[0], timeout);
-        }
+                    }
+                    return false;
+                });
         LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
         LiveUiCheck.untilUi(
                 test,
@@ -488,13 +456,6 @@ final class PhoneJourneyCheck {
         check(
                 !published.get() && !a.networkBusy && a.page.equals(page),
                 "A cancelled result changed the current journey");
-    }
-
-    private static MainActivity launch(Instrumentation test, Context context) {
-        return (MainActivity)
-                test.startActivitySync(
-                        new Intent(context, MainActivity.class)
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     }
 
     private static void check(boolean value, String message) {
