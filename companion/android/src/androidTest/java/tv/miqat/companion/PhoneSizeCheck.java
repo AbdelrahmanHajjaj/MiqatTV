@@ -31,11 +31,17 @@ final class PhoneSizeCheck {
                         int content=0;for(int i=0;i<cell.getChildCount();i++)content+=cell.getChildAt(i).getHeight();
                         PhoneUiCheck.check(content<=cell.getHeight()-cell.getPaddingTop()-cell.getPaddingBottom(),"Prayer card text clipped at "+expected);
                     }
-                    a.phoneUi.open("audio");View save=a.body.findViewWithTag("phone.reminders.volume.save");PhoneUiCheck.check(save!=null&&save.isEnabled(),"Numeric save missing at scale");
+                    a.phoneUi.open("audio");a.body.findViewWithTag("phone.reminders.volume.edit").performClick();View save=a.body.findViewWithTag("phone.reminders.volume.save");PhoneUiCheck.check(save!=null&&save.isEnabled(),"Numeric save missing at scale");
                     a.tab("prayers");
                     a.phoneUi.save("display.digits","western");PhoneUiCheck.check(a.phoneUi.digits("٠١٢٣").equals("0123"),"Western digits ignored in Arabic locale");
                     a.phoneUi.save("display.digits","eastern");PhoneUiCheck.check(a.phoneUi.digits("0123").equals("٠١٢٣"),"Eastern digits ignored");
                 });
+                PhoneUiCheck.on(test,()->a.phoneUi.open("audio"));
+                PhoneUiCheck.on(test,()->{
+                    View preview=a.body.findViewWithTag("phone.reminders.voice.preview"),stop=a.body.findViewWithTag("phone.reminders.voice.stop");ViewGroup row=(ViewGroup)preview.getParent();
+                    PhoneUiCheck.check(preview.getWidth()>0&&stop.getWidth()>=a.dp(48)&&preview.getLeft()>=0&&preview.getRight()<=row.getWidth()&&stop.getLeft()>=0&&stop.getRight()<=row.getWidth(),"Voice preview/Stop clipped at "+expected);
+                });
+                PhoneUiCheck.on(test,()->a.tab("prayers"));
                 if(size==80||size==150)PhoneUiCheck.capture(test,a,lang+"-phone-size-"+size,capture);
                 PhoneUiCheck.on(test,a::finish);LiveUiCheck.untilUi(test,a::isDestroyed);active[0]=null;
             }

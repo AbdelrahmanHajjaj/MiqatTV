@@ -137,6 +137,28 @@ Ordered work:
 6. [ ] Validate affected behavior and final CI, update guide/evidence/PR, export
    the replacement review APK. Physical acceptance and publication stay open.
 
+### Pass-2 implementation notes
+
+Location is committed in ac510e9; public downloads in 47dbe87. Compact saved-value
+rows, focused numeric editors, bottom choice sheets and stable root tabs were
+implemented before adding the extra adhan fields. TV Remote/Settings now have
+nested tabs. Keep the Prayer / Your TVs / Phone settings root bar stable.
+
+Remaining sound implementation should preserve v1 settings through a strict v2
+migration, adding defaults only for new fields. Extend existing alert modes with
+vibration and silent notification, per-prayer default-audio/volume/duration and a
+weekday mask. Quiet start/end use local civil time with an overnight-aware core
+rule. Plan a full week ahead and exclude suppressed events from the next-alarm
+search so quiet hours cannot cause repeated immediate alarms. Recheck policy at
+claim and dispatch. Keep existing duplicate/late-event protection and Stop.
+
+Custom audio should use Android's document picker, a bounded private copy and
+actual duration/decoder validation. Store a content-addressed private file identity
+with the voice choice in one settings commit, preserving old selections on error;
+never ship user recordings. Reuse the 14 approved built-in voices. Travel remains
+opt-in foreground one-shot refresh plus the existing device/fixed timezone choice;
+preserve method/offset calibration and report refresh failure without tracking.
+
 ## Current resume point
 
 Work pass 2 in the existing feature/companion-installation worktree (clean base

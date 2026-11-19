@@ -32,7 +32,9 @@ advance/after reminder and vibration with adhan. Sunrise remains informational.
 The default voice applies unless a prayer overrides it. The phone has independent
 settings; changing them never writes to a TV.
 
-Numbers edit inline with +/- and Done/Cancel. Voice previews last up to 12 seconds.
+Settings rows show their saved values. Tap a number to edit inline with +/- and
+Done/Cancel; choices open a focused sheet. Prayer / Your TVs / Phone settings stay
+in the root navigation, with Remote and TV settings nested inside a selected TV. Voice previews last up to 12 seconds.
 Stop is available on the Prayer screen and the playback notification. A scheduled
 adhan continues when the app leaves the foreground; a preview stops. Audio-focus
 loss stops playback and does not automatically restart a missed recording.

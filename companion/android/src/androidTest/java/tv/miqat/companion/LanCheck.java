@@ -132,7 +132,7 @@ final class LanCheck {
                 check(remoteStarted.await(5,java.util.concurrent.TimeUnit.SECONDS));
                 test.runOnMainSync(()->{try{
                     check(activity.remoteLoading&&!activity.networkBusy);
-                    check(activity.getWindow().getDecorView().findViewWithTag("nav.settings").isEnabled());
+                    check(activity.getWindow().getDecorView().findViewWithTag("tv-nav.settings").isEnabled());
                     activity.tab("tvs");check(activity.page.equals("tvs"));
                     check(activity.body.findViewWithTag(activity.real().key+".forget")!=null);
                 }catch(Throwable error){uiFailure[0]=error;}});

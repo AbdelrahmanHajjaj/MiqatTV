@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Compact phone settings into saved-value rows, focused number editors and
+  choice sheets. Keep the three root tabs stable while using nested TV controls.
+
 - Download public Android TV/LG packages from phone setup with size/SHA-256
   verification, labelled previews and local files under Advanced. Protect newer
   Android installs using the APK version code rather than the release tag.

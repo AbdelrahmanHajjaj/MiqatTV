@@ -235,11 +235,10 @@ public final class MainActivity extends Activity {
         nav.setPadding(dp(6),dp(6),dp(6),dp(6));nav.setTag("navigation");nav.setElevation(dp(8));
         GradientDrawable material=background(surface,40);material.setStroke(dp(1),(muted&0x00ffffff)|0x33000000);nav.setBackground(material);
         LinearLayout.LayoutParams bar=new LinearLayout.LayoutParams(-1,-2);bar.setMargins(dp(16),dp(8),dp(16),dp(14));shell.addView(nav,bar);
-        boolean tvArea=Arrays.asList("overview","settings","updates").contains(page);
-        String active=tvArea?(page.equals("settings")?"settings":"overview"):page.equals("prayers")?"prayers":Arrays.asList("phone-settings","preferences").contains(page)?"phone-settings":"tvs";
-        String[] targets=tvArea?new String[]{"overview","settings","tvs"}:new String[]{"prayers","tvs","phone-settings"};
-        String[] icons=tvArea?new String[]{"remote","gear","tv"}:new String[]{"mihrab","tv","gear"};
-        String[] labels=tvArea?new String[]{t("remote_title"),t("settings"),t("tvs")}:new String[]{t("phone_home"),t("tvs"),t("phone_settings")};
+        String active=page.equals("prayers")?"prayers":Arrays.asList("phone-settings","preferences").contains(page)?"phone-settings":"tvs";
+        String[] targets={"prayers","tvs","phone-settings"};
+        String[] icons={"mihrab","tv","gear"};
+        String[] labels={t("phone_home"),t("tvs"),t("phone_settings")};
         for(int i=0;i<targets.length;i++){
             final String target=targets[i];boolean selected=target.equals(active);int tint=selected?ground:muted;
             Button item=button(nav,labels[i],()->tab(target));flex(item);item.setMinHeight(dp(56));item.setTextSize(11);item.setPadding(dp(4),dp(4),dp(4),dp(4));
@@ -277,6 +276,14 @@ public final class MainActivity extends Activity {
         if(!subtitle.isEmpty()){TextView secondary=text(subtitle,11,muted);secondary.setPadding(0,dp(2),0,0);titles.addView(secondary);}
         if(page.equals("tvs"))iconButton(toolbar,"gear",t("preferences"),()->navigate("preferences"));
         if(Arrays.asList("overview","settings").contains(page))iconButton(toolbar,"refresh",t("refresh"),()->{if(page.equals("settings"))readSettings();else readRemote();}).setEnabled(!networkBusy);
+        if(Arrays.asList("overview","settings","updates").contains(page)){
+            LinearLayout tabs=horizontal(shell);tabs.setPadding(dp(20),0,dp(20),0);
+            for(String target:new String[]{"overview","settings"}){
+                Button item=button(tabs,t(target.equals("overview")?"remote_title":"settings"),()->tab(target));flex(item);
+                item.setTag("tv-nav."+target);item.setSelected(page.equals(target));item.setTextColor(page.equals(target)?accent:muted);item.setEnabled(!networkBusy);
+                if(target.equals("settings"))bindAction(item,"open-settings");
+            }
+        }
         body=column(); body.setPadding(dp(20),dp(12),dp(20),dp(20)); body.setBackgroundColor(ground);
         String screen=page.equals("settings")&&section.equals("appearance")?"appearance":page;
         if(!CompanionContract.INSTANCE.getScreens().contains(screen))throw new IllegalStateException("Unknown companion screen: "+screen);

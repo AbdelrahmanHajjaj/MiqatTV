@@ -33,12 +33,15 @@ final class PhoneUiCheck {
                     if(!a.phoneUi.settings.locationReady){enabled.performClick();check(a.section.equals("calculation")&&!a.phoneUi.settings.enabled,"Alerts require location confirmation");}
                     a.phoneUi.open("calculation");a.body.findViewWithTag("phone.location.confirm").performClick();check(a.phoneUi.settings.locationReady,"Location confirmation not saved");
                     a.phoneUi.open("audio");
+                    check(a.body.findViewWithTag("phone.reminders.volume.input")==null,"Number editor must stay closed until tapped");
+                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();
                     EditText number=a.body.findViewWithTag("phone.reminders.volume.input");String before=a.phoneUi.settings.value("reminders.volume");number.setText("٣٥");
                     a.body.findViewWithTag("phone.reminders.volume.cancel").performClick();check(a.phoneUi.settings.value("reminders.volume").equals(before),"Cancel changed saved volume");
-                    number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("٣٥");a.body.findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Arabic numeric Save failed");
-                    number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("37");a.body.findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Off-step number accepted");
-                    a.phoneUi.open("fajr");check(a.body.findViewWithTag("phone.call.fajr.mode.option.notification")!=null,"Per-prayer mode missing");
-                    a.body.findViewWithTag("phone.call.fajr.mode.option.notification").performClick();check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
+                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("٣٥");a.body.findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Arabic numeric Save failed");
+                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("37");a.body.findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Off-step number accepted");
+                    a.phoneUi.open("fajr");a.body.findViewWithTag("phone.call.fajr.mode.edit").performClick();
+                    check(a.phoneUi.choiceDialog!=null,"Per-prayer choice sheet missing");
+                    ListView modes=a.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.choice.list");check(modes.getCheckedItemPosition()==(a.phoneUi.settings.modes[0]),"Choice sheet must show saved mode");modes.performItemClick(null,1,1);check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
                     a.phoneUi.open("calculation");a.phoneUi.save("prayer.zone","Asia/Tokyo");check(!a.phoneUi.settings.locationReady,"Changed timezone must need confirmation");
                     a.phoneUi.save("prayer.zone","system");a.body.findViewWithTag("phone.location.confirm").performClick();
                     a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
@@ -60,6 +63,8 @@ final class PhoneUiCheck {
                 });
                 capture(test,a,lang+"-phone-settings",capture);
                 on(test,()->a.phoneUi.open("audio"));capture(test,a,lang+"-phone-audio",capture);
+                on(test,()->a.body.findViewWithTag("phone.reminders.voice.edit").performClick());capture(test,a,lang+"-phone-voice-sheet",capture);
+                on(test,()->a.phoneUi.choiceDialog.dismiss());
                 on(test,()->a.phoneUi.open("calculation"));capture(test,a,lang+"-phone-location",capture);
                 on(test,()->{a.phoneUi.open("fajr");a.tab("prayers");});capture(test,a,lang+"-phone-themed",capture);
                 on(test,a::finish);test.waitForIdleSync();current[0]=null;

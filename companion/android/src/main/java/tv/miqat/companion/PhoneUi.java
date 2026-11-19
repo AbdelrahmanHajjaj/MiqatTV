@@ -23,7 +23,7 @@ final class PhoneUi {
     final PhoneLocation locator;
     boolean locationPermissionPending,advancedLocation;
     String locationMessage="";
-    AlertDialog locationDialog;
+    AlertDialog locationDialog,choiceDialog;
     int dayOffset;
     String pending="",draft="",latitude="",longitude="";
     private String artworkId="";
@@ -51,7 +51,7 @@ final class PhoneUi {
     void restore(Bundle b){advancedLocation=b.getBoolean("phone-location-advanced");dayOffset=Math.max(-366,Math.min(366,b.getInt("phone-day")));pending=b.getString("phone-pending","");draft=b.getString("phone-draft","");latitude=b.getString("phone-lat","");longitude=b.getString("phone-lng","");}
     void save(Bundle b){b.putBoolean("phone-location-advanced",advancedLocation);b.putInt("phone-day",dayOffset);b.putString("phone-pending",pending);b.putString("phone-draft",draft);b.putString("phone-lat",latitude);b.putString("phone-lng",longitude);}
     void start(){clock.removeCallbacksAndMessages(null);clock.post(tick);}
-    void stop(){clock.removeCallbacksAndMessages(null);cancelLocation();}
+    void stop(){clock.removeCallbacksAndMessages(null);cancelLocation();if(choiceDialog!=null)choiceDialog.dismiss();}
     void cancelLocation(){if(locator.running)locationMessage="phone_location_cancelled";locator.close();locationPermissionPending=false;if(locationDialog!=null){locationDialog.dismiss();locationDialog=null;}}
     void palette(){
         try{data=PhoneData.get(a);settings=PhoneStore.read(a);JSONObject c=a.catalog.data.getJSONObject("themes").getJSONObject(settings.value("appearance.theme")).getJSONObject("colors");
@@ -147,6 +147,7 @@ final class PhoneUi {
         if(id.equals("prayer.zone"))return value.equals("system")?a.t("phone_system"):value;
         if(id.equals("reminders.duration")&&value.equals("0"))return a.t("phone_full");
         if(id.equals("appearance.background")&&value.equals("plain"))return a.t("phone_plain");
+        if(id.endsWith(".volume")||id.equals("display.size"))return digits(value)+"%";
         if(id.endsWith(".voice")){for(int i=0;i<data.voices.length();i++){JSONObject voice=data.voices.getJSONObject(i);if(voice.getString("id").equals(value))return a.catalog.label(voice,a.ar);}}
         String source=id.startsWith("call.")?"reminders.voice":id;
         try{return a.catalog.value("android",source,value,a.ar);}catch(Exception absent){return digits(value);}
@@ -154,17 +155,26 @@ final class PhoneUi {
     void control(JSONObject c)throws Exception {
         String id=c.getString("id"),label=a.t(c.getString("label")),saved=settings.value(id);SettingSpec spec=data.spec(c);
         ColorStateList selection=new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{a.accent,a.muted});
-        LinearLayout row=a.card(a.body);row.setTag("phone."+id);TextView title=a.text(label,16,a.ink);row.addView(title);
+        LinearLayout row=a.column();row.setPadding(a.dp(16),a.dp(10),a.dp(16),a.dp(10));row.setBackground(a.background(a.surface,18));
+        LinearLayout.LayoutParams size=new LinearLayout.LayoutParams(-1,-2);size.bottomMargin=a.dp(6);a.body.addView(row,size);row.setTag("phone."+id);
         if(c.getString("kind").equals("toggle")) {
-            Switch toggle=new Switch(a);toggle.setText(a.t(saved.equals("true")?"on":"off"));toggle.setTextColor(a.ink);toggle.setTypeface(a.regular);toggle.setMinHeight(a.dp(48));toggle.setChecked(saved.equals("true"));toggle.setThumbTintList(selection);toggle.setTrackTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{(a.accent&0xffffff)|0x66000000,(a.muted&0xffffff)|0x44000000}));toggle.setContentDescription(label);row.addView(toggle);toggle.setTag("phone."+id+".edit");
+            Switch toggle=new Switch(a);toggle.setText(label);toggle.setTextColor(a.ink);toggle.setTextSize(15);toggle.setTypeface(a.regular);toggle.setMinHeight(a.dp(48));toggle.setChecked(saved.equals("true"));toggle.setThumbTintList(selection);toggle.setTrackTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{(a.accent&0xffffff)|0x66000000,(a.muted&0xffffff)|0x44000000}));toggle.setContentDescription(label);row.addView(toggle);toggle.setTag("phone."+id+".edit");
             toggle.setOnCheckedChangeListener((button,on)->{if(id.equals("reminders.enabled")&&on&&!settings.locationReady){a.notice("phone_location_needed");open("calculation");return;}save(id,Boolean.toString(on));});return;
         }
-        if(c.getString("kind").equals("number")){number(row,spec,saved,label);return;}
-        java.util.List<String> options=data.options(c);
-        if(options.size()<=3){RadioGroup group=new RadioGroup(a);row.addView(group);for(String option:options){RadioButton radio=new RadioButton(a);radio.setText(value(id,option));radio.setTextColor(a.ink);radio.setTypeface(a.regular);radio.setMinHeight(a.dp(48));radio.setChecked(saved.equals(option));radio.setButtonTintList(selection);radio.setTag("phone."+id+".option."+option);group.addView(radio);radio.setOnClickListener(v->save(id,option));}}
-        else if(id.startsWith("appearance.")){int index=options.indexOf(saved);LinearLayout track=a.horizontal(row);Button previous=a.button(track,a.ar?"›":"‹",()->save(id,options.get(index-1)));a.square(previous);previous.setEnabled(index>0);previous.setContentDescription(a.t("previous")+" "+label);Button selected=a.button(track,value(id,saved),()->choose(id,options));a.flex(selected);selected.setTag("phone."+id+".edit");Button next=a.button(track,a.ar?"‹":"›",()->save(id,options.get(index+1)));a.square(next);next.setEnabled(index+1<options.size());next.setContentDescription(a.t("next")+" "+label);}
-        else a.button(row,value(id,saved)+"  ⌄",()->choose(id,options)).setTag("phone."+id+".edit");
-        if(id.endsWith(".voice")){a.button(row,a.t("phone_preview"),()->preview(id)).setTag("phone."+id+".preview");a.button(row,a.t("phone_stop"),()->PhonePlayback.stop(a));}
+        TextView title=a.text(label,13,a.muted);title.setPadding(0,0,0,a.dp(2));row.addView(title);
+        if(c.getString("kind").equals("number")){
+            if(pending.equals(id))number(row,spec,saved,label);
+            else summary(row,id,value(id,saved),()->{pending=id;draft=saved;a.render();View editor=a.body.findViewWithTag("phone."+id);editor.post(()->editor.requestRectangleOnScreen(new Rect(0,0,editor.getWidth(),editor.getHeight()),false));});
+            return;
+        }
+        summary(row,id,value(id,saved),()->{try{choose(id,data.options(c));}catch(Exception invalid){a.notice("invalid");}});
+        if(id.endsWith(".voice")){
+            LinearLayout actions=a.horizontal(row);Button preview=a.button(actions,a.t("phone_preview"),()->preview(id));a.flex(preview);preview.setTag("phone."+id+".preview");a.iconButton(actions,"close",a.t("phone_stop"),()->PhonePlayback.stop(a)).setTag("phone."+id+".stop");
+        }
+    }
+    void summary(LinearLayout row,String id,String value,Runnable edit){
+        TextView selected=a.text(value+"  ⌄",16,a.ink);selected.setPadding(0,0,0,0);selected.setMinHeight(a.dp(48));selected.setGravity(Gravity.CENTER_VERTICAL);selected.setTag("phone."+id+".edit");selected.setContentDescription(a.t(data.controls.get(id).optString("label"))+", "+value);
+        selected.setBackground(new RippleDrawable(ColorStateList.valueOf((a.accent&0xffffff)|0x22000000),null,null));selected.setFocusable(true);selected.setOnClickListener(v->edit.run());row.addView(selected,new LinearLayout.LayoutParams(-1,-2));
     }
     void number(LinearLayout row,SettingSpec spec,String saved,String label) {
         String id=spec.getId();boolean editing=pending.equals(id);LinearLayout track=a.horizontal(row);
@@ -173,22 +183,37 @@ final class PhoneUi {
         Button minus=a.button(track,"−",()->{try{input.setText(spec.adjust(normalize(input.getText().toString()),-1));changed.run();}catch(Exception invalid){input.setError(a.t("invalid"));}});a.square(minus);minus.setContentDescription(a.t("decrease")+" "+label);
         track.addView(input,new LinearLayout.LayoutParams(0,-2,1));input.addTextChangedListener(MainActivity.watcher(text->{pending=id;draft=text;}));
         Button plus=a.button(track,"+",()->{try{input.setText(spec.adjust(normalize(input.getText().toString()),1));changed.run();}catch(Exception invalid){input.setError(a.t("invalid"));}});a.square(plus);plus.setContentDescription(a.t("increase")+" "+label);
-        LinearLayout actions=a.horizontal(row);Button apply=a.button(actions,a.t("done"),()->{try{String next=normalize(input.getText().toString());spec.validate(next);if((Integer.parseInt(next)-spec.getMinimum())%spec.getStep()!=0)throw new IllegalArgumentException();save(id,next);}catch(Exception invalid){input.setError(a.t("invalid"));}});a.flex(apply);apply.setTag("phone."+id+".save");Button cancel=a.button(actions,a.t("cancel"),()->{pending="";a.render();});a.flex(cancel);cancel.setTag("phone."+id+".cancel");
+        LinearLayout actions=a.horizontal(row);Button apply=a.button(actions,a.t("done"),()->{try{String next=normalize(input.getText().toString());spec.validate(next);if((Integer.parseInt(next)-spec.getMinimum())%spec.getStep()!=0)throw new IllegalArgumentException();save(id,next);}catch(Exception invalid){input.setError(a.t("invalid"));}});a.flex(apply);apply.setTag("phone."+id+".save");Button cancel=a.button(actions,a.t("cancel"),()->{pending="";a.render();editorFocus(id);});a.flex(cancel);cancel.setTag("phone."+id+".cancel");
+    }
+    void editorFocus(String id){
+        ((android.view.inputmethod.InputMethodManager)a.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(a.getWindow().getDecorView().getWindowToken(),0);
+        View field=a.body.findViewWithTag("phone."+id+".edit");if(field!=null)field.requestFocus();
     }
     static String normalize(String value){StringBuilder out=new StringBuilder();for(char c:value.trim().toCharArray()){int d=Character.digit(c,10);out.append(d>=0?(char)('0'+d):c=='٫'?'.':c=='−'?'-':c);}return out.toString();}
     void choose(String id,java.util.List<String> options) {
-        try{java.util.List<Choices.Option> list=new ArrayList<>();for(String v:options)list.add(new Choices.Option(v,value(id,v)));picker(a.t(data.controls.get(id).getString("label")),list,choice->save(id,choice));}catch(Exception invalid){a.notice("invalid");}
+        try{java.util.List<Choices.Option> list=new ArrayList<>();for(String v:options)list.add(new Choices.Option(v,value(id,v)));picker(a.t(data.controls.get(id).getString("label")),list,settings.value(id),choice->save(id,choice));}catch(Exception invalid){a.notice("invalid");}
     }
     interface Picked{void accept(String value);}
-    void picker(String title,java.util.List<Choices.Option> options,Picked picked){
-        LinearLayout layout=a.column();layout.setPadding(a.dp(20),a.dp(8),a.dp(20),a.dp(8));EditText search=new EditText(a);search.setSingleLine(true);search.setHint(a.t("phone_search"));search.setContentDescription(a.t("phone_search"));layout.addView(search);
-        ListView list=new ListView(a);ArrayAdapter<Choices.Option> adapter=new ArrayAdapter<>(a,android.R.layout.simple_list_item_1,options);list.setAdapter(adapter);layout.addView(list,new LinearLayout.LayoutParams(-1,a.dp(320)));
-        AlertDialog dialog=new AlertDialog.Builder(a).setTitle(title).setView(layout).setNegativeButton(a.t("cancel"),null).create();
-        search.addTextChangedListener(MainActivity.watcher(text->adapter.getFilter().filter(text)));list.setOnItemClickListener((parent,view,index,item)->{Choices.Option option=adapter.getItem(index);dialog.dismiss();if(option!=null)picked.accept(option.value);});dialog.show();
+    void picker(String title,java.util.List<Choices.Option> options,Picked picked){picker(title,options,"",picked);}
+    void picker(String title,java.util.List<Choices.Option> options,String selected,Picked picked){
+        if(choiceDialog!=null)choiceDialog.dismiss();
+        LinearLayout layout=a.column();layout.setPadding(a.dp(16),a.dp(8),a.dp(16),a.dp(8));layout.setLayoutDirection(a.ar?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);
+        EditText search=new EditText(a);search.setSingleLine(true);search.setTextColor(a.ink);search.setHintTextColor(a.muted);search.setTypeface(a.regular);search.setHint(a.t("phone_search"));search.setContentDescription(a.t("phone_search"));if(options.size()>8)layout.addView(search);
+        ListView list=new ListView(a);list.setTag("phone.choice.list");list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        ArrayAdapter<Choices.Option> adapter=new ArrayAdapter<Choices.Option>(a,android.R.layout.simple_list_item_single_choice,new ArrayList<>(options)){
+            @Override public View getView(int position,View recycled,ViewGroup parent){
+                TextView view=(TextView)super.getView(position,recycled,parent);view.setTextColor(a.ink);view.setTypeface(a.regular);view.setTextSize(16);view.setMinHeight(a.dp(52));view.setLayoutDirection(a.ar?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);return view;
+            }
+        };
+        list.setAdapter(adapter);int index=-1;for(int i=0;i<options.size();i++)if(options.get(i).value.equals(selected))index=i;if(index>=0)list.setItemChecked(index,true);
+        int height=Math.min(a.getResources().getDisplayMetrics().heightPixels/2,a.dp(60)*options.size());layout.addView(list,new LinearLayout.LayoutParams(-1,height));
+        AlertDialog dialog=new AlertDialog.Builder(a).setTitle(title).setView(layout).setNegativeButton(a.t("cancel"),null).create();choiceDialog=dialog;dialog.setOnDismissListener(ignored->{if(choiceDialog==dialog)choiceDialog=null;});
+        search.addTextChangedListener(MainActivity.watcher(text->{adapter.getFilter().filter(text);list.clearChoices();}));list.setOnItemClickListener((parent,view,position,item)->{Choices.Option option=adapter.getItem(position);dialog.dismiss();if(option!=null)picked.accept(option.value);});dialog.show();
+        dialog.getWindow().setBackgroundDrawable(a.background(a.surface,24));dialog.getWindow().setGravity(Gravity.BOTTOM);dialog.getWindow().setLayout(-1,-2);dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(a.accent);
     }
     void save(String id,String value){
         Map<String,String> changes=new LinkedHashMap<>();changes.put(id,value);if(id.equals("prayer.zone"))changes.put("prayer.location-ready","false");
-        save(changes,id.equals("display.size"));
+        save(changes,id.equals("display.size"));if(!id.equals("display.size"))editorFocus(id);
         if(id.equals("reminders.enabled")&&value.equals("true")&&(!PhoneAlarms.notifications(a)||!PhoneAlarms.exact(a)))open("permissions");
     }
     void save(Map<String,String> changes,boolean recreate) {

@@ -66,7 +66,7 @@ public final class CompanionCheck extends Instrumentation {
                 runOnMainSync(()->{activity.page="pair";activity.pairState="";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-start.png");centeredIcon(activity,"pair.scan");
                 runOnMainSync(()->{activity.page="pair";activity.pairState="requesting";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-connecting.png");centeredIcon(activity,"pair.cancel");
                 runOnMainSync(()->{activity.pairState="waiting";activity.pairCode="123456";activity.render();});waitForIdleSync();capture(activity,lang+"-pair-approval.png");
-                runOnMainSync(activity::finish);waitForIdleSync();InstallationCheck.run(this,lang);count++;
+                runOnMainSync(activity::finish);LiveUiCheck.untilUi(this,activity::isDestroyed);InstallationCheck.run(this,lang);count++;
             }
             result.putString("stream","PASS: bilingual native bindings, capabilities, drafts, native number editor, saves, offline and specialized validation ("+count+" languages)\n");
             finish(-1,result);
@@ -77,7 +77,9 @@ public final class CompanionCheck extends Instrumentation {
         for(String destination:new String[]{"tvs","overview","settings","preferences","pair"}){
             a.page=destination;a.section="";a.render();
             View nav=a.getWindow().getDecorView().findViewWithTag("navigation");check(nav!=null,"Persistent navigation missing on "+destination);
-            String selected=destination.equals("settings")?"settings":destination.equals("overview")?"overview":destination.equals("preferences")?"phone-settings":"tvs";
+            String selected=destination.equals("preferences")?"phone-settings":"tvs";
+            for(String root:new String[]{"prayers","tvs","phone-settings"})check(a.getWindow().getDecorView().findViewWithTag("nav."+root)!=null,"Root tabs changed inside TV area");
+            if(destination.equals("overview")||destination.equals("settings"))check(a.getWindow().getDecorView().findViewWithTag("tv-nav."+destination).isSelected(),"Nested TV tab selection");
             check(a.getWindow().getDecorView().findViewWithTag("nav."+selected).isSelected(),"Wrong selected navigation destination");
         }
         a.page="overview";a.networkBusy=true;a.render();

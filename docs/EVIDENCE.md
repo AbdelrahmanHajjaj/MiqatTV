@@ -1,5 +1,25 @@
 # Validation evidence
 
+## Compact phone controls — 19 November 2026
+
+Native English/Arabic phone checks pass for compact saved values, focused numeric
+Done/Cancel, off-step rejection, choice-sheet saved selection and persistence.
+Owned-emulator sizing passes 80–150% in portrait and landscape with 1.3× OS text,
+including actual preview/Stop bounds and stable root navigation. Rendered phone
+settings/voice sheets were inspected. Review caught oversized preview rows when
+two match-width buttons shared a row; a weighted preview plus labelled Stop icon
+corrects this, with a native bounds regression. Existing TV binding and pinned-LAN
+checks pass locally after updating assertions for the intended nested TV tabs.
+Phone assemble/lint pass. Private logs: phone-compact-preview-build,
+phone-compact-preview-size, phone-compact-preview-ui, phone-compact-landscape-large,
+phone-compact-tv-ui-2 and phone-compact-lan.
+
+CI at ac510e9 exposed an outer test Activity finish/start race before embedded
+setup; the fixture now waits for destruction at that transition as it already did
+inside setup. CI at 47dbe87 also failed the untouched TV Settings focus assertion;
+keep final-head CI as a gate and investigate any recurrence. Passing local checks
+do not replace that gate or physical acceptance.
+
 ## Published-package installer feedback — 19 November 2026
 
 Android and LG now share anonymous public-release selection and size/SHA-256
