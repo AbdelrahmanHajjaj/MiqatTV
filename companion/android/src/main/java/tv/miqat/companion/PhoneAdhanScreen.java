@@ -108,6 +108,7 @@ public final class PhoneAdhanScreen extends Activity {
                             getIntent().getIntExtra("prayer", 0), PhoneAlarms.arabic(this)),
                     32,
                     accent);
+            label(content, PhoneAlarms.text(this, "phone_swipe_stop"), 14, ink);
             LinearLayout footer = new LinearLayout(this);
             footer.setOrientation(LinearLayout.VERTICAL);
             footer.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -128,7 +129,6 @@ public final class PhoneAdhanScreen extends Activity {
                     stop,
                     new LinearLayout.LayoutParams(
                             Math.round(80 * density), Math.round(136 * density)));
-            label(footer, PhoneAlarms.text(this, "phone_swipe_stop"), 14, ink);
             setContentView(shell);
         } catch (Exception unavailable) {
             finish();

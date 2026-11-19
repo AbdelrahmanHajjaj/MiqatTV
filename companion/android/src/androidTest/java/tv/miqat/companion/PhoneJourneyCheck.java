@@ -55,10 +55,7 @@ final class PhoneJourneyCheck {
                 PhoneUiCheck.on(
                         test,
                         () -> {
-                            a.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("onboarding.previous")
-                                    .performClick();
+                            a.back();
                             check(
                                     a.phoneUi.settings.locationReady,
                                     "Previous must preserve the confirmed location");
@@ -68,7 +65,7 @@ final class PhoneJourneyCheck {
                                     .performClick();
                             check(
                                     a.body.findViewWithTag("phone.reminders.enabled.edit") != null,
-                                    "Footer Previous/Continue did not return to the same step");
+                                    "Back/Continue did not return to the same step");
                         });
                 PhoneUiCheck.on(test, a::finish);
                 LiveUiCheck.untilUi(test, a::isDestroyed);
@@ -397,20 +394,52 @@ final class PhoneJourneyCheck {
         }
         dialog.recycle();
         View[] focusedDialog = {null};
-        LiveUiCheck.untilUi(
-                test,
-                () -> {
-                    if (a.hasWindowFocus()) return false;
-                    if (android.os.Build.VERSION.SDK_INT < 29) return true;
-                    for (View window :
-                            android.view.inspector.WindowInspector.getGlobalWindowViews()) {
-                        if (window != a.getWindow().getDecorView() && window.hasWindowFocus()) {
-                            focusedDialog[0] = window;
-                            return true;
+        String[] focusState = {""};
+        try {
+            LiveUiCheck.untilUi(
+                    test,
+                    () -> {
+                        StringBuilder state =
+                                new StringBuilder(
+                                        "activity="
+                                                + a.hasWindowFocus()
+                                                + ", destroyed="
+                                                + a.isDestroyed()
+                                                + ", foreground="
+                                                + a.phoneForeground
+                                                + ", interactive="
+                                                + a.getSystemService(android.os.PowerManager.class)
+                                                        .isInteractive()
+                                                + ", locked="
+                                                + a.getSystemService(
+                                                                android.app.KeyguardManager.class)
+                                                        .isKeyguardLocked());
+                        for (View window :
+                                android.view.inspector.WindowInspector.getGlobalWindowViews())
+                            state.append("; ")
+                                    .append(window.getClass().getSimpleName())
+                                    .append(" focus=")
+                                    .append(window.hasWindowFocus())
+                                    .append(" shown=")
+                                    .append(window.isShown())
+                                    .append(" attached=")
+                                    .append(window.isAttachedToWindow());
+                        focusState[0] = state.toString();
+                        if (a.hasWindowFocus()) return false;
+                        if (android.os.Build.VERSION.SDK_INT < 29) return true;
+                        for (View window :
+                                android.view.inspector.WindowInspector.getGlobalWindowViews()) {
+                            if (window != a.getWindow().getDecorView() && window.hasWindowFocus()) {
+                                focusedDialog[0] = window;
+                                return true;
+                            }
                         }
-                    }
-                    return false;
-                });
+                        return false;
+                    });
+        } catch (AssertionError timeout) {
+            throw new AssertionError(
+                    "Coming soon window did not gain focus: " + focusState[0], timeout);
+        }
         LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
         LiveUiCheck.untilUi(
                 test,

@@ -178,9 +178,6 @@ final class LgSetup {
     void footer(LinearLayout shell) {
         if (connected || a.networkBusy) return;
         LinearLayout actions = a.views.actionBar(shell);
-        a.views
-                .secondaryAction(a.views.secondaryActions(actions), a.t("previous"), this::back)
-                .setTag("lg.previous");
         Button next =
                 a.views.primaryAction(
                         actions,

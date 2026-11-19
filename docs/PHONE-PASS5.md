@@ -11,9 +11,9 @@ PHONE-PASS4.md and PHONE-AUDIT.md; no merge/release/physical deployment.
   optional volume shortcut, confirmed Back and notification controls.
 - Keep the selected mihrab/background/theme and background/locked playback.
   Honor reduced/system motion; interrupted gestures reset safely.
-- Unify screen confirmations/Continue/Finish/Previous/Skip at the bottom.
-  Reuse existing fixed footer ownership: primary action full width, secondary
-  Previous/Skip or Cancel above. Dialog/sheet actions stay on their own bottom
+- Unify screen confirmations/Continue/Finish at the bottom. Use one contextual
+  primary action, optional Skip and draft/operation Cancel only. Existing top/
+  system Back handles previous steps; do not duplicate Next/Previous controls. Dialog/sheet actions stay on their own bottom
   edge. Keep keyboard/system-gesture clearance and RTL/large-text reachability.
   In short landscape layouts, use a compact footer row and keep the app visible
   while editing instead of IME full-screen extraction.
@@ -30,3 +30,8 @@ and exact APK receipt, preserve commits, keep draft PR, stop for owner testing.
 
 - Remove redundant instructions and narration throughout the phone app. Keep
   concise labels, useful status and necessary TV access/setup steps.
+
+- Later owner refinement: center the swipe label in the prayer area, away from
+  the bottom mihrab line; retain the bottom gesture handle. Keep Android media
+  notification controls in their native layout. Per-app notification alignment
+  and fixed bottom-center Play/Pause are not supported by SystemUI.

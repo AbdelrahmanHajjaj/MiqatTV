@@ -6,7 +6,9 @@ is not needed for phone prayer times. Minimum Android version: 8 (API 26).
 
 ## First use
 
-Guided actions use one fixed footer: Continue/Finish below Previous/Skip.
+Guided actions use one fixed footer with Continue/Finish and optional Skip.
+The top/system Back control returns to previous steps. Cancel appears for drafts
+or operations; duplicate Next/Previous buttons are omitted.
 Confirmation and Save/Cancel actions stay at the bottom, outside scrolling
 content; dialogs anchor their actions at the bottom of the sheet.
 
@@ -210,3 +212,7 @@ The phone build includes both standalone prayers and TV setup/control.
   acceptance remains an owner observation.
 - Send one feedback list with screen/flow, expected result, actual result and app/
   OS version. Keep credentials, device addresses and sensitive captures private.
+
+The optional adhan screen keeps its swipe label in the central prayer area,
+above the bottom mihrab line. Android controls media-notification alignment and
+Play/Pause position; Miqat supplies localized prayer/time/voice and artwork.

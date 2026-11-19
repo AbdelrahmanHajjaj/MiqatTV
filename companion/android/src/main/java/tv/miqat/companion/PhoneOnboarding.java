@@ -81,10 +81,6 @@ final class PhoneOnboarding {
         int step = step();
         LinearLayout footer = a.views.actionBar(shell);
         LinearLayout secondary = a.views.secondaryActions(footer);
-        if (step > 0)
-            a.views
-                    .secondaryAction(secondary, a.t("previous"), this::back)
-                    .setTag("onboarding.previous");
         a.views
                 .secondaryAction(
                         secondary,

@@ -126,14 +126,12 @@ final class TvSetup {
     }
 
     void footer(LinearLayout shell) {
-        if (step == 0) return;
+        if (step == 0 || step == 2 && local) return;
         LinearLayout footer = a.views.actionBar(shell);
-        LinearLayout secondary = a.views.secondaryActions(footer);
-        a.views.secondaryAction(secondary, a.t("previous"), this::back).setTag("setup.previous");
         if (step == 1) {
             a.views
                     .secondaryAction(
-                            secondary,
+                            a.views.secondaryActions(footer),
                             a.t("setup_skip"),
                             () -> {
                                 step = 2;

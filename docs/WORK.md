@@ -8,7 +8,11 @@ bottom swipe-up adhan dismissal, fixed primary/secondary action footers,
 keyboard-safe landscape editing, and concise bilingual copy. Product copy rules
 are durable in AGENTS.md. No new dependency, player or unrelated platform work.
 
-Implementation and local acceptance complete: build/lint, actual alarm/gesture,
+Latest refinement in progress: centered swipe label and contextual actions
+without duplicate Next/Previous. Diagnose API34 CI Coming soon focus timeout
+using actual window/power state; three local API34 journeys pass unchanged.
+
+Previous slice local acceptance complete: build/lint, actual alarm/gesture,
 bilingual UI/journeys/TV bindings, local LG SSH fixture and 80–150% sizing pass.
 Final native screenshots inspected. EVIDENCE.md owns the exact review APK; PR #9
 and ignored receipt own final-head CI status. Finish that CI/handoff bookkeeping,

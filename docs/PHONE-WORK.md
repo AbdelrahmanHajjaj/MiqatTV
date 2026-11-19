@@ -5,11 +5,20 @@ Approved requirements: PHONE-PASS5.md and preceding phone passes.
 
 ## Current candidate — 0.4.4/code 13
 
+Latest owner refinements: swipe label centered in the prayer area; no duplicate
+footer Next/Previous beside Continue. Top/system Back owns return navigation.
+Native Android notification alignment/control positions remain OS-managed.
+Updated builds and native acceptance are in progress. Final-head phone CI on
+11a2346 hit Coming soon input-focus timeout; local API34 repeated journey passed
+three times with CI animation settings. Existing assertion now reports actual
+activity/window/power state to distinguish background, sleep and dialog failure.
+No assertion or product behavior was weakened to hide it.
+
 - Native bottom swipe-up adhan handle replaces centered Stop. Accidental taps,
   short/horizontal/cancelled pulls keep playing; completed upward release and
   explicit accessibility activation stop. Background player/session unchanged.
 - Shared bottom actions serve onboarding, phone/TV numeric editors, appearance,
-  widget setup, pairing and LG setup. Portrait primary below secondary actions;
+  widget setup, pairing and LG setup. Contextual Skip/Cancel accompany one primary;
   short landscape uses a compact row. Dialog actions stay in bottom sheets.
 - Phone text editors request no fullscreen IME extraction. Short landscape
   headers collapse outside the layout traversal; the focused input and footer
