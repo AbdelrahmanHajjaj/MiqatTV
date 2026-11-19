@@ -19,9 +19,11 @@ polish, foreground location detection, automatic public TV package downloads
 sound controls, custom audio, and weekday/quiet-hour/travel behavior.
 
 Proceed sequentially using [PHONE-WORK.md](PHONE-WORK.md)'s pass-2 checklist.
-Pass 2 is implemented and locally verified; the combined 0.2.1 review APK is
-exported. Require final-head PR #9 CI, then hand over for the owner’s combined
-review. Keep the PR draft while human acceptance remains open.
+Pass 2 and its CI passed, but the owner rejected the overall experience as
+incomplete. Continue pass 3 in PHONE-WORK.md: guided first use, unified TV
+platform/preparation/release/setup journey, real phone appearance previews and
+an evidence-led maintainability/test audit. Deliver a combined review build only
+after verifying the complete journeys. Keep PR #9 draft for human acceptance.
 The public repository has only a draft prerelease, so no anonymous published
 release is available yet; implement the download flow and honest unavailable
 state without publishing or embedding credentials. Keep physical acceptance and

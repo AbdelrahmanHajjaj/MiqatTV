@@ -154,7 +154,40 @@ private content identities and one settings commit; existing selections survive
 failed imports. The 14 built-in approved recordings remain unchanged. Travel
 refresh is opt-in/foreground, preserving calibration and device/fixed timezone.
 
-## Current resume point
+## Feedback pass 3 — approved 19 November 2026
+
+Detailed binding requirements and engineering/compaction guardrails:
+[PHONE-PASS3.md](PHONE-PASS3.md). Read it before resuming or changing pass-3 scope.
+
+Owner rejected the partial standalone experience. Complete the prayer/adhan
+journeys and phone polish, using the actual Athar recording for interaction and
+audio-control references. Shipped audio still requires approved provenance;
+reference recordings are not permission to redistribute Athar content.
+
+1. [ ] Unify Set up my TV / Pair new TV behind platform selection. Android/Google
+   TV and LG webOS supported; Samsung Tizen/Roku and other unimplemented platforms
+   visibly locked Coming soon. Preparation instructions precede release selection
+   (latest default, stable/preview choices); Advanced switches to local APK/IPK.
+   Continue into guarded setup, then explicit ordinary pairing. Preserve recovery.
+2. [ ] Guided fresh-install location, notifications/alarms and personalization;
+   explicit permission decisions, resumable progress, no TV requirement.
+3. [ ] Phone theme/background previews and coherent daily prayer, audio/per-prayer,
+   settings and TV journeys, in Arabic/English at supported text/window sizes.
+4. [ ] Audit repository entry points, contracts, runtime/security/storage, rendering
+   responsibilities and tests. Fix concrete duplication/dead code/mixed jobs;
+   share deterministic policy without speculative frameworks or weakening checks.
+   Record findings, fixes and genuinely uninspected areas.
+5. [ ] Build/lint, focused native journey/failure checks and affected consumers,
+   screenshots inspected, accurate docs/PR, final CI and single combined export.
+
+Owner clarified scope: include Qibla and home-screen widgets now. Quran, adhkar
+and broader worship modules have locked Coming soon placeholders; no content
+or incomplete working screens. Add portable Qibla bearing to shared/core; keep
+sensor calibration in the phone shell. Widgets reuse the offline schedule and
+refresh lifecycle, without another scheduler or idle service.
+Persistent quality rules are in AGENTS.md. No release/physical deployment/merge.
+
+## Current resume point (pass 2 history)
 
 Pass 2 is implemented and locally verified for phone 0.2.1/code 7 and standalone
 installer 1.1.2/code 5. Location, public downloads and compact UI milestones are

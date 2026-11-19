@@ -45,6 +45,20 @@ the approved scope. Companion work belongs to its separate project/branch.
 
 ## Validation and delivery
 
+- Keep classes responsible for one coherent job. Split mixed rendering, device
+  transport and product policy at existing boundaries; avoid giant methods and
+  pass-through abstractions. Search callers before deleting or consolidating code.
+- Reuse canonical contracts and portable rules for features shared by phone/TV;
+  shells declare and implement their capabilities. Do not duplicate shared policy
+  or claim support from a catalog entry alone.
+- Tests must protect an observable feature, failure or edge case. Do not add
+  getter/constant/implementation-mirroring tests or blanket coverage targets.
+  Remove redundant tests only after identifying the behavior still protected.
+- Continue only the approved checklist. Update WORK.md and PHONE-WORK.md at a
+  milestone/compaction boundary; never label a partial journey complete or start
+  unrelated work after the handoff. Review touched code for dead paths,
+  duplication, swallowed failures and unnecessary abstractions before delivery.
+
 - Follow docs/TESTING.md for affected-consumer checks and focused regressions.
   Check prose-only edits for links, paths and claims; they need no device tests.
 - Browser mocks, emulators, live diagnostics and human TV acceptance are separate
