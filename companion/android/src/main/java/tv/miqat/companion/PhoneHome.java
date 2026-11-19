@@ -211,20 +211,7 @@ final class PhoneHome {
                         });
         forward.setRotation(180);
         forward.setEnabled(dayOffset < 366);
-        android.icu.util.IslamicCalendar hijri =
-                new android.icu.util.IslamicCalendar(
-                        android.icu.util.TimeZone.getTimeZone(ui.settings.zone().getID()),
-                        ui.locale());
-        hijri.setCalculationType(android.icu.util.IslamicCalendar.CalculationType.ISLAMIC_UMALQURA);
-        hijri.setTimeInMillis(day.start);
-        hijri.add(android.icu.util.Calendar.DATE, ui.settings.number("prayer.hijri-offset"));
-        android.icu.text.DateFormat hf =
-                android.icu.text.DateFormat.getDateInstance(
-                        android.icu.text.DateFormat.LONG,
-                        new android.icu.util.ULocale(
-                                (a.ar ? "ar" : "en") + "@calendar=islamic-umalqura"));
-        hf.setCalendar(hijri);
-        dateLabel.append("\n" + ui.digits(hf.format(hijri.getTime())));
+        dateLabel.append("\n" + ui.digits(PhoneTime.hijri(ui.settings, day.start, a.ar)));
         dateLabel.setTextSize(12);
         return day;
     }

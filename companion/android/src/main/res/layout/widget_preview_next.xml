@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:layoutDirection="locale"
+    android:padding="16dp" android:background="@drawable/widget_background" android:gravity="center_vertical">
+<TextView android:id="@+id/widget_next_label" style="@style/MiqatWidgetText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_prayer_0" android:maxLines="2" android:textColor="@color/companion_gold_400" />
+<TextView android:id="@+id/widget_next_time" style="@style/MiqatWidgetValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_time_0" android:maxLines="2" android:textSize="34sp" />
+</LinearLayout>

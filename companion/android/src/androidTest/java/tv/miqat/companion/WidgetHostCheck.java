@@ -64,6 +64,12 @@ final class WidgetHostCheck {
                                 && strip.getVisibility() == View.VISIBLE
                                 && strip.getChildCount() == 6;
                     });
+            pickerPreviews(test, a, ids, capture);
+            WidgetOptions legacy = WidgetOptions.from(a, "{\"background\":false}");
+            WidgetOptions invalid = WidgetOptions.from(a, "{\"opacity\":999,\"shape\":\"unknown\",\"scene\":\"../private\"}");
+            PhoneUiCheck.check(legacy.opacity == 0 && invalid.opacity == 100
+                            && invalid.shape.equals("rounded") && invalid.scene.equals("plain"),
+                    "Widget presentation migration/bounds accepted invalid options");
             MainActivity cancelled =
                     (MainActivity)
                             test.startActivitySync(
@@ -96,6 +102,15 @@ final class WidgetHostCheck {
                     () -> {
                         config.body.findViewWithTag("widget.layout.next").performClick();
                         config.body.findViewWithTag("widget.size").performClick();
+                        ((SeekBar) config.body.findViewWithTag("widget.opacity")).setProgress(42);
+                        PhoneUiCheck.check(((ImageView) config.body.findViewById(R.id.widget_backdrop)).getImageAlpha() == 107
+                                        && config.body.findViewById(R.id.widget_root).getAlpha() == 1f,
+                                "Opacity must affect only the widget background");
+                        config.body.findViewWithTag("widget.widget_hijri").performClick();
+                        config.body.findViewWithTag("widget.shape").performClick();
+                        config.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.choice.list").performItemClick(null, 1, 1);
+                        config.body.findViewWithTag("widget.background").performClick();
+                        config.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.choice.list").performItemClick(null, 0, 0);
                         config.getWindow().getDecorView().findViewWithTag("widget.apply").performClick();
                     });
             LiveUiCheck.untilUi(test, config::isDestroyed);
@@ -117,9 +132,28 @@ final class WidgetHostCheck {
             WidgetOptions saved = WidgetOptions.read(a, ids[0]);
             PhoneUiCheck.check(
                     saved.layout.equals("next")
-                            && saved.size == 120
-                            && WidgetOptions.read(a, ids[1]).layout.equals("day"),
+                            && saved.size == 120 && saved.opacity == 42 && saved.hijri
+                            && saved.shape.equals("soft") && saved.scene.equals("app")
+                            && WidgetOptions.read(a, ids[1]).layout.equals("day")
+                            && WidgetOptions.read(a, ids[1]).opacity == 100
+                            && !WidgetOptions.read(a, ids[1]).hijri,
                     "Widget instances did not retain independent configuration");
+            String hijri = a.phoneUi.digits(PhoneTime.hijri(PhoneStore.read(a), System.currentTimeMillis(), a.ar));
+            PhoneUiCheck.on(test, () -> {
+                PhoneUiCheck.check(((TextView) views[0].findViewById(R.id.widget_title)).getText().toString().contains(hijri),
+                        "Optional Hijri date is missing from the actual hosted widget");
+                ImageView background = views[0].findViewById(R.id.widget_backdrop);
+                android.graphics.Bitmap bitmap = ((android.graphics.drawable.BitmapDrawable) background.getDrawable()).getBitmap();
+                PhoneUiCheck.check(background.getImageAlpha() == 107
+                                && android.graphics.Color.alpha(bitmap.getPixel(0, 0)) == 0
+                                && bitmap.getByteCount() < 1024 * 1024,
+                        "Hosted widget lost opacity/shape or exceeded a bounded image parcel");
+                TextView name = views[1].findViewById(R.id.widget_prayer_name);
+                TextView prayerTime = views[1].findViewById(R.id.widget_prayer_time);
+                PhoneUiCheck.check(name.getTypeface().equals(a.getResources().getFont(R.font.alexandria_regular))
+                                && prayerTime.getTypeface().equals(a.getResources().getFont(R.font.alexandria_semibold)),
+                        "Hosted widget did not retain app typography");
+            });
             PhoneUiCheck.on(
                     test,
                     () -> {
@@ -203,6 +237,37 @@ final class WidgetHostCheck {
             test.getUiAutomation().dropShellPermissionIdentity();
             original.save(a);
             PrayerWidget.updateAll(a);
+        }
+    }
+
+    private static void pickerPreviews(Instrumentation test, MainActivity a, int[] ids, boolean capture) throws Exception {
+        for (int index : new int[] {0, 2, 3}) {
+            String layout = index == 0 ? "day" : index == 2 ? "next" : "strip";
+            AppWidgetProviderInfo info = AppWidgetManager.getInstance(a).getAppWidgetInfo(ids[index]);
+            android.graphics.Bitmap[] image = {null};
+            PhoneUiCheck.on(test, () -> {
+                android.view.View preview = new RemoteViews(a.getPackageName(), info.previewLayout).apply(a, new FrameLayout(a));
+                TextView prayer = preview.findViewById(layout.equals("next") ? R.id.widget_next_label : R.id.widget_prayer_name);
+                TextView time = preview.findViewById(layout.equals("next") ? R.id.widget_next_time : R.id.widget_prayer_time);
+                PhoneUiCheck.check(prayer != null && !prayer.getText().toString().isEmpty()
+                                && time != null && !time.getText().toString().isEmpty(),
+                        "Android picker preview is empty for " + layout);
+                if (!capture) return;
+                preview.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+                int width = a.views.dp(layout.equals("strip") ? 320 : layout.equals("next") ? 160 : 280);
+                int height = a.views.dp(layout.equals("day") ? 260 : layout.equals("next") ? 140 : 120);
+                preview.measure(android.view.View.MeasureSpec.makeMeasureSpec(width, android.view.View.MeasureSpec.EXACTLY),
+                        android.view.View.MeasureSpec.makeMeasureSpec(height, android.view.View.MeasureSpec.EXACTLY));
+                preview.layout(0, 0, width, height);
+                image[0] = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888);
+                preview.draw(new android.graphics.Canvas(image[0]));
+            });
+            if (image[0] != null) {
+                try (java.io.FileOutputStream file = new java.io.FileOutputStream(new java.io.File(a.getExternalFilesDir(null),
+                        (a.ar ? "ar" : "en") + "-picker-" + layout + ".png"))) {
+                    image[0].compress(android.graphics.Bitmap.CompressFormat.PNG, 100, file);
+                } finally { image[0].recycle(); }
+            }
         }
     }
 

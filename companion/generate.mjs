@@ -133,7 +133,16 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   mkdirSync(new URL('drawable-nodpi/',res),{recursive:true});
   writeFileSync(new URL('drawable-nodpi/miqat_icon.png',res),readFileSync(new URL('shared/design/artwork/icon.png',root)));
   for(const [id,svg] of Object.entries(read('shared/design/icons.json')))writeFileSync(new URL('drawable/companion_icon_'+id+'.xml',res),vectorIcon(svg,id==='back'));
-  const colors=generate().colors;
-  writeFileSync(new URL('values/companion_colors.xml',res),'<resources>'+['lapis-900','gold-400','plaster-100'].map(id=>'<color name="companion_'+id.replaceAll('-','_')+'">'+colors[id]+'</color>').join('')+'</resources>');
+  const catalog=generate(), colors=catalog.colors;
+  writeFileSync(new URL('values/companion_colors.xml',res),'<resources>'+['lapis-900','lapis-800','gold-400','plaster-100','mist-400'].map(id=>'<color name="companion_'+id.replaceAll('-','_')+'">'+colors[id]+'</color>').join('')+'</resources>');
+  const sampleTimes=['05:10','06:30','12:00','15:15','17:30','19:00'];
+  for(const language of ['en','ar']) {
+    const directory=new URL(language==='ar'?'values-ar/':'values/',res);
+    mkdirSync(directory,{recursive:true});
+    const entries=catalog.prayerNames[language].map((name,i)=>['widget_preview_prayer_'+i,name]);
+    entries.push(...sampleTimes.map((time,i)=>['widget_preview_time_'+i,language==='ar'?time.replace(/[0-9]/g,n=>'٠١٢٣٤٥٦٧٨٩'[n]):time]));
+    const xml=entries.map(([name,value])=>'<string name="'+name+'">'+value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll("'","\\'")+'</string>').join('');
+    writeFileSync(new URL('companion_widget_preview.xml',directory),'<resources>'+xml+'</resources>');
+  }
   console.log('Generated companion catalog from canonical product sources');
 }

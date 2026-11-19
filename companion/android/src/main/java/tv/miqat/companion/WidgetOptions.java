@@ -9,9 +9,10 @@ import java.util.Arrays;
 /** Per-instance presentation only; prayer settings always come from PhoneStore. */
 final class WidgetOptions {
     static final String[] LAYOUTS = {"next", "day", "strip"};
-    String layout = "day", theme = "app";
-    boolean background = true, date = true;
-    int size = 100;
+    static final String[] SHAPES = {"rounded", "soft", "square"};
+    String layout = "day", theme = "app", scene = "plain", shape = "rounded";
+    boolean date = true, hijri;
+    int size = 100, opacity = 100;
 
     static WidgetOptions read(Context context, int id) {
         String stored = PhoneStore.preferences(context).getString("widget-" + id, null);
@@ -28,7 +29,22 @@ final class WidgetOptions {
             if (Arrays.asList(LAYOUTS).contains(layout)) options.layout = layout;
             if (theme.equals("app") || new Catalog(context).data.getJSONObject("themes").has(theme))
                 options.theme = theme;
-            options.background = data.optBoolean("background", true);
+            String scene = data.optString("scene", "plain"),
+                    shape = data.optString("shape", "rounded");
+            PhoneData phone = PhoneData.get(context);
+            if (scene.equals("app")
+                    || phone.options(phone.controls.get("appearance.background")).contains(scene))
+                options.scene = scene;
+            if (Arrays.asList(SHAPES).contains(shape)) options.shape = shape;
+            options.opacity =
+                    Math.max(
+                            0,
+                            Math.min(
+                                    100,
+                                    data.optInt(
+                                            "opacity",
+                                            data.optBoolean("background", true) ? 100 : 0)));
+            options.hijri = data.optBoolean("hijri", false);
             options.date = data.optBoolean("date", true);
             options.size = data.optInt("size") == 120 ? 120 : 100;
         } catch (Exception invalid) {
@@ -37,12 +53,19 @@ final class WidgetOptions {
         return options;
     }
 
+    int height() {
+        return layout.equals("day") ? 260 : layout.equals("next") ? 160 : 120;
+    }
+
     String encode() {
         try {
             return new JSONObject()
                     .put("layout", layout)
                     .put("theme", theme)
-                    .put("background", background)
+                    .put("scene", scene)
+                    .put("shape", shape)
+                    .put("opacity", opacity)
+                    .put("hijri", hijri)
                     .put("date", date)
                     .put("size", size)
                     .toString();

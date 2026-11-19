@@ -131,7 +131,7 @@ final class PhoneAdhanCheck {
             enabled.put("reminders.full-screen", "true");
             enabled.put("reminders.volume-keys", "true");
             enabled.put("appearance.theme", "dusk");
-            enabled.put("appearance.background", "dusk_peaks");
+            enabled.put("appearance.background", "miqat_signature");
             if (c.getResources().getConfiguration().orientation
                     == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
                 enabled.put("display.size", "150");
@@ -176,6 +176,11 @@ final class PhoneAdhanCheck {
                     () -> !PhonePlayback.playing() && shown[0].isDestroyed(),
                     5000,
                     "Notification dismissal did not stop audio and close its screen");
+            PhoneStore.read(c)
+                    .changed(
+                            java.util.Collections.singletonMap(
+                                    "appearance.background", "dusk_peaks"))
+                    .save(c);
             language.edit().putString("language", "ar").commit();
             shown[0] = start(test, c, "screen-volume");
             captureScreen(test, shown[0], "ar-adhan-screen");

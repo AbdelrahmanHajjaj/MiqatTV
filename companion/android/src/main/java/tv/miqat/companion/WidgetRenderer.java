@@ -18,7 +18,7 @@ final class WidgetRenderer {
     private final Context context;
     private final RemoteViews view;
     private final WidgetOptions options;
-    private final int height, ink, accent;
+    private final int width, height, ink, accent;
     private final PhoneStore settings;
     private final PhoneData data;
     private final boolean ar, eastern;
@@ -27,15 +27,15 @@ final class WidgetRenderer {
     private final SimpleDateFormat time;
     private final JSONObject colors;
 
-    static RemoteViews create(Context context, WidgetOptions options, int height) {
+    static RemoteViews create(Context context, WidgetOptions options, int width, int height) {
         RemoteViews view = new RemoteViews(context.getPackageName(), R.layout.prayer_widget);
         view.setOnClickPendingIntent(R.id.widget_root, PhoneAlarms.open(context));
         try {
-            new WidgetRenderer(context, view, options, height).render();
+            new WidgetRenderer(context, view, options, width, height).render();
         } catch (Exception unavailable) {
             view.setInt(
-                    R.id.widget_root,
-                    "setBackgroundColor",
+                    R.id.widget_backdrop,
+                    "setColorFilter",
                     context.getColor(R.color.companion_lapis_900));
             view.setTextColor(R.id.widget_title, context.getColor(R.color.companion_gold_400));
             view.setTextColor(R.id.widget_times, context.getColor(R.color.companion_plaster_100));
@@ -50,11 +50,13 @@ final class WidgetRenderer {
         return view;
     }
 
-    private WidgetRenderer(Context context, RemoteViews view, WidgetOptions options, int height)
+    private WidgetRenderer(
+            Context context, RemoteViews view, WidgetOptions options, int width, int height)
             throws Exception {
         this.context = context;
         this.view = view;
         this.options = options;
+        this.width = width;
         this.height = height;
         settings = PhoneStore.read(context);
         data = PhoneData.get(context);
@@ -63,26 +65,20 @@ final class WidgetRenderer {
         String digits = settings.value("display.digits");
         eastern = digits.equals("eastern") || digits.equals("auto") && ar;
         colors =
-                new Catalog(context)
-                        .data
-                        .getJSONObject("themes")
-                        .getJSONObject(
-                                options.theme.equals("app")
-                                        ? settings.value("appearance.theme")
-                                        : options.theme)
-                        .getJSONObject("colors");
+                data.colors(
+                        options.theme.equals("app")
+                                ? settings.value("appearance.theme")
+                                : options.theme);
         ink = Color.parseColor(colors.getString("plaster-100"));
         accent = Color.parseColor(colors.getString("gold-400"));
         time = PhoneTime.formatter(settings, locale);
     }
 
     private void render() throws Exception {
-        view.setInt(
-                R.id.widget_root,
-                "setBackgroundColor",
-                options.background
-                        ? Color.parseColor(colors.getString("lapis-800"))
-                        : Color.TRANSPARENT);
+        view.setImageViewBitmap(
+                R.id.widget_backdrop,
+                WidgetBackground.create(context, settings, options, colors, width, height));
+        view.setInt(R.id.widget_backdrop, "setImageAlpha", options.opacity * 255 / 100);
         view.setInt(
                 R.id.widget_root,
                 "setLayoutDirection",
@@ -94,14 +90,23 @@ final class WidgetRenderer {
                     R.id.widget_times,
                     R.id.widget_next_label
                 }) view.setTextColor(id, ink);
-        view.setTextColor(R.id.widget_next_time, accent);
+        view.setTextColor(R.id.widget_next_label, accent);
+        view.setTextColor(R.id.widget_next_time, ink);
+        view.setTextColor(R.id.widget_title, Color.parseColor(colors.getString("mist-400")));
+        view.setTextColor(R.id.widget_updated, Color.parseColor(colors.getString("mist-400")));
         SimpleDateFormat date = new SimpleDateFormat("EEE d MMM", locale);
         date.setTimeZone(settings.zone());
-        view.setTextViewText(
-                R.id.widget_title,
-                text(
-                        (ar ? "ميقات" : "Miqat")
-                                + (options.date ? " · " + date.format(new Date(now)) : "")));
+        String title =
+                (ar ? "ميقات" : "Miqat") + (options.date ? " · " + date.format(new Date(now)) : "");
+        boolean compact =
+                height < (options.layout.equals("strip") ? 130 : 180)
+                        && !options.layout.equals("day");
+        if (options.hijri) {
+            String hijri = PhoneTime.hijri(settings, now, ar);
+            title = compact ? hijri : title + "\n" + hijri;
+        }
+        view.setInt(R.id.widget_title, "setMaxLines", options.hijri && !compact ? 2 : 1);
+        view.setTextViewText(R.id.widget_title, text(title));
         prayers();
         SimpleDateFormat updated = new SimpleDateFormat("HH:mm", locale);
         updated.setTimeZone(settings.zone());
@@ -109,7 +114,8 @@ final class WidgetRenderer {
                 R.id.widget_updated,
                 text(data.text("widget_updated", ar) + " · " + updated.format(new Date(now))));
         view.setViewVisibility(
-                R.id.widget_updated, options.layout.equals("strip") ? View.GONE : View.VISIBLE);
+                R.id.widget_updated,
+                options.layout.equals("strip") || compact ? View.GONE : View.VISIBLE);
     }
 
     private void prayers() throws Exception {
@@ -130,7 +136,8 @@ final class WidgetRenderer {
                                 ar));
         view.setViewVisibility(R.id.widget_next, ready && nextOnly ? View.VISIBLE : View.GONE);
         view.setViewVisibility(
-                R.id.widget_title, nextOnly && height < 180 ? View.GONE : View.VISIBLE);
+                R.id.widget_title,
+                nextOnly && height < 180 && !options.hijri ? View.GONE : View.VISIBLE);
         view.setViewVisibility(
                 R.id.widget_prayers, ready && !nextOnly && !strip ? View.VISIBLE : View.GONE);
         view.setViewVisibility(R.id.widget_strip, ready && strip ? View.VISIBLE : View.GONE);

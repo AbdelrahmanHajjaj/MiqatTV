@@ -19,9 +19,9 @@ or operations; duplicate Next/Previous buttons are omitted.
 Confirmation and Save/Cancel actions stay at the bottom, outside scrolling
 content; dialogs anchor their actions at the bottom of the sheet.
 
-A fresh install presents one decision at a time: location, prayer alerts,
-notification access, precise-alarm access, theme and background. **Skip** advances
-past an optional step. Back from the first step opens Prayer with a visible
+A fresh install groups location, alerts and appearance into three pages.
+**Skip** bypasses pending alert access; theme and background share one page.
+Back from the first step opens Prayer with a visible
 **Complete Miqat setup** entry. Progress survives reopening; revisiting setup
 preserves saved settings. Phone setup never requires a TV.
 
@@ -30,11 +30,11 @@ preserves saved settings. Phone setup never requires a TV.
    background location tracking is used. The city supplies its calculation
    method and Asr school. Manual coordinates and further calculation/timezone
    adjustments remain under **Phone settings → Location & calculation**.
-2. Choose whether to enable prayer alerts. The next two screens request Android
-   notifications and precise alarms separately; each can be skipped and repaired
-   later in **Prayer alert permissions**. Miqat never grants access silently.
-3. Swipe the theme and portrait background carousels. Select a preview and
-   continue, or skip. Ordinary Appearance settings also offer draft previews
+2. Choose whether to enable prayer alerts. Continue requests only missing Android
+   notification or precise-alarm access on this page. Skip leaves it for later in
+   **Prayer alert permissions**. Miqat never grants access silently.
+3. Select a theme and background from compact carousels under one live prayer-card
+   preview, then Finish. Ordinary Appearance settings also offer draft previews
    with Apply/Cancel. Digits, clock format and interface size remain there.
 
 Alerts default to off. Changing the city, coordinates or timezone requires location
@@ -139,11 +139,15 @@ removes its Home resume prompt, including after reopening the app.
 **Home-screen widgets** offers next-prayer, daily timetable and compact strip
 layouts with live previews. Each has a launcher entry with a suitable default
 size. Customize each placed widget independently: layout, app/fixed theme,
-solid/transparent background, date and label size. Apply saves only that widget;
+color/app/selected background, 0–100% background opacity, rounded/soft/square
+corners, Gregorian and optional Hijri date, and label size. Text uses the app’s
+Alexandria fonts and canonical theme colors. Android’s picker has populated native
+previews with bilingual image fallbacks for older launchers. Apply saves only that widget;
 Back cancels. The launcher can reopen configuration. A resized timetable falls
 back to next prayer when short and returns to the chosen layout when enlarged.
 
 The prayer data follows phone location, calculation, language, digits and clock.
+Compact widgets prioritize the enabled Hijri date when both dates cannot fit.
 Widget appearance records use the same protected local boundary as phone prayers.
 Use Android's pin flow where supported, or the launcher's Widgets menu. Settings,
 alarm, boot and time changes request updates; the periodic host refresh may be

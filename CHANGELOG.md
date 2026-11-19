@@ -4,7 +4,9 @@
 
 - Add purpose-generated portrait Miqat signature artwork in phone-only packaging
   for 0.4.5/code 14. Reduce first use to three pages, combining theme/background
-  choices with one live preview and contextual alert permissions.
+  choices with one live preview and contextual alert permissions. Add populated
+  Android widget-picker previews, per-widget scene/opacity/corner controls and an
+  optional Hijri date, using the app’s fonts, palettes and date formatter.
 
 - Replace the optional phone adhan Stop button with a deliberate bottom swipe-up
   handle in 0.4.4/code13. Unify bottom primary/secondary action footers and dialog

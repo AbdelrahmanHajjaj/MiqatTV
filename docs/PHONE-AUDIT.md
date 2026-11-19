@@ -231,3 +231,23 @@ unsaved draft. Location save failures preserve the editor. Focused native checks
 cover accidental dismissal, actual playback, Save/Cancel, keyboard and text-size
 boundaries; trivial copy changes have no new mirror tests. Redundant narration
 and unused catalog entries were deleted, with the copy rule recorded in AGENTS.
+
+
+## Pass-6 portrait, first use and widgets
+
+Dedicated portrait signature artwork is packaged only by the phone; wide assets
+remain unchanged. Existing PhoneBackdrop chooses by actual render bounds, shared
+by first use, appearance and adhan. First use has three pages and one combined
+live appearance preview; missing alert access stays contextual on its page.
+
+WidgetRenderer retains native accessible text and canonical Alexandria font
+resources. WidgetBackground owns only a bounded background bitmap (under 1 MB),
+so opacity does not dim text. Per-instance options validate scene/shape/opacity
+and preserve old transparent backgrounds. PhoneTime reuses Home’s existing
+Umm al-Qura formatter, timezone and Hijri adjustment. No calendar, player,
+background service or dependency was duplicated. Configuration uses compact
+choice rows, a live opacity slider, independent dates and fixed Apply/Cancel.
+Native populated XML previews and bilingual rendered PNG fallbacks replace the
+empty picker; retired binary-opacity labels were removed. Focused host checks
+cover preview contents, independent save/cancel, old settings, invalid options,
+background-only alpha, rounded transparency and actual font binding.

@@ -1,5 +1,35 @@
 # Validation evidence
 
+## Portrait first use and widget customization — 19 November 2026
+
+Review APK **0.4.5/code 14**, `state/builds/companion/Miqat-latest.apk`,
+34,464,466 bytes; SHA-256:
+`2763C3472A2F67D4B6183256562ED1B3BB6355B2706A12716F43EC67763CF1FF`.
+Prior signing identity retained. All 25 recordings and 25 packaged notices match
+approved bytes; the dedicated portrait asset and six bilingual picker images
+are packaged. TV/LG artwork roots remain unchanged. No dependency added.
+
+Companion build/test APK/lint pass (0 errors, 42 existing warnings); generator
+8/8, canonical catalogs and shared validation pass. Owned muted API34 emulator:
+three-page Arabic/English first use, contextual permissions, live combined
+personalization, saved completion, native hosted-widget independence/Cancel,
+resize fallback/restoration, missing location, picker contents, opacity/shape,
+Hijri date and actual Alexandria binding pass. Legacy transparent presentation
+and invalid option bounds are checked in that existing host fixture.
+
+80–150% app sizing passes in portrait and landscape with Android text at 1.3.
+Actual native renders inspected, including Arabic picker order, combined setup,
+widget controls and the new portrait signature on the optional adhan screen.
+Actual scheduled background playback, notification controls/metadata, accidental
+swipe cancellation, deliberate/accessibility Stop and screen dismissal pass.
+The exported APK differs from that runtime installation only by removal of three
+unused labels. Final-head CI is tracked on draft PR #9; private command logs,
+process receipts and versioned captures stay under ignored state/.
+
+Physical launcher/OEM background delivery, speakers/compass, TVs and iOS remain
+owner acceptance. Android controls notification layout and launcher clipping.
+No merge, release or physical deployment is part of this review handoff.
+
 ## Bottom actions and concise phone copy — 19 November 2026
 
 Review APK **0.4.4/code 13**, `state/builds/companion/Miqat-latest.apk`,

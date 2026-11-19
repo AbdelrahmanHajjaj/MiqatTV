@@ -1,18 +1,19 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-19. Branch feature/companion-installation, draft PR #9.
-Approved requirements: PHONE-PASS5.md and preceding phone passes.
+Approved requirements: PHONE-PASS6.md, PHONE-PASS5.md and preceding phone passes.
 
 ## Active candidate — 0.4.5/code 14
 
-Latest owner scope is PHONE-PASS6.md. A dedicated portrait signature artwork
-has been generated from the canonical Miqat design and added under the separate
-phone asset root. Native three-page portrait journey, location-to-alert advance, contextual
-permission Skip, actual live theme/background changes and saved completion
-pass. Combined bilingual renders inspected; build/lint pass. Next: widget-picker
-previews, opacity/shape controls, optional Hijri date and app font/color parity.
-Work sequentially; no new dependencies or unrelated work. Existing pass-5
-requirements remain in force. Do not hand over an older APK as this candidate.
+Latest owner scope is PHONE-PASS6.md, now implemented: dedicated phone-only
+portrait signature artwork; three-page first use with contextual alert access
+and combined theme/background preview; populated native widget-picker previews
+and bilingual fallback images; independent background/opacity/shape/Hijri
+customization with app typography/colors. Build/lint, generator/canonical checks,
+bilingual native journeys/hosted widgets, enlarged-text portrait/landscape sizing
+and actual scheduled playback pass. Exact APK receipt is in EVIDENCE.md.
+Final-head CI belongs to draft PR #9 and ignored state receipts. Stop for owner
+feedback after checks; no merge/release/deployment or follow-up scope.
 
 ## Previous candidate — 0.4.4/code 13
 

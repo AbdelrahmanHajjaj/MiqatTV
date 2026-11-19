@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:layoutDirection="locale"
+    android:padding="16dp" android:background="@drawable/widget_background">
+<TextView android:id="@+id/widget_title" style="@style/MiqatWidgetMuted" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/app_name" android:maxLines="2"  />
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp">
+<TextView android:id="@+id/widget_prayer_name" style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="start" android:text="@string/widget_preview_prayer_0" android:textSize="13sp" />
+<TextView android:id="@+id/widget_prayer_time" style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="end" android:text="@string/widget_preview_time_0" android:textSize="13sp" />
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp">
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="start" android:text="@string/widget_preview_prayer_1" android:textSize="13sp" />
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="end" android:text="@string/widget_preview_time_1" android:textSize="13sp" />
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp">
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="start" android:text="@string/widget_preview_prayer_2" android:textSize="13sp" />
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="end" android:text="@string/widget_preview_time_2" android:textSize="13sp" />
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp">
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="start" android:text="@string/widget_preview_prayer_3" android:textSize="13sp" />
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="end" android:text="@string/widget_preview_time_3" android:textSize="13sp" />
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp">
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="start" android:text="@string/widget_preview_prayer_4" android:textSize="13sp" />
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="end" android:text="@string/widget_preview_time_4" android:textSize="13sp" />
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp" android:paddingBottom="4dp">
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="start" android:text="@string/widget_preview_prayer_5" android:textSize="13sp" />
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:gravity="end" android:text="@string/widget_preview_time_5" android:textSize="13sp" />
+</LinearLayout>
+</LinearLayout>

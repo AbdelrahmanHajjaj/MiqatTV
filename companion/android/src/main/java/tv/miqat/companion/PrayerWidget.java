@@ -82,10 +82,13 @@ public class PrayerWidget extends AppWidgetProvider {
     static void update(Context context, int id) {
         Bundle bounds = AppWidgetManager.getInstance(context).getAppWidgetOptions(id);
         WidgetOptions options = WidgetOptions.read(context, id);
-        int height = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 260);
+        int width = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 280);
+        int height = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, options.height());
+        if (width <= 0) width = 280;
+        if (height <= 0) height = options.height();
         if (height > 0 && height < 200 && options.layout.equals("day")) options.layout = "next";
         AppWidgetManager.getInstance(context)
-                .updateAppWidget(id, WidgetRenderer.create(context, options, height));
+                .updateAppWidget(id, WidgetRenderer.create(context, options, width, height));
     }
 
     static void updateAll(Context context) {
