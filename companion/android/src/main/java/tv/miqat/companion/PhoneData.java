@@ -49,6 +49,11 @@ final class PhoneData {
         for(int i=0;i<cities.length();i++)if(cities.getJSONObject(i).getString("id").equals(id))return cities.getJSONObject(i);
         throw new IllegalArgumentException("Unknown city");
     }
+    JSONObject nearest(double latitude,double longitude)throws Exception {
+        JSONObject best=null;double distance=100.0;
+        for(int i=0;i<cities.length();i++){JSONObject city=cities.getJSONObject(i);double next=tv.miqat.companion.core.PhonePrayerRules.INSTANCE.distanceKm(latitude,longitude,city.getDouble("lat"),city.getDouble("lng"));if(next<=distance){distance=next;best=city;}}
+        return best;
+    }
     List<String> options(JSONObject c)throws Exception {
         Object definition=c.opt("choices");List<String> values=new ArrayList<>();
         if(definition instanceof JSONArray){JSONArray items=(JSONArray)definition;for(int i=0;i<items.length();i++)values.add(items.getString(i));return values;}
@@ -77,6 +82,6 @@ final class PhoneData {
                 throw new IllegalArgumentException("Invalid phone numeric step");
         }
         if(!Arrays.asList("true","false").contains(values.get("prayer.location-ready")))throw new IllegalArgumentException("Invalid location state");
-        if(!values.get("prayer.location").equals("custom"))city(values.get("prayer.location"));
+        String place=values.get("prayer.location");if(!place.equals("custom")&&!place.equals("detected"))city(place.startsWith("detected:")?place.substring(9):place);
     }
 }

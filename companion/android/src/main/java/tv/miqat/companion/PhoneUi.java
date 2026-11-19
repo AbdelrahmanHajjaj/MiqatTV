@@ -20,6 +20,10 @@ final class PhoneUi {
     final MainActivity a;
     PhoneData data;
     PhoneStore settings;
+    final PhoneLocation locator;
+    boolean locationPermissionPending,advancedLocation;
+    String locationMessage="";
+    AlertDialog locationDialog;
     int dayOffset;
     String pending="",draft="",latitude="",longitude="";
     private String artworkId="";
@@ -43,11 +47,12 @@ final class PhoneUi {
         if(playback!=null)playback.setVisibility(PhonePlayback.playing()?View.VISIBLE:View.GONE);
         clock.postDelayed(this,1000);
     }};
-    PhoneUi(MainActivity a){this.a=a;}
-    void restore(Bundle b){dayOffset=Math.max(-366,Math.min(366,b.getInt("phone-day")));pending=b.getString("phone-pending","");draft=b.getString("phone-draft","");latitude=b.getString("phone-lat","");longitude=b.getString("phone-lng","");}
-    void save(Bundle b){b.putInt("phone-day",dayOffset);b.putString("phone-pending",pending);b.putString("phone-draft",draft);b.putString("phone-lat",latitude);b.putString("phone-lng",longitude);}
+    PhoneUi(MainActivity a){this.a=a;locator=new PhoneLocation(a);}
+    void restore(Bundle b){advancedLocation=b.getBoolean("phone-location-advanced");dayOffset=Math.max(-366,Math.min(366,b.getInt("phone-day")));pending=b.getString("phone-pending","");draft=b.getString("phone-draft","");latitude=b.getString("phone-lat","");longitude=b.getString("phone-lng","");}
+    void save(Bundle b){b.putBoolean("phone-location-advanced",advancedLocation);b.putInt("phone-day",dayOffset);b.putString("phone-pending",pending);b.putString("phone-draft",draft);b.putString("phone-lat",latitude);b.putString("phone-lng",longitude);}
     void start(){clock.removeCallbacksAndMessages(null);clock.post(tick);}
-    void stop(){clock.removeCallbacksAndMessages(null);}
+    void stop(){clock.removeCallbacksAndMessages(null);cancelLocation();}
+    void cancelLocation(){if(locator.running)locationMessage="phone_location_cancelled";locator.close();locationPermissionPending=false;if(locationDialog!=null){locationDialog.dismiss();locationDialog=null;}}
     void palette(){
         try{data=PhoneData.get(a);settings=PhoneStore.read(a);JSONObject c=a.catalog.data.getJSONObject("themes").getJSONObject(settings.value("appearance.theme")).getJSONObject("colors");
             a.ground=Color.parseColor(c.getString("lapis-900"));a.surface=Color.parseColor(c.getString("lapis-800"));a.accent=Color.parseColor(c.getString("gold-400"));a.ink=Color.parseColor(c.getString("plaster-100"));a.muted=Color.parseColor(c.getString("mist-400"));
@@ -64,8 +69,13 @@ final class PhoneUi {
     String digits(String value){String mode=settings.value("display.digits");boolean eastern=mode.equals("eastern")||mode.equals("auto")&&a.ar;StringBuilder out=new StringBuilder();for(char c:value.toCharArray()){int n=Character.digit(c,10);out.append(n>=0?(char)((eastern?'٠':'0')+n):c);}return out.toString();}
     Locale locale(){return new Locale(a.ar?"ar":"en");}
     String time(double stamp){SimpleDateFormat f=new SimpleDateFormat(settings.value("display.clock").equals("12")?"h:mm a":"HH:mm",locale());f.setTimeZone(settings.zone());return digits(f.format(new Date((long)stamp)));}
-    String location()throws Exception{return settings.value("prayer.location").equals("custom")?a.t("phone_custom_location"):a.catalog.label(data.city(settings.value("prayer.location")),a.ar);}
-    void open(String section){pending="";a.section=section;a.page="phone-settings";a.render();}
+    String location()throws Exception {
+        String id=settings.value("prayer.location");
+        if(id.equals("custom"))return a.t("phone_custom_location");
+        if(id.equals("detected"))return a.t("phone_current_location");
+        return id.startsWith("detected:")?String.format(locale(),a.t("phone_near_city"),a.catalog.label(data.city(id.substring(9)),a.ar)):a.catalog.label(data.city(id),a.ar);
+    }
+    void open(String section){if(!section.equals("calculation"))cancelLocation();pending="";a.section=section;a.page="phone-settings";a.render();}
     void home(long now)throws Exception {
         a.navigationRow(a.body,"compass",location(),settings.zone().getID(),()->open("calculation")).setTag("phone.location");
         renderedDay=civilDay(now);renderedZone=settings.zone().getID();lastTick=now;PhoneSchedule.Day today=settings.day(now,0),tomorrow=settings.day(now,1);tv.miqat.core.PrayerSelection selection=tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(today.times,tomorrow.times,now);
@@ -75,7 +85,8 @@ final class PhoneUi {
         TextView upcoming=a.text(next<0?a.t("phone_unavailable"):data.prayerName(next,a.ar)+" · "+time(target),28,a.ink);upcoming.setTypeface(a.heading);hero.addView(upcoming);
         if(next>=0){countdown=a.text("",18,a.accent);countdown.setTag("phone.countdown");hero.addView(countdown);nextTime=(long)target;}
         status=a.text(a.t(PhoneAlarms.status(a,settings)),12,a.muted);status.setTag("phone.status");hero.addView(status);
-        a.button(hero,a.t(settings.locationReady?"phone_audio":"phone_choose_location"),()->open(settings.locationReady?"audio":"calculation")).setTag("phone.setup");
+        a.button(hero,a.t(settings.locationReady?"phone_audio":"phone_use_location"),()->{if(settings.locationReady)open("audio");else useLocation();}).setTag("phone.setup");
+        if(!locationMessage.isEmpty())hero.addView(a.text(a.t(locationMessage),13,a.muted));
         playback=a.button(hero,a.t("phone_stop"),()->{PhonePlayback.stop(a);a.render();});playback.setTag("phone.stop");
         String audioError=PhoneStore.preferences(a).getString("audio-error","");if(!audioError.isEmpty())hero.addView(a.text(a.t(audioError),13,a.accent));
         LinearLayout dateBar=a.horizontal(a.body);
@@ -185,19 +196,55 @@ final class PhoneUi {
         catch(Exception failure){a.notice("phone_save_failed");}
     }
     void locationEditor()throws Exception {
+        a.button(a.body,a.t(locator.running?"phone_location_cancel":"phone_use_location"),()->{if(locator.running){cancelLocation();a.render();}else useLocation();}).setTag("phone.location.detect");
+        a.body.addView(a.text(a.t("phone_location_privacy"),13,a.muted));
+        if(!locationMessage.isEmpty())a.body.addView(a.text(a.t(locationMessage),14,a.accent));
+        if(locationMessage.equals("phone_location_disabled"))a.button(a.body,a.t("phone_location_settings"),()->system(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)));
+        if(locationMessage.equals("phone_location_denied"))a.button(a.body,a.t("phone_app_settings"),()->system(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+a.getPackageName()))));
         a.body.addView(a.text(a.t("phone_location_needed"),14,a.muted));
         a.button(a.body,location()+"  ⌄",()->{
             java.util.List<Choices.Option> options=new ArrayList<>();try{for(int i=0;i<data.cities.length();i++){JSONObject c=data.cities.getJSONObject(i);options.add(new Choices.Option(c.getString("id"),a.catalog.label(c,a.ar)+" · "+c.optString(a.ar?"countryAr":"countryEn")));}}catch(Exception invalid){a.notice("invalid");return;}
             picker(a.t("phone_choose_location"),options,id->{try{JSONObject city=data.city(id);Map<String,String> changes=new LinkedHashMap<>();changes.put("prayer.location",id);changes.put("prayer.latitude",city.getString("lat"));changes.put("prayer.longitude",city.getString("lng"));changes.put("prayer.method",city.getString("method"));changes.put("prayer.asr",city.optBoolean("hanafi")?"hanafi":"shafi");changes.put("prayer.location-ready","false");latitude="";longitude="";save(changes,false);}catch(Exception invalid){a.notice("invalid");}});
         }).setTag("phone.city");
+        a.button(a.body,a.t("phone_advanced"),()->{advancedLocation=!advancedLocation;a.render();}).setTag("phone.location.advanced");
+        if(advancedLocation){
         LinearLayout custom=a.card(a.body);custom.addView(a.text(a.t("phone_custom_location"),16,a.ink));
         if(latitude.isEmpty()){latitude=settings.value("prayer.latitude");longitude=settings.value("prayer.longitude");}
         EditText lat=coordinate(custom,"phone_latitude",latitude),lng=coordinate(custom,"phone_longitude",longitude);
         lat.addTextChangedListener(MainActivity.watcher(v->latitude=v));lng.addTextChangedListener(MainActivity.watcher(v->longitude=v));
         a.button(custom,a.t("done"),()->{try{double x=Double.parseDouble(normalize(latitude)),y=Double.parseDouble(normalize(longitude));if(!Double.isFinite(x)||!Double.isFinite(y)||Math.abs(x)>90||Math.abs(y)>180)throw new IllegalArgumentException();Map<String,String> values=new LinkedHashMap<>();values.put("prayer.location","custom");values.put("prayer.latitude",Double.toString(x));values.put("prayer.longitude",Double.toString(y));values.put("prayer.location-ready","false");save(values,false);}catch(Exception invalid){lat.setError(a.t("invalid"));}}).setTag("phone.coordinates.save");
         a.button(custom,a.t("cancel"),()->{latitude="";longitude="";a.render();});
-        a.body.addView(a.text(settings.latitude+", "+settings.longitude+" · "+settings.zone().getID(),14,a.muted));
+        custom.addView(a.text(settings.latitude+", "+settings.longitude,13,a.muted));
+        }
+        a.body.addView(a.text(settings.zone().getID(),14,a.muted));
         a.button(a.body,a.t("phone_confirm_location"),()->save("prayer.location-ready","true")).setTag("phone.location.confirm");
+    }
+    void useLocation(){
+        if(!PhoneLocation.allowed(a)){locationPermissionPending=true;a.requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,android.Manifest.permission.ACCESS_COARSE_LOCATION},78);return;}
+        locationMessage="phone_location_working";
+        locator.request(value->{if(a.phoneForeground)offerLocation(value);},failure->{locationMessage=failure;if(!a.isDestroyed())a.render();});
+        if(locator.running)a.render();
+    }
+    void locationPermissionResult(){if(!locationPermissionPending)return;locationPermissionPending=false;if(PhoneLocation.allowed(a))useLocation();else{locationMessage="phone_location_denied";a.render();}}
+    void offerLocation(android.location.Location fix){
+        try {
+            JSONObject city=data.nearest(fix.getLatitude(),fix.getLongitude());
+            Map<String,String> changes=new LinkedHashMap<>();
+            changes.put("prayer.location",city==null?"detected":"detected:"+city.getString("id"));
+            changes.put("prayer.latitude",Double.toString(fix.getLatitude()));changes.put("prayer.longitude",Double.toString(fix.getLongitude()));
+            changes.put("prayer.zone","system");changes.put("prayer.location-ready","true");
+            if(!settings.locationReady&&city!=null){changes.put("prayer.method",city.getString("method"));changes.put("prayer.asr",city.optBoolean("hanafi")?"hanafi":"shafi");}
+            String place=city==null?a.t("phone_current_location"):String.format(locale(),a.t("phone_near_city"),a.catalog.label(city,a.ar));
+            String method=value("prayer.method",changes.getOrDefault("prayer.method",settings.value("prayer.method")));
+            locationMessage="";
+            locationDialog=new AlertDialog.Builder(a).setTitle(a.t("phone_location_found"))
+                .setMessage(place+"\n"+TimeZone.getDefault().getID()+"\n"+method+"\n\n"+a.t("phone_location_review"))
+                .setNegativeButton(a.t("cancel"),(d,w)->{locationDialog=null;a.render();})
+                .setPositiveButton(a.t("phone_confirm_location"),(d,w)->{
+                    locationDialog=null;if(!PhoneLocation.usable(fix,android.os.SystemClock.elapsedRealtimeNanos())){locationMessage="phone_location_timeout";a.render();return;}
+                    latitude="";longitude="";save(changes,false);
+                }).show();
+        }catch(Exception invalid){locationMessage="phone_location_timeout";a.render();}
     }
     EditText coordinate(LinearLayout parent,String key,String value){TextView label=a.text(a.t(key),14,a.muted);parent.addView(label);EditText field=new EditText(a);field.setId(View.generateViewId());label.setLabelFor(field.getId());field.setTextColor(a.ink);field.setTypeface(a.regular);field.setSingleLine(true);field.setTextDirection(View.TEXT_DIRECTION_LTR);field.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);field.setText(value);field.setTag(key);parent.addView(field);return field;}
     void permissions(){

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add one-shot phone location detection with approximate access, confirmation,
+  city fallback and manual coordinates under Advanced.
+
 - Expand the phone app into standalone Miqat prayer (0.2.0): independent offline daily
   times in a compact daily overview, tomorrow's Fajr, city/custom location and
   timezone, Hijri display,

@@ -105,9 +105,49 @@ reference. Sources, learned patterns and future discussion candidates are in
 a compact six-time daily overview and background-delivery repair help; broader
 worship modules are recorded for feedback rather than silently added.
 
+## Feedback pass 2 — approved 19 November 2026
+
+The owner skim-tested the Android app: broad functionality is present, but phone
+UI/UX needs substantial polish. They requested location detection, broader adhan
+customization and public automatic TV package downloads, keeping local files in
+Advanced. Asked to prioritize adhan areas, the owner answered **all three**:
+per-prayer volume/duration/silent/vibration, custom audio/more voices, and weekday/
+quiet-hour/travel behavior. Continue sequentially in this worktree/PR; preserve
+TV controls and earlier validated work. No public release publication or physical
+deployment has been requested. Public repository currently has only a draft
+prerelease; there is no anonymous published APK/IPK release yet.
+
+Ordered work:
+1. [x] One-shot foreground location with approximate permission support, explicit
+   location confirmation and city-search fallback; coordinates move to Advanced.
+2. [ ] Canonical GitHub public-release lookup/verified downloads for APK/IPK,
+   ordinary setup as default and local packages in Advanced. Never embed tokens,
+   install unverified/partial files, silently downgrade or uninstall to update.
+   Website should link to the same release assets. Handle no public release honestly.
+3. [ ] Per-prayer volume/duration overrides, silent/vibration alert modes,
+   weekday schedules and quiet hours. Custom user audio remains private on-device;
+   no unreviewed media enters Git or distribution. Existing 14 approved recordings
+   remain available; adding shipped recordings needs the established content review.
+4. [ ] Travel behavior: opt-in foreground location refresh and device/fixed
+   timezone choice, with clear stale/denied/location-disabled states. No continuous
+   background tracking or automatic religious travel rulings are implied.
+5. [ ] Phone UX pass: compact settings summaries, focused inline numeric editors,
+   short choice sheets, clear first-run/location/alert/setup states, consistent
+   surfaces/spacing and accessible Arabic/English, large text and RTL.
+6. [ ] Validate affected behavior and final CI, update guide/evidence/PR, export
+   the replacement review APK. Physical acceptance and publication stay open.
+
 ## Current resume point
 
-Implementation and the review export are complete. Before handing over, require
+Work pass 2 in the existing feature/companion-installation worktree (clean base
+298f195). Location detection is implemented and validated (EVIDENCE.md). Continue
+with public downloads, adhan schedules/audio
+and phone UX. Reuse native Java Views, shared phone contract/core and existing
+installer runtime. The previous 0.2.0 review APK remains the latest delivered
+build until this pass is verified/exported. All final 298f195 CI gates passed;
+links are in PR #9. Keep the PR draft while owner acceptance remains open.
+
+Previous pass: implementation and the 0.2.0 review export were complete. Before handing over, require
 all latest PR #9 checks to pass; record their final run links in the PR body.
 Then wait for the owner's combined physical-device feedback, keeping this PR
 draft. Do not merge past the open human acceptance or add broader Athar modules

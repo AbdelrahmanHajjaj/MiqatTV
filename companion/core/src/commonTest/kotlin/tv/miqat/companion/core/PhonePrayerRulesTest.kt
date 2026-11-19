@@ -7,6 +7,17 @@ class PhonePrayerRulesTest {
     private val none = IntArray(6)
     private val times = doubleArrayOf(600000.0, 900000.0, 1200000.0, 1800000.0, 2400000.0, 3000000.0)
 
+    @Test fun locationQualityAndCityDistancesAreBounded() {
+        assertTrue(PhonePrayerRules.usableLocation(30.0,31.0,3000.0,120000.0))
+        assertFalse(PhonePrayerRules.usableLocation(30.0,31.0,10001.0,0.0))
+        assertFalse(PhonePrayerRules.usableLocation(30.0,31.0,20.0,120001.0))
+        assertFalse(PhonePrayerRules.usableLocation(30.0,31.0,20.0,-1.0))
+        assertFalse(PhonePrayerRules.usableLocation(Double.NaN,31.0,20.0,0.0))
+        assertEquals(0.0,PhonePrayerRules.distanceKm(30.0,31.0,30.0,31.0),0.000001)
+        assertTrue(PhonePrayerRules.distanceKm(0.0,179.9,0.0,-179.9) in 22.0..23.0)
+        assertEquals(20015.09,PhonePrayerRules.distanceKm(90.0,0.0,-90.0,0.0),0.1)
+    }
+
     @Test fun nextPrayerSkipsSunriseAndUsesTomorrowWithoutInventingPolarTimes() {
         val tomorrow=times.map { it+86400000 }.toDoubleArray()
         assertEquals(2,PhonePrayerRules.nextPrayer(times,tomorrow,600000.0)!!.next)

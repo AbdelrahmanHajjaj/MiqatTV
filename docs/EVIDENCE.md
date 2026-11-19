@@ -1,5 +1,22 @@
 # Validation evidence
 
+## Phone location feedback pass — 19 November 2026
+
+Foreground one-shot detection, explicit confirmation and Advanced coordinates pass
+English/Arabic native checks on an owned muted API 37 phone emulator. Precise GPS
+uses an injected London fix; approximate-only access uses a framework test network
+provider with 3 km accuracy and precise permission denied. Denied access returns
+without listening; stale fixes are rejected; requests close on success/navigation.
+Rendered English/Arabic location pages were inspected. Core quality/distance tests,
+phone assemble/lint and native test build pass. Fixtures do not establish physical
+GPS performance or OEM delivery. Private logs: phone-location-denied.log,
+phone-location-granted-2.log, phone-location-coarse-network.log,
+phone-location-capture.log, phone-location-core.log and phone-location-build.log.
+
+The owner’s actual Athar recording was sampled visually across its full duration;
+only generic UX observations/timestamps enter PHONE-REFERENCE.md. No private
+profile/location data, original video or recording assets enter distribution.
+
 ## Standalone phone foundation — 19 November 2026
 
 Phone prayer settings are independent from TV settings/cache and default to alerts

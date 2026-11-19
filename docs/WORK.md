@@ -13,15 +13,18 @@ prayer app sequentially, without stopping for intermediate physical-device
 feedback. Deliver one combined build for the owner's complete review. The durable
 scope, decisions, ordered checklist and resume point are in [PHONE-WORK.md](PHONE-WORK.md).
 
-Android/LG installation and standalone phone prayer implementation, local
-validation and fixed review export are complete. The owner supplied Athar as a
-mobile reference; adopted patterns and later discussion ideas are durably saved
-in [PHONE-REFERENCE.md](PHONE-REFERENCE.md). Before handoff, require latest PR #9
-checks to pass and record final links in its body. Then wait for the owner's
-combined physical feedback; keep the PR draft while human acceptance is open.
-The exact artifact and resume instructions are in [PHONE-WORK.md](PHONE-WORK.md).
-Android is the standalone deliverable; iOS core compilation/native rule CI passes,
-with native iOS app/platform adapters still future work.
+The owner skim-tested 0.2.0 and approved a second pass: substantial phone UX
+polish, foreground location detection, automatic public TV package downloads
+(local files in Advanced), and all three adhan customization groups: per-prayer
+sound controls, custom audio, and weekday/quiet-hour/travel behavior.
+
+Proceed sequentially using [PHONE-WORK.md](PHONE-WORK.md)'s pass-2 checklist.
+Start with location detection. The existing worktree/PR owns this feedback.
+The public repository has only a draft prerelease, so no anonymous published
+release is available yet; implement the download flow and honest unavailable
+state without publishing or embedding credentials. Keep physical acceptance and
+public release publication separate. Retain native TV stacks and independent
+phone/TV settings. Broader Athar modules remain future discussion candidates.
 
 Use gh and the PR template. Preserve commits with a normal merge after required
 checks pass. Physical TV deployment and release publication need specific scope.

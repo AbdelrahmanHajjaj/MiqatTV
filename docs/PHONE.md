@@ -6,7 +6,10 @@ is not needed for phone prayer times. Minimum Android version: 8 (API 26).
 
 ## First use
 
-1. Open **Prayer → location**, choose a city or save custom latitude/longitude.
+1. Tap **Use my location** to request a one-shot foreground fix, then review and
+   confirm it. Approximate Android location is supported. You can choose a city
+   instead; manual latitude/longitude is under **Advanced**. No background location
+   permission or continuous tracking is used.
 2. Select the prayer timezone. **Use phone timezone** follows Android, including
    changes while travelling; choose an explicit IANA timezone to keep a fixed
    location. City selection supplies its coordinates, method and Asr school;

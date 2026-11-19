@@ -226,7 +226,7 @@ public final class MainActivity extends Activity {
     void tab(String target){
         if(networkBusy)return;
         if(page.equals(target)&&(!target.equals("settings")||section.isEmpty()))return;
-        Runnable change=()->{if(phoneUi!=null)phoneUi.pending="";stopAudio();if(lgSetup!=null)lgSetup.close();cancelPairing();clearPending();appearance=null;section="";query="";page=target;
+        Runnable change=()->{if(phoneUi!=null){phoneUi.pending="";phoneUi.cancelLocation();}stopAudio();if(lgSetup!=null)lgSetup.close();cancelPairing();clearPending();appearance=null;section="";query="";page=target;
             if(target.equals("settings"))readSettings();else if(target.equals("overview"))readRemote();render();};
         if(appearance!=null&&!appearance.getChanges().isEmpty())confirmDiscard(change);else change.run();
     }
@@ -257,7 +257,7 @@ public final class MainActivity extends Activity {
     }
     void notice(String key) {if(toast!=null)toast.cancel();toast=Toast.makeText(this,t(key),Toast.LENGTH_LONG);toast.show();}
     void info(String title,String message) { new AlertDialog.Builder(this).setTitle(title).setMessage(message).setPositiveButton(t("done"),null).show(); }
-    void navigate(String target) { stopAudio();if(lgSetup!=null&&!target.equals("lg-setup"))lgSetup.close(); page=target; query=""; render(); }
+    void navigate(String target) { if(phoneUi!=null)phoneUi.cancelLocation();stopAudio();if(lgSetup!=null&&!target.equals("lg-setup"))lgSetup.close(); page=target; query=""; render(); }
 
     void render() {
         if(phoneUi!=null)phoneUi.palette();
@@ -900,12 +900,13 @@ public final class MainActivity extends Activity {
     void stopAudio() {PhonePlayback.stopPreview(this);}
     @Override protected void onNewIntent(android.content.Intent intent){super.onNewIntent(intent);setIntent(intent);if(intent.getBooleanExtra("prayer-home",false))tab("prayers");}
     @Override protected void onResume(){super.onResume();if(phoneUi!=null){PhoneAlarms.rebuild(this);if(page.equals("prayers")||page.equals("phone-settings"))render();phoneUi.start();}}
-    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==75){PhoneAlarms.rebuild(this);render();}}
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==75){PhoneAlarms.rebuild(this);render();}if(request==78&&phoneUi!=null)phoneUi.locationPermissionResult();}
     @Override protected void onStart(){super.onStart();phoneForeground=true;schedulePoll();if(lgSetup!=null&&page.equals("lg-setup"))render();}
     @Override protected void onStop(){phoneForeground=false;if(phoneUi!=null)phoneUi.stop();polling.removeCallbacksAndMessages(null);stopAudio();if(lgSetup!=null)lgSetup.close();if(toast!=null)toast.cancel();super.onStop();}
     @Override protected void onDestroy(){cancelPairing();if(lgSetup!=null)lgSetup.close();io.shutdownNow();super.onDestroy();}
     void confirmDiscard(Runnable next) {new AlertDialog.Builder(this).setMessage(t("discard")).setNegativeButton(t("cancel"),null).setPositiveButton(t("discard_yes"),(d,w)->next.run()).show();}
     void back() {
+        if(phoneUi!=null)phoneUi.cancelLocation();
         if(networkBusy&&!page.equals("pair"))return;
         stopAudio();
         if(page.equals("phone-settings")&&!section.isEmpty()){phoneUi.pending="";section="";render();return;}

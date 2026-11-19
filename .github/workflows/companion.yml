@@ -46,6 +46,20 @@ jobs:
           script: |
             adb install -r companion/android/build/outputs/apk/debug/companion-debug.apk
             adb install -r -t companion/android/build/outputs/apk/androidTest/debug/companion-debug-androidTest.apk
+            adb shell am instrument -r -w -e suite phone-location-denied tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-denied-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-location-denied-result.log
+            grep -q 'PASS: denied foreground location' phone-location-denied-result.log
+            adb shell pm grant tv.miqat.companion android.permission.ACCESS_COARSE_LOCATION
+            adb shell cmd location set-location-enabled true
+            adb shell appops set tv.miqat.companion android:mock_location allow
+            adb shell am instrument -r -w -e suite phone-location-approx tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-approx-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-location-approx-result.log
+            grep -q 'PASS: bilingual one-shot GPS' phone-location-approx-result.log
+            adb shell pm grant tv.miqat.companion android.permission.ACCESS_FINE_LOCATION
+            adb emu geo fix -0.1278 51.5074
+            adb shell am instrument -r -w -e suite phone-location tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-location-result.log
+            grep -q 'PASS: bilingual one-shot GPS' phone-location-result.log
             adb shell am instrument -r -w tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee companion-ui-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' companion-ui-result.log
             grep -q 'PASS: bilingual native bindings' companion-ui-result.log

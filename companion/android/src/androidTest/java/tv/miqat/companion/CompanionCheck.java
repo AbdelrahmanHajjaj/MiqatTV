@@ -17,12 +17,14 @@ import java.util.*;
 
 /** Run only on an explicitly selected owned phone emulator; no TV/device integration. */
 public final class CompanionCheck extends Instrumentation {
-    boolean lan,live,camera,lg,captures,lgInstall,phoneRuntime,phoneUi,phoneDenied,phoneSize;
-    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");phoneSize=suite.equals("phone-size");phoneDenied=suite.equals("phone-denied");phoneUi=suite.equals("phone-ui");phoneRuntime=suite.equals("phone-runtime");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
+    boolean lan,live,camera,lg,captures,lgInstall,phoneRuntime,phoneUi,phoneDenied,phoneSize,phoneLocation,locationDenied,locationApprox;
+    @Override public void onCreate(Bundle arguments) {super.onCreate(arguments);captures=arguments!=null&&"true".equals(arguments.getString("capture","false"));String suite=arguments==null?"":arguments.getString("suite","");locationApprox=suite.equals("phone-location-approx");phoneLocation=suite.equals("phone-location");locationDenied=suite.equals("phone-location-denied");phoneSize=suite.equals("phone-size");phoneDenied=suite.equals("phone-denied");phoneUi=suite.equals("phone-ui");phoneRuntime=suite.equals("phone-runtime");lgInstall=suite.equals("lg-install");lan=suite.equals("lan");lg=suite.equals("live-lg");live=suite.equals("live")||lg;camera=suite.equals("camera");start();}
     static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
     @Override public void onStart() {
         Bundle result=new Bundle(); int count=0;
         try {
+            if(locationDenied){PhoneLocationCheck.denied(this);result.putString("stream","PASS: denied foreground location leaves detection off\n");finish(-1,result);return;}
+            if(phoneLocation||locationApprox){PhoneLocationCheck.run(this,captures,locationApprox);result.putString("stream","PASS: bilingual one-shot GPS detection, approximate/stale quality, confirmation/persistence and Advanced coordinate fallback\n");finish(-1,result);return;}
             if(phoneSize){PhoneSizeCheck.run(this,captures);result.putString("stream","PASS: bilingual phone sizing 80-150, navigation geometry and digit selection\n");finish(-1,result);return;}
             if(phoneDenied){PhoneRuntimeCheck.denied(this);result.putString("stream","PASS: denied prayer permissions keep alarms and playback off; components private and direct-boot aware\n");finish(-1,result);return;}
             if(phoneUi){PhoneUiCheck.run(this,captures);result.putString("stream","PASS: independent bilingual phone prayer UI, location confirmation, numeric Save/Cancel, per-prayer persistence and themes\n");finish(-1,result);return;}
