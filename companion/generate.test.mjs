@@ -62,7 +62,7 @@ test('companion copy is bilingual and compact/mihrab positions remain independen
     assert.deepEqual(controls.find(x=>x.id==='appearance.compact-position').options.map(x=>x.value),['top','bottom']);
   }
   const manifest=readFileSync(new URL('android/src/main/AndroidManifest.xml',import.meta.url),'utf8');
-  assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','VIBRATE'].map(x=>'android.permission.'+x));
+  assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','USE_FULL_SCREEN_INTENT','VIBRATE'].map(x=>'android.permission.'+x));
 });
 
 test('new branding settings reach both profiles with canonical scenes and opacity drafts',()=>{

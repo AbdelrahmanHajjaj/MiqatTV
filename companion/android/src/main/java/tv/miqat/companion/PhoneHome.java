@@ -113,12 +113,6 @@ final class PhoneHome {
         LinearLayout hero = ui.appearance.hero(a.body, ui.settings);
         hero.setPadding(a.views.dp(16), a.views.dp(12), a.views.dp(16), a.views.dp(12));
         hero.setTag("phone.hero");
-        Button location = a.views.button(hero, ui.location(), () -> ui.open("calculation"));
-        location.setTag("phone.location");
-        location.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-        location.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-        location.setPadding(0, 0, 0, 0);
-        location.setTextSize(14);
         tv.miqat.core.PrayerSelection selection = nextPrayer(hero, now, true);
         int next = selection == null ? -1 : selection.getNext();
         boolean tomorrowNext = selection != null && selection.getNextTime() >= tomorrow.start;
@@ -147,6 +141,8 @@ final class PhoneHome {
         boolean repair = state.equals("phone_permission_missing");
         status = a.views.text(a.t(state), 12, a.muted);
         status.setTag("phone.status");
+        status.setGravity(Gravity.CENTER);
+        status.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         hero.addView(status);
         if (!ui.settings.locationReady || repair)
             a.views
@@ -327,23 +323,51 @@ final class PhoneHome {
                 tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(
                         today.times, tomorrow.times, now);
         double target = next == null ? 0 : next.getNextTime();
-        hero.addView(
+        LinearLayout header = a.views.horizontal(hero);
+        if (live) {
+            Button location = a.views.button(header, ui.location(), () -> ui.open("calculation"));
+            location.setTag("phone.location");
+            location.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            location.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+            location.setPadding(0, 0, 0, 0);
+            location.setTextSize(14);
+            a.views.flex(location);
+        }
+        TextView label =
                 a.views.text(
                         a.t("phone_next")
-                                + (target >= tomorrow.start ? " · " + a.t("phone_tomorrow") : ""),
+                                + (target >= tomorrow.start
+                                        ? " \u00b7 " + a.t("phone_tomorrow")
+                                        : ""),
                         14,
-                        a.muted));
+                        a.muted);
+        label.setTag("phone.next.label");
+        label.setGravity(live ? Gravity.END : Gravity.START);
+        label.setTextAlignment(
+                live ? View.TEXT_ALIGNMENT_VIEW_END : View.TEXT_ALIGNMENT_VIEW_START);
+        header.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
+        LinearLayout prayer = a.views.horizontal(hero);
+        prayer.setPadding(0, a.views.dp(6), 0, a.views.dp(6));
         TextView name =
                 a.views.text(
                         next == null
                                 ? a.t("phone_unavailable")
-                                : ui.data.prayerName(next.getNext(), a.ar)
-                                        + " · "
-                                        + ui.time(target),
+                                : ui.data.prayerName(next.getNext(), a.ar),
                         28,
-                        a.ink);
+                        a.accent);
+        name.setTag("phone.next.name");
         name.setTypeface(a.heading);
-        hero.addView(name);
+        prayer.addView(name, new LinearLayout.LayoutParams(0, -2, 1));
+        if (next != null) {
+            TextView time = a.views.text(ui.time(target), 32, a.ink);
+            time.setTag("phone.next.time");
+            time.setGravity(Gravity.END);
+            time.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
+            time.setTypeface(a.heading);
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-2, -2);
+            size.setMarginStart(a.views.dp(12));
+            prayer.addView(time, size);
+        }
         if (next != null) {
             long minutes = Math.max(0, ((long) target - now + 59999) / 60000);
             TextView remaining =
@@ -359,6 +383,9 @@ final class PhoneHome {
                                                     minutes % 60))),
                             18,
                             a.accent);
+            remaining.setGravity(Gravity.CENTER);
+            remaining.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            remaining.setTag("phone.next.remaining");
             hero.addView(remaining);
             if (live) {
                 countdown = remaining;

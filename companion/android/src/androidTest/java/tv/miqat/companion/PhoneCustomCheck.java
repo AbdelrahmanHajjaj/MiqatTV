@@ -39,7 +39,7 @@ final class PhoneCustomCheck {
         try {
             PhoneStore current = PhoneStore.read(c);
             Map<String, String> old = new LinkedHashMap<>(current.values);
-            old.keySet().retainAll(current.data.legacyIds());
+            old.keySet().retainAll(current.data.idsAt(1));
             old.put("reminders.voice", "alafasy");
             old.put("reminders.volume", "35");
             old.put("call.fajr.voice", "inherit");
@@ -68,6 +68,35 @@ final class PhoneCustomCheck {
                             new JSONObject()
                                     .put("version", 1)
                                     .put("values", new JSONObject(old))
+                                    .toString())
+                    .commit();
+            LanCheck.rejects(() -> PhoneStore.read(c));
+            Map<String, String> versionTwo = new LinkedHashMap<>(migrated.values);
+            versionTwo.remove("reminders.full-screen");
+            versionTwo.remove("reminders.volume-keys");
+            PhoneStore.preferences(c)
+                    .edit()
+                    .putString(
+                            "settings",
+                            new JSONObject()
+                                    .put("version", 2)
+                                    .put("values", new JSONObject(versionTwo))
+                                    .toString())
+                    .commit();
+            PhoneStore upgraded = PhoneStore.read(c);
+            PhoneUiCheck.check(
+                    upgraded.value("reminders.full-screen").equals("false")
+                            && upgraded.volume == 35
+                            && upgraded.values.entrySet().containsAll(versionTwo.entrySet()),
+                    "v2 upgrade lost settings or enabled an unrequested full-screen alert");
+            versionTwo.remove("reminders.volume");
+            PhoneStore.preferences(c)
+                    .edit()
+                    .putString(
+                            "settings",
+                            new JSONObject()
+                                    .put("version", 2)
+                                    .put("values", new JSONObject(versionTwo))
                                     .toString())
                     .commit();
             LanCheck.rejects(() -> PhoneStore.read(c));

@@ -9,9 +9,11 @@ import android.os.*;
 
 import java.util.*;
 
-/** A foreground service only while a selected local adhan is preparing/playing. Never sticky. */
+/** A foreground service only during a selected local adhan session, including user pause. Never sticky. */
 public final class PhonePlayback extends Service {
     static final String STOP = "tv.miqat.companion.STOP_ADHAN";
+    static final String PAUSE = "tv.miqat.companion.PAUSE_ADHAN",
+            RESUME = "tv.miqat.companion.RESUME_ADHAN";
     private static final int NOTIFICATION = 42500;
     private static volatile PhonePlayback active;
     private MediaPlayer player;
@@ -19,11 +21,11 @@ public final class PhonePlayback extends Service {
     private AudioFocusRequest focus;
     private MediaSession media;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean preview, started, defaultAudio;
+    private boolean preview, started, paused, defaultAudio;
     private String eventId = "";
     private int generation, prayerIndex = -1;
     private double prayerTime;
-    private long startedAt;
+    private long resumedAt, playedMs;
 
     static Intent intent(Context c, int prayer, String voice, boolean preview, String id) {
         return new Intent(c, PhonePlayback.class)
@@ -42,7 +44,11 @@ public final class PhonePlayback extends Service {
     }
 
     static boolean outputStarted() {
-        return active != null && active.started;
+        return active != null && active.started && !active.paused;
+    }
+
+    static boolean paused() {
+        return active != null && active.paused;
     }
 
     static String currentId() {
@@ -78,15 +84,8 @@ public final class PhonePlayback extends Service {
                                     / 100f,
                             latest.audioVolume(service.defaultAudio ? -1 : service.prayerIndex)
                                     / 100f);
-                if (service.started) {
-                    service.handler.removeCallbacksAndMessages(null);
-                    service.handler.postDelayed(
-                            service::stopSelf,
-                            Math.max(
-                                    0,
-                                    service.limit(latest)
-                                            - (SystemClock.elapsedRealtime() - service.startedAt)));
-                }
+                if (service.started) service.armLimit(latest);
+
             } catch (Exception invalid) {
                 stop(c);
             }
@@ -112,8 +111,17 @@ public final class PhonePlayback extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null || STOP.equals(intent.getAction())) {
+        if (intent == null) {
             stopSelf();
+            return START_NOT_STICKY;
+        }
+        String action = intent.getAction();
+        if (STOP.equals(action) || PAUSE.equals(action) || RESUME.equals(action)) {
+            if (active == this && eventId.equals(intent.getStringExtra("id"))) {
+                if (STOP.equals(action)) stopSelf();
+                else if (PAUSE.equals(action)) pauseOutput();
+                else resumeOutput();
+            } else if (active != this) stopSelf();
             return START_NOT_STICKY;
         }
         String id = intent.getStringExtra("id");
@@ -128,9 +136,13 @@ public final class PhonePlayback extends Service {
         prayerTime = intent.getDoubleExtra("prayerTime", System.currentTimeMillis());
         try {
             PhoneAlarms.channels(this);
-            if (!PhoneAlarms.channel(this, PhoneAlarms.PLAYBACK))
-                throw new IllegalStateException("Playback notifications disabled");
             PhoneStore settings = PhoneStore.read(this);
+            if (!PhoneAlarms.channel(
+                    this,
+                    PhoneAlarms.playbackChannel(
+                            this,
+                            !preview && settings.value("reminders.full-screen").equals("true"))))
+                throw new IllegalStateException("Playback notifications disabled");
             int prayer = intent.getIntExtra("prayer", 0);
             if (!tv.miqat.core.PrayerRules.INSTANCE.isPrayer(prayer))
                 throw new IllegalArgumentException("Invalid prayer");
@@ -174,12 +186,20 @@ public final class PhonePlayback extends Service {
 
                     @Override
                     public void onPause() {
-                        stopSelf();
+                        pauseOutput();
+                    }
+
+                    @Override
+                    public void onPlay() {
+                        resumeOutput();
                     }
                 });
         media.setPlaybackState(
                 new PlaybackState.Builder()
-                        .setActions(PlaybackState.ACTION_STOP)
+                        .setActions(
+                                PlaybackState.ACTION_STOP
+                                        | PlaybackState.ACTION_PLAY
+                                        | PlaybackState.ACTION_PAUSE)
                         .setState(PlaybackState.STATE_PLAYING, 0, 1)
                         .build());
         media.setActive(true);
@@ -191,14 +211,34 @@ public final class PhonePlayback extends Service {
                                 preview ? PhoneAlarms.text(this, "phone_preview") : name)
                         .putString(MediaMetadata.METADATA_KEY_ARTIST, "Miqat")
                         .build());
-        PendingIntent stop =
-                PendingIntent.getService(
-                        this,
-                        42501,
-                        new Intent(this, PhonePlayback.class).setAction(STOP),
-                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Notification notification =
-                new Notification.Builder(this, PhoneAlarms.PLAYBACK)
+        startForeground(NOTIFICATION, notification(settings));
+    }
+
+    private PendingIntent command(String action, int code) {
+        return PendingIntent.getService(
+                this,
+                code,
+                new Intent(this, PhonePlayback.class)
+                        .setAction(action)
+                        .putExtra("id", eventId)
+                        .setData(
+                                new android.net.Uri.Builder()
+                                        .scheme("miqat")
+                                        .authority("adhan")
+                                        .appendPath(eventId)
+                                        .build()),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    private Notification notification(PhoneStore settings) throws Exception {
+        String name = settings.data.prayerName(prayerIndex, PhoneAlarms.arabic(this));
+        boolean screen = !preview && settings.value("reminders.full-screen").equals("true");
+        PendingIntent open =
+                screen
+                        ? PhoneAdhanScreen.pending(this, eventId, prayerIndex)
+                        : PhoneAlarms.open(this);
+        Notification.Builder notice =
+                new Notification.Builder(this, PhoneAlarms.playbackChannel(this, screen))
                         .setSmallIcon(R.drawable.companion_icon_mihrab)
                         .setContentTitle(
                                 preview
@@ -207,22 +247,107 @@ public final class PhonePlayback extends Service {
                                                 Locale.getDefault(),
                                                 PhoneAlarms.text(this, "phone_adhan_title"),
                                                 name))
-                        .setContentText(PhoneAlarms.text(this, "phone_playing"))
-                        .setContentIntent(PhoneAlarms.open(this))
-                        .setOngoing(true)
-                        .setCategory(Notification.CATEGORY_TRANSPORT)
+                        .setContentText(
+                                PhoneAlarms.text(this, paused ? "phone_paused" : "phone_playing"))
+                        .setContentIntent(open)
+                        .setDeleteIntent(command(STOP, 42501))
+                        .setOngoing(false)
+                        .setOnlyAlertOnce(true)
+                        .setCategory(
+                                screen
+                                        ? Notification.CATEGORY_ALARM
+                                        : Notification.CATEGORY_TRANSPORT)
+                        .addAction(
+                                new Notification.Action.Builder(
+                                                paused
+                                                        ? android.R.drawable.ic_media_play
+                                                        : android.R.drawable.ic_media_pause,
+                                                PhoneAlarms.text(
+                                                        this,
+                                                        paused ? "phone_resume" : "phone_pause"),
+                                                command(paused ? RESUME : PAUSE, 42502))
+                                        .build())
                         .addAction(
                                 new Notification.Action.Builder(
                                                 R.drawable.companion_icon_close,
                                                 PhoneAlarms.text(this, "phone_stop"),
-                                                stop)
+                                                command(STOP, 42501))
                                         .build())
                         .setStyle(
                                 new Notification.MediaStyle()
                                         .setMediaSession(media.getSessionToken())
-                                        .setShowActionsInCompactView(0))
-                        .build();
-        startForeground(NOTIFICATION, notification);
+                                        .setShowActionsInCompactView(0, 1));
+        if (screen && !paused && PhoneAlarms.fullScreenAllowed(this))
+            notice.setFullScreenIntent(open, true);
+        return notice.build();
+    }
+
+    private void armLimit(PhoneStore settings) {
+        handler.removeCallbacksAndMessages(null);
+        if (!paused)
+            handler.postDelayed(
+                    this::stopSelf,
+                    Math.max(
+                            0,
+                            limit(settings)
+                                    - playedMs
+                                    - (SystemClock.elapsedRealtime() - resumedAt)));
+    }
+
+    private void playbackState() throws Exception {
+        media.setPlaybackState(
+                new PlaybackState.Builder()
+                        .setActions(
+                                PlaybackState.ACTION_STOP
+                                        | PlaybackState.ACTION_PLAY
+                                        | PlaybackState.ACTION_PAUSE)
+                        .setState(
+                                paused ? PlaybackState.STATE_PAUSED : PlaybackState.STATE_PLAYING,
+                                player.getCurrentPosition(),
+                                paused ? 0 : 1)
+                        .build());
+        getSystemService(NotificationManager.class)
+                .notify(NOTIFICATION, notification(PhoneStore.read(this)));
+    }
+
+    private void pauseOutput() {
+        if (!started || paused) return;
+        try {
+            playedMs += SystemClock.elapsedRealtime() - resumedAt;
+            paused = true;
+            handler.removeCallbacksAndMessages(null);
+            player.pause();
+            audio.abandonAudioFocusRequest(focus);
+            playbackState();
+        } catch (Exception failure) {
+            failed();
+        }
+    }
+
+    private void resumeOutput() {
+        if (!started || !paused) return;
+        try {
+            PhoneStore settings = PhoneStore.read(this);
+            if (!PhoneAlarms.notifications(this)
+                    || !preview
+                            && (!settings.enabled
+                                    || !settings.locationReady
+                                    || !allowed(settings, prayerIndex))) {
+                stopSelf();
+                return;
+            }
+            if (audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                stopSelf();
+                return;
+            }
+            player.start();
+            paused = false;
+            resumedAt = SystemClock.elapsedRealtime();
+            armLimit(settings);
+            playbackState();
+        } catch (Exception failure) {
+            failed();
+        }
     }
 
     private void preparePlayer(
@@ -239,8 +364,9 @@ public final class PhonePlayback extends Service {
                         .setAudioAttributes(attributes)
                         .setAcceptsDelayedFocusGain(false)
                         .setOnAudioFocusChangeListener(change -> {
-                            if (token == generation && change != AudioManager.AUDIOFOCUS_GAIN)
-                                stopSelf();
+                            if (token == generation
+                                    && !paused
+                                    && change != AudioManager.AUDIOFOCUS_GAIN) stopSelf();
                         })
                         .build();
         if (audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
@@ -280,7 +406,9 @@ public final class PhonePlayback extends Service {
                     latest.audioVolume(defaultAudio ? -1 : prayer) / 100f);
             handler.removeCallbacksAndMessages(null);
             started = true;
-            startedAt = SystemClock.elapsedRealtime();
+            paused = false;
+            playedMs = 0;
+            resumedAt = SystemClock.elapsedRealtime();
             ready.start();
             PhoneStore.preferences(this).edit().remove("audio-error").apply();
             if (!preview && latest.vibrate(prayer))
@@ -288,7 +416,7 @@ public final class PhonePlayback extends Service {
                         .vibrate(
                                 VibrationEffect.createWaveform(new long[] {0, 300, 200, 300}, -1),
                                 attributes);
-            handler.postDelayed(this::stopSelf, limit(latest));
+            armLimit(latest);
         } catch (Exception invalid) {
             failed();
         }
@@ -308,6 +436,8 @@ public final class PhonePlayback extends Service {
     private void release() {
         handler.removeCallbacksAndMessages(null);
         started = false;
+        paused = false;
+        playedMs = 0;
         if (player != null) {
             player.setOnPreparedListener(null);
             player.setOnCompletionListener(null);

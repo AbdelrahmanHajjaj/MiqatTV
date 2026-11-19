@@ -64,7 +64,7 @@ final class PhoneStore {
             if (!(schema instanceof Integer))
                 throw new IOException("Invalid phone settings version type");
             int version = (Integer) schema;
-            if (version < 1 || version > 2)
+            if (version < 1 || version > 3)
                 throw new IOException("Unsupported phone settings version");
             JSONObject fields = record.getJSONObject("values");
             Map<String, String> values = new LinkedHashMap<>();
@@ -75,9 +75,9 @@ final class PhoneStore {
                 if (!(value instanceof String)) throw new IOException("Invalid phone setting type");
                 values.put(key, (String) value);
             }
-            if (version == 1) {
-                if (!values.keySet().equals(data.legacyIds()))
-                    throw new IOException("Invalid v1 phone fields");
+            if (version < 3) {
+                if (!values.keySet().equals(data.idsAt(version)))
+                    throw new IOException("Invalid older phone fields");
                 Map<String, String> merged = new LinkedHashMap<>(data.defaults);
                 merged.putAll(values);
                 values = merged;
@@ -98,7 +98,7 @@ final class PhoneStore {
 
     void save(Context context) throws Exception {
         String stored =
-                new JSONObject().put("version", 2).put("values", new JSONObject(values)).toString();
+                new JSONObject().put("version", 3).put("values", new JSONObject(values)).toString();
         synchronized (LOCK) {
             if (!preferences(context).edit().putString("settings", stored).commit())
                 throw new IOException("Phone settings could not be saved");

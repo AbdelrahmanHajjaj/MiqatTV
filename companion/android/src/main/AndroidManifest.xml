@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
@@ -27,6 +28,7 @@
             </intent-filter>
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
         </activity>
+        <activity android:name=".PhoneAdhanScreen" android:exported="false" android:directBootAware="true" android:excludeFromRecents="true" />
         <activity android:name=".ScanActivity" android:exported="false" />
         <activity android:name=".SetupActivity" android:exported="false"
             android:theme="@style/Theme.Installer"

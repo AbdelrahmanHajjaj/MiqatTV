@@ -1,0 +1,198 @@
+package tv.miqat.companion;
+
+import static tv.miqat.companion.PhoneRuntimeCheck.await;
+import static tv.miqat.companion.PhoneUiCheck.check;
+
+import android.app.*;
+import android.content.*;
+import android.media.session.*;
+import android.os.SystemClock;
+import android.view.KeyEvent;
+
+import java.util.*;
+
+/**
+ * Notification session controls and deliberate optional-screen dismissal on an owned muted device.
+ */
+final class PhoneAdhanCheck {
+    private static Notification notice(Context c) {
+        return Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
+                .map(n -> n.getNotification())
+                .filter(n -> (n.flags & Notification.FLAG_FOREGROUND_SERVICE) != 0)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Playback notification missing"));
+    }
+
+    static long pause(Instrumentation test, Context c) throws Exception {
+        Notification playing = notice(c);
+        check(
+                playing.actions.length == 2
+                        && playing.deleteIntent != null
+                        && (playing.flags & Notification.FLAG_ONGOING_EVENT) == 0,
+                "Playback must offer pause/stop and dismissal where Android supports it");
+        MediaSession.Token token = playing.extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
+        MediaController controller = new MediaController(c, token);
+        playing.actions[0].actionIntent.send();
+        await(test, PhonePlayback::paused, 5000, "Notification pause did not pause output");
+        long pausedAt = SystemClock.elapsedRealtime();
+        long position = controller.getPlaybackState().getPosition();
+        SystemClock.sleep(4000);
+        check(
+                !PhonePlayback.outputStarted()
+                        && PhonePlayback.scheduled()
+                        && controller.getPlaybackState().getState() == PlaybackState.STATE_PAUSED
+                        && controller.getPlaybackState().getPosition() == position,
+                "Pause lost the scheduled session or advanced its position");
+        notice(c).actions[0].actionIntent.send();
+        await(test, PhonePlayback::outputStarted, 5000, "Notification Play did not resume output");
+        check(
+                !PhonePlayback.paused() && controller.getPlaybackState().getPosition() >= position,
+                "Resume restarted the recording");
+        return SystemClock.elapsedRealtime() - pausedAt;
+    }
+
+    static void screen(Instrumentation test, Context c) throws Exception {
+        PhoneStore before = PhoneStore.read(c);
+        SharedPreferences language = c.getSharedPreferences("companion", 0);
+        String originalLanguage = language.getString("language", "system");
+        PhoneAdhanScreen[] shown = {null};
+        int volume =
+                c.getSystemService(android.media.AudioManager.class)
+                        .getStreamVolume(android.media.AudioManager.STREAM_ALARM);
+        try {
+            Map<String, String> enabled = new HashMap<>();
+            enabled.put("reminders.full-screen", "true");
+            enabled.put("reminders.volume-keys", "true");
+            before.changed(enabled).save(c);
+            language.edit().putString("language", "en").commit();
+            shown[0] =
+                    PhoneAlarms.fullScreenAllowed(c)
+                            ? alarmScreen(test, c)
+                            : start(test, c, "screen-dismiss");
+            PhoneUiCheck.capture(test, shown[0], "en-adhan-screen", true);
+            Notification first = notice(c);
+            check(
+                    PhoneAlarms.fullScreenAllowed(c) == (first.fullScreenIntent != null),
+                    "Full-screen notification ignored Android access");
+            PhoneUiCheck.on(test, () -> shown[0].content.performClick());
+            test.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            await(
+                    test,
+                    () -> shown[0].closeDialog != null && shown[0].closeDialog.isShowing(),
+                    5000,
+                    "Back bypassed deliberate-close confirmation");
+            PhoneUiCheck.on(
+                    test,
+                    () -> {
+                        check(
+                                shown[0].closeDialog.isShowing() && PhonePlayback.outputStarted(),
+                                "Touching/Back stopped adhan without confirmation");
+                        shown[0].closeDialog.getButton(-2).performClick();
+                    });
+            check(PhonePlayback.outputStarted(), "Keep playing stopped the session");
+            first.deleteIntent.send();
+            await(
+                    test,
+                    () -> !PhonePlayback.playing() && shown[0].isDestroyed(),
+                    5000,
+                    "Notification dismissal did not stop audio and close its screen");
+            language.edit().putString("language", "ar").commit();
+            shown[0] = start(test, c, "screen-volume");
+            PhoneUiCheck.capture(test, shown[0], "ar-adhan-screen", true);
+            first.deleteIntent.send();
+            SystemClock.sleep(500);
+            check(
+                    PhonePlayback.currentId().equals("screen-volume")
+                            && PhonePlayback.outputStarted(),
+                    "A stale notification stopped a newer adhan");
+            test.sendKeyDownUpSync(KeyEvent.KEYCODE_VOLUME_DOWN);
+            await(
+                    test,
+                    () -> !PhonePlayback.playing() && shown[0].isDestroyed(),
+                    5000,
+                    "Opted-in screen volume key did not stop adhan");
+            check(
+                    volume
+                            == c.getSystemService(android.media.AudioManager.class)
+                                    .getStreamVolume(android.media.AudioManager.STREAM_ALARM),
+                    "Stop shortcut changed global alarm volume");
+            shown[0] = start(test, c, "screen-close");
+            PhoneUiCheck.on(
+                    test,
+                    () -> shown[0].content.findViewWithTag("adhan.stop-close").performClick());
+            await(
+                    test,
+                    () -> !PhonePlayback.playing() && shown[0].isDestroyed(),
+                    5000,
+                    "Explicit Stop-and-close did not release adhan");
+        } finally {
+            if (shown[0] != null) PhoneUiCheck.on(test, shown[0]::finish);
+            PhonePlayback.stop(c);
+            before.save(c);
+            language.edit().putString("language", originalLanguage).commit();
+        }
+    }
+
+    private static PhoneAdhanScreen alarmScreen(Instrumentation test, Context c) throws Exception {
+        Instrumentation.ActivityMonitor monitor =
+                test.addMonitor(PhoneAdhanScreen.class.getName(), null, false);
+        try {
+            PhoneRuntimeCheck.shell(test, "input keyevent KEYCODE_SLEEP");
+            long now = System.currentTimeMillis(), time = now + 2000;
+            PhoneAlarms.arm(
+                    c,
+                    new tv.miqat.core.ReminderEvent("phone:call:0:" + time, "call", 0, time, time),
+                    now);
+            Activity opened = test.waitForMonitorWithTimeout(monitor, 15000);
+            check(
+                    opened instanceof PhoneAdhanScreen,
+                    "Allowed full-screen alarm did not open over the lock screen");
+            PhoneAdhanScreen screen = (PhoneAdhanScreen) opened;
+            await(
+                    test,
+                    () -> screen.hasWindowFocus() && PhonePlayback.outputStarted(),
+                    10000,
+                    "Lock-screen adhan did not become ready");
+            reachable(test, screen);
+            return screen;
+        } finally {
+            test.removeMonitor(monitor);
+        }
+    }
+
+    private static PhoneAdhanScreen start(Instrumentation test, Context c, String id)
+            throws Exception {
+        test.runOnMainSync(
+                () -> c.startForegroundService(PhonePlayback.intent(c, 0, "almalki", false, id)));
+        await(test, PhonePlayback::outputStarted, 10000, "Screen fixture did not start audio");
+        PhoneAdhanScreen screen =
+                (PhoneAdhanScreen)
+                        test.startActivitySync(
+                                PhoneAdhanScreen.intent(c, id, 0)
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        await(test, screen::hasWindowFocus, 5000, "Adhan screen did not become active");
+        reachable(test, screen);
+        return screen;
+    }
+
+    private static void reachable(Instrumentation test, PhoneAdhanScreen screen) {
+        PhoneUiCheck.on(
+                test,
+                () -> {
+                    android.view.View stop = screen.content.findViewWithTag("adhan.stop-close");
+                    stop.requestRectangleOnScreen(
+                            new android.graphics.Rect(0, 0, stop.getWidth(), stop.getHeight()),
+                            true);
+                });
+        PhoneUiCheck.on(
+                test,
+                () -> {
+                    android.view.View stop = screen.content.findViewWithTag("adhan.stop-close");
+                    android.graphics.Rect bounds = new android.graphics.Rect();
+                    check(
+                            stop.getGlobalVisibleRect(bounds)
+                                    && bounds.height() == stop.getHeight(),
+                            "Adhan screen Stop cannot be reached at this window/text size");
+                });
+    }
+}

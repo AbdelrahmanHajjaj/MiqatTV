@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Restore balanced, theme-highlighted prayer-card text in phone 0.4.2/code 11.
+  Add notification Play/Pause/Stop and dismissal cancellation where Android
+  supports it, with pause preserving position and remaining playback duration.
+  Offer a default-off adhan screen with explicit closing/Back confirmation and
+  an optional volume-key stop while visible over the lock screen. Preserve
+  background/screen-off playback; migrate prior phone settings safely.
 - Give phone Home (0.4.1/code 10) more breathing room and allow short scrolling.
   Integrate location in the prayer card, show tomorrow Fajr before tools, and
   move locked features below separately spaced actions. Verify completed setup

@@ -59,7 +59,8 @@ final class PhoneRuntimeCheck {
         CompanionCheck.check(
                 PhoneAlarms.exact(c) && PhoneAlarms.notifications(c),
                 "Grant exact-alarm/notification permissions on the owned emulator before this"
-                    + " suite");
+                        + " suite");
+        MainActivity[] home = {null};
         try {
             PhonePlayback.stop(c);
             PhoneAlarms.cancel(c);
@@ -68,6 +69,8 @@ final class PhoneRuntimeCheck {
             changes.put("prayer.location-ready", "true");
             changes.put("reminders.volume", "0");
             changes.put("reminders.duration", "30");
+            changes.put("reminders.full-screen", "false");
+            changes.put("reminders.volume-keys", "false");
             changes.put("call.fajr.mode", "adhan");
             changes.put("prayer.latitude", "30.0444");
             changes.put("prayer.longitude", "31.2357");
@@ -99,6 +102,20 @@ final class PhoneRuntimeCheck {
             CompanionCheck.check(
                     preferences.edit().putString("handled", "[]").remove("audio-error").commit(),
                     "Cannot initialize alarm fixture");
+            preferences.edit().putBoolean("onboarding-seen", true).commit();
+            home[0] =
+                    (MainActivity)
+                            test.startActivitySync(
+                                    new Intent(c, MainActivity.class)
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            Intent otherApp = new Intent(android.provider.Settings.ACTION_SETTINGS);
+            String otherPackage = otherApp.resolveActivity(c.getPackageManager()).getPackageName();
+            PhoneUiCheck.on(test, () -> home[0].startActivity(otherApp));
+            await(
+                    test,
+                    () -> !home[0].phoneForeground && otherPackage.equals(activePackage(test)),
+                    5000,
+                    "Other app did not become active before the alarm");
             long now = System.currentTimeMillis(), time = now + 3000;
             ReminderEvent event = new ReminderEvent("phone:call:0:" + time, "call", 0, time, time);
             PhoneAlarms.arm(c, event, now);
@@ -107,6 +124,12 @@ final class PhoneRuntimeCheck {
             CompanionCheck.check(
                     system != null && system.getTriggerTime() == time,
                     "Actual OS alarm clock registration");
+            shell(test, "input keyevent KEYCODE_SLEEP");
+            await(
+                    test,
+                    () -> !c.getSystemService(android.os.PowerManager.class).isInteractive(),
+                    5000,
+                    "Owned emulator did not enter screen-off state");
             await(
                     test,
                     () ->
@@ -124,6 +147,43 @@ final class PhoneRuntimeCheck {
                                             != 0),
                     "Foreground playback notification missing");
             CompanionCheck.check(
+                    !c.getSystemService(android.os.PowerManager.class).isInteractive(),
+                    "Background-only adhan forced the screen on");
+            shell(test, "input keyevent KEYCODE_WAKEUP");
+            shell(test, "wm dismiss-keyguard");
+            await(
+                    test,
+                    () -> otherPackage.equals(activePackage(test)),
+                    5000,
+                    "Could not resume the other app after screen-off adhan");
+            CompanionCheck.check(
+                    otherPackage.equals(activePackage(test)),
+                    "Scheduled adhan forced a window over the active app");
+            PhoneUiCheck.on(
+                    test,
+                    () ->
+                            c.startActivity(
+                                    new Intent(c, MainActivity.class)
+                                            .addFlags(
+                                                    Intent.FLAG_ACTIVITY_NEW_TASK
+                                                            | Intent
+                                                                    .FLAG_ACTIVITY_REORDER_TO_FRONT)));
+            await(test, () -> home[0].phoneForeground, 5000, "Could not reopen Miqat during adhan");
+            PhoneUiCheck.on(test, () -> home[0].startActivity(otherApp));
+            long switchedAt = SystemClock.elapsedRealtime();
+            await(
+                    test,
+                    () ->
+                            SystemClock.elapsedRealtime() - switchedAt >= 1500
+                                    && !home[0].phoneForeground
+                                    && otherPackage.equals(activePackage(test)),
+                    5000,
+                    "Could not continue using another app during adhan");
+            CompanionCheck.check(
+                    PhonePlayback.outputStarted()
+                            && PhonePlayback.currentId().equals(event.getId()),
+                    "Leaving Miqat stopped scheduled adhan");
+            CompanionCheck.check(
                     PhoneAlarms.claim(c, event.getId(), System.currentTimeMillis()) == null,
                     "Duplicate event was accepted");
             PhonePlayback.stop(c);
@@ -136,6 +196,10 @@ final class PhoneRuntimeCheck {
                     systemAudio.getStreamVolume(android.media.AudioManager.STREAM_ALARM)
                             == alarmVolume,
                     "Miqat changed global alarm volume");
+            PhoneUiCheck.on(test, home[0]::finish);
+            LiveUiCheck.untilUi(test, home[0]::isDestroyed);
+            home[0] = null;
+            PhoneAdhanCheck.screen(test, c);
             // A stale/early fixture event must not be claimed or produce playback.
             now = System.currentTimeMillis();
             ReminderEvent expired =
@@ -206,7 +270,7 @@ final class PhoneRuntimeCheck {
             CompanionCheck.check(
                     PhoneStore.read(c).value("audio.custom.fajr").isEmpty(),
                     "Custom runtime fixture requires an unused Fajr audio slot on the owned"
-                        + " emulator");
+                            + " emulator");
             PhoneAudio.importFile(c, c.getAssets().open("adhan/almalki.mp3"), "call.fajr.voice");
             Map<String, String> overrides = new LinkedHashMap<>();
             overrides.put("call.fajr.default-audio", "false");
@@ -218,13 +282,14 @@ final class PhoneRuntimeCheck {
                             PhonePlayback.intent(c, 0, "custom", false, "custom-bounded-fixture")));
             await(test, PhonePlayback::outputStarted, 10000, "Private custom audio did not start");
             long customStarted = SystemClock.elapsedRealtime();
+            long pausedFor = PhoneAdhanCheck.pause(test, c);
             await(
                     test,
                     () -> !PhonePlayback.playing(),
                     34000,
                     "Per-prayer duration did not stop custom audio");
             CompanionCheck.check(
-                    SystemClock.elapsedRealtime() - customStarted >= 28000
+                    SystemClock.elapsedRealtime() - customStarted >= 28000 + pausedFor
                             && !preferences.contains("audio-error"),
                     "Custom playback failed instead of reaching its per-prayer bound");
             PhoneStore beforeDraft = PhoneStore.read(c);
@@ -305,6 +370,9 @@ final class PhoneRuntimeCheck {
                     !PhonePlayback.playing() && !PhoneStore.preferences(c).contains("next-event"),
                     "Disabled alerts retained active playback/alarm");
         } finally {
+            shell(test, "input keyevent KEYCODE_WAKEUP");
+            shell(test, "wm dismiss-keyguard");
+            if (home[0] != null) PhoneUiCheck.on(test, home[0]::finish);
             PhonePlayback.stop(c);
             PhoneAlarms.cancel(c);
             SharedPreferences.Editor restore = preferences.edit().clear();
@@ -321,6 +389,25 @@ final class PhoneRuntimeCheck {
             CompanionCheck.check(restore.commit(), "Cannot restore alarm fixture");
             PhoneAudio.cleanup(c);
             PhoneAlarms.rebuild(c);
+        }
+    }
+
+    static void shell(Instrumentation test, String command) throws java.io.IOException {
+        try (java.io.InputStream input =
+                new android.os.ParcelFileDescriptor.AutoCloseInputStream(
+                        test.getUiAutomation().executeShellCommand(command))) {
+            while (input.read() != -1) {}
+        }
+    }
+
+    private static String activePackage(Instrumentation test) {
+        android.view.accessibility.AccessibilityNodeInfo root =
+                test.getUiAutomation().getRootInActiveWindow();
+        if (root == null) return "";
+        try {
+            return String.valueOf(root.getPackageName());
+        } finally {
+            root.recycle();
         }
     }
 
@@ -373,8 +460,7 @@ final class PhoneRuntimeCheck {
         }
     }
 
-    private static void await(
-            Instrumentation test, BooleanSupplier condition, long timeout, String error) {
+    static void await(Instrumentation test, BooleanSupplier condition, long timeout, String error) {
         long until = SystemClock.uptimeMillis() + timeout;
         boolean[] ready = {false};
         do {

@@ -62,8 +62,10 @@ public final class MainActivity extends Activity {
 
     static android.content.Context localized(android.content.Context base) {
         String language =
-                base.getSharedPreferences("companion", MODE_PRIVATE)
-                        .getString("language", "system");
+                base.getSystemService(android.os.UserManager.class).isUserUnlocked()
+                        ? base.getSharedPreferences("companion", MODE_PRIVATE)
+                                .getString("language", "system")
+                        : PhoneStore.preferences(base).getString("language-mode", "system");
         android.content.res.Configuration config =
                 new android.content.res.Configuration(base.getResources().getConfiguration());
         if (!language.equals("system")) {

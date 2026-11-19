@@ -1,6 +1,47 @@
 # Validation evidence
 
-## Phone Home spacing follow-up � 19 November 2026
+## Prayer card and background adhan — 19 November 2026
+
+Review APK **0.4.2/code 11**, primary `state/builds/companion/Miqat-latest.apk`,
+32,553,521 bytes; SHA-256:
+`29B43EE0FBFCB6EE4E4A3BE0F89C3467C5409B135E94040CC166334826B99D06`.
+Certificate matches prior review builds. All 25 approved recordings and 25
+notices match exact source bytes. No production dependency was added.
+
+Phone assemble/test APK/lint pass (0 errors, 43 existing warnings); companion
+generator tests 8/8 and canonical/shared validation pass. Native bilingual
+phone UI/journey and rendered completed Home checks pass. The card separates
+highlighted prayer name/time and centers countdown/status with explicit text
+alignment; actual previews use the selected canonical palette. Existing short
+scroll, lower locked section and setup-completion persistence remain verified.
+80–150% app text with Android font1.3 passes in both asserted orientations.
+
+The owned muted emulator passes actual AlarmManager delivery with screen off,
+then resuming another app and entering/leaving Miqat without stopping scheduled
+output. Notification Play/Pause retains position and remaining 30-second custom
+playback duration. Delete callbacks stop audio and close the optional screen;
+stale callbacks do not stop a later session. Background touches/Back cancellation
+preserve audio; explicit Stop-and-close and opted-in volume key stop it. Stop is
+reachable after scrolling in wide/enlarged text. The denied-FSI run preserves
+background playback and manual screen opening. Native v1/v2-to-v3 migration
+preserves values and rejects malformed records; new toggles default off.
+
+Private evidence: `state/card-background-*`, `state/card-final-*` and
+`state/card-fsi-*`. The first runtime fixture retained an Activity before its
+later fresh-launch audition, then stalled; its owned process was stopped.
+The fixture now finishes/waits for that Activity before later cases and passes;
+no assertion was removed. An explicit allowed-FSI run passes an actual scheduled alarm opening the
+Activity over keyguard through ActivityMonitor, with real Back confirmation.
+All required final-head CI checks remain the delivery gate; exact receipts/head
+belong to draft PR #9.
+
+Android may pin active foreground media notifications, so universal swipe
+removal is not claimed; Stop remains available. Power keys are not intercepted.
+The volume shortcut is limited to the visible adhan screen, including keyguard.
+Actual OEM notification gestures, lock-screen/power behavior and speaker output
+remain owner hardware acceptance. No TV runtime/deployment/release changed.
+
+## Phone Home spacing follow-up — 19 November 2026
 
 Review APK **0.4.1/code 10**, primary `state/builds/companion/Miqat-latest.apk`,
 32,358,047 bytes; SHA-256:
@@ -8,7 +49,7 @@ Review APK **0.4.1/code 10**, primary `state/builds/companion/Miqat-latest.apk`,
 Signing certificate matches 0.4.0; 25 approved recordings match exact source bytes.
 
 Phone assemble/test-APK/lint pass. Owned muted emulator checks both languages at
-80�150% app text plus Android font 1.3 in asserted portrait and landscape. New
+80–150% app text plus Android font 1.3 in asserted portrait and landscape. New
 native geometry checks protect separated Home actions, tomorrow Fajr before
 tools, lower locked features and location within the prayer card. The first
 portrait attempt correctly failed its orientation precondition because the AVD

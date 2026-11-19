@@ -257,6 +257,18 @@ final class PhoneUi {
             if (c.getString("section").equals("audio") && !c.getString("id").startsWith("quiet."))
                 control(c);
         a.body.addView(a.views.text(a.t("phone_volume_hint"), 13, a.muted));
+        a.body.addView(a.views.text(a.t("phone_full_screen_hint"), 13, a.muted));
+        if (settings.value("reminders.full-screen").equals("true")
+                && !PhoneAlarms.fullScreenAllowed(a))
+            a.views.button(
+                    a.body,
+                    a.t("phone_full_screen_access"),
+                    () ->
+                            system(
+                                    new Intent(
+                                            Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT,
+                                            android.net.Uri.parse(
+                                                    "package:" + a.getPackageName()))));
 
         prayerRows();
 

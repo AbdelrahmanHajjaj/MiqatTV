@@ -75,7 +75,7 @@ loss stops playback and does not automatically restart a missed recording.
 
 Adhan level is relative to Android's alarm volume. Miqat does not change system
 volume or bypass Do Not Disturb. Zero duration means the complete selected clip (up to 10 minutes);
-the service exists only while preparing/playing audio. Notification-only alerts
+the service exists only during an active adhan session, including a user pause. Notification-only alerts
 use Android notification channel sound settings. No idle foreground service runs.
 
 Android may display the next prayer/reminder as an alarm clock. Alarms rebuild
@@ -95,6 +95,20 @@ calibration/accuracy guidance away from magnets and metal. Without a suitable
 sensor, use the numeric bearing with a separate compass. There is no background
 location or sensor service, and an undefined bearing at the destination is
 reported explicitly. Physical compass accuracy still needs device testing.
+
+Adhan continues while using other apps or with the screen off. Its notification
+provides Play/Pause and Stop; pause keeps the recording position and remaining
+configured duration. Dismissing it stops playback where Android allows active
+service notifications to be dismissed. Some versions pin this notification;
+Stop remains available there.
+
+**Full-screen adhan** is off by default. Enabling it allows Android's alarm
+screen when locked; Android 14+ may require **Allow full-screen alarms**. Tapping
+the notification opens that same session. Tapping the screen or switching apps
+does not stop audio. **Stop adhan and close** ends it; Back asks confirmation.
+The screen closes when playback finishes. The optional volume-key shortcut
+stops adhan while this screen is visible, including over the lock screen.
+Android reserves the power key: locking or screen timeout does not stop audio.
 
 Prayer Home keeps location in the next-prayer card and tomorrow Fajr directly
 below the daily times. Qibla and widgets are separate actions; locked future
@@ -159,7 +173,7 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.1, version code 10) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.4.2, version code 11) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 

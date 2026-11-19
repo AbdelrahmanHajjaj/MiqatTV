@@ -160,11 +160,11 @@ final class PhoneData {
                 c.optInt("step", 1));
     }
 
-    Set<String> legacyIds() {
+    Set<String> idsAt(int version) {
         Set<String> ids = new LinkedHashSet<>(defaults.keySet());
         for (JSONObject c : controls.values())
-            if (c.optInt("since", 1) > 1) ids.remove(c.optString("id"));
-        ids.removeIf(id -> id.startsWith("audio.custom."));
+            if (c.optInt("since", 1) > version) ids.remove(c.optString("id"));
+        if (version < 2) ids.removeIf(id -> id.startsWith("audio.custom."));
         return ids;
     }
 

@@ -185,6 +185,11 @@ final class PhoneJourneyCheck {
                             resumed.phoneUi.choiceDialog.getButton(-2).performClick();
                             resumed.phoneUi.save("appearance.theme", before);
                             resumed.tab("prayers");
+                        });
+                PhoneUiCheck.capture(test, resumed, lang + "-home-theme-complete", captures);
+                PhoneUiCheck.on(
+                        test,
+                        () -> {
                             resumed.body.findViewWithTag("widgets.open").performClick();
                             check(
                                     resumed.body

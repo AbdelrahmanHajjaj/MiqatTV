@@ -125,9 +125,24 @@ final class PhoneSizeCheck {
                                                 >= tools.getBottom(),
                                         "Locked features must follow prayer tools");
                                 PhoneUiCheck.check(
-                                        a.body.findViewWithTag("phone.location").getParent()
-                                                == a.body.findViewWithTag("phone.hero"),
+                                        ((ViewGroup) a.body.findViewWithTag("phone.hero"))
+                                                        .findViewWithTag("phone.location")
+                                                != null,
                                         "Location must belong to the prayer card");
+                                TextView name = a.body.findViewWithTag("phone.next.name");
+                                TextView time = a.body.findViewWithTag("phone.next.time");
+                                PhoneUiCheck.check(
+                                        name.getCurrentTextColor() == a.accent
+                                                && time.getCurrentTextColor() == a.ink,
+                                        "Prayer card lost its theme highlights");
+                                PhoneUiCheck.check(
+                                        name.getWidth() > 0
+                                                && Math.max(name.getLeft(), time.getLeft())
+                                                                - Math.min(
+                                                                        name.getRight(),
+                                                                        time.getRight())
+                                                        >= a.views.dp(12),
+                                        "Prayer name and time overlap");
                                 a.phoneUi.open("audio");
                                 a.body.findViewWithTag("phone.reminders.volume.edit")
                                         .performClick();

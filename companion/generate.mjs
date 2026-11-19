@@ -11,7 +11,7 @@ export function generatePhone() {
   const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
   const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
     prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
-  if(contract.version!==2||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
+  if(contract.version!==3||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
   const ids=new Set();
   for(const control of [...contract.controls,...contract.perPrayer]) {
     const id=control.id??control.suffix;

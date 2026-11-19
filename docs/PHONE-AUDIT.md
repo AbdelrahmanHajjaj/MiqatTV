@@ -175,7 +175,26 @@ recorded in EVIDENCE.md after the final review build passes.
 
 Final review caught widget previews using the Activity's compounded app/system
 text scale. They now inflate using application context, matching launcher text.
-A native rendered-font assertion reproduced the fault and passes all 80–150%
+A native rendered-font assertion reproduced the fault and passes all 80â€“150%
 portrait/wide cases in both languages. The API-34 dialog fixture now waits for
 its actual active window before injecting Back; dismissal/focus assertions stay.
 No new production abstraction or dependency was needed for either correction.
+
+## Prayer-card and adhan-control follow-up
+
+PhoneAdhanScreen owns only the optional native view and deliberate input. It
+observes the existing session, stops polling when backgrounded and never stops
+scheduled audio in a lifecycle callback. PhonePlayback remains the sole player,
+MediaSession and foreground-notification owner. Notification controls include
+the event in immutable PendingIntent identity; old callbacks cannot stop a new
+session. Pause retains player position, releases focus and excludes paused time
+from configured playback duration. OS full-screen access is optional and checked;
+there is no overlay, hidden volume observer or accessibility service.
+
+Both new toggles are canonical phone-only controls. Strict format3 migration
+uses the exact known field set for v1/v2 and defaults new controls off without
+resetting prior audio/location/appearance. Lock-screen language can use the
+existing device-protected value before unlock; TV credentials stay separate.
+Tests target real alarm/screen-off/app-switching, media controls/duration,
+stale dismissal, deliberate close, optional key input and migration failures.
+They reuse the existing native runner and add no broad getter/coverage suite.

@@ -76,12 +76,14 @@ final class PhoneAppearance {
                         .getJSONObject("themes")
                         .getJSONObject(settings.value("appearance.theme"))
                         .getJSONObject("colors");
-        for (int i = 0; i < content.getChildCount(); i++)
-            if (content.getChildAt(i) instanceof TextView) {
-                String key = i == 0 ? "mist-400" : i == 1 ? "plaster-100" : "gold-400";
-                ((TextView) content.getChildAt(i))
-                        .setTextColor(Color.parseColor(colors.getString(key)));
-            }
+        for (String[] highlight :
+                new String[][] {
+                    {"label", "mist-400"}, {"name", "gold-400"},
+                    {"time", "plaster-100"}, {"remaining", "gold-400"}
+                }) {
+            TextView text = content.findViewWithTag("phone.next." + highlight[0]);
+            if (text != null) text.setTextColor(Color.parseColor(colors.getString(highlight[1])));
+        }
     }
 
     void carousel(LinearLayout parent, String id, boolean guided) throws Exception {

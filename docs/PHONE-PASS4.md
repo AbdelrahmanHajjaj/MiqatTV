@@ -74,3 +74,26 @@ modules in a lower section. Keep tomorrow Fajr with prayer information before
 secondary tools, and integrate the location action into the prayer card. The
 setup-resume prompt is only for an unfinished guide; verify disappearance on
 completion and after reopening. Capture the completed state for the next review.
+
+Further owner steering: the prayer card retains theme color highlights with
+balanced placement of prayer name/time/countdown, rather than all text stacked
+at one edge. Scheduled adhan runs while other apps remain usable; opening Miqat
+is optional. Do not force an activity at alarm time or tie scheduled output to
+the prayer screen lifecycle. Native regression must cover actual background
+alarm delivery and switching away during playback.
+
+Latest clarification: add an optional full-screen phone adhan screen, off by
+default. A notification stays during background playback; explicit dismissal
+(where Android permits it) or Stop ends playback. Full-screen background taps
+and app switching must not stop audio. Stop-and-close is explicit; Back asks
+confirmation. Audio completion closes the optional screen. Respect Android 14
+full-screen alarm access and older pinned foreground-service notifications,
+with a Stop action always available. Do not add duplicate playback services,
+overlays or idle processes. Add safe migration for the new phone-only setting.
+
+Notification controls also provide Play/Pause on the existing session, preserving
+play position and configured remaining duration. The requested volume-key stop
+is optional; clarify screen-only versus cross-app capture before adding special
+access. Use documented APIs; no hidden volume listener or silent accessibility
+service. Notification Stop/dismissal and explicit screen close target the current
+event so stale controls cannot silence a later adhan.
