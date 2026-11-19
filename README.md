@@ -33,7 +33,8 @@ Android TV app with the default Miqat signature artwork and petrol/gold palette.
 | Browser | Interactive preview with simulated TV integration. |
 
 Sony Android/Google TV uses the Android app. Samsung/Tizen and newer LG hardware
-are unverified. The companion app is developed separately.
+are unverified. The Android phone app also works on its own for prayer alerts and can set up
+and control a TV; see the [phone guide](docs/PHONE.md).
 
 ## Install
 

@@ -41,6 +41,14 @@ final class PhoneSizeCheck {
                     View preview=a.body.findViewWithTag("phone.reminders.voice.preview"),stop=a.body.findViewWithTag("phone.reminders.voice.stop");ViewGroup row=(ViewGroup)preview.getParent();
                     PhoneUiCheck.check(preview.getWidth()>0&&stop.getWidth()>=a.dp(48)&&preview.getLeft()>=0&&preview.getRight()<=row.getWidth()&&stop.getLeft()>=0&&stop.getRight()<=row.getWidth(),"Voice preview/Stop clipped at "+expected);
                 });
+                if(size==80||size==150){
+                    PhoneUiCheck.on(test,()->a.body.findViewWithTag("phone.quiet.start.edit").performClick());
+                    PhoneUiCheck.on(test,()->{Rect bounds=new Rect();View done=a.phoneUi.choiceDialog.getButton(-1);PhoneUiCheck.check(done.getGlobalVisibleRect(bounds)&&bounds.height()==done.getHeight(),"Clock save clipped at "+expected);});
+                    PhoneUiCheck.capture(test,a,lang+"-phone-clock-"+size,capture);PhoneUiCheck.on(test,()->a.phoneUi.choiceDialog.dismiss());
+                    PhoneUiCheck.on(test,()->{a.phoneUi.open("fajr");a.body.findViewWithTag("phone.call.fajr.weekdays.edit").performClick();});
+                    PhoneUiCheck.on(test,()->{Rect bounds=new Rect();View done=a.phoneUi.choiceDialog.getButton(-1);PhoneUiCheck.check(done.getGlobalVisibleRect(bounds)&&bounds.height()==done.getHeight(),"Weekday save clipped at "+expected);});
+                    PhoneUiCheck.capture(test,a,lang+"-phone-weekdays-"+size,capture);PhoneUiCheck.on(test,()->a.phoneUi.choiceDialog.dismiss());
+                }
                 PhoneUiCheck.on(test,()->a.tab("prayers"));
                 if(size==80||size==150)PhoneUiCheck.capture(test,a,lang+"-phone-size-"+size,capture);
                 PhoneUiCheck.on(test,a::finish);LiveUiCheck.untilUi(test,a::isDestroyed);active[0]=null;

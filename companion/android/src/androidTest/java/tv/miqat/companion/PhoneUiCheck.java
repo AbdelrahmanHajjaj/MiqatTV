@@ -39,7 +39,9 @@ final class PhoneUiCheck {
                     a.body.findViewWithTag("phone.reminders.volume.cancel").performClick();check(a.phoneUi.settings.value("reminders.volume").equals(before),"Cancel changed saved volume");
                     a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("٣٥");a.body.findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Arabic numeric Save failed");
                     a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("37");a.body.findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Off-step number accepted");
-                    a.phoneUi.open("fajr");a.body.findViewWithTag("phone.call.fajr.mode.edit").performClick();
+                    a.phoneUi.open("fajr");check(!a.body.findViewWithTag("phone.call.fajr.volume.edit").isEnabled(),"Inherited audio must not expose an active override");
+                    a.body.findViewWithTag("phone.call.fajr.default-audio.edit").performClick();a.body.findViewWithTag("phone.call.fajr.volume.edit").performClick();((EditText)a.body.findViewWithTag("phone.call.fajr.volume.input")).setText("١٥");a.body.findViewWithTag("phone.call.fajr.volume.save").performClick();check(a.phoneUi.settings.audioVolume(0)==15&&a.phoneUi.settings.volume==35,"Per-prayer audio changed default level");a.phoneUi.save("call.fajr.default-audio","true");
+                    a.body.findViewWithTag("phone.call.fajr.mode.edit").performClick();
                     check(a.phoneUi.choiceDialog!=null,"Per-prayer choice sheet missing");
                     ListView modes=a.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.choice.list");check(modes.getCheckedItemPosition()==(a.phoneUi.settings.modes[0]),"Choice sheet must show saved mode");modes.performItemClick(null,1,1);check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
                     a.phoneUi.open("calculation");a.phoneUi.save("prayer.zone","Asia/Tokyo");check(!a.phoneUi.settings.locationReady,"Changed timezone must need confirmation");
@@ -61,6 +63,16 @@ final class PhoneUiCheck {
                     a.phoneUi.open("permissions");check(a.body.findViewWithTag("phone.power-settings")!=null,"Background delivery repair help missing");
                     a.tab("phone-settings");
                 });
+                String priorQuiet=PhoneStore.read(context).value("quiet.start");
+                on(test,()->{a.phoneUi.open("audio");a.body.findViewWithTag("phone.quiet.start.edit").performClick();check(a.phoneUi.choiceDialog instanceof android.app.TimePickerDialog,"Quiet hours need a clock editor");((android.app.TimePickerDialog)a.phoneUi.choiceDialog).updateTime(21,30);a.phoneUi.choiceDialog.getButton(-2).performClick();});
+                LiveUiCheck.untilUi(test,()->a.phoneUi.choiceDialog==null);check(PhoneStore.read(context).value("quiet.start").equals(priorQuiet),"Clock Cancel saved a draft");
+                on(test,()->{a.body.findViewWithTag("phone.quiet.start.edit").performClick();((android.app.TimePickerDialog)a.phoneUi.choiceDialog).updateTime(21,30);a.phoneUi.choiceDialog.getButton(-1).performClick();});
+                LiveUiCheck.untilUi(test,()->a.phoneUi.settings.number("quiet.start")==1290);
+                on(test,()->{a.phoneUi.open("fajr");a.body.findViewWithTag("phone.call.fajr.weekdays.edit").performClick();});
+                LiveUiCheck.untilUi(test,()->a.phoneUi.choiceDialog.getListView().isItemChecked(0));
+                on(test,()->{check(a.phoneUi.choiceDialog.getListView().getCount()==7,"Weekday editor missing days");check(a.phoneUi.choiceDialog.getListView().isItemChecked(0),"Saved Sunday missing");a.phoneUi.choiceDialog.getListView().performItemClick(null,0,0);check(!a.phoneUi.choiceDialog.getListView().isItemChecked(0),"Weekday tap did not deselect Sunday");a.phoneUi.choiceDialog.getButton(-1).performClick();});
+                LiveUiCheck.untilUi(test,()->a.phoneUi.settings.number("call.fajr.weekdays")==126);
+                on(test,()->{a.phoneUi.save("call.fajr.weekdays","127");a.tab("phone-settings");check(a.section.isEmpty(),"Phone settings root tab did not return from its child page");});
                 capture(test,a,lang+"-phone-settings",capture);
                 on(test,()->a.phoneUi.open("audio"));capture(test,a,lang+"-phone-audio",capture);
                 on(test,()->a.body.findViewWithTag("phone.reminders.voice.edit").performClick());capture(test,a,lang+"-phone-voice-sheet",capture);

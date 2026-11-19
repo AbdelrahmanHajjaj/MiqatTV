@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Extend phone adhan settings (0.2.1) with per-prayer level/duration, weekday
+  schedules, quiet hours, silent/vibration modes and private custom audio imports.
+  Preserve existing settings and add opt-in foreground travel-location refresh.
+  Shared installer download changes ship as standalone installer 1.1.2.
+
 - Compact phone settings into saved-value rows, focused number editors and
   choice sheets. Keep the three root tabs stable while using nested TV controls.
 

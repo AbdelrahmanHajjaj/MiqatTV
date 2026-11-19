@@ -12,7 +12,7 @@ public final class PrayerAlarm extends BroadcastReceiver {
                 event=PhoneAlarms.claim(context,intent.getStringExtra("event"),System.currentTimeMillis());
                 if(event!=null) {
                     PhoneStore settings=PhoneStore.read(context);
-                    if(event.getKind().equals("call")&&settings.modes[event.getPrayer()]==2&&PhoneAlarms.channel(context,PhoneAlarms.PLAYBACK))
+                    if(event.getKind().equals("call")&&settings.eventMode(event)==2&&PhoneAlarms.channel(context,PhoneAlarms.PLAYBACK))
                         context.startForegroundService(PhonePlayback.intent(context,event.getPrayer(),settings.voice(event.getPrayer()),false,event.getId()).putExtra("prayerTime",event.getPrayerTime()));
                     else PhoneAlarms.notify(context,event,false);
                 }

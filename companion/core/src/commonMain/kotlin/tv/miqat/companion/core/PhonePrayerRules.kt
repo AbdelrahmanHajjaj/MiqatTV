@@ -25,15 +25,25 @@ object PhonePrayerRules {
         after: IntArray, volume: Int, durationSeconds: Int) {
         require(latitude.isFinite() && latitude in -90.0..90.0 && longitude.isFinite() && longitude in -180.0..180.0)
         require(modes.size == 6 && before.size == 6 && after.size == 6)
-        require(modes.all { it in 0..2 } && modes[1] == 0 && before[1] == 0 && after[1] == 0)
+        require(modes.all { it in 0..4 } && modes[1] == 0 && before[1] == 0 && after[1] == 0)
         require(before.all { it in 0..60 } && after.all { it in 0..60 })
         require(volume in 0..100 && durationSeconds in 0..600 && durationSeconds % 30 == 0)
+    }
+
+    /** weekday is Sunday=0; quiet hours use local civil minutes, including overnight. */
+    fun alertMode(mode: Int, weekday: Int, daysMask: Int, minute: Int, quiet: Boolean,
+        start: Int, end: Int, quietMode: Int): Int {
+        require(mode in 0..4 && weekday in 0..6 && daysMask in 0..127 && minute in 0..1439)
+        require(start in 0..1439 && end in 0..1439 && quietMode in listOf(0,3,4))
+        if (mode == 0 || daysMask and (1 shl weekday) == 0) return 0
+        val inside = if (start < end) minute >= start && minute < end else minute >= start || minute < end
+        return if (quiet && inside) quietMode else mode
     }
 
     fun nextEvent(days: Array<DoubleArray>, now: Double, modes: IntArray, before: IntArray,
         after: IntArray, handled: Array<String>): ReminderEvent? {
         validate(0.0, 0.0, modes, before, after, 100, 0)
-        require(days.size <= 3 && now.isFinite())
+        require(days.size <= 9 && now.isFinite())
         var next: ReminderEvent? = null
         fun add(kind: String, prayer: Int, time: Double, prayerTime: Double) {
             if (time <= now - LATE_WINDOW_MS) return

@@ -19,7 +19,9 @@ polish, foreground location detection, automatic public TV package downloads
 sound controls, custom audio, and weekday/quiet-hour/travel behavior.
 
 Proceed sequentially using [PHONE-WORK.md](PHONE-WORK.md)'s pass-2 checklist.
-Start with location detection. The existing worktree/PR owns this feedback.
+Pass 2 is implemented and locally verified; the combined 0.2.1 review APK is
+exported. Require final-head PR #9 CI, then hand over for the owner’s combined
+review. Keep the PR draft while human acceptance remains open.
 The public repository has only a draft prerelease, so no anonymous published
 release is available yet; implement the download flow and honest unavailable
 state without publishing or embedding credentials. Keep physical acceptance and

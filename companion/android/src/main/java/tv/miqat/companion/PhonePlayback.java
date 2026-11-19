@@ -8,7 +8,7 @@ import android.media.session.*;
 import android.os.*;
 import java.util.*;
 
-/** A foreground service only while a local approved adhan is preparing/playing. Never sticky. */
+/** A foreground service only while a selected local adhan is preparing/playing. Never sticky. */
 public final class PhonePlayback extends Service {
     static final String STOP="tv.miqat.companion.STOP_ADHAN";
     private static final int NOTIFICATION=42500;
@@ -18,7 +18,7 @@ public final class PhonePlayback extends Service {
     private AudioFocusRequest focus;
     private MediaSession media;
     private final Handler handler=new Handler(Looper.getMainLooper());
-    private boolean preview,started;
+    private boolean preview,started,defaultAudio;
     private String eventId="";
     private int generation,prayerIndex=-1;
     private double prayerTime;
@@ -36,28 +36,29 @@ public final class PhonePlayback extends Service {
             if(active!=service)return;
             try {
                 PhoneStore latest=PhoneStore.read(c);
-                if(!service.preview&&(!latest.enabled||!latest.locationReady||service.prayerIndex<0||latest.modes[service.prayerIndex]!=2)){stop(c);return;}
-                if(service.player!=null)service.player.setVolume(latest.volume/100f,latest.volume/100f);
+                if(!service.preview&&(!latest.enabled||!latest.locationReady||service.prayerIndex<0||!service.allowed(latest,service.prayerIndex))){stop(c);return;}
+                if(service.player!=null)service.player.setVolume(latest.audioVolume(service.defaultAudio?-1:service.prayerIndex)/100f,latest.audioVolume(service.defaultAudio?-1:service.prayerIndex)/100f);
                 if(service.started){service.handler.removeCallbacksAndMessages(null);service.handler.postDelayed(service::stopSelf,Math.max(0,service.limit(latest)-(SystemClock.elapsedRealtime()-service.startedAt)));}
             }catch(Exception invalid){stop(c);}
         });
     }
-    private long limit(PhoneStore settings){return 1000L*(preview?12:settings.duration==0?600:settings.duration);}
+    private boolean allowed(PhoneStore settings,int prayer){return settings.eventMode(new tv.miqat.core.ReminderEvent(eventId,"call",prayer,prayerTime,prayerTime))==2;}
+    private long limit(PhoneStore settings){int duration=settings.audioDuration(defaultAudio?-1:prayerIndex);return 1000L*(preview?12:duration==0?600:duration);}
     @Override public IBinder onBind(Intent intent){return null;}
     @Override public int onStartCommand(Intent intent,int flags,int startId) {
         if(intent==null||STOP.equals(intent.getAction())){stopSelf();return START_NOT_STICKY;}
         String id=intent.getStringExtra("id");if(active==this&&Objects.equals(id,eventId))return START_NOT_STICKY;
         release();active=this;preview=intent.getBooleanExtra("preview",false);eventId=id==null?"":id;
-        final int token=++generation;prayerIndex=-1;
+        final int token=++generation;prayerIndex=-1;defaultAudio=intent.getBooleanExtra("default-audio",false);prayerTime=intent.getDoubleExtra("prayerTime",System.currentTimeMillis());
         try {
             PhoneAlarms.channels(this);if(!PhoneAlarms.channel(this,PhoneAlarms.PLAYBACK))throw new IllegalStateException("Playback notifications disabled");
             PhoneStore settings=PhoneStore.read(this);int prayer=intent.getIntExtra("prayer",0);
             if(!tv.miqat.core.PrayerRules.INSTANCE.isPrayer(prayer))throw new IllegalArgumentException("Invalid prayer");
-            if(!preview&&(!settings.enabled||!settings.locationReady||settings.modes[prayer]!=2)){stopSelf();return START_NOT_STICKY;}
+            if(!preview&&(!settings.enabled||!settings.locationReady||!allowed(settings,prayer))){stopSelf();return START_NOT_STICKY;}
             prayerIndex=prayer;prayerTime=intent.getDoubleExtra("prayerTime",System.currentTimeMillis());
             String voice=intent.getStringExtra("voice");boolean approved=false;
             for(int i=0;i<settings.data.voices.length();i++)approved|=settings.data.voices.getJSONObject(i).getString("id").equals(voice);
-            if(!approved)throw new IllegalArgumentException("Unknown voice");
+            if(!approved&&!"custom".equals(voice))throw new IllegalArgumentException("Unknown voice");
             media=new MediaSession(this,"Miqat adhan");media.setCallback(new MediaSession.Callback(){@Override public void onStop(){stopSelf();}@Override public void onPause(){stopSelf();}});
             media.setPlaybackState(new PlaybackState.Builder().setActions(PlaybackState.ACTION_STOP).setState(PlaybackState.STATE_PLAYING,0,1).build());media.setActive(true);
             String name=settings.data.prayerName(prayer,PhoneAlarms.arabic(this));
@@ -74,13 +75,14 @@ public final class PhonePlayback extends Service {
                 .setAudioAttributes(attributes).setAcceptsDelayedFocusGain(false).setOnAudioFocusChangeListener(change->{if(token==generation&&change!=AudioManager.AUDIOFOCUS_GAIN)stopSelf();}).build();
             if(audio.requestAudioFocus(focus)!=AudioManager.AUDIOFOCUS_REQUEST_GRANTED)throw new IllegalStateException("Audio focus unavailable");
             player=new MediaPlayer();player.setAudioAttributes(attributes);player.setWakeMode(this,PowerManager.PARTIAL_WAKE_LOCK);
-            try(AssetFileDescriptor file=getAssets().openFd("adhan/"+voice+".mp3")){player.setDataSource(file.getFileDescriptor(),file.getStartOffset(),file.getLength());}
-            float volume=settings.volume/100f;player.setVolume(volume,volume);
+            if("custom".equals(voice))player.setDataSource(PhoneAudio.file(this,settings,prayer,defaultAudio).getPath());
+            else try(AssetFileDescriptor file=getAssets().openFd("adhan/"+voice+".mp3")){player.setDataSource(file.getFileDescriptor(),file.getStartOffset(),file.getLength());}
+            float volume=settings.audioVolume(defaultAudio?-1:prayer)/100f;player.setVolume(volume,volume);
             player.setOnCompletionListener(done->stopSelf());player.setOnErrorListener((failed,what,extra)->{failed();return true;});
             player.setOnPreparedListener(ready->{
                 try {
-                    PhoneStore latest=PhoneStore.read(this);if(!preview&&(!latest.enabled||!latest.locationReady||latest.modes[prayer]!=2)){stopSelf();return;}
-                    ready.setVolume(latest.volume/100f,latest.volume/100f);
+                    PhoneStore latest=PhoneStore.read(this);if(!preview&&(!latest.enabled||!latest.locationReady||!allowed(latest,prayer))){stopSelf();return;}
+                    ready.setVolume(latest.audioVolume(defaultAudio?-1:prayer)/100f,latest.audioVolume(defaultAudio?-1:prayer)/100f);
                     handler.removeCallbacksAndMessages(null);started=true;startedAt=SystemClock.elapsedRealtime();ready.start();
                     PhoneStore.preferences(this).edit().remove("audio-error").apply();
                     if(!preview&&latest.vibrate(prayer))getSystemService(Vibrator.class).vibrate(VibrationEffect.createWaveform(new long[]{0,300,200,300},-1),attributes);

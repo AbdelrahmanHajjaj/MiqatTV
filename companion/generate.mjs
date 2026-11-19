@@ -9,14 +9,15 @@ const read = path => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
 export function generatePhone() {
   const contract=read('shared/data/phone-ui-contract.json'),cities=read('shared/data/cities.json'),voices=read('shared/data/voices.json');
   const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
-  const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:voices.map(x=>x.id),
-    prayerVoices:['inherit',...voices.map(x=>x.id)],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
-  if(contract.version!==1||!cities.some(c=>c.id===contract.defaultCity))throw Error('Invalid phone catalog version/location');
+  const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
+    prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
+  if(contract.version!==2||!cities.some(c=>c.id===contract.defaultCity))throw Error('Invalid phone catalog version/location');
   const ids=new Set();
   for(const control of [...contract.controls,...contract.perPrayer]) {
     const id=control.id??control.suffix;
     if(typeof id!=='string'||ids.has(id)||!text[control.label]?.en||!text[control.label]?.ar||typeof control.default!=='string')throw Error('Invalid phone control: '+id);
     ids.add(id);
+    if(!Number.isInteger(control.since??1)||(control.since??1)<1||(control.since??1)>contract.version)throw Error('Invalid phone control version: '+id);
     if(control.kind==='number') {
       if(![control.minimum,control.maximum,control.step].every(Number.isInteger)||control.step<1||control.minimum>control.maximum||
          !/^-?\d+$/.test(control.default)||+control.default<control.minimum||+control.default>control.maximum||(+control.default-control.minimum)%control.step)throw Error('Invalid phone numeric control: '+id);

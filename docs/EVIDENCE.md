@@ -1,5 +1,43 @@
 # Validation evidence
 
+## Phone feedback pass 2 delivery — 19 November 2026
+
+Phone 0.2.1/code 7 and installer 1.1.2/code 5 assemble/lint pass. Portable quiet
+policy tests pass for weekdays, overnight periods, equal start/end and exact end
+boundaries. Native isolated storage checks preserve v1 values through v2 migration,
+reject missing old fields, keep per-prayer audio independent and find next week's
+allowed event without repeatedly rearming suppressed events. Required channels
+exclude unused sound channels for vibration and all-day quiet overrides.
+
+An owned muted API 37 emulator passes private audio import/decoder checks,
+malformed/interrupted/oversized-copy preservation, actual foreground custom audio
+with a measured 30-second per-prayer cutoff, dedicated silent/vibration output,
+actual alarm delivery, duplicate/early/expired claims, Stop/focus/permission denial
+and disabled cleanup. Global Android alarm volume stays unchanged. Only the
+existing 14 approved built-in recordings ship; custom files stay private and are
+excluded from backup/transfer.
+
+Native bilingual clock Save/Cancel, weekday selection, Arabic numbers, per-prayer
+overrides, saved-value/choice sheets, root navigation and every canonical control
+pass. Portrait and landscape 80–150% checks include new editor buttons; landscape
+also combines 1.3× Android text. Renders of English/Arabic clocks, weekdays and
+phone settings were inspected. Opt-in travel uses the fixture fix while preserving
+method, offsets and fixed timezone, then releases location providers. These are
+emulator/fixture results, not physical GPS, OEM power or speaker acceptance.
+
+47 Python/Java regressions, canonical checks and eight companion generator tests
+pass. The exported APK contains all 26 exact approved recordings; its signing
+certificate matches the previous review build. Final review export SHA256:
+7B203855FF55F7671746EA3C1BB8468218A2A78F4D84BDD0E51E1F65CC21F541.
+All CI workflows passed on the preceding compact-UI milestone c519e6b; final-head
+CI remains a separate gate, with authoritative links on PR #9.
+
+Private logs include phone-custom-core, phone-custom-runtime, phone-custom-denied,
+phone-custom-travel, phone-pass2-root-ui, phone-pass2-custom,
+phone-pass2-editor-size, phone-pass2-landscape-editors, phone-pass2-channels,
+phone-pass2-regressions and phone-pass2-package under state/. No original Athar
+recording, private profile/location capture or imported user media enters Git.
+
 ## Compact phone controls — 19 November 2026
 
 Native English/Arabic phone checks pass for compact saved values, focused numeric

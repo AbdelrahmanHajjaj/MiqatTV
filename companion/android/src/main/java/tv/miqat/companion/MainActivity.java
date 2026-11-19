@@ -225,7 +225,7 @@ public final class MainActivity extends Activity {
     }
     void tab(String target){
         if(networkBusy)return;
-        if(page.equals(target)&&(!target.equals("settings")||section.isEmpty()))return;
+        if(page.equals(target)&&(!Arrays.asList("settings","phone-settings").contains(target)||section.isEmpty()))return;
         Runnable change=()->{if(phoneUi!=null){phoneUi.pending="";phoneUi.cancelLocation();}stopAudio();if(lgSetup!=null)lgSetup.close();cancelPairing();clearPending();appearance=null;section="";query="";page=target;
             if(target.equals("settings"))readSettings();else if(target.equals("overview"))readRemote();render();};
         if(appearance!=null&&!appearance.getChanges().isEmpty())confirmDiscard(change);else change.run();
@@ -858,6 +858,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int request,int result,android.content.Intent data) {
         super.onActivityResult(request,result,data);
+        if(request==79&&phoneUi!=null)phoneUi.audioResult(result==RESULT_OK&&data!=null?data.getData():null);
         if(request==71 && result==RESULT_OK && data!=null){String qr=data.getStringExtra("qr");if(qr!=null)beginPairing(qr);}
         if(request==72 && result==RESULT_OK)navigate("pair");
         if(request==73 && result==RESULT_OK && data!=null && data.getData()!=null){if(lgSetup==null)lgSetup=new LgSetup(this);lgSetup.select(data.getData());}
@@ -906,7 +907,7 @@ public final class MainActivity extends Activity {
     }
     void stopAudio() {PhonePlayback.stopPreview(this);}
     @Override protected void onNewIntent(android.content.Intent intent){super.onNewIntent(intent);setIntent(intent);if(intent.getBooleanExtra("prayer-home",false))tab("prayers");}
-    @Override protected void onResume(){super.onResume();if(phoneUi!=null){PhoneAlarms.rebuild(this);if(page.equals("prayers")||page.equals("phone-settings"))render();phoneUi.start();}}
+    @Override protected void onResume(){super.onResume();if(phoneUi!=null){PhoneAlarms.rebuild(this);if(page.equals("prayers")||page.equals("phone-settings"))render();phoneUi.start();phoneUi.refreshTravel();}}
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==75){PhoneAlarms.rebuild(this);render();}if(request==78&&phoneUi!=null)phoneUi.locationPermissionResult();}
     @Override protected void onStart(){super.onStart();phoneForeground=true;schedulePoll();if(lgSetup!=null&&page.equals("lg-setup"))render();}
     @Override protected void onStop(){phoneForeground=false;if(phoneUi!=null)phoneUi.stop();polling.removeCallbacksAndMessages(null);stopAudio();if(lgSetup!=null)lgSetup.close();if(toast!=null)toast.cancel();super.onStop();}

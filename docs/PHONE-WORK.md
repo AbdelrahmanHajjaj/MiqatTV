@@ -124,18 +124,19 @@ Ordered work:
    ordinary setup as default and local packages in Advanced. Never embed tokens,
    install unverified/partial files, silently downgrade or uninstall to update.
    Website should link to the same release assets. Handle no public release honestly.
-3. [ ] Per-prayer volume/duration overrides, silent/vibration alert modes,
+3. [x] Per-prayer volume/duration overrides, silent/vibration alert modes,
    weekday schedules and quiet hours. Custom user audio remains private on-device;
    no unreviewed media enters Git or distribution. Existing 14 approved recordings
    remain available; adding shipped recordings needs the established content review.
-4. [ ] Travel behavior: opt-in foreground location refresh and device/fixed
+4. [x] Travel behavior: opt-in foreground location refresh and device/fixed
    timezone choice, with clear stale/denied/location-disabled states. No continuous
    background tracking or automatic religious travel rulings are implied.
-5. [ ] Phone UX pass: compact settings summaries, focused inline numeric editors,
+5. [x] Phone UX pass: compact settings summaries, focused inline numeric editors,
    short choice sheets, clear first-run/location/alert/setup states, consistent
    surfaces/spacing and accessible Arabic/English, large text and RTL.
-6. [ ] Validate affected behavior and final CI, update guide/evidence/PR, export
-   the replacement review APK. Physical acceptance and publication stay open.
+6. [x] Local affected checks, guide/evidence/PR scope and final review APK export.
+   Final-head CI remains the handoff gate on PR #9; physical acceptance and public
+   release publication stay open.
 
 ### Pass-2 implementation notes
 
@@ -144,31 +145,36 @@ rows, focused numeric editors, bottom choice sheets and stable root tabs were
 implemented before adding the extra adhan fields. TV Remote/Settings now have
 nested tabs. Keep the Prayer / Your TVs / Phone settings root bar stable.
 
-Remaining sound implementation should preserve v1 settings through a strict v2
-migration, adding defaults only for new fields. Extend existing alert modes with
-vibration and silent notification, per-prayer default-audio/volume/duration and a
-weekday mask. Quiet start/end use local civil time with an overnight-aware core
-rule. Plan a full week ahead and exclude suppressed events from the next-alarm
-search so quiet hours cannot cause repeated immediate alarms. Recheck policy at
-claim and dispatch. Keep existing duplicate/late-event protection and Stop.
-
-Custom audio should use Android's document picker, a bounded private copy and
-actual duration/decoder validation. Store a content-addressed private file identity
-with the voice choice in one settings commit, preserving old selections on error;
-never ship user recordings. Reuse the 14 approved built-in voices. Travel remains
-opt-in foreground one-shot refresh plus the existing device/fixed timezone choice;
-preserve method/offset calibration and report refresh failure without tracking.
+Sound now preserves v1 preferences through strict v2 migration. Portable policy
+handles weekday masks and overnight quiet hours; the shell plans a week ahead,
+excludes suppressed events and rechecks eligibility at claim/output. Per-prayer
+level/duration, silent/vibration channels and private custom recordings are bound
+to the native controls. Custom files use bounded decoder validation, immutable
+private content identities and one settings commit; existing selections survive
+failed imports. The 14 built-in approved recordings remain unchanged. Travel
+refresh is opt-in/foreground, preserving calibration and device/fixed timezone.
 
 ## Current resume point
 
-Work pass 2 in the existing feature/companion-installation worktree (clean base
-298f195). Location detection is implemented and validated (EVIDENCE.md). Continue
-with adhan schedules/audio and phone UX. Public package downloads now share a
-verified runtime and default setup actions, with local files in Advanced. Native
-parser/atomic-file and bilingual setup checks pass; publication stays pending. Reuse native Java Views, shared phone contract/core and existing
-installer runtime. The previous 0.2.0 review APK remains the latest delivered
-build until this pass is verified/exported. All final 298f195 CI gates passed;
-links are in PR #9. Keep the PR draft while owner acceptance remains open.
+Pass 2 is implemented and locally verified for phone 0.2.1/code 7 and standalone
+installer 1.1.2/code 5. Location, public downloads and compact UI milestones are
+ac510e9, 47dbe87 and c519e6b. Full Validate, Companion and Apple-core CI passed on
+c519e6b. Require the final PR #9 head's checks before handoff; update its body with
+the resulting links. Keep the PR draft for owner acceptance, with no physical
+TV operation or public release publication.
+
+The final local review APK is exported to the fixed primary-checkout companion
+path, SHA256 7B203855FF55F7671746EA3C1BB8468218A2A78F4D84BDD0E51E1F65CC21F541.
+Signing certificate matches the previous 0.2.0 review APK. Native settings
+migration, private custom playback/30-second cutoff, actual alarms, quiet/weekday
+policy, calibrated travel refresh, bilingual editors, 80–150% portrait/landscape
+with 1.3× OS text, 47 regressions and all 26 packaged recordings pass locally.
+See EVIDENCE.md for concise results; raw logs/captures stay under ignored state/.
+
+Owned emulator record is ignored state/feedback-emulator-session.json. Verify
+recorded process ownership before cleanup. It is read-only/headless/muted; display
+has been restored to the session's portrait/default text settings. Do not adopt
+another emulator or use the fixture against a physical device.
 
 Previous pass: implementation and the 0.2.0 review export were complete. Before handing over, require
 all latest PR #9 checks to pass; record their final run links in the PR body.
@@ -177,8 +183,8 @@ draft. Do not merge past the open human acceptance or add broader Athar modules
 without the owner's subsequent direction.
 
 Phone artifact: primary checkout state/builds/companion/Miqat-latest.apk,
-0.2.0/code 6, SHA256 prefix D6B4983DA58E3CF3. LG artifact remains the existing
-state/builds/webos/Miqat-latest.ipk (0.2.28). Standalone installer: 1.1.1/code 4.
+0.2.1/code 7, SHA256 prefix 7B203855FF55F767. LG artifact remains the existing
+state/builds/webos/Miqat-latest.ipk (0.2.28). Standalone installer: 1.1.2/code 5.
 First-use and combined-review checklist: PHONE.md. Durable reference: PHONE-REFERENCE.md.
 
 Latest private logs: phone-delivery-ui.log, phone-handoff-portrait.log,

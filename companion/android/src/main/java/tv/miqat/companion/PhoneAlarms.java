@@ -13,7 +13,7 @@ import tv.miqat.companion.core.PhonePrayerRules;
 /** One next prayer event and a bounded daily recovery check; never an idle service. */
 final class PhoneAlarms {
     static final String FIRE="tv.miqat.companion.PRAYER_ALARM",REFRESH="tv.miqat.companion.REFRESH_ALARMS";
-    static final String ALERTS="phone-prayers",REMINDERS="phone-reminders",PLAYBACK="phone-adhan";
+    static final String ALERTS="phone-prayers",REMINDERS="phone-reminders",PLAYBACK="phone-adhan",SILENT="phone-silent",VIBRATION="phone-vibration";
     private static final int EVENT=41701,MAINTENANCE=41702;
     private static AlarmManager manager(Context c){return (AlarmManager)c.getSystemService(Context.ALARM_SERVICE);}
     static boolean exact(Context c){return Build.VERSION.SDK_INT<31||manager(c).canScheduleExactAlarms();}
@@ -39,16 +39,27 @@ final class PhoneAlarms {
         manager.createNotificationChannel(new NotificationChannel(REMINDERS,text(c,"phone_audio"),NotificationManager.IMPORTANCE_HIGH));
         NotificationChannel audio=new NotificationChannel(PLAYBACK,text(c,"phone_adhan"),NotificationManager.IMPORTANCE_LOW);
         audio.setSound(null,null);audio.enableVibration(false);manager.createNotificationChannel(audio);
+        for(int mode:new int[]{3,4}){
+            NotificationChannel quiet=new NotificationChannel(mode==3?VIBRATION:SILENT,text(c,mode==3?"phone_vibration":"phone_silent"),NotificationManager.IMPORTANCE_HIGH);
+            quiet.setSound(null,null);quiet.enableVibration(mode==3);if(mode==3)quiet.setVibrationPattern(new long[]{0,300,200,300});manager.createNotificationChannel(quiet);
+        }
     }
     static boolean channel(Context c,String id){NotificationChannel channel=c.getSystemService(NotificationManager.class).getNotificationChannel(id);return notifications(c)&&channel!=null&&channel.getImportance()!=NotificationManager.IMPORTANCE_NONE;}
+    static Set<String> requiredChannels(PhoneStore settings){
+        Set<String> required=new HashSet<>();boolean quiet=settings.value("quiet.enabled").equals("true"),allDay=quiet&&settings.number("quiet.start")==settings.number("quiet.end");
+        for(int i=0;i<6;i++)if(i!=1&&settings.modes[i]>0&&settings.number("call."+PhoneStore.PRAYERS[i]+".weekdays")>0){
+            int mode=allDay?settings.quietMode():settings.modes[i];
+            if(mode>0)required.add(mode==1?ALERTS:mode==2?PLAYBACK:mode==3?VIBRATION:SILENT);
+            if((mode==1||mode==2)&&(settings.before[i]>0||settings.after[i]>0))required.add(REMINDERS);
+            if(quiet&&!allDay&&settings.quietMode()>0)required.add(settings.quietMode()==3?VIBRATION:SILENT);
+        }
+        return required;
+    }
     static String status(Context c,PhoneStore settings) {
-        if(!settings.enabled)return "phone_alerts_off";
+        if(!settings.enabled||!settings.anyAlerts())return "phone_alerts_off";
         if(!settings.locationReady)return "phone_location_needed";
         if(!notifications(c)||!exact(c))return "phone_permission_missing";
-        if(Arrays.stream(settings.modes).anyMatch(mode->mode==2)&&!channel(c,PLAYBACK)||
-           Arrays.stream(settings.modes).anyMatch(mode->mode==1)&&!channel(c,ALERTS))return "phone_permission_missing";
-        for(int i=0;i<6;i++)if(settings.modes[i]>0&&(settings.before[i]>0||settings.after[i]>0)&&!channel(c,REMINDERS))return "phone_permission_missing";
-        if(Arrays.stream(settings.modes).noneMatch(mode->mode>0))return "phone_alerts_off";
+        for(String id:requiredChannels(settings))if(!channel(c,id))return "phone_permission_missing";
         String error=PhoneStore.preferences(c).getString("alarm-error","");
         return error.isEmpty()?"phone_alerts_ready":error;
     }
@@ -63,11 +74,11 @@ final class PhoneAlarms {
                 PhoneStore settings=PhoneStore.read(c);String state=status(c,settings);
                 PhonePlayback.applySettings(c);
                 if(!notifications(c))PhonePlayback.stop(c);
-                if(!settings.enabled||!settings.locationReady||!notifications(c)||!exact(c))return state;
+                if(!settings.enabled||!settings.anyAlerts()||!settings.locationReady||!notifications(c)||!exact(c))return state;
                 long now=System.currentTimeMillis();double[][] days=settings.days(now);
-                ReminderEvent event=PhonePrayerRules.INSTANCE.nextEvent(days,now,settings.modes,settings.before,settings.after,handled(c));
+                ReminderEvent event=settings.nextEvent(days,now,handled(c));
                 if(event!=null)arm(c,event,now);
-                else if(Arrays.stream(settings.modes).anyMatch(mode->mode>0)) {
+                else if(settings.anyAlerts()) {
                     Calendar tomorrow=new GregorianCalendar(settings.zone());tomorrow.setTimeInMillis(now);tomorrow.add(Calendar.DAY_OF_MONTH,1);
                     tomorrow.set(Calendar.HOUR_OF_DAY,0);tomorrow.set(Calendar.MINUTE,5);tomorrow.set(Calendar.SECOND,0);tomorrow.set(Calendar.MILLISECOND,0);
                     manager(c).setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,tomorrow.getTimeInMillis(),pending(c,REFRESH,MAINTENANCE,""));
@@ -106,12 +117,14 @@ final class PhoneAlarms {
             List<String> claims=new ArrayList<>(Arrays.asList(handled(c)));if(claims.contains(id))return null;
             claims.add(id);while(claims.size()>64)claims.remove(0);
             if(!PhoneStore.preferences(c).edit().putString("handled",new JSONArray(claims).toString()).commit())throw new java.io.IOException("Cannot save claim");
-            return new ReminderEvent(id,kind,prayer,value.getDouble("time"),value.getDouble("prayerTime"));
+            ReminderEvent event=new ReminderEvent(id,kind,prayer,value.getDouble("time"),value.getDouble("prayerTime"));
+            return settings.eventMode(event)>0?event:null;
         }
     }
     static void notify(Context c,ReminderEvent event,boolean failure) {
         try {
-            channels(c);String channel=event.getKind().equals("call")?ALERTS:REMINDERS;if(!channel(c,channel))return;
+            channels(c);int mode=PhoneStore.read(c).eventMode(event);if(mode==0)return;
+            String channel=mode==3?VIBRATION:mode==4?SILENT:event.getKind().equals("call")?ALERTS:REMINDERS;if(!channel(c,channel))return;
             PhoneData data=PhoneData.get(c);String name=data.prayerName(event.getPrayer(),arabic(c));
             String key=event.getKind().equals("before")?"phone_advance_title":event.getKind().equals("after")?"phone_after_title":"phone_adhan_title";
             String title=String.format(Locale.getDefault(),text(c,key),name);

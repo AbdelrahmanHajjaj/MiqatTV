@@ -37,6 +37,7 @@ final class PhoneData {
         JSONObject city=city(contract.getString("defaultCity"));
         defaults.put("prayer.location",city.getString("id"));defaults.put("prayer.latitude",Double.toString(city.getDouble("lat")));
         defaults.put("prayer.longitude",Double.toString(city.getDouble("lng")));defaults.put("prayer.location-ready","false");
+        for(String slot:new String[]{"default","fajr","dhuhr","asr","maghrib","isha"})defaults.put("audio.custom."+slot,"");
     }
     private void add(JSONObject c)throws Exception {
         String id=c.getString("id");if(controls.put(id,c)!=null)throw new IOException("Duplicate phone control");
@@ -62,7 +63,7 @@ final class PhoneData {
             case "methods":for(PrayerMethod method:PrayerMethod.values())values.add(method.name());break;
             case "voices":case "prayerVoices":
                 if(kind.equals("prayerVoices"))values.add("inherit");
-                for(int i=0;i<voices.length();i++)values.add(voices.getJSONObject(i).getString("id"));break;
+                for(int i=0;i<voices.length();i++)values.add(voices.getJSONObject(i).getString("id"));values.add("custom");break;
             case "timezones":values.add("system");List<String> zones=new ArrayList<>(Arrays.asList(TimeZone.getAvailableIDs()));Collections.sort(zones);values.addAll(zones);break;
             case "themes":Iterator<String> keys=catalog.data.getJSONObject("themes").keys();while(keys.hasNext()){String id=keys.next();if(!id.equals("custom"))values.add(id);}break;
             case "backgrounds":JSONArray backgrounds=source.getJSONArray("backgrounds");for(int i=0;i<backgrounds.length();i++)values.add(backgrounds.getString(i));break;
@@ -74,6 +75,11 @@ final class PhoneData {
         return new SettingSpec(c.getString("id"),c.getString("kind"),"",c.optString("kind").equals("choice")?options(c):Collections.emptyList(),
             c.optInt("minimum"),c.optInt("maximum"),c.optInt("step",1));
     }
+    Set<String> legacyIds(){
+        Set<String> ids=new LinkedHashSet<>(defaults.keySet());
+        for(JSONObject c:controls.values())if(c.optInt("since",1)>1)ids.remove(c.optString("id"));
+        ids.removeIf(id->id.startsWith("audio.custom."));return ids;
+    }
     void validate(Map<String,String> values)throws Exception {
         if(!values.keySet().equals(defaults.keySet()))throw new IllegalArgumentException("Invalid phone setting IDs");
         for(JSONObject c:controls.values()) {
@@ -82,6 +88,7 @@ final class PhoneData {
                 throw new IllegalArgumentException("Invalid phone numeric step");
         }
         if(!Arrays.asList("true","false").contains(values.get("prayer.location-ready")))throw new IllegalArgumentException("Invalid location state");
+        for(String id:defaults.keySet())if(id.startsWith("audio.custom.")&&!values.get(id).matches("(?:[a-f0-9]{64})?"))throw new IllegalArgumentException("Invalid custom audio identity");
         String place=values.get("prayer.location");if(!place.equals("custom")&&!place.equals("detected"))city(place.startsWith("detected:")?place.substring(9):place);
     }
 }

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "defaultCity": "cairo",
   "controls": [
     {"id":"prayer.method","section":"calculation","kind":"choice","label":"phone_method","choices":"methods","default":"EGYPTIAN"},
@@ -17,14 +17,23 @@
     {"id":"display.size","section":"appearance","kind":"number","label":"phone_size","minimum":80,"maximum":150,"step":10,"default":"100"},
     {"id":"display.reduce-motion","section":"appearance","kind":"toggle","label":"phone_reduce_motion","default":"false"},
     {"id":"appearance.theme","section":"appearance","kind":"choice","label":"phone_theme","choices":"themes","default":"mihrab"},
-    {"id":"appearance.background","section":"appearance","kind":"choice","label":"phone_background","choices":"backgrounds","default":"miqat_signature"}
+    {"id":"appearance.background","section":"appearance","kind":"choice","label":"phone_background","choices":"backgrounds","default":"miqat_signature"},
+    {"id":"prayer.travel-refresh","section":"calculation","kind":"toggle","label":"phone_travel_refresh","default":"false","since":2},
+    {"id":"quiet.enabled","section":"audio","kind":"toggle","label":"phone_quiet_enabled","default":"false","since":2},
+    {"id":"quiet.start","section":"audio","kind":"number","editor":"time","label":"phone_quiet_start","minimum":0,"maximum":1439,"step":1,"default":"1320","since":2},
+    {"id":"quiet.end","section":"audio","kind":"number","editor":"time","label":"phone_quiet_end","minimum":0,"maximum":1439,"step":1,"default":"420","since":2},
+    {"id":"quiet.mode","section":"audio","kind":"choice","label":"phone_quiet_mode","choices":["off","vibration","silent"],"default":"silent","since":2}
   ],
   "perPrayer": [
-    {"suffix":"mode","kind":"choice","label":"phone_mode","choices":["off","notification","adhan"],"default":"adhan"},
+    {"suffix":"mode","kind":"choice","label":"phone_mode","choices":["off","notification","adhan","vibration","silent"],"default":"adhan"},
     {"suffix":"voice","kind":"choice","label":"phone_prayer_voice","choices":"prayerVoices","default":"inherit"},
     {"suffix":"offset","kind":"number","label":"phone_offset","minimum":-30,"maximum":30,"step":1,"default":"0"},
     {"suffix":"before","kind":"number","label":"phone_before","minimum":0,"maximum":60,"step":1,"default":"0"},
     {"suffix":"after","kind":"number","label":"phone_after","minimum":0,"maximum":60,"step":1,"default":"0"},
-    {"suffix":"vibrate","kind":"toggle","label":"phone_vibrate","default":"false"}
+    {"suffix":"vibrate","kind":"toggle","label":"phone_vibrate","default":"false"},
+    {"suffix":"default-audio","kind":"toggle","label":"phone_default_audio","default":"true","since":2},
+    {"suffix":"volume","kind":"number","label":"phone_volume","minimum":0,"maximum":100,"step":5,"default":"70","since":2},
+    {"suffix":"duration","kind":"number","label":"phone_duration","minimum":0,"maximum":600,"step":30,"default":"0","since":2},
+    {"suffix":"weekdays","kind":"number","editor":"weekdays","label":"phone_weekdays","minimum":0,"maximum":127,"step":1,"default":"127","since":2}
   ]
 }

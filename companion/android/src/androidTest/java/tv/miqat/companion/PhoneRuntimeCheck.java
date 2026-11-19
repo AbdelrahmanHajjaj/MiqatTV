@@ -75,6 +75,21 @@ final class PhoneRuntimeCheck {
             long previewStarted=SystemClock.elapsedRealtime();
             await(test,()->!PhonePlayback.playing(),16000,"Preview exceeded its twelve-second bound");
             CompanionCheck.check(SystemClock.elapsedRealtime()-previewStarted>=10000&&!preferences.contains("audio-error"),"Preview failed instead of completing its bounded playback");
+            CompanionCheck.check(PhoneStore.read(c).value("audio.custom.fajr").isEmpty(),"Custom runtime fixture requires an unused Fajr audio slot on the owned emulator");
+            PhoneAudio.importFile(c,c.getAssets().open("adhan/alafasy.mp3"),"call.fajr.voice");
+            Map<String,String> overrides=new LinkedHashMap<>();overrides.put("call.fajr.default-audio","false");overrides.put("call.fajr.volume","15");overrides.put("call.fajr.duration","30");PhoneStore.read(c).changed(overrides).save(c);
+            test.runOnMainSync(()->c.startForegroundService(PhonePlayback.intent(c,0,"custom",false,"custom-bounded-fixture")));
+            await(test,PhonePlayback::outputStarted,10000,"Private custom audio did not start");long customStarted=SystemClock.elapsedRealtime();
+            await(test,()->!PhonePlayback.playing(),34000,"Per-prayer duration did not stop custom audio");
+            CompanionCheck.check(SystemClock.elapsedRealtime()-customStarted>=28000&&!preferences.contains("audio-error"),"Custom playback failed instead of reaching its per-prayer bound");
+            for(String mode:new String[]{"vibration","silent"}){
+                PhoneStore.read(c).changed(Collections.singletonMap("call.fajr.mode",mode)).save(c);long stamp=System.currentTimeMillis();
+                PhoneAlarms.notify(c,new ReminderEvent("mode-fixture:"+mode,"call",0,stamp,stamp),false);
+                String expectedChannel=mode.equals("vibration")?PhoneAlarms.VIBRATION:PhoneAlarms.SILENT;
+                CompanionCheck.check(Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications()).anyMatch(n->n.getNotification().getChannelId().equals(expectedChannel)),"Dedicated silent/vibration output missing");
+                CompanionCheck.check(!PhonePlayback.playing(),"Silent/vibration mode started adhan playback");
+            }
+            PhoneStore.read(c).changed(Collections.singletonMap("call.fajr.mode","adhan")).save(c);
             test.runOnMainSync(()->c.startForegroundService(PhonePlayback.intent(c,0,"alafasy",false,"disable-fixture")));
             await(test,PhonePlayback::outputStarted,10000,"Disable fixture did not start");
             PhoneStore.read(c).changed(Collections.singletonMap("reminders.enabled","false")).save(c);PhoneAlarms.rebuild(c);
@@ -92,7 +107,7 @@ final class PhoneRuntimeCheck {
                 else if(value instanceof Float)restore.putFloat(key,(Float)value);
                 else throw new IllegalStateException("Unexpected fixture preference type");
             }
-            CompanionCheck.check(restore.commit(),"Cannot restore alarm fixture");PhoneAlarms.rebuild(c);
+            CompanionCheck.check(restore.commit(),"Cannot restore alarm fixture");PhoneAudio.cleanup(c);PhoneAlarms.rebuild(c);
         }
     }
     private static void await(Instrumentation test,BooleanSupplier condition,long timeout,String error) {

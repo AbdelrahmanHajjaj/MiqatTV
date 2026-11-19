@@ -169,6 +169,16 @@ Stop/focus loss, disabled cleanup, recovery and early/expired/duplicate rejectio
 The fixture saves/restores phone settings; it does not operate a TV. Companion CI
 runs UI, portrait sizing, denial and actual-delivery suites in addition to existing TV UI/LAN checks.
 
+Phone feedback suites: `phone-location-denied` requires foreground location denied;
+`phone-location-approx` uses a framework network-provider fixture with coarse-only
+access and mock-location app-op on an owned emulator; `phone-location` requires
+precise access plus injected London GPS and checks calibrated travel refresh.
+`phone-custom` isolates preferences/files to verify migration, weekday/quiet
+policy and bounded private imports. `public-release` tests release metadata,
+checksums and interrupted/atomic file preservation without a network or TV.
+Phone CI runs these before the existing suites. Public binary end-to-end download
+still needs an actually published release; draft assets are not public downloads.
+
 ## Apple portability boundary
 
 On Apple-silicon macOS with Xcode 16.4, use `-PmiqatApple=true` for the two core

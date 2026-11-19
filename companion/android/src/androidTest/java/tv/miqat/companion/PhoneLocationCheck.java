@@ -16,7 +16,7 @@ final class PhoneLocationCheck {
         PhoneUiCheck.check(error[0].equals("phone_location_denied")&&!locator.running,"Denied request must stop without reading location");
     }
     static void run(Instrumentation test,boolean capture,boolean approximate)throws Exception {
-        Context c=test.getTargetContext();PhoneStore original=PhoneStore.read(c);String language=c.getSharedPreferences("companion",0).getString("language","system");MainActivity[] current={null};
+        Context c=test.getTargetContext();long refresh=PhoneStore.preferences(c).getLong("location-refresh",0);PhoneStore original=PhoneStore.read(c);String language=c.getSharedPreferences("companion",0).getString("language","system");MainActivity[] current={null};
         PhoneUiCheck.check(PhoneLocation.allowed(c),"Grant foreground location and inject London GPS on the owned emulator first");
         Location stale=new Location("fixture");stale.setLatitude(51.5074);stale.setLongitude(-0.1278);stale.setAccuracy(3000);stale.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos()-121000000000L);
         PhoneUiCheck.check(!PhoneLocation.usable(stale,SystemClock.elapsedRealtimeNanos()),"Stale fix accepted");
@@ -30,7 +30,7 @@ final class PhoneLocationCheck {
                 Location network=new Location("network");network.setLatitude(51.5074);network.setLongitude(-0.1278);network.setAccuracy(3000);network.setTime(System.currentTimeMillis());network.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());manager.setTestProviderLocation("network",network);
             }
             for(String lang:new String[]{"en","ar"}) {
-                original.save(c);c.getSharedPreferences("companion",0).edit().putString("language",lang).commit();
+                original.changed(Collections.singletonMap("prayer.travel-refresh","false")).save(c);c.getSharedPreferences("companion",0).edit().putString("language",lang).commit();
                 MainActivity a=(MainActivity)test.startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));current[0]=a;
                 PhoneUiCheck.on(test,()->{
                     a.phoneUi.open("calculation");
@@ -52,6 +52,16 @@ final class PhoneLocationCheck {
                 PhoneUiCheck.capture(test,a,lang+"-phone-detected-location",capture);
                 PhoneUiCheck.on(test,a::finish);LiveUiCheck.untilUi(test,a::isDestroyed);current[0]=null;
             }
-        }finally{if(mock)manager.removeTestProvider("network");if(current[0]!=null)PhoneUiCheck.on(test,current[0]::finish);original.save(c);c.getSharedPreferences("companion",0).edit().putString("language",language).commit();PhoneAlarms.rebuild(c);}
+            if(!approximate){
+                Map<String,String> travel=new LinkedHashMap<>();travel.put("prayer.travel-refresh","true");travel.put("prayer.location-ready","true");travel.put("prayer.location","custom");travel.put("prayer.latitude","0");travel.put("prayer.longitude","0");travel.put("prayer.zone","Asia/Tokyo");travel.put("prayer.method","KARACHI");travel.put("call.fajr.offset","7");original.changed(travel).save(c);
+                PhoneStore.preferences(c).edit().putLong("location-refresh",0).commit();
+                MainActivity a=(MainActivity)test.startActivitySync(new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));current[0]=a;
+                LiveUiCheck.untilUi(test,()->a.phoneUi.settings.value("prayer.location").startsWith("detected"));
+                PhoneUiCheck.check(a.phoneUi.locationDialog==null&&!a.phoneUi.locator.running,"Opt-in refresh did not release provider");
+                PhoneStore updated=PhoneStore.read(c);PhoneUiCheck.check(updated.value("prayer.method").equals("KARACHI")&&updated.offsets[0]==7&&updated.zone().getID().equals("Asia/Tokyo")&&updated.locationReady,"Travel refresh lost calibration/fixed timezone");
+                PhoneUiCheck.check(PhonePrayerRules.INSTANCE.distanceKm(51.5074,-0.1278,updated.latitude,updated.longitude)<20,"Travel refresh ignored fixture location");
+                PhoneUiCheck.on(test,a::finish);LiveUiCheck.untilUi(test,a::isDestroyed);current[0]=null;
+            }
+        }finally{if(mock)manager.removeTestProvider("network");if(current[0]!=null)PhoneUiCheck.on(test,current[0]::finish);original.save(c);PhoneStore.preferences(c).edit().putLong("location-refresh",refresh).commit();c.getSharedPreferences("companion",0).edit().putString("language",language).commit();PhoneAlarms.rebuild(c);}
     }
 }
