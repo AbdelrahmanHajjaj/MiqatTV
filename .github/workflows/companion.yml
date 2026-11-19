@@ -44,6 +44,8 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
+            # A cold Google APIs image can leave Pixel Launcher ANR covering the test app.
+            adb shell am force-stop com.google.android.apps.nexuslauncher
             adb install -r companion/android/build/outputs/apk/debug/companion-debug.apk
             adb install -r -t companion/android/build/outputs/apk/androidTest/debug/companion-debug-androidTest.apk
             timeout 420s adb shell am instrument -r -w -e suite phone-journey tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-journey-result.log

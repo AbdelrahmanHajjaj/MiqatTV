@@ -35,6 +35,10 @@ exposed an immediate post/read race in the silent/vibration fixture. Its exact
 channel predicate now uses the existing bounded await; production is unchanged.
 Android [queues notification publication](https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android14-release/services/core/java/com/android/server/notification/NotificationManagerService.java#L6350)
 on its service handler, so notify returning is not a posted-notification barrier.
+Failure-only window diagnostics identified the separate cold-CI focus blocker as
+“Pixel Launcher isn’t responding.” Companion CI now force-stops only that
+external launcher before testing. Miqat focus/ANR assertions remain unchanged;
+there is no app workaround or generic dismissal of system dialogs.
 
 Physical launcher/OEM background delivery, speakers/compass, TVs and iOS remain
 owner acceptance. Android controls notification layout and launcher clipping.
