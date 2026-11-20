@@ -6,36 +6,27 @@ is not needed for phone prayer times. Minimum Android version: 8 (API 26).
 
 ## First use
 
-First use has three pages: Location, Prayer alerts and Appearance. Confirming
-location advances directly; alert permissions stay on their page. Appearance
-combines compact theme/background choices with one live prayer-card preview.
+First use has two pages: **Location & alerts** and **Your style**. The first
+page combines automatic location/city choice and optional prayer alerts; its
+bottom action confirms the location and requests missing Android access. Skip
+leaves those choices for later. No location is confirmed or alert enabled merely
+by toggling an unconfirmed setup draft. Progress survives reopening.
 
-Every first-use step uses Miqat’s dedicated generated portrait signature artwork with a subtle
-scrim and consistent brand controls. Theme/background choices remain live previews.
+The second page has one live prayer-card preview. Theme/background tabs switch
+the compact visual carousel directly; Finish accepts the current selection.
+Every setup page uses the dedicated portrait signature artwork. Back from the
+first page leaves a resumable Home entry; finishing removes it. Setup needs no TV.
 
-Guided actions use one fixed footer with Continue/Finish and optional Skip.
-The top/system Back control returns to previous steps. Cancel appears for drafts
-or operations; duplicate Next/Previous buttons are omitted.
-Confirmation and Save/Cancel actions stay at the bottom, outside scrolling
-content; dialogs anchor their actions at the bottom of the sheet.
+Ordinary Appearance uses the same single preview and direct selectors, with
+one Apply/Cancel boundary for theme, background and display settings. Short
+settings use inline choices; long catalogs have search, including adhan voices.
+Language choices are available directly in Phone settings. Bottom actions remain
+outside scrolling content; accessible text can wrap and pages can scroll.
 
-A fresh install groups location, alerts and appearance into three pages.
-**Skip** bypasses pending alert access; theme and background share one page.
-Back from the first step opens Prayer with a visible
-**Complete Miqat setup** entry. Progress survives reopening; revisiting setup
-preserves saved settings. Phone setup never requires a TV.
-
-1. Use **Use my location**, or choose a city, then review/confirm the displayed
-   timezone. Approximate foreground location is supported. No continuous or
-   background location tracking is used. The city supplies its calculation
-   method and Asr school. Manual coordinates and further calculation/timezone
-   adjustments remain under **Phone settings → Location & calculation**.
-2. Choose whether to enable prayer alerts. Continue requests only missing Android
-   notification or precise-alarm access on this page. Skip leaves it for later in
-   **Prayer alert permissions**. Miqat never grants access silently.
-3. Select a theme and background from compact carousels under one live prayer-card
-   preview, then Finish. Ordinary Appearance settings also offer draft previews
-   with Apply/Cancel. Digits, clock format and interface size remain there.
+Use **Use my location**, or choose a city, then confirm its timezone. Approximate
+foreground location is supported; there is no background location tracking.
+Manual coordinates and calculation/timezone adjustments stay in **Location &
+calculation**. Missing alert access can be repaired in **Prayer alert permissions**.
 
 Alerts default to off. Changing the city, coordinates or timezone requires location
 confirmation again. Review the method and local authority for your location;
@@ -137,7 +128,7 @@ features follow farther down, reachable with a short scroll. Finishing first use
 removes its Home resume prompt, including after reopening the app.
 
 **Home-screen widgets** offers next-prayer, daily timetable and compact strip
-layouts with live previews. Each has a launcher entry with a suitable default
+layouts with one live preview and direct Theme/Background/Shape carousels. Each has a launcher entry with a suitable default
 size. Customize each placed widget independently: layout, app/fixed theme,
 color/app/selected background, 0–100% background opacity, rounded/soft/square
 corners, Gregorian and optional Hijri date, and label size. Text uses the app’s
@@ -171,8 +162,8 @@ to a local APK/IPK. Unsupported Samsung Tizen, Roku and Other TV entries show a
 lock and Coming soon. Already installed Miqat can proceed to ordinary pairing.
 
 Android then opens guarded ADB setup/recovery using your phone theme/language.
-LG asks for the TV address and passphrase on separate guided screens, with
-short contextual instructions and explicit SSH identity approval,
+LG shows its numbered preparation instructions, release choice, TV address and
+passphrase on one page, with explicit SSH identity approval,
 then downloads the selected public build; a local IPK is selected first in
 Advanced. Downloaded bytes must match size/SHA-256, and downgrades are refused.
 No public release is currently published; the app shows an unavailable state

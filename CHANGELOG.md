@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Refine phone 0.4.6/code15: two-page first use, single live appearance/widget
+  previews with direct carousels, compact inline choices and searchable voices.
+  Show numbered TV preparation together with release selection and LG credentials;
+  remove single-instruction pages and nested visual-choice dialogs. Keep a coherent
+  appearance Apply/Cancel draft and expose language directly in Phone settings.
+
 - Add purpose-generated portrait Miqat signature artwork in phone-only packaging
   for 0.4.5/code 14. Reduce first use to three pages, combining theme/background
   choices with one live preview and contextual alert permissions. Add populated

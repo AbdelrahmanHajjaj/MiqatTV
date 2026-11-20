@@ -80,7 +80,7 @@ final class PairingUi {
             cancel.setTag("pair.cancel");
             return;
         }
-        a.body.addView(a.views.text(a.t("pair_info"), 16, a.ink));
+        a.views.numberedSteps(a.body, a.t("tv_pair_steps"), "pair.instruction");
         a.body.addView(a.views.text(a.t("phone_name"), 13, a.muted));
         EditText name = new EditText(a);
         name.setImeOptions(

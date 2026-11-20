@@ -31,35 +31,31 @@ final class PhoneJourneyCheck {
                         test,
                         () -> {
                             check(
-                                    a.page.equals("onboarding"),
-                                    "Fresh install must open guided setup");
+                                    a.page.equals("onboarding")
+                                            && !a.phoneUi.settings.locationReady,
+                                    "Fresh setup must require location confirmation");
                             check(
-                                    !a.phoneUi.settings.locationReady,
-                                    "Default location must require explicit confirmation");
+                                    a.body.findViewWithTag("phone.reminders.enabled.edit") != null
+                                            && a.body.findViewWithTag("phone.location.detect")
+                                                    != null,
+                                    "Location and alerts must share the first page");
+                            a.body.findViewWithTag("phone.reminders.enabled.edit").performClick();
+                            check(
+                                    !a.phoneUi.settings.locationReady
+                                            && !a.phoneUi.settings.enabled,
+                                    "First-use draft must not enable alerts before location"
+                                            + " confirmation");
                             a.getWindow()
                                     .getDecorView()
                                     .findViewWithTag("onboarding.next")
                                     .performClick();
+                            if (a.body.findViewWithTag("phone.appearance.preview") != null)
+                                a.back();
                             check(
-                                    a.phoneUi.settings.locationReady && a.page.equals("onboarding"),
-                                    "Location confirmation must advance directly to alerts");
+                                    a.phoneUi.settings.locationReady && a.phoneUi.settings.enabled,
+                                    "Bundled choices were not saved");
                         });
                 PhoneUiCheck.capture(test, a, lang + "-journey-alerts", captures);
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            a.back();
-                            check(
-                                    a.phoneUi.settings.locationReady,
-                                    "Previous must preserve the confirmed location");
-                            a.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("onboarding.next")
-                                    .performClick();
-                            check(
-                                    a.body.findViewWithTag("phone.reminders.enabled.edit") != null,
-                                    "Back/Continue did not return to the same step");
-                        });
                 PhoneUiCheck.on(test, a::finish);
                 LiveUiCheck.untilUi(test, a::isDestroyed);
                 MainActivity resumed = LiveUiCheck.launch(test);
@@ -69,17 +65,9 @@ final class PhoneJourneyCheck {
                         () -> {
                             check(
                                     resumed.page.equals("onboarding")
-                                            && resumed.body.findViewWithTag(
-                                                            "phone.reminders.enabled.edit")
-                                                    != null,
+                                            && resumed.phoneUi.settings.locationReady
+                                            && resumed.phoneUi.settings.enabled,
                                     "First-use progress lost after reopening");
-                            resumed.body
-                                    .findViewWithTag("phone.reminders.enabled.edit")
-                                    .performClick();
-                            check(
-                                    resumed.phoneUi.settings.enabled
-                                            && resumed.page.equals("onboarding"),
-                                    "Alert choice left the bundled permission page");
                             android.widget.Button next =
                                     resumed.getWindow()
                                             .getDecorView()
@@ -92,28 +80,29 @@ final class PhoneJourneyCheck {
                                                     : "setup_next";
                             check(
                                     next.getText().toString().equals(resumed.t(required)),
-                                    "Alert Continue must request only the missing access");
-                            View skip =
-                                    resumed.getWindow()
-                                            .getDecorView()
-                                            .findViewWithTag("onboarding.skip");
-                            if (skip != null) skip.performClick();
-                            else next.performClick();
+                                    "Continue must request only missing access");
+                            resumed.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("onboarding.skip")
+                                    .performClick();
                             check(
                                     resumed.body.findViewWithTag("phone.appearance.preview") != null
                                             && resumed.body.findViewWithTag(
-                                                            "phone.appearance.theme")
+                                                            "appearance.tab.appearance.theme")
                                                     != null
                                             && resumed.body.findViewWithTag(
-                                                            "phone.appearance.background")
+                                                            "appearance.tab.appearance.background")
                                                     != null,
-                                    "Theme and background must share one live-preview page");
+                                    "Second page needs one preview and both direct visual choices");
                             check(
                                     resumed.getWindow()
                                                     .getDecorView()
                                                     .findViewWithTag("onboarding.skip")
                                             == null,
-                                    "Finish already completes appearance without changes");
+                                    "Finish needs no duplicate Skip");
+                            resumed.body
+                                    .findViewWithTag("appearance.tab.appearance.theme")
+                                    .performClick();
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-personalization", captures);
                 String before = PhoneStore.read(context).value("appearance.theme");
@@ -137,6 +126,9 @@ final class PhoneJourneyCheck {
                                                     .getCurrentTextColor()
                                             == frostAccent,
                                     "Live preview did not apply the selected theme");
+                            resumed.body
+                                    .findViewWithTag("appearance.tab.appearance.background")
+                                    .performClick();
                             resumed.body
                                     .findViewWithTag(
                                             "phone.appearance.background.option.dusk_peaks")
@@ -182,45 +174,58 @@ final class PhoneJourneyCheck {
                                     "Repeated setup restored a completed Home prompt");
                             resumed.phoneUi.open("appearance");
                             resumed.body
-                                    .findViewWithTag("phone.appearance.theme.option.dusk")
+                                    .findViewWithTag("appearance.tab.appearance.theme")
                                     .performClick();
-                        });
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            android.widget.HorizontalScrollView carousel =
-                                    resumed.phoneUi
-                                            .choiceDialog
-                                            .getWindow()
-                                            .getDecorView()
-                                            .findViewWithTag("phone.appearance.choices");
-                            ((android.view.ViewGroup) carousel.getChildAt(0))
-                                    .getChildAt(0)
+                            resumed.body
+                                    .findViewWithTag("phone.appearance.theme.option.dusk")
                                     .performClick();
                             check(
                                     resumed.phoneUi
-                                                    .choiceDialog
-                                                    .getWindow()
-                                                    .getDecorView()
-                                                    .findViewWithTag("phone.appearance.preview")
+                                            .settings
+                                            .value("appearance.theme")
+                                            .equals("frost"),
+                                    "Preview saved before Apply");
+                            check(
+                                    resumed.body.findViewWithTag("phone.appearance.preview")
                                             != null,
-                                    "Theme choice preview missing");
-                            resumed.phoneUi.choiceDialog.getButton(-2).performClick();
+                                    "Live preview missing");
+                            resumed.phoneUi.save("display.clock", "12");
+                            check(
+                                    resumed.phoneUi.settings.value("display.clock").equals("24"),
+                                    "Display draft changed saved clock before Apply");
+                            resumed.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("appearance.cancel")
+                                    .performClick();
                         });
                 check(
                         PhoneStore.read(context).value("appearance.theme").equals("frost"),
-                        "Cancel preview changed saved theme");
+                        "Cancel saved appearance draft");
                 PhoneUiCheck.on(
                         test,
-                        () ->
-                                resumed.body
-                                        .findViewWithTag("phone.appearance.background.edit")
-                                        .performClick());
+                        () -> {
+                            resumed.phoneUi.open("appearance");
+                            resumed.body
+                                    .findViewWithTag("appearance.tab.appearance.theme")
+                                    .performClick();
+                            resumed.body
+                                    .findViewWithTag("phone.appearance.theme.option.dusk")
+                                    .performClick();
+                        });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-frost-preview", captures);
                 PhoneUiCheck.on(
                         test,
                         () -> {
-                            resumed.phoneUi.choiceDialog.getButton(-2).performClick();
+                            resumed.getWindow()
+                                    .getDecorView()
+                                    .findViewWithTag("appearance.apply")
+                                    .performClick();
+                            check(
+                                    resumed.phoneUi
+                                            .settings
+                                            .value("appearance.theme")
+                                            .equals("dusk"),
+                                    "Apply lost appearance draft");
                             resumed.phoneUi.save("appearance.theme", before);
                             resumed.tab("prayers");
                         });
@@ -229,6 +234,13 @@ final class PhoneJourneyCheck {
                         test,
                         () -> {
                             resumed.body.findViewWithTag("widgets.open").performClick();
+                            android.widget.Button add =
+                                    resumed.getWindow()
+                                            .getDecorView()
+                                            .findViewWithTag("widget.apply");
+                            check(
+                                    add.getText().toString().equals(resumed.t("widget_add")),
+                                    "A new widget must enter Add, not update an invalid widget ID");
                             check(
                                     resumed.body
                                                     .findViewWithTag("widget.preview")
@@ -267,32 +279,42 @@ final class PhoneJourneyCheck {
                 comingSoon(test, resumed);
                 PhoneUiCheck.on(
                         test,
-                        () -> resumed.body.findViewWithTag("setup.platform.lg").performClick());
-                PhoneUiCheck.capture(test, resumed, lang + "-journey-lg-guide", captures);
-                PhoneUiCheck.on(
-                        test,
                         () -> {
+                            resumed.body.findViewWithTag("setup.platform.lg").performClick();
                             check(
-                                    resumed.getWindow()
-                                                    .getDecorView()
-                                                    .findViewWithTag("setup.continue")
-                                            == null,
-                                    "Source selection must follow preparation");
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("setup.skip")
-                                    .performClick();
+                                    resumed.page.equals("lg-setup")
+                                            && resumed.body.findViewWithTag("setup.instruction.5")
+                                                    != null
+                                            && resumed.body.findViewWithTag("lg.host") != null
+                                            && resumed.body.findViewWithTag("lg.passphrase")
+                                                    != null,
+                                    "LG numbered guide and credentials must share one page");
                             check(
                                     resumed.body
                                             .findViewWithTag("setup.channel.latest")
                                             .isSelected(),
-                                    "Latest channel must be default");
-                            resumed.body.findViewWithTag("setup.channel.stable").performClick();
+                                    "Latest must be default");
+                        });
+                PhoneUiCheck.capture(test, resumed, lang + "-journey-lg-guide", captures);
+                PhoneUiCheck.on(
+                        test,
+                        () -> {
+                            resumed.body.findViewWithTag("setup.channel.preview").performClick();
                             check(
                                     resumed.body
-                                            .findViewWithTag("setup.channel.stable")
+                                            .findViewWithTag("setup.channel.preview")
                                             .isSelected(),
-                                    "Release channel did not update");
+                                    "Release choice did not update");
+                            resumed.back();
+                            resumed.body.findViewWithTag("setup.platform.android").performClick();
+                            check(
+                                    resumed.body.findViewWithTag("setup.instruction.1") != null
+                                            && resumed.getWindow()
+                                                            .getDecorView()
+                                                            .findViewWithTag("setup.continue")
+                                                    != null,
+                                    "Android preparation and release must share one page");
+                            resumed.body.findViewWithTag("setup.channel.preview").performClick();
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-channel", captures);
                 PhoneUiCheck.on(

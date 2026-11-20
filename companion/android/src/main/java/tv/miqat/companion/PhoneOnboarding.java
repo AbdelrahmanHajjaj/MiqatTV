@@ -35,7 +35,7 @@ final class PhoneOnboarding {
     }
 
     private int step() {
-        return Math.max(0, Math.min(2, PhoneStore.preferences(a).getInt("onboarding-step", 0)));
+        return Math.max(0, Math.min(1, PhoneStore.preferences(a).getInt("onboarding-step", 0)));
     }
 
     void open() {
@@ -57,37 +57,42 @@ final class PhoneOnboarding {
 
     void render() {
         int step = step();
-        a.body.addView(a.views.text(a.phoneUi.digits((step + 1) + " / 3"), 13, a.accent));
-        String[] titles = {"setup_location", "setup_alerts", "setup_appearance"};
-        android.widget.TextView title = a.views.heading(a.t(titles[step]));
-        title.setTag("onboarding.title");
-        a.body.addView(title);
+        a.body.addView(a.views.heading(a.t(step == 0 ? "setup_essentials" : "setup_appearance")));
         try {
             if (step == 0) {
                 a.phoneUi.locationUi.locationEditor();
                 a.phoneUi.locationUi.confirmLocation();
-            } else if (step == 1) {
-                a.phoneUi.control(a.phoneUi.data.controls.get("reminders.enabled"));
-                android.widget.Switch alerts =
-                        a.body.findViewWithTag("phone.reminders.enabled.edit");
-                alerts.setText(a.t(a.phoneUi.settings.enabled ? "on" : "off"));
-                if (a.phoneUi.settings.enabled)
+                a.views
+                        .toggle(
+                                a.body,
+                                a.t(
+                                        a.phoneUi
+                                                .data
+                                                .controls
+                                                .get("reminders.enabled")
+                                                .getString("label")),
+                                wantsAlerts(),
+                                value -> {
+                                    if (!PhoneStore.preferences(a)
+                                            .edit()
+                                            .putBoolean("onboarding-alerts", value)
+                                            .commit()) a.notice("phone_save_failed");
+                                    a.render();
+                                })
+                        .setTag("phone.reminders.enabled.edit");
+                if (wantsAlerts())
                     a.body.addView(
                             a.views.text(
                                     a.t("phone_notifications")
                                             + " · "
                                             + a.t(PhoneAlarms.notifications(a) ? "on" : "off")
-                                            + "\n"
+                                            + "  ·  "
                                             + a.t("phone_exact")
                                             + " · "
                                             + a.t(PhoneAlarms.exact(a) ? "on" : "off"),
-                                    14,
+                                    13,
                                     a.muted));
-            } else {
-                a.phoneUi.appearance.preview(a.body, a.phoneUi.settings);
-                a.phoneUi.appearance.carousel(a.body, "appearance.theme", true);
-                a.phoneUi.appearance.carousel(a.body, "appearance.background", true);
-            }
+            } else a.phoneUi.appearance.editor(a.body, true);
         } catch (Exception invalid) {
             a.body.addView(a.views.text(a.t("phone_settings_failed"), 16, a.ink));
         }
@@ -95,43 +100,50 @@ final class PhoneOnboarding {
 
     void footer(LinearLayout shell) {
         int step = step();
-        boolean alerts = step == 1 && a.phoneUi.settings != null && a.phoneUi.settings.enabled;
-        boolean notification = alerts && !PhoneAlarms.notifications(a);
-        boolean exact = alerts && !PhoneAlarms.exact(a);
-        boolean confirm =
-                step == 0 && a.phoneUi.settings != null && !a.phoneUi.settings.locationReady;
         LinearLayout footer = a.views.actionBar(shell);
         footer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-        if (confirm || notification || exact)
+        if (step == 0)
             a.views
                     .secondaryAction(
-                            a.views.secondaryActions(footer),
-                            a.t("setup_skip"),
-                            () -> advance(step + 1))
+                            a.views.secondaryActions(footer), a.t("setup_skip"), () -> advance(1))
                     .setTag("onboarding.skip");
-        String label = "setup_next";
-        if (notification) label = "phone_permission_notifications";
-        else if (exact) label = "phone_permission_exact";
-        else if (confirm) label = "phone_confirm_location";
-        else if (step == 2) label = "setup_finish";
+        boolean alerts = step == 0 && a.phoneUi.settings != null && wantsAlerts();
+        boolean notifications = alerts && !PhoneAlarms.notifications(a);
+        boolean exact = alerts && !PhoneAlarms.exact(a);
+        String label =
+                step == 1
+                        ? "setup_finish"
+                        : a.phoneUi.settings == null || !a.phoneUi.settings.locationReady
+                                ? "phone_confirm_location"
+                                : notifications
+                                        ? "phone_permission_notifications"
+                                        : exact ? "phone_permission_exact" : "setup_next";
         android.widget.Button next =
                 a.views.primaryAction(
                         footer,
                         a.t(label),
                         () -> {
-                            if (notification) a.phoneUi.requestNotifications();
+                            if (step == 1) {
+                                finish(true);
+                                return;
+                            }
+                            boolean confirming = !a.phoneUi.settings.locationReady;
+                            java.util.Map<String, String> values = new java.util.LinkedHashMap<>();
+                            values.put("prayer.location-ready", "true");
+                            values.put("reminders.enabled", Boolean.toString(wantsAlerts()));
+                            if (!a.phoneUi.save(values, false)) return;
+                            if (confirming && (notifications || exact)) return;
+                            if (notifications) a.phoneUi.requestNotifications();
                             else if (exact) a.phoneUi.requestExact();
-                            else if (confirm) {
-                                if (a.phoneUi.save(
-                                        java.util.Collections.singletonMap(
-                                                "prayer.location-ready", "true"),
-                                        false)) advance(1);
-                            } else if (step == 2) finish(true);
-                            else advance(step + 1);
+                            else advance(1);
                         });
         next.setTag("onboarding.next");
         next.setEnabled(a.phoneUi.settings != null && !a.phoneUi.locationUi.locator.running);
-        next.setAlpha(next.isEnabled() ? 1f : .45f);
+    }
+
+    private boolean wantsAlerts() {
+        return PhoneStore.preferences(a)
+                .getBoolean("onboarding-alerts", a.phoneUi.settings.enabled);
     }
 
     private void advance(int next) {
@@ -144,11 +156,14 @@ final class PhoneOnboarding {
     }
 
     private void finish(boolean complete) {
-        if (!PhoneStore.preferences(a)
-                .edit()
-                .putBoolean("onboarding-complete", complete || !needed())
-                .putBoolean("onboarding-seen", true)
-                .commit()) {
+        boolean done = complete || !needed();
+        android.content.SharedPreferences.Editor edit =
+                PhoneStore.preferences(a)
+                        .edit()
+                        .putBoolean("onboarding-complete", done)
+                        .putBoolean("onboarding-seen", true);
+        if (done) edit.remove("onboarding-alerts");
+        if (!edit.commit()) {
             a.notice("phone_save_failed");
             return;
         }

@@ -40,6 +40,7 @@ final class PhoneUi {
     }
 
     void restore(Bundle b) {
+        appearance.restore(b);
         ArrayList<Bundle> saved = b.getParcelableArrayList("phone-history");
         if (saved != null)
             for (Bundle place : saved)
@@ -59,6 +60,7 @@ final class PhoneUi {
     }
 
     void save(Bundle b) {
+        appearance.save(b);
         b.putParcelableArrayList("phone-history", new ArrayList<>(history));
         b.putString("phone-audio-import", sound.audioImport);
         b.putBoolean("phone-location-advanced", locationUi.advancedLocation);
@@ -143,6 +145,7 @@ final class PhoneUi {
     }
 
     void resetNavigation() {
+        appearance.cancel();
         pending = "";
         history.clear();
         locationUi.cancelLocation();
@@ -176,6 +179,7 @@ final class PhoneUi {
             editorFocus(id);
             return true;
         }
+        appearance.cancel();
         if (history.isEmpty()) return false;
         Bundle place = history.remove(history.size() - 1);
         locationUi.cancelLocation();
@@ -202,8 +206,8 @@ final class PhoneUi {
                         .setTag("phone.section." + section);
             a.views.navigationRow(
                     a.body, "gear", a.t("setup_again"), "", () -> a.onboarding.open());
-            a.views.navigationRow(
-                    a.body, "gear", a.t("preferences"), "", () -> a.navigate("preferences"));
+            a.body.addView(a.views.text(a.t("preferences"), 13, a.muted));
+            a.languageChoices(a.body);
             reset(a.body);
             return;
         }
@@ -216,14 +220,18 @@ final class PhoneUi {
             return;
         }
         if (a.section.equals("calculation")) locationUi.locationEditor();
-        if (a.section.equals("appearance")) {
-            appearance.preview(a.body, settings);
-            appearance.carousel(a.body, "appearance.theme", false);
-            appearance.carousel(a.body, "appearance.background", false);
+        PhoneStore saved = settings;
+        try {
+            if (a.section.equals("appearance")) {
+                settings = appearance.candidate(saved);
+                appearance.editor(a.body, false);
+            }
+            for (JSONObject c : data.controls.values())
+                if (c.getString("section").equals(a.section)
+                        && !c.getString("id").startsWith("appearance.")) control(c);
+        } finally {
+            settings = saved;
         }
-        for (JSONObject c : data.controls.values())
-            if (c.getString("section").equals(a.section)
-                    && !c.getString("id").startsWith("appearance.")) control(c);
         if (a.section.equals("calculation")) locationUi.confirmLocation();
     }
 
@@ -423,6 +431,17 @@ final class PhoneUi {
                         });
             return;
         }
+        java.util.List<String> options = data.options(c);
+        if (options.size() <= 5 && !id.endsWith(".voice")) {
+            java.util.List<Choices.Option> choices = new ArrayList<>();
+            for (String option : options)
+                choices.add(new Choices.Option(option, value(id, option)));
+            a.views.choiceRail(
+                    row, "phone." + id + ".choices", choices, saved, choice -> save(id, choice));
+            row.getChildAt(row.getChildCount() - 1)
+                    .setLayoutParams(new LinearLayout.LayoutParams(0, -2, 2));
+            return;
+        }
         summary(
                 row,
                 id,
@@ -601,14 +620,6 @@ final class PhoneUi {
     }
 
     void choose(String id, java.util.List<String> options) {
-        if (id.equals("appearance.theme") || id.equals("appearance.background")) {
-            try {
-                appearance.choose(id, options);
-            } catch (Exception invalid) {
-                a.notice("invalid");
-            }
-            return;
-        }
         try {
             java.util.List<Choices.Option> list = new ArrayList<>();
             for (String v : options) list.add(new Choices.Option(v, value(id, v)));
@@ -640,16 +651,8 @@ final class PhoneUi {
         LinearLayout layout = a.views.column();
         layout.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(8));
         layout.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
-        EditText search = new EditText(a);
-        search.setImeOptions(
-                search.getImeOptions()
-                        | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
-        search.setSingleLine(true);
-        search.setTextColor(a.ink);
-        search.setHintTextColor(a.muted);
-        search.setTypeface(a.regular);
-        search.setHint(a.t("phone_search"));
-        search.setContentDescription(a.t("phone_search"));
+        EditText search = a.views.searchField();
+        search.setTag("phone.choice.search");
         if (options.size() > 8) layout.addView(search);
         ListView list = new ListView(a);
         list.setTag("phone.choice.list");
@@ -679,11 +682,7 @@ final class PhoneUi {
         dialog.setOnDismissListener(ignored -> {
             if (choiceDialog == dialog) choiceDialog = null;
         });
-        search.addTextChangedListener(
-                MainActivity.watcher(text -> {
-                    adapter.getFilter().filter(text);
-                    list.clearChoices();
-                }));
+        a.views.filterChoices(search, list, adapter, () -> selected);
         list.setOnItemClickListener((parent, view, position, item) -> {
             Choices.Option option = adapter.getItem(position);
             dialog.dismiss();
@@ -697,6 +696,12 @@ final class PhoneUi {
     }
 
     void save(String id, String value) {
+        if (a.page.equals("phone-settings")
+                && a.section.equals("appearance")
+                && (id.startsWith("appearance.") || id.startsWith("display."))) {
+            appearance.stage(id, value);
+            return;
+        }
         Map<String, String> changes = new LinkedHashMap<>();
         changes.put(id, value);
         if (id.equals("prayer.zone")) changes.put("prayer.location-ready", "false");

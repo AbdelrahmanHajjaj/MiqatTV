@@ -20,12 +20,12 @@ final class LgSetup {
     private final MainActivity a;
     private volatile LgInstall client;
     private boolean connected;
-    private int connectionStep;
     private String address = "";
     private String version = "", message = "lg_intro";
     private LgPackage selected;
     private boolean preview, local, downloading;
-    private final String channel;
+    private String channel;
+    private String passphrase = "";
     private volatile boolean destroyed;
 
     LgSetup(MainActivity activity) {
@@ -40,19 +40,24 @@ final class LgSetup {
         a = activity;
         this.channel = channel;
         this.local = local;
+        a.tvSetup.channel = channel;
+    }
+
+    void source(String channel, boolean local) {
+        if (this.local != local || !this.channel.equals(channel)) selected = null;
+        this.channel = channel;
+        this.local = local;
     }
 
     void save(android.os.Bundle state) {
         state.putString("lg-selected-version", selected == null ? "" : selected.version);
         state.putBoolean("lg-preview", preview);
         state.putBoolean("lg-local", local);
-        state.putInt("lg-connection-step", Math.min(1, connectionStep));
         state.putString("lg-address", address);
     }
 
     void restore(android.os.Bundle state) {
         local = state.getBoolean("lg-local", local);
-        connectionStep = Math.max(0, Math.min(1, state.getInt("lg-connection-step")));
         address = state.getString("lg-address", "");
         String version = state.getString("lg-selected-version", "");
         if (!version.isEmpty())
@@ -69,32 +74,16 @@ final class LgSetup {
 
     void render(LinearLayout parent) {
         if (!connected) {
-            parent.addView(
-                    a.views.text(a.t(local ? "tv_local" : "tv_channel_" + channel), 13, a.accent));
-            parent.addView(
-                    a.views.heading(a.t(connectionStep == 0 ? "lg_address" : "lg_passphrase")));
-            parent.addView(
-                    a.views.text(
-                            a.t(
-                                    connectionStep == 0
-                                            ? "lg_address_hint_short"
-                                            : "lg_phrase_hint_short"),
-                            15,
-                            a.muted));
-            if (connectionStep == 0) {
-                if (address.isEmpty()) address = a.prefs().getString("lg-host", "");
-                EditText host = field(parent, a.t("lg_address"), address, false);
-                host.setTag("lg.host");
-                host.addTextChangedListener(MainActivity.watcher(value -> address = value));
-            } else {
-                parent.addView(a.views.text(address, 14, a.accent));
-                field(parent, a.t("lg_passphrase"), "", true).setTag("lg.passphrase");
-            }
+            a.tvSetup.lgGuide();
+            if (address.isEmpty()) address = a.prefs().getString("lg-host", "");
+            EditText host = field(parent, a.t("lg_address"), address, false);
+            host.setTag("lg.host");
+            host.addTextChangedListener(MainActivity.watcher(value -> address = value));
+            EditText phrase = field(parent, a.t("lg_passphrase"), passphrase, true);
+            phrase.setTag("lg.passphrase");
+            phrase.addTextChangedListener(MainActivity.watcher(value -> passphrase = value));
             if (!message.equals("lg_intro"))
                 parent.addView(a.views.text(a.t(message), 14, a.accent));
-            a.views
-                    .button(parent, a.t("tv_change_build"), () -> a.navigate("tv-setup"))
-                    .setTag("setup.source.change");
             return;
         }
         LinearLayout connect = parent;
@@ -107,6 +96,7 @@ final class LgSetup {
                     .button(connect, a.t("tv_public_download"), this::download)
                     .setTag("lg.download");
         if (connected) {
+            connect.addView(a.views.text(a.t("lg_expiry"), 13, a.muted));
             connect.addView(
                     a.views.text(
                             version.isEmpty() ? a.t("lg_not_installed") : "Miqat " + version,
@@ -177,41 +167,19 @@ final class LgSetup {
 
     void footer(LinearLayout shell) {
         if (connected || a.networkBusy) return;
-        LinearLayout actions = a.views.actionBar(shell);
         Button next =
                 a.views.primaryAction(
-                        actions,
-                        a.t(connectionStep == 0 ? "setup_next" : "lg_connect"),
-                        () -> {
-                            if (connectionStep == 0) {
-                                try {
-                                    address = LgInstall.host(address.trim());
-                                    connectionStep = 1;
-                                    message = "lg_intro";
-                                } catch (IOException invalid) {
-                                    message = "lg_invalid_host";
-                                }
-                                a.render();
-                            } else {
-                                EditText pass = a.body.findViewWithTag("lg.passphrase");
-                                String phrase = pass.getText().toString();
-                                pass.setText("");
-                                connect(address, phrase);
-                            }
-                        });
-        next.setTag(connectionStep == 0 ? "lg.next" : "lg.connect");
+                        a.views.actionBar(shell),
+                        a.t("lg_connect"),
+                        () -> connect(address.trim(), passphrase));
+        next.setTag("lg.connect");
         next.setEnabled(!local || selected != null);
         next.setAlpha(next.isEnabled() ? 1f : .45f);
     }
 
     void back() {
-        if (!connected && connectionStep > 0) {
-            connectionStep--;
-            a.render();
-        } else {
-            close();
-            a.navigate("tv-setup");
-        }
+        close();
+        a.tvSetup.back();
     }
 
     private EditText field(LinearLayout parent, String label, String value, boolean secret) {
@@ -246,6 +214,9 @@ final class LgSetup {
             a.render();
             return;
         }
+        passphrase = "";
+        EditText input = a.body.findViewWithTag("lg.passphrase");
+        if (input != null) input.setText("");
         a.prefs().edit().putString("lg-host", host).apply();
         String pinned = a.prefs().getString("lg-key-" + host, "");
         close();
@@ -422,6 +393,7 @@ final class LgSetup {
     }
 
     void close() {
+        passphrase = "";
         destroyed = true;
         if (connected) message = a.networkBusy ? "lg_failed" : "lg_reconnect";
         connected = false;

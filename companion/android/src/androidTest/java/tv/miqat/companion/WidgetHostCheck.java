@@ -101,16 +101,16 @@ final class WidgetHostCheck {
                     test,
                     () -> {
                         config.body.findViewWithTag("widget.layout.next").performClick();
-                        config.body.findViewWithTag("widget.size").performClick();
+                        config.body.findViewWithTag("widget.size.120").performClick();
                         ((SeekBar) config.body.findViewWithTag("widget.opacity")).setProgress(42);
                         PhoneUiCheck.check(((ImageView) config.body.findViewById(R.id.widget_backdrop)).getImageAlpha() == 107
                                         && config.body.findViewById(R.id.widget_root).getAlpha() == 1f,
                                 "Opacity must affect only the widget background");
                         config.body.findViewWithTag("widget.widget_hijri").performClick();
-                        config.body.findViewWithTag("widget.shape").performClick();
-                        config.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.choice.list").performItemClick(null, 1, 1);
-                        config.body.findViewWithTag("widget.background").performClick();
-                        config.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.choice.list").performItemClick(null, 0, 0);
+                        config.body.findViewWithTag("widget.style.shape").performClick();
+                        config.body.findViewWithTag("widget.shape.soft").performClick();
+                        config.body.findViewWithTag("widget.style.appearance.background").performClick();
+                        config.body.findViewWithTag("phone.appearance.background.option.app").performClick();
                         config.getWindow().getDecorView().findViewWithTag("widget.apply").performClick();
                     });
             LiveUiCheck.untilUi(test, config::isDestroyed);

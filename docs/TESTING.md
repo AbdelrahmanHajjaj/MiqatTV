@@ -210,3 +210,18 @@ The native LAN suite accepts an older TV's retired voice baseline without a
 write, rejects an unknown choice and verifies the retired option is hidden in
 the actual native selector. This is compatible read behavior, not a migration
 command sent to a TV. Physical launcher/OEM/TV acceptance remains separate.
+
+
+Pass-7 phone journeys exercise two-page first use, a single direct appearance
+preview with Apply/Cancel (including display drafts), compact visual widget
+choices and new-widget Add versus existing-widget Apply. Numbered TV preparation,
+release choices and LG address/passphrase share one page; invalid addresses must
+preserve session-only input without networking. Voice search tests selection
+from filtered results as well as unchanged Cancel/Apply behavior.
+
+Widget picker XML layouts are the source for static fallback images. When changing
+those layouts/styles, run the owned-emulator phone journey with `-e capture true`.
+It renders `en-picker-{day,next,strip}.png` and Arabic counterparts under the app’s
+external files directory. Inspect them, then copy English images to native
+`res/drawable-nodpi/widget_preview_*.png` and Arabic to `res/drawable-ar-nodpi/`.
+These images are native renders, not separately authored preview designs.

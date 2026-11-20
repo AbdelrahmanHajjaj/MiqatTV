@@ -24,10 +24,17 @@ final class PhoneSound {
         LinearLayout layout = a.views.column();
         layout.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(8));
         layout.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+        EditText search = a.views.searchField();
+        search.setTag("phone.voice.search");
+        layout.addView(search);
+        layout.setFocusableInTouchMode(true);
+        layout.requestFocus();
         ListView list = new ListView(a);
         list.setTag("phone.voice.list");
         list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        list.setAdapter(a.views.choices(options));
+        ArrayAdapter<Choices.Option> adapter = a.views.choices(options);
+        list.setAdapter(adapter);
+        a.views.filterChoices(search, list, adapter, () -> candidate[0]);
         int selected = 0;
         for (int i = 0; i < options.size(); i++)
             if (options.get(i).value.equals(candidate[0])) selected = i;
@@ -41,8 +48,7 @@ final class PhoneSound {
                                 a.views.dp(300),
                                 a.getResources().getDisplayMetrics().heightPixels / 3)));
         LinearLayout actions = a.views.horizontal(layout);
-        Button play =
-                a.views.button(actions, a.t("phone_listen"), () -> preview(id, candidate[0]));
+        Button play = a.views.button(actions, a.t("phone_listen"), () -> preview(id, candidate[0]));
         a.views.flex(play);
         play.setTag("phone.voice.preview");
         play.setContentDescription(a.t("phone_preview"));
@@ -80,7 +86,7 @@ final class PhoneSound {
                 };
         list.setOnItemClickListener((parent, view, position, row) -> {
             PhonePlayback.stopPreview(a);
-            candidate[0] = options.get(position).value;
+            candidate[0] = adapter.getItem(position).value;
             list.setItemChecked(position, true);
             update.run();
         });

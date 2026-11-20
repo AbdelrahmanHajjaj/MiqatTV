@@ -41,14 +41,14 @@ final class PhoneUiCheck {
                     a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("37");a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Off-step number accepted");
                     a.phoneUi.open("fajr");check(!a.body.findViewWithTag("phone.call.fajr.volume.edit").isEnabled(),"Inherited audio must not expose an active override");
                     a.body.findViewWithTag("phone.call.fajr.default-audio.edit").performClick();a.body.findViewWithTag("phone.call.fajr.volume.edit").performClick();((EditText)a.body.findViewWithTag("phone.call.fajr.volume.input")).setText("١٥");a.getWindow().getDecorView().findViewWithTag("phone.call.fajr.volume.save").performClick();check(a.phoneUi.settings.audioVolume(0)==15&&a.phoneUi.settings.volume==35,"Per-prayer audio changed default level");a.phoneUi.save("call.fajr.default-audio","true");
-                    a.body.findViewWithTag("phone.call.fajr.mode.edit").performClick();
-                    check(a.phoneUi.choiceDialog!=null,"Per-prayer choice sheet missing");
-                    ListView modes=a.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.choice.list");check(modes.getCheckedItemPosition()==(a.phoneUi.settings.modes[0]),"Choice sheet must show saved mode");modes.performItemClick(null,1,1);check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
+                    String mode=a.phoneUi.settings.value("call.fajr.mode");
+                    check(a.body.findViewWithTag("phone.call.fajr.mode.choices."+mode).isSelected(),"Inline mode choice must show saved value");
+                    a.body.findViewWithTag("phone.call.fajr.mode.choices.notification").performClick();check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
                     a.phoneUi.open("calculation");a.phoneUi.save("prayer.zone","Asia/Tokyo");check(!a.phoneUi.settings.locationReady,"Changed timezone must need confirmation");
                     a.phoneUi.save("prayer.zone","system");a.getWindow().getDecorView().findViewWithTag("phone.location.confirm").performClick();
-                    a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
+                    a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");a.getWindow().getDecorView().findViewWithTag("appearance.apply").performClick();check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
                     for(JSONObject c:a.phoneUi.data.controls.values()){
-                        a.phoneUi.open(c.optString("section"));check(a.body.findViewWithTag("phone."+c.optString("id"))!=null,"Missing phone control "+c.optString("id"));
+                        a.phoneUi.open(c.optString("section"));if(c.optString("id").startsWith("appearance."))a.body.findViewWithTag("appearance.tab."+c.optString("id")).performClick();check(a.body.findViewWithTag("phone."+c.optString("id"))!=null,"Missing phone control "+c.optString("id"));
                     }
                     a.tab("prayers");
                     try {
@@ -80,14 +80,22 @@ final class PhoneUiCheck {
                 java.util.List<String> voices = a.phoneUi.data.options(a.phoneUi.data.controls.get("reminders.voice"));
                 int candidateIndex = savedVoice.equals(voices.get(0)) ? 1 : 0;
                 String candidateVoice = voices.get(candidateIndex);
+                String candidateLabel = a.phoneUi.value("reminders.voice",candidateVoice);
                 on(test,()->{
                     a.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.voice.list")
                             .performItemClick(null,candidateIndex,candidateIndex);
                     check(a.phoneUi.settings.value("reminders.voice").equals(savedVoice),"Audition selection changed the saved voice");
                     a.phoneUi.choiceDialog.getButton(-2).performClick();
                     a.body.findViewWithTag("phone.reminders.voice.edit").performClick();
+                    ((EditText)a.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.voice.search"))
+                            .setText(candidateLabel);
+                });
+                LiveUiCheck.untilUi(test,()->a.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.voice.list").getCount()==1);
+                on(test,()->{
+                    check(!a.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.voice.list").isItemChecked(0),
+                            "Filtering must not select a different voice automatically");
                     a.phoneUi.choiceDialog.getWindow().getDecorView().<ListView>findViewWithTag("phone.voice.list")
-                            .performItemClick(null,candidateIndex,candidateIndex);
+                            .performItemClick(null,0,0);
                     a.phoneUi.choiceDialog.getButton(-1).performClick();
                 });
                 LiveUiCheck.untilUi(test,()->a.phoneUi.choiceDialog == null && a.phoneUi.settings.value("reminders.voice").equals(candidateVoice));

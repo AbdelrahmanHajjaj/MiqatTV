@@ -184,9 +184,8 @@ final class PhoneLocationUi {
 
     void confirmLocation() {
         a.body.addView(a.views.text(ui.settings.zone().getID(), 14, a.muted));
-        if (a.page.equals("onboarding")
-                || ui.settings.locationReady
-                || a.actionHost.getChildCount() > 0) return;
+        if (a.page.equals("onboarding")) return;
+        if (ui.settings.locationReady || a.actionHost.getChildCount() > 0) return;
         a.views
                 .primaryAction(
                         a.views.actionBar(a.actionHost),

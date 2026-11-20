@@ -329,6 +329,96 @@ final class CompanionViews {
         return row;
     }
 
+    void filterChoices(
+            EditText search,
+            ListView list,
+            ArrayAdapter<Choices.Option> adapter,
+            java.util.function.Supplier<String> selected) {
+        search.addTextChangedListener(
+                MainActivity.watcher(text ->
+                        adapter.getFilter()
+                                .filter(
+                                        text,
+                                        count -> {
+                                            list.clearChoices();
+                                            for (int i = 0; i < adapter.getCount(); i++)
+                                                if (adapter.getItem(i).value.equals(selected.get()))
+                                                    list.setItemChecked(i, true);
+                                        })));
+    }
+
+    EditText searchField() {
+        EditText search = new EditText(a);
+        search.setImeOptions(
+                search.getImeOptions()
+                        | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+        search.setSingleLine(true);
+        search.setTextColor(a.ink);
+        search.setHintTextColor(a.muted);
+        search.setTypeface(a.regular);
+        search.setHint(a.t("phone_search"));
+        search.setContentDescription(a.t("phone_search"));
+        return search;
+    }
+
+    void numberedSteps(LinearLayout parent, String instructions, String tag) {
+        int number = 0;
+        for (String instruction : instructions.split("\n")) {
+            LinearLayout row = horizontal(parent);
+            row.setGravity(Gravity.TOP);
+            row.setPadding(0, dp(6), 0, dp(6));
+            TextView marker = text(a.phoneUi.digits(Integer.toString(++number)), 14, a.accent);
+            row.addView(marker, new LinearLayout.LayoutParams(dp(30), -2));
+            TextView detail = text(instruction.replaceFirst("^[0-9٠-٩]+[.、]?\\s*", ""), 14, a.ink);
+            row.addView(detail, new LinearLayout.LayoutParams(0, -2, 1));
+            row.setTag(tag + "." + number);
+        }
+    }
+
+    void choiceRail(
+            LinearLayout parent,
+            String tag,
+            java.util.List<Choices.Option> choices,
+            String selected,
+            java.util.function.Consumer<String> changed) {
+        HorizontalScrollView scroll = new HorizontalScrollView(a);
+        scroll.setHorizontalScrollBarEnabled(false);
+        scroll.setTag(tag);
+        LinearLayout track = new LinearLayout(a);
+        scroll.addView(track);
+        parent.addView(scroll, new LinearLayout.LayoutParams(-1, -2));
+        for (Choices.Option option : choices) {
+            Button button = button(track, option.toString(), () -> changed.accept(option.value));
+            button.setTag(tag + "." + option.value);
+            button.setTextSize(13);
+            button.setMaxLines(2);
+            button.setMinWidth(dp(72));
+            button.setMaxWidth(dp(200));
+            button.setPadding(dp(14), dp(8), dp(14), dp(8));
+            boolean active = option.value.equals(selected);
+            button.setSelected(active);
+            button.setTextColor(active ? a.ground : a.ink);
+            button.setBackground(
+                    new RippleDrawable(
+                            ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000),
+                            background(active ? a.accent : a.surface, 20),
+                            null));
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-2, -2);
+            size.setMarginEnd(dp(6));
+            size.topMargin = dp(4);
+            size.bottomMargin = dp(8);
+            button.setLayoutParams(size);
+            if (active)
+                scroll.post(() ->
+                        scroll.scrollTo(
+                                Math.max(
+                                        0,
+                                        button.getLeft()
+                                                - (scroll.getWidth() - button.getWidth()) / 2),
+                                0));
+        }
+    }
+
     String sectionIcon(String id) {
         switch (id) {
             case "prayer":

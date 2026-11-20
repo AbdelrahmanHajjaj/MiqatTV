@@ -11,7 +11,7 @@ final class TvSetup {
     private final MainActivity a;
     private String platform = "";
     String channel = "latest";
-    private int step, preparation;
+    private int step;
     private boolean local;
 
     TvSetup(MainActivity activity) {
@@ -21,9 +21,8 @@ final class TvSetup {
     void restore(Bundle state) {
         platform = state.getString("setup-platform", "");
         channel = state.getString("setup-channel", "latest");
-        step = state.getInt("setup-step");
+        step = Math.min(1, state.getInt("setup-step"));
         local = state.getBoolean("setup-local");
-        preparation = Math.max(0, state.getInt("setup-preparation", 0));
     }
 
     void save(Bundle state) {
@@ -31,12 +30,10 @@ final class TvSetup {
         state.putString("setup-channel", channel);
         state.putInt("setup-step", step);
         state.putBoolean("setup-local", local);
-        state.putInt("setup-preparation", preparation);
     }
 
     void open() {
         step = 0;
-        preparation = 0;
         platform = "";
         channel = "latest";
         local = false;
@@ -44,13 +41,11 @@ final class TvSetup {
     }
 
     void back() {
+        if (a.lgSetup != null) a.lgSetup.close();
         if (step == 0) a.navigate("tvs");
-        else if (step == 1 && preparation > 0) {
-            preparation--;
-            a.render();
-        } else {
-            step--;
-            a.render();
+        else {
+            step = 0;
+            a.navigate("tv-setup");
         }
     }
 
@@ -63,18 +58,7 @@ final class TvSetup {
             platforms();
             return;
         }
-        a.body.addView(
-                a.views.text(
-                        (platform.equals("android") ? "Android / Google TV" : "LG webOS")
-                                + " · "
-                                + (step + 1)
-                                + " / 3",
-                        13,
-                        a.accent));
-        if (step == 1) {
-            guide();
-            return;
-        }
+        guide();
         source();
     }
 
@@ -95,10 +79,16 @@ final class TvSetup {
                                     a.info(a.t("coming_soon"), a.catalog.label(item, a.ar));
                                     return;
                                 }
+                                if (!platform.equals(id)) {
+                                    channel = "latest";
+                                    local = false;
+                                }
                                 platform = id;
-                                preparation = 0;
                                 step = 1;
-                                a.render();
+                                if (id.equals("lg")) {
+                                    a.lgSetup = new LgSetup(a, channel, local);
+                                    a.navigate("lg-setup");
+                                } else a.render();
                             });
             row.setTag("setup.platform." + id);
             row.setContentDescription(
@@ -106,57 +96,36 @@ final class TvSetup {
         }
     }
 
-    private String[] instructions() {
-        return a.t(platform.equals("android") ? "tv_android_steps" : "tv_lg_steps").split("\n");
+    void lgGuide() {
+        platform = "lg";
+        step = 1;
+        guide();
+        source();
     }
 
     private void guide() {
-        String[] instructions = instructions();
-        preparation = Math.min(preparation, instructions.length - 1);
-        a.body.addView(a.views.text((preparation + 1) + " / " + instructions.length, 13, a.accent));
-        a.body.addView(
-                a.views.text(
-                        instructions[preparation].replaceFirst("^[0-9٠-٩]+[.、]?\\s*", ""),
-                        20,
-                        a.ink));
-        if (platform.equals("lg") && preparation == 2)
-            a.views.button(
-                    a.body, a.t("phone_advanced"), () -> a.info(a.t("tv_guide"), a.t("lg_expiry")));
         a.views.button(a.body, a.t("tv_already"), () -> a.navigate("pair")).setTag("setup.pair");
+        a.views.numberedSteps(
+                a.body,
+                a.t(platform.equals("android") ? "tv_android_steps" : "tv_lg_steps"),
+                "setup.instruction");
     }
 
     void footer(LinearLayout shell) {
-        if (step == 0 || step == 2 && local) return;
-        LinearLayout footer = a.views.actionBar(shell);
-        if (step == 1) {
-            a.views
-                    .secondaryAction(
-                            a.views.secondaryActions(footer),
-                            a.t("setup_skip"),
-                            () -> {
-                                step = 2;
-                                a.render();
-                            })
-                    .setTag("setup.skip");
-            a.views
-                    .primaryAction(
-                            footer,
-                            a.t("setup_next"),
-                            () -> {
-                                if (++preparation >= instructions().length) step = 2;
-                                a.render();
-                            })
-                    .setTag("setup.ready");
-        } else if (!local) {
-            a.views
-                    .primaryAction(footer, a.t("tv_continue"), this::proceed)
-                    .setTag("setup.continue");
-        }
+        if (step == 0 || local) return;
+        a.views
+                .primaryAction(a.views.actionBar(shell), a.t("tv_continue"), this::proceed)
+                .setTag("setup.continue");
+    }
+
+    private void updateSource() {
+        if (platform.equals("lg") && a.lgSetup != null) a.lgSetup.source(channel, local);
+        a.render();
     }
 
     private void source() {
         LinearLayout heading = a.views.horizontal(a.body);
-        TextView title = a.views.heading(a.t("tv_source"));
+        TextView title = a.views.text(a.t("tv_source"), 14, a.muted);
         heading.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
         a.views
                 .iconButton(
@@ -165,7 +134,7 @@ final class TvSetup {
                         a.t("phone_advanced"),
                         () -> {
                             local = !local;
-                            a.render();
+                            updateSource();
                         })
                 .setTag("setup.advanced");
         if (local) {
@@ -180,26 +149,22 @@ final class TvSetup {
                     a.t("tv_public"),
                     () -> {
                         local = false;
-                        a.render();
+                        updateSource();
                     });
             return;
         }
-        for (String id : new String[] {"latest", "stable", "preview"}) {
-            Button choice =
-                    a.views.button(
-                            a.body,
-                            a.t("tv_channel_" + id),
-                            () -> {
-                                channel = id;
-                                a.render();
-                            });
-            choice.setSelected(channel.equals(id));
-            choice.setTag("setup.channel." + id);
-            if (choice.isSelected()) {
-                choice.setTextColor(a.ground);
-                choice.setBackground(a.views.background(a.accent, 24));
-            }
-        }
+        java.util.List<Choices.Option> channels = new java.util.ArrayList<>();
+        for (String id : new String[] {"latest", "stable", "preview"})
+            channels.add(new Choices.Option(id, a.t("tv_channel_" + id)));
+        a.views.choiceRail(
+                a.body,
+                "setup.channel",
+                channels,
+                channel,
+                selected -> {
+                    channel = selected;
+                    updateSource();
+                });
     }
 
     private void proceed() {
@@ -223,8 +188,8 @@ final class TvSetup {
                             .putExtra("prepared", true),
                     72);
         else {
-            a.lgSetup = new LgSetup(a, channel, local);
-            a.navigate("lg-setup");
+            if (a.lgSetup == null) a.lgSetup = new LgSetup(a, channel, local);
+            a.lgSetup.source(channel, local);
             a.startActivityForResult(
                     new Intent(Intent.ACTION_OPEN_DOCUMENT)
                             .setType("*/*")

@@ -1,5 +1,31 @@
 # Validation evidence
 
+## Phone interaction refinement — 20 November 2026
+
+Review APK **0.4.6/code 15**, `state/builds/companion/Miqat-latest.apk`,
+34,588,278 bytes; SHA-256:
+`C8D575C784841FD9E02C1668C25C4A6F7BFC8348B400F5B8754D68F0081FDD4E`.
+Prior signing identity retained. All 25 recordings and 25 packaged notices match
+canonical bytes; exact portrait signature and six widget-picker PNGs retained.
+
+Build/test APK/lint pass (0 errors, 42 existing warnings); generator 8/8,
+canonical catalogs and shared validation pass. Owned API34 emulator passes:
+two-page bilingual first use and completion; staged alert/location confirmation;
+one live appearance preview, full-page Apply/Cancel; filtered voice selection;
+independent native hosted widgets, opacity/shape/Hijri/cancel/resize; combined
+numbered Android/LG preparation, release/local sources and invalid LG host with
+private input retained in memory. New-widget Add uses Android's invalid-ID
+constant; manual action shows the correct Widgets fallback on this launcher,
+which does not support pin requests. Actual launcher pin confirmation remains
+unverified. No physical TV connection or deployment performed.
+
+80–150% app sizing passes in portrait and landscape with Android text at 1.3.
+Representative native English/Arabic normal and enlarged renders inspected;
+normal review screenshots exported under `state/builds/companion/screenshots/`.
+Logs/captures remain in ignored `state/ux7-*`. Final delivery journey ran against
+the exact exported APK. Playback policy/core/TV rendering unchanged in this pass;
+final-head CI and actual OEM/TV acceptance remain distinct evidence on PR #9.
+
 ## Portrait first use and widget customization — 19 November 2026
 
 Review APK **0.4.5/code 14**, `state/builds/companion/Miqat-latest.apk`,

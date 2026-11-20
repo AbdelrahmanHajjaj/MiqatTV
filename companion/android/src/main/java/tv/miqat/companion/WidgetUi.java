@@ -14,6 +14,7 @@ final class WidgetUi {
     private WidgetOptions draft;
     private int id = AppWidgetManager.INVALID_APPWIDGET_ID;
     private boolean configuring;
+    private String style = "appearance.theme";
 
     WidgetUi(MainActivity activity) {
         a = activity;
@@ -48,13 +49,16 @@ final class WidgetUi {
     void save(Bundle state) {
         if (draft != null) state.putString("widget-draft", draft.encode());
         state.putInt("widget-edit-id", id);
+        state.putString("widget-style-tab", style);
     }
 
     void restore(Bundle state) {
+        style = state.getString("widget-style-tab", "appearance.theme");
         if (state.containsKey("widget-draft"))
             draft = WidgetOptions.from(a, state.getString("widget-draft"));
-        int saved = state.getInt("widget-edit-id", -1);
-        if (saved == -1 || PrayerWidget.owns(a, saved)) id = saved;
+        int saved = state.getInt("widget-edit-id", AppWidgetManager.INVALID_APPWIDGET_ID);
+        if (saved == AppWidgetManager.INVALID_APPWIDGET_ID || PrayerWidget.owns(a, saved))
+            id = saved;
     }
 
     void render() {
@@ -62,48 +66,53 @@ final class WidgetUi {
         layouts();
         android.view.View preview = preview();
         appearance(preview);
-        toggle(
-                "widget_date",
-                draft.date,
-                () -> {
-                    draft.date = !draft.date;
+        LinearLayout dates = a.views.horizontal(a.body);
+        for (String key : new String[] {"widget_date", "widget_hijri"}) {
+            Switch date =
+                    a.views.toggle(
+                            dates,
+                            a.t(key),
+                            key.equals("widget_date") ? draft.date : draft.hijri,
+                            checked -> {
+                                if (key.equals("widget_date")) draft.date = checked;
+                                else draft.hijri = checked;
+                                a.render();
+                            });
+            date.setTag("widget." + key);
+            date.setTextSize(13);
+            a.views.flex(date);
+        }
+        a.body.addView(a.views.text(a.t("widget_text_size"), 13, a.muted));
+        a.views.choiceRail(
+                a.body,
+                "widget.size",
+                Arrays.asList(
+                        new Choices.Option("100", a.phoneUi.digits("100%")),
+                        new Choices.Option("120", a.phoneUi.digits("120%"))),
+                Integer.toString(draft.size),
+                value -> {
+                    draft.size = Integer.parseInt(value);
                     a.render();
                 });
-        toggle(
-                "widget_hijri",
-                draft.hijri,
-                () -> {
-                    draft.hijri = !draft.hijri;
-                    a.render();
-                });
-        choice(
-                        "widget_text_size",
-                        a.phoneUi.digits(draft.size + "%"),
-                        () -> {
-                            draft.size = draft.size == 100 ? 120 : 100;
-                            a.render();
-                        })
-                .setTag("widget.size");
         if (!configuring) placed();
     }
 
     private void layouts() {
-        LinearLayout variants = a.views.horizontal(a.body);
-        for (String layout : WidgetOptions.LAYOUTS) {
-            Button button =
-                    a.views.button(
-                            variants,
-                            a.t("widget_" + (layout.equals("strip") ? "compact" : layout)),
-                            () -> {
-                                draft.layout = layout;
-                                a.render();
-                            });
-            a.views.flex(button);
-            button.setTextSize(12);
-            button.setSelected(draft.layout.equals(layout));
-            button.setAlpha(button.isSelected() ? 1f : .5f);
-            button.setTag("widget.layout." + layout);
-        }
+        List<Choices.Option> layouts = new ArrayList<>();
+        for (String layout : WidgetOptions.LAYOUTS)
+            layouts.add(
+                    new Choices.Option(
+                            layout,
+                            a.t("widget_" + (layout.equals("strip") ? "compact" : layout))));
+        a.views.choiceRail(
+                a.body,
+                "widget.layout",
+                layouts,
+                draft.layout,
+                selected -> {
+                    draft.layout = selected;
+                    a.render();
+                });
     }
 
     private int width() {
@@ -137,24 +146,46 @@ final class WidgetUi {
     }
 
     private void appearance(android.view.View preview) {
-        String themeLabel = a.t("widget_match_app"), backgroundLabel = a.t("widget_color");
+        a.views.choiceRail(
+                a.body,
+                "widget.style",
+                Arrays.asList(
+                        new Choices.Option("appearance.theme", a.t("widget_theme")),
+                        new Choices.Option("appearance.background", a.t("widget_background")),
+                        new Choices.Option("shape", a.t("widget_shape"))),
+                style,
+                selected -> {
+                    style = selected;
+                    a.render();
+                });
         try {
-            if (!draft.theme.equals("app"))
-                themeLabel = a.phoneUi.value("appearance.theme", draft.theme);
-            backgroundLabel =
-                    draft.scene.equals("app")
-                            ? a.t("widget_app_background")
-                            : draft.scene.equals("plain")
-                                    ? a.t("widget_color")
-                                    : a.phoneUi.value("appearance.background", draft.scene);
+            if (style.equals("shape")) {
+                List<Choices.Option> shapes = new ArrayList<>();
+                for (String shape : WidgetOptions.SHAPES)
+                    shapes.add(new Choices.Option(shape, a.t("widget_shape_" + shape)));
+                a.views.choiceRail(
+                        a.body,
+                        "widget.shape",
+                        shapes,
+                        draft.shape,
+                        value -> {
+                            draft.shape = value;
+                            a.render();
+                        });
+            } else
+                a.phoneUi.appearance.rail(
+                        a.body,
+                        style,
+                        style.equals("appearance.theme") ? draft.theme : draft.scene,
+                        true,
+                        selected -> {
+                            if (style.equals("appearance.theme")) draft.theme = selected;
+                            else draft.scene = selected;
+                            a.render();
+                        });
         } catch (Exception unavailable) {
             a.notice("phone_settings_failed");
         }
-        choice("widget_theme", themeLabel, this::chooseTheme).setTag("widget.theme");
-        choice("widget_background", backgroundLabel, this::chooseBackground)
-                .setTag("widget.background");
-        choice("widget_shape", a.t("widget_shape_" + draft.shape), this::chooseShape)
-                .setTag("widget.shape");
         opacity(preview);
     }
 
@@ -197,80 +228,6 @@ final class WidgetUi {
                 });
     }
 
-    private Button choice(String labelKey, String value, Runnable edit) {
-        LinearLayout row = a.views.horizontal(a.body);
-        row.setPadding(0, a.views.dp(3), 0, a.views.dp(3));
-        TextView label = a.views.text(a.t(labelKey), 14, a.ink);
-        row.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
-        Button button = a.views.button(row, value + " ⌄", edit);
-        a.views.flex(button);
-        button.setTextSize(14);
-        button.setMaxLines(2);
-        button.setId(android.view.View.generateViewId());
-        label.setLabelFor(button.getId());
-        button.setContentDescription(a.t(labelKey) + ", " + value);
-        return button;
-    }
-
-    private void chooseShape() {
-        List<Choices.Option> choices = new ArrayList<>();
-        for (String shape : WidgetOptions.SHAPES)
-            choices.add(new Choices.Option(shape, a.t("widget_shape_" + shape)));
-        a.phoneUi.picker(
-                a.t("widget_shape"),
-                choices,
-                draft.shape,
-                value -> {
-                    draft.shape = value;
-                    a.render();
-                });
-    }
-
-    private void chooseTheme() {
-        try {
-            List<Choices.Option> choices = new ArrayList<>();
-            choices.add(new Choices.Option("app", a.t("widget_match_app")));
-            for (String theme :
-                    a.phoneUi.data.options(a.phoneUi.data.controls.get("appearance.theme")))
-                choices.add(new Choices.Option(theme, a.phoneUi.value("appearance.theme", theme)));
-            a.phoneUi.picker(
-                    a.t("widget_theme"),
-                    choices,
-                    draft.theme,
-                    value -> {
-                        draft.theme = value;
-                        a.render();
-                    });
-        } catch (Exception invalid) {
-            a.notice("invalid");
-        }
-    }
-
-    private void chooseBackground() {
-        try {
-            List<Choices.Option> choices = new ArrayList<>();
-            choices.add(new Choices.Option("app", a.t("widget_app_background")));
-            for (String scene :
-                    a.phoneUi.data.options(a.phoneUi.data.controls.get("appearance.background")))
-                choices.add(
-                        new Choices.Option(
-                                scene,
-                                scene.equals("plain")
-                                        ? a.t("widget_color")
-                                        : a.phoneUi.value("appearance.background", scene)));
-            a.phoneUi.picker(
-                    a.t("widget_background"),
-                    choices,
-                    draft.scene,
-                    value -> {
-                        draft.scene = value;
-                        a.render();
-                    });
-        } catch (Exception invalid) {
-            a.notice("invalid");
-        }
-    }
-
     private void placed() {
         int[] ids = PrayerWidget.ids(a);
         if (ids.length == 0) return;
@@ -306,18 +263,15 @@ final class WidgetUi {
                         })
                 .setTag("widget.cancel");
         a.views
-                .primaryAction(actions, a.t(id == -1 ? "widget_add" : "apply"), this::apply)
+                .primaryAction(
+                        actions,
+                        a.t(id == AppWidgetManager.INVALID_APPWIDGET_ID ? "widget_add" : "apply"),
+                        this::apply)
                 .setTag("widget.apply");
     }
 
-    private void toggle(String label, boolean checked, Runnable changed) {
-        a.views
-                .toggle(a.body, a.t(label), checked, value -> changed.run())
-                .setTag("widget." + label);
-    }
-
     private void apply() {
-        if (id != -1) {
+        if (id != AppWidgetManager.INVALID_APPWIDGET_ID) {
             if (!PrayerWidget.owns(a, id) || !draft.save(a, id)) {
                 a.notice("phone_save_failed");
                 return;

@@ -231,38 +231,20 @@ public final class CompanionCheck extends Instrumentation {
                             .performClick();
                     check(activity.page.equals("tv-setup"), "Unified setup entry");
                     activity.body.findViewWithTag("setup.platform.lg").performClick();
-                    activity.getWindow()
-                            .getDecorView()
-                            .findViewWithTag("setup.skip")
-                            .performClick();
-                    activity.getWindow()
-                            .getDecorView()
-                            .findViewWithTag("setup.continue")
-                            .performClick();
                     check(activity.page.equals("lg-setup"), "LG setup entry");
-                    check(
-                            activity.body.findViewWithTag("setup.source.change") != null
-                                    && activity.body.findViewWithTag("lg.choose") == null,
-                            "LG connection must use the selected source; local files belong on the"
-                                    + " common source page");
-                    check(
-                            activity.body.findViewWithTag("lg.passphrase") == null,
-                            "LG address and passphrase must be separate steps");
+                    check(activity.body.findViewWithTag("setup.instruction.5") != null
+                                    && activity.body.findViewWithTag("setup.channel.latest") != null,
+                            "LG guide and selected release must share the connection page");
                     EditText address = activity.body.findViewWithTag("lg.host");
-                    address.setText("127.0.0.1");
-                    activity.getWindow().getDecorView().findViewWithTag("lg.next").performClick();
-                    check(
-                            !activity.networkBusy
-                                    && activity.body.findViewWithTag("lg.host") != null,
-                            "Invalid LG address must be rejected before networking");
-                    ((EditText) activity.body.findViewWithTag("lg.host")).setText("192.168.1.20");
-                    activity.getWindow().getDecorView().findViewWithTag("lg.next").performClick();
                     EditText phrase = activity.body.findViewWithTag("lg.passphrase");
-                    check(
-                            phrase != null
-                                    && !phrase.isSaveEnabled()
-                                    && activity.body.findViewWithTag("lg.host") == null,
-                            "LG passphrase must be private and on its own step");
+                    check(phrase != null && !phrase.isSaveEnabled(), "LG passphrase must remain private");
+                    address.setText("127.0.0.1");
+                    phrase.setText("fixture-private");
+                    activity.getWindow().getDecorView().findViewWithTag("lg.connect").performClick();
+                    check(!activity.networkBusy && activity.body.findViewWithTag("lg.host") != null,
+                            "Invalid LG address must be rejected before networking");
+                    check(((EditText) activity.body.findViewWithTag("lg.passphrase")).getText().toString().equals("fixture-private"),
+                            "Correcting an invalid host must preserve the session-only passphrase");
                 });
                 waitForIdleSync();
                 capture(activity, lang + "-lg-setup.png");

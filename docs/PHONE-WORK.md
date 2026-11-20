@@ -1,9 +1,26 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-19. Branch feature/companion-installation, draft PR #9.
-Approved requirements: PHONE-PASS6.md, PHONE-PASS5.md and preceding phone passes.
+Updated: 2026-11-20. Branch feature/companion-installation, draft PR #9.
+Approved requirements: PHONE-PASS7.md, PHONE-PASS6.md and preceding phone passes.
 
-## Active candidate — 0.4.5/code 14
+## Active candidate — 0.4.6/code 15
+
+Owner rejected the prior interaction structure. PHONE-PASS7.md now owns scope.
+Baseline native renders captured on 20 November: first use has large empty areas;
+widget controls bury content below stacked selectors; LG preparation advances
+one numbered instruction at a time. Implementation now combines location/alerts,
+uses two first-use pages, direct app/widget visual rails with one live preview,
+and numbered TV preparation plus relevant source/credentials on one page.
+Short phone choices reuse compact rails; long choices retain search. Existing
+feature regressions pass for bilingual setup/widgets/TV, appearance drafts,
+filtered voices and native bindings. Enlarged-text portrait and landscape pass;
+normal and enlarged native renders inspected. Widget Add reaches the correct
+manual-add fallback on the owned emulator launcher (pin unsupported). Review
+caught the old new-widget ID mismatch; the fix uses the OS invalid-ID constant.
+0.4.6 exported and byte-verified; receipt in EVIDENCE.md. Final-head CI is tracked
+on draft PR #9. No merge/release/deployment; stop for owner review.
+
+## Previous candidate — 0.4.5/code 14
 
 Latest owner scope is PHONE-PASS6.md, now implemented: dedicated phone-only
 portrait signature artwork; three-page first use with contextual alert access

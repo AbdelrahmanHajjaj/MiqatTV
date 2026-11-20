@@ -205,7 +205,6 @@ final class InstallationCheck {
             test.runOnMainSync(() -> {
                 phone.tvSetup.open();
                 phone.body.findViewWithTag("setup.platform.android").performClick();
-                phone.getWindow().getDecorView().findViewWithTag("setup.skip").performClick();
                 CompanionCheck.check(
                         phone.body.findViewWithTag("setup.channel.latest").isSelected(),
                         "Latest release must be the default");

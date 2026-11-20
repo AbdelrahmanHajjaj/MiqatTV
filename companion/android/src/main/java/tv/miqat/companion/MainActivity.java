@@ -722,31 +722,7 @@ public final class MainActivity extends Activity {
     }
 
     void renderPreferences() {
-        String[] labels = {t("system"), "العربية", "English"};
-        String[] values = {"system", "ar", "en"};
-        RadioGroup choices = new RadioGroup(this);
-        body.addView(choices);
-        for (int i = 0; i < labels.length; i++) {
-            final String value = values[i];
-            RadioButton option = new RadioButton(this);
-            option.setText(labels[i]);
-            option.setTextColor(ink);
-            option.setTypeface(regular);
-            option.setTextSize(16);
-            option.setMinHeight(views.dp(56));
-            option.setPadding(views.dp(12), 0, views.dp(12), 0);
-            option.setButtonTintList(
-                    new ColorStateList(
-                            new int[][] {new int[] {android.R.attr.state_checked}, new int[] {}},
-                            new int[] {accent, muted}));
-            choices.addView(option);
-            option.setChecked(prefs().getString("language", "system").equals(value));
-            views.bindAction(option, "choose-language");
-            option.setOnClickListener(v -> {
-                prefs().edit().putString("language", value).apply();
-                recreate();
-            });
-        }
+        languageChoices(body);
         views.button(
                 body,
                 t("try_demo"),
@@ -754,6 +730,27 @@ public final class MainActivity extends Activity {
                     prefs().edit().putBoolean("show-demo", true).apply();
                     navigate("tvs");
                 });
+    }
+
+    void languageChoices(LinearLayout parent) {
+        java.util.List<Choices.Option> choices =
+                java.util.Arrays.asList(
+                        new Choices.Option("system", t("system")),
+                        new Choices.Option("ar", "العربية"),
+                        new Choices.Option("en", "English"));
+        views.choiceRail(
+                parent,
+                "phone.language",
+                choices,
+                prefs().getString("language", "system"),
+                value -> {
+                    prefs().edit().putString("language", value).apply();
+                    recreate();
+                });
+        for (Choices.Option choice : choices)
+            views.bindAction(
+                    (Button) parent.findViewWithTag("phone.language." + choice.value),
+                    "choose-language");
     }
 
     @Override

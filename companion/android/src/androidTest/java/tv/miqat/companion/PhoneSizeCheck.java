@@ -319,7 +319,7 @@ final class PhoneSizeCheck {
         boolean hadStep = prefs.contains("onboarding-step");
         int oldStep = prefs.getInt("onboarding-step", 0);
         try {
-            prefs.edit().putInt("onboarding-step", 2).commit();
+            prefs.edit().putInt("onboarding-step", 1).commit();
             PhoneUiCheck.on(test, () -> a.navigate("onboarding"));
             PhoneUiCheck.on(
                     test,
@@ -334,20 +334,26 @@ final class PhoneSizeCheck {
                     test,
                     () -> {
                         a.phoneUi.open("appearance");
-                        a.body.findViewWithTag("phone.appearance.background.edit").performClick();
+                        a.body.findViewWithTag("appearance.tab.appearance.background")
+                                .performClick();
                     });
             PhoneUiCheck.on(
                     test,
                     () ->
                             visible(
-                                    a.phoneUi.choiceDialog.getButton(-1),
+                                    a.getWindow()
+                                            .getDecorView()
+                                            .findViewWithTag("appearance.apply"),
                                     "Appearance Apply clipped at " + size));
             PhoneUiCheck.capture(
                     test, a, (a.ar ? "ar" : "en") + "-journey-background-" + size, capture);
             PhoneUiCheck.on(
                     test,
                     () -> {
-                        a.phoneUi.choiceDialog.dismiss();
+                        a.getWindow()
+                                .getDecorView()
+                                .findViewWithTag("appearance.cancel")
+                                .performClick();
                         a.tab("tvs");
                         a.body.findViewWithTag("pair.open").performClick();
                         a.body.findViewWithTag("setup.platform.lg").performClick();

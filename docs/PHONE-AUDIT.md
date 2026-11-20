@@ -1,3 +1,23 @@
+# Pass-7 interaction and engineering review
+
+20 November 2026. Native before/after captures: ignored `state/ux7-*`.
+First use reduced to two populated pages; TV preparation grouped in numbered
+rows with its source/inputs. App/widgets reuse one live preview and direct
+visual rails. Short choices reuse compact controls; voices and long catalogs
+keep searchable selection. Footer actions remain contextual and reachable with
+large text; short scrolling is allowed. Native normal and enlarged portrait/
+landscape renders reviewed, with RTL order and readable signature artwork.
+
+Touched native classes reviewed for caller consistency, draft/save/cancel,
+private inputs and removed paths. Removed obsolete per-step state, nested style
+dialogs and unused labels. Shared view primitives consolidate compact choices,
+numbered instructions and filtered selection. No dependency, transport, prayer
+policy or new feature framework added. Full appearance edits now share coherent
+Apply/Cancel semantics. Widget Add's existing invalid-ID mismatch corrected;
+LG rejected input preserves typed private data in memory without persisting it.
+Existing feature fixtures adapted; no blanket micro-test expansion. See
+EVIDENCE.md for exact validation and hardware limits.
+
 # Pass-3 engineering audit
 
 Local implementation audit completed, 19 November 2026. Expected load: one household, local prayers and
