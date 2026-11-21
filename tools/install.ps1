@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 if (-not $Tv) { throw 'Supply -Tv or set the TV environment variable.' }
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if (-not (Get-ChildItem -LiteralPath (Join-Path $repoRoot 'shared/media/adhan') -Filter '*.mp3' -ErrorAction SilentlyContinue)) {
-    Write-Warning 'Adhan recordings are missing. Run tools/fetch-adhans.sh before building for audible calls.'
+    Write-Warning 'Adhan recordings are missing. Restore the reviewed shared/media/adhan files from Git before building.'
 }
 if (-not $SkipBuild) {
     Push-Location -LiteralPath $repoRoot

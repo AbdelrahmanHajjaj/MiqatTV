@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Gently reduce rumble and background noise in all 14 adhan voices, preserving
+  existing wording, duration and bitrate. The recordings are slightly smaller;
+  spoken reminders are unchanged.
+
 - Load TV settings sections as sidebar focus moves Up/Down, with no OK press.
   Keep focus in the sidebar until moving toward the content, in both languages
   (Android TV 0.7.1 and LG 0.2.28).

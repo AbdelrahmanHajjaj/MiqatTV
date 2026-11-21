@@ -1,5 +1,36 @@
 # Local audio audit
 
+## Approved mild cleanup — 21 November 2026
+
+The maintainer reviewed before/after excerpts spanning the beginning, middle and
+ending of all 14 voices, then approved applying the mild cleaned candidates.
+All 14 tracked adhan files now contain those exact reviewed candidate bytes.
+The 12 synthesized reminder clips remain byte-identical.
+
+FFmpeg 9.0.2 applied `highpass=f=50,afftdn=nr=4:nf=-50:tn=1:gs=8` to the previously
+approved, already-trimmed files. Processing pads and compensates the measured FFT
+latency so every decoded sample count is retained, including the tail. MP3 uses
+libmp3lame at the existing bitrate, rate and channel count, with encoder quality
+0. Static attenuation only where needed leaves sample-peak headroom; there is no
+upward normalization, dynamic compression, new cut, or synthesized wording.
+
+The 14 adhan files total **18,335,775 bytes**, down from 18,345,232 (9,457 bytes).
+All candidates fully decoded, retained exact decoded sample counts and source
+formats, and had no decoded sample clipping. Quiet-window measurements are a
+proxy, not an SNR or perceived-quality certification; the effect is intentionally
+subtle and missing detail in old compressed sources cannot be restored.
+
+Restore the approved outputs from Git, checked by `shared/media/SHA256SUMS`.
+`adhan-edits.json` retains the original download hashes and cut points, with its
+approved output hashes updated to the cleaned files. Fetching and trimming the
+upstream originals does not reproduce the cleanup. Preparation rejects outputs
+that differ from an explicit approved hash, including stale local stamps.
+Original pre-cleanup bytes, processing recipe, measurements and listening samples
+remain under ignored `state/`. See [current validation](EVIDENCE.md).
+Physical-TV listening to the cleaned set has not been performed.
+
+## Historical wording and cut review — 13–18 November 2026
+
 Reviewed 13 November 2026: all 14 catalog adhan recordings and all 12 spoken
 announcements. Audio, transcripts, originals and build outputs remain ignored.
 This is recording maintenance, separate from the completed architecture work.
@@ -71,7 +102,8 @@ not substituted for that source.
 
 ## Reproduction and handoff
 
-`bash tools/fetch-adhans.sh` downloads missing sources and prepares reviewed edits.
+At the time of this cut review, `bash tools/fetch-adhans.sh` downloaded missing
+sources and prepared the reviewed edits. This predates the cleanup above.
 For an existing cache, run `node tools/prepare-adhans.mjs` with Node 24 and FFmpeg/
 ffprobe installed. Exact source hashes guard each edit; unknown input or a mismatched
 backup fails without overwriting it. Originals and output-hash stamps live under
