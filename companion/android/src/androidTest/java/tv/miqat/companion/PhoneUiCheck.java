@@ -107,6 +107,9 @@ final class PhoneUiCheck {
                 capture(test,a,lang+"-phone-settings",capture);
                 on(test,()->a.phoneUi.open("audio"));capture(test,a,lang+"-phone-audio",capture);
                 on(test,()->{a.phoneUi.open("default-audio");a.body.findViewWithTag("phone.reminders.voice.edit").performClick();});capture(test,a,lang+"-phone-voice-sheet",capture);
+                on(test, () -> check(a.phoneUi.choiceDialog.getWindow().getDecorView()
+                                .findViewWithTag("phone.voice.import").getVisibility() == View.VISIBLE,
+                        "Device audio selection must be visible before choosing Custom audio"));
                 String savedVoice = PhoneStore.read(context).value("reminders.voice");
                 java.util.List<String> voices = a.phoneUi.data.options(a.phoneUi.data.controls.get("reminders.voice"));
                 int candidateIndex = savedVoice.equals(voices.get(0)) ? 1 : 0;

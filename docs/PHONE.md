@@ -67,9 +67,10 @@ explicitly; Miqat does not silently convert a time window into whole weekdays.
 
 Voice sheets keep a draft selection: tap **Listen · 12s** to audition it, Stop
 or Cancel to end the preview, and Apply to save. Changing the draft does not
-change an upcoming adhan. Select **Custom audio from this phone**, then
-**Import or replace audio** to choose that voice's recording. An existing private
-recording can be reused without importing it again. Miqat copies audio-only media into private local storage,
+change an upcoming adhan. Tap **Choose audio from device** in the voice picker
+to choose that voice's recording. The action stays visible while a built-in voice
+is selected. An existing private recording can be reused without importing again.
+Miqat copies audio-only media into private local storage,
 checks that Android can prepare it, and limits it to 20 MB / 10 minutes. Failed
 imports preserve the previous selection. Original document access is not needed
 after a successful copy. There are 13 selectable approved built-in voices; the

@@ -301,3 +301,8 @@ appearance persistence after section changes. No physical TV is used by those fi
 Widget journeys check persistence before Android Add completion and after Back,
 with selected placed widgets updating independently. Appearance has no page-level
 Apply/Cancel; custom-palette dialogs still validate the complete value before saving.
+
+Voice-sheet checks require device audio selection to stay visible before selecting
+Custom audio, including compact landscape and enlarged text. The private custom
+audio fixture imports distinct default/Fajr files and checks independent slots,
+inherited defaults, malformed input, interrupted copies and oversize rejection.

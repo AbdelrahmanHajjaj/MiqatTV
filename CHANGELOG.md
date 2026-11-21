@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.8 device adhan selection
+
+- Keep **Choose audio from device** visible in every phone adhan voice picker, without first selecting Custom audio from the list. Reuse the validated private import for default and individual prayer voices.
+
 ## 0.5.7 immediate appearance and widgets
 
 - Save phone appearance, display and widget changes immediately, including existing placed widgets. Back retains changes; page-level Apply/Cancel is removed.

@@ -47,7 +47,7 @@
   "phone_silent":{"en":"Silent","ar":"صامت"},
   "phone_custom":{"en":"Custom audio","ar":"صوت مخصص"},
   "phone_custom_audio_failed":{"en":"Could not import audio. Maximum: 20 MB, 10 minutes.","ar":"تعذّر استيراد الصوت. الحد الأقصى: ٢٠ م.ب و١٠ دقائق."},
-  "phone_import_audio":{"en":"Import or replace audio","ar":"استيراد صوت أو استبداله"},
+  "phone_import_audio":{"en":"Choose audio from device","ar":"اختيار صوت من الجهاز"},
   "phone_travel_failed":{"en":"Location update failed. Using saved location.","ar":"تعذّر تحديث الموقع. يُستخدم الموقع المحفوظ."},
   "tv_public_download":{"en":"Download latest TV build","ar":"تنزيل أحدث إصدار للتلفاز"},
   "tv_public_unavailable":{"en":"No published build available.","ar":"لا يتوفر إصدار منشور."},

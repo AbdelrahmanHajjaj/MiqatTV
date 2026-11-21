@@ -183,7 +183,7 @@ final class PhoneSound {
         if (ui.choiceDialog != null) ui.choiceDialog.dismiss();
         String[] candidate = {ui.settings.value(id)};
         boolean shortWindow = a.getResources().getDisplayMetrics().heightPixels
-                < a.views.dp(320) * Math.max(1f, a.getResources().getConfiguration().fontScale);
+                < a.views.dp(480) * Math.max(1f, a.getResources().getConfiguration().fontScale);
         LinearLayout layout = a.views.column();
         layout.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(8));
         layout.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
@@ -207,9 +207,9 @@ final class PhoneSound {
                 list,
                 new LinearLayout.LayoutParams(
                         -1,
-                        shortWindow ? a.views.dp(52) : Math.min(
+                        shortWindow ? a.views.dp(52) : Math.max(a.views.dp(52), Math.min(
                                 a.views.dp(300),
-                                a.getResources().getDisplayMetrics().heightPixels / 3)));
+                                a.getResources().getDisplayMetrics().heightPixels / 3) - a.views.dp(64))));
         LinearLayout actions = a.views.horizontal(layout);
         Button play = a.views.button(actions, a.t("phone_listen"), () -> preview(id, candidate[0]));
         a.views.flex(play);
@@ -249,7 +249,6 @@ final class PhoneSound {
                                             .isEmpty();
                     play.setEnabled(available);
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(available);
-                    imported.setVisibility(custom ? View.VISIBLE : View.GONE);
                 };
         list.setOnItemClickListener((parent, view, position, row) -> {
             PhonePlayback.stopPreview(a);

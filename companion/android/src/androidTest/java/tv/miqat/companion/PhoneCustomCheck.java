@@ -243,6 +243,15 @@ final class PhoneCustomCheck {
                     imported.voice(0).equals("custom")
                             && PhoneAudio.file(c, imported, 0, true).isFile(),
                     "Imported global voice not inherited");
+            PhoneAudio.importFile(c, c.getAssets().open("adhan/chebae_fajr.mp3"), "call.fajr.voice");
+            PhoneStore perPrayer = PhoneStore.read(c);
+            PhoneUiCheck.check(perPrayer.value("call.fajr.voice").equals("custom")
+                            && perPrayer.value("audio.custom.default").equals(hash)
+                            && !perPrayer.value("audio.custom.fajr").equals(hash)
+                            && PhoneAudio.file(c, perPrayer, 0, false).isFile()
+                            && perPrayer.value("call.dhuhr.voice").equals("inherit")
+                            && perPrayer.voice(2).equals("custom"),
+                    "A custom prayer recording replaced the default or another prayer's inheritance");
             LanCheck.rejects(() ->
                     PhoneAudio.importFile(
                             c, new ByteArrayInputStream(new byte[] {1, 2, 3}), "reminders.voice"));

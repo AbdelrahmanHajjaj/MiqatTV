@@ -1,7 +1,14 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: immediate page settings after the numeric/Home cleanup; WORK.md owns next action.
+Latest scope: direct device-audio selection after immediate page settings; WORK.md owns next action.
+
+## Device adhan selection — 0.5.8/code 24
+
+Choose audio from device is always visible in every phone voice picker, rather
+than hidden until the list selects Custom audio. It reuses Android document
+selection and bounded private import for the default voice and each prayer.
+Existing saved custom recordings remain reusable; failed imports retain them.
 
 ## Immediate appearance and widgets — 0.5.7/code 23
 

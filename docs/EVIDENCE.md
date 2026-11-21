@@ -1,5 +1,32 @@
 # Validation evidence
 
+## Direct device adhan selection — 21 November 2026
+
+Phone review **0.5.8/code 24** exposes **Choose audio from device** in every
+phone voice picker without first selecting Custom audio. Android document
+selection and bounded private import already existed and remain the single path
+for default and per-prayer recordings. Existing files remain reusable. No new
+storage permission, transport, dependency or shipped recording is introduced.
+
+Owned muted read-only API 37: private import/migration checks and bilingual phone
+UI pass. Distinct default/Fajr imports preserve independent slots and other
+prayers' inheritance; malformed audio, interrupted/oversize copies retain the
+previous recording. The always-visible action is measured at app scales 80–150%,
+normal portrait and font 1.3 portrait/landscape. All pass after reserving a device-
+action row and using the compact sheet earlier on short windows. English/Arabic
+normal and compact voice renders were inspected. Actual provider-file selection
+on a physical phone remains unverified.
+
+Production/test builds and lint pass: **0 errors, 41 existing warnings**.
+Generator 11/11 and design handlers pass. All 25 exact shipped recordings and
+notices are preserved; signing identity is unchanged. Exact-head CI is tracked
+in draft PR #9. Private captures/logs remain under ignored state/. No merge,
+release or physical deployment.
+
+Latest review export: `state/builds/companion/Miqat-latest.apk`, **35,342,955 bytes**,
+SHA256 `7A71C1EC5B4B55F497AD63C82747D856BE656633C1B9625F49EA8B60CA699803`.
+
+
 ## Immediate appearance and widgets — 21 November 2026
 
 Phone review **0.5.7/code 23** follows the owner's clarification that full-page

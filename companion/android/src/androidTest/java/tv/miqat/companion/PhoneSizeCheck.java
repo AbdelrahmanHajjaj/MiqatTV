@@ -262,6 +262,9 @@ final class PhoneSizeCheck {
                 test,
                 () -> {
                     visible(a.phoneUi.choiceDialog.getButton(-1), "Voice Apply clipped at " + size);
+                    visible(a.phoneUi.choiceDialog.getWindow().getDecorView()
+                                    .findViewWithTag("phone.voice.import"),
+                            "Device audio selection clipped at " + size);
                     visible(
                             a.phoneUi
                                     .choiceDialog
