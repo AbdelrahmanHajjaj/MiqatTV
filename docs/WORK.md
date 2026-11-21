@@ -1,18 +1,16 @@
 # Current work
 
-Updated: 2026-11-21. Owner requested quieter welcome/Home and immediate numeric
-settings on feature/companion-installation, draft PR #9.
+Updated: 2026-11-21. Owner approved phone audio/testing/popup refinements on
+feature/companion-installation, draft PR #9. Current export is 0.5.8/code 24;
+0.5.9/code 25 is in progress.
 
-0.5.8/code 24 removes welcome ad/account copy, the line beneath the Quran verse,
-and Home location success/confirmation narration. Shared phone numeric controls
-save every +/− tap and valid typed value; switching controls/pages retains edits.
-Phone Appearance/display and widget changes also save immediately, as the owner
-confirmed. TV choices use the existing guarded save path. Page-level Apply/Cancel
-is removed; Android widget Add and validated dialogs keep their completion actions.
+Build a named reusable private adhan library, preserving existing imports and
+independent prayer selections. Listen plays the full recording from the start;
+length preview plays from the start to the selected percentage. Add explicit
+Adhan and notification phone tests with a cancellable 30-second grace period.
+Remove the redundant phone Reduce motion setting and follow Android animation
+accessibility. Reproduce/fix the Coming soon sheet's horizontal entrance shift.
 
-Affected bilingual UI, first-use/hosted-widget, TV mock/LAN and 80–150% sizing
-checks pass, including font 1.3 portrait/landscape. The review APK is exported.
-Device audio selection is visible directly in every voice picker, reusing the
-bounded private import. Bilingual UI, custom import and all three sizing checks
-pass; the 0.5.8 APK is exported. Next: verify exact-head CI. Keep PR #9 draft for
-owner acceptance. No merge, release or physical deployment requested.
+Next: focused storage/runtime/dialog regressions, bilingual native UI/sizing,
+export the review APK and verify exact-head CI. Keep PR #9 draft for owner review.
+No merge, release or physical deployment requested.

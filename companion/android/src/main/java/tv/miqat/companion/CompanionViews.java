@@ -22,6 +22,8 @@ final class CompanionViews {
             @Override
             public AlertDialog create() {
                 AlertDialog dialog = super.create();
+                // Material initializes a narrower width in onCreate; finish that before sizing.
+                dialog.create();
                 dialog.getWindow().setBackgroundDrawable(background(a.surface, 24));
                 WindowManager.LayoutParams window = dialog.getWindow().getAttributes();
                 window.gravity = Gravity.BOTTOM;

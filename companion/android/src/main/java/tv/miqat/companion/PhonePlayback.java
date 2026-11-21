@@ -24,10 +24,10 @@ public final class PhonePlayback extends Service {
     private AudioFocusRequest focus;
     private MediaSession media;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean preview, started, paused, defaultAudio, endingPreview;
-    private String eventId = "", voiceId = "";
+    private boolean preview, started, paused, defaultAudio, lengthPreview, testing;
+    private String eventId = "", voiceId = "", customHash = "";
     private android.graphics.Bitmap artwork;
-    private int generation, prayerIndex = -1, previewPercent = 100, clipStart;
+    private int generation, prayerIndex = -1, previewPercent = 100, previewCapSeconds;
     private double prayerTime;
     private long resumedAt, playedMs;
 
@@ -75,10 +75,7 @@ public final class PhonePlayback extends Service {
             try {
                 PhoneStore latest = PhoneStore.read(c);
                 if (!service.preview
-                        && (!latest.enabled
-                                || !latest.locationReady
-                                || service.prayerIndex < 0
-                                || !service.allowed(latest, service.prayerIndex))) {
+                        && (service.prayerIndex < 0 || !service.allowed(latest, service.prayerIndex))) {
                     stop(c);
                     return;
                 }
@@ -97,19 +94,21 @@ public final class PhonePlayback extends Service {
     }
 
     private boolean allowed(PhoneStore settings, int prayer) {
-        return settings.eventMode(
+        if (testing) return PhoneAlertTest.allowed(this, eventId);
+        return settings.enabled && settings.locationReady && settings.eventMode(
                         new tv.miqat.core.ReminderEvent(
                                 eventId, "call", prayer, prayerTime, prayerTime))
                 == 2;
     }
 
     private long limit(PhoneStore settings) {
-        if (preview && !endingPreview) return Math.min(12000, player.getDuration());
-        int end = tv.miqat.companion.core.PhonePrayerRules.INSTANCE.cutoffMillis(
+        long duration;
+        if (preview && !lengthPreview) duration = player.getDuration();
+        else duration = tv.miqat.companion.core.PhonePrayerRules.INSTANCE.cutoffMillis(
                 player.getDuration(),
-                endingPreview ? previewPercent : settings.audioPercent(defaultAudio ? -1 : prayerIndex),
-                settings.audioDuration(defaultAudio ? -1 : prayerIndex));
-        return Math.max(0, end - clipStart);
+                lengthPreview ? previewPercent : settings.audioPercent(defaultAudio ? -1 : prayerIndex),
+                lengthPreview ? 0 : settings.audioDuration(defaultAudio ? -1 : prayerIndex));
+        return previewCapSeconds > 0 ? Math.min(duration, previewCapSeconds * 1000L) : duration;
     }
 
     @Override
@@ -134,19 +133,33 @@ public final class PhonePlayback extends Service {
         }
         String id = intent.getStringExtra("id");
         if (active == this && Objects.equals(id, eventId)) return START_NOT_STICKY;
+        String testToken = intent.getStringExtra("test-token");
+        if (testToken != null) {
+            if (!testToken.equals(id) || scheduled() || !PhoneAlertTest.starting(this, id)) {
+                PhoneAlertTest.finished(this, testToken, "phone_stop_first");
+                if (active != this) stopSelf();
+                return START_NOT_STICKY;
+            }
+        }
         release();
+        testing = testToken != null;
         active = this;
         preview = intent.getBooleanExtra("preview", false);
-        endingPreview = preview && intent.getBooleanExtra("ending-preview", false);
-        previewPercent = intent.getIntExtra("ending-percent", 100);
-        clipStart = 0;
+        lengthPreview = preview && intent.getBooleanExtra("length-preview", false);
+        previewPercent = intent.getIntExtra("length-percent", 100);
+        previewCapSeconds = preview ? intent.getIntExtra("preview-cap-seconds", 0)
+                : testing ? intent.getIntExtra("test-cap-seconds", 0) : 0;
+        customHash = preview ? intent.getStringExtra("custom-audio-hash") : "";
+        if (customHash == null) customHash = "";
         eventId = id == null ? "" : id;
         final int token = ++generation;
         prayerIndex = -1;
         defaultAudio = intent.getBooleanExtra("default-audio", false);
         prayerTime = intent.getDoubleExtra("prayerTime", System.currentTimeMillis());
         try {
-            if (endingPreview && (previewPercent < 5 || previewPercent > 100 || previewPercent % 5 != 0))
+            if (previewCapSeconds < 0 || previewCapSeconds > 20 || !customHash.isEmpty() && !customHash.matches("[a-f0-9]{64}"))
+                throw new IllegalArgumentException("Invalid audition input");
+            if (lengthPreview && (previewPercent < 5 || previewPercent > 100 || previewPercent % 5 != 0))
                 throw new IllegalArgumentException("Invalid preview length");
             PhoneAlarms.channels(this);
             PhoneStore settings = PhoneStore.read(this);
@@ -159,10 +172,7 @@ public final class PhonePlayback extends Service {
             int prayer = intent.getIntExtra("prayer", 0);
             if (!tv.miqat.core.PrayerRules.INSTANCE.isPrayer(prayer))
                 throw new IllegalArgumentException("Invalid prayer");
-            if (!preview
-                    && (!settings.enabled
-                            || !settings.locationReady
-                            || !allowed(settings, prayer))) {
+            if (!preview && !allowed(settings, prayer)) {
                 stopSelf();
                 return START_NOT_STICKY;
             }
@@ -177,7 +187,7 @@ public final class PhonePlayback extends Service {
             boolean defaultVoice =
                     settings.value("call." + PhoneStore.PRAYERS[prayer] + ".voice")
                             .equals("inherit");
-            if (preview)
+            if (preview || testing)
                 defaultVoice =
                         intent.getBooleanExtra("default-voice", defaultAudio || defaultVoice);
             voiceId = voice;
@@ -245,6 +255,7 @@ public final class PhonePlayback extends Service {
     }
 
     private String title(PhoneStore settings) throws Exception {
+        if (testing) return PhoneAlarms.text(this, "phone_test_adhan");
         if (preview) return PhoneAlarms.text(this, "phone_preview");
         boolean ar = PhoneAlarms.arabic(this);
         return settings.data.prayerName(prayerIndex, ar)
@@ -359,10 +370,7 @@ public final class PhonePlayback extends Service {
         try {
             PhoneStore settings = PhoneStore.read(this);
             if (!PhoneAlarms.notifications(this)
-                    || !preview
-                            && (!settings.enabled
-                                    || !settings.locationReady
-                                    || !allowed(settings, prayerIndex))) {
+                    || !preview && !allowed(settings, prayerIndex)) {
                 stopSelf();
                 return;
             }
@@ -405,7 +413,9 @@ public final class PhonePlayback extends Service {
         player.setAudioAttributes(attributes);
         player.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
         if ("custom".equals(voice))
-            player.setDataSource(PhoneAudio.file(this, settings, prayer, defaultVoice).getPath());
+            player.setDataSource((preview && !customHash.isEmpty()
+                    ? PhoneAudio.file(this, customHash)
+                    : PhoneAudio.file(this, settings, prayer, defaultVoice)).getPath());
         else
             try (AssetFileDescriptor file = getAssets().openFd("adhan/" + voice + ".mp3")) {
                 player.setDataSource(
@@ -426,25 +436,14 @@ public final class PhonePlayback extends Service {
     private void startOutput(MediaPlayer ready, int prayer, AudioAttributes attributes) {
         try {
             PhoneStore latest = PhoneStore.read(this);
-            if (!preview
-                    && (!latest.enabled || !latest.locationReady || !allowed(latest, prayer))) {
+            if (!preview && !allowed(latest, prayer)) {
                 stopSelf();
                 return;
             }
             ready.setVolume(
                     latest.audioVolume(defaultAudio ? -1 : prayer) / 100f,
                     latest.audioVolume(defaultAudio ? -1 : prayer) / 100f);
-            if (endingPreview) {
-                int end = tv.miqat.companion.core.PhonePrayerRules.INSTANCE.cutoffMillis(
-                        ready.getDuration(), previewPercent, latest.audioDuration(defaultAudio ? -1 : prayer));
-                clipStart = Math.max(0, end - 5000);
-                ready.setOnSeekCompleteListener(seeked -> {
-                    if (player != seeked || active != this) return;
-                    seeked.setOnSeekCompleteListener(null);
-                    beginOutput(seeked, latest, prayer, attributes);
-                });
-                ready.seekTo(clipStart, MediaPlayer.SEEK_CLOSEST);
-            } else beginOutput(ready, latest, prayer, attributes);
+            beginOutput(ready, latest, prayer, attributes);
         } catch (Exception invalid) {
             failed();
         }
@@ -453,8 +452,7 @@ public final class PhonePlayback extends Service {
     private void beginOutput(MediaPlayer ready, PhoneStore settings, int prayer, AudioAttributes attributes) {
         try {
             settings = PhoneStore.read(this);
-            if (!PhoneAlarms.notifications(this) || !preview
-                    && (!settings.enabled || !settings.locationReady || !allowed(settings, prayer))) {
+            if (!PhoneAlarms.notifications(this) || !preview && !allowed(settings, prayer)) {
                 stopSelf();
                 return;
             }
@@ -467,7 +465,7 @@ public final class PhonePlayback extends Service {
             updateMediaState(ready.getCurrentPosition());
             PhoneStore.preferences(this).edit().remove("audio-error").apply();
             Vibrator vibrator = getSystemService(Vibrator.class);
-            if (!preview && vibrator != null && vibrator.hasVibrator()
+            if (!preview && !testing && vibrator != null && vibrator.hasVibrator()
                     && settings.eventVibrate(new tv.miqat.core.ReminderEvent(
                             eventId, "call", prayer, prayerTime, prayerTime)))
                 vibrator.vibrate(VibrationEffect.createWaveform(new long[] {0, 120, 100, 120}, -1), attributes);
@@ -479,7 +477,10 @@ public final class PhonePlayback extends Service {
 
     private void failed() {
         PhoneStore.preferences(this).edit().putString("audio-error", "phone_audio_failed").apply();
-        if (!preview && prayerIndex >= 0)
+        if (testing) {
+            PhoneAlarms.notifyTest(this, true);
+            PhoneAlertTest.finished(this, eventId, "phone_test_failed");
+        } else if (!preview && prayerIndex >= 0)
             PhoneAlarms.notify(
                     this,
                     new tv.miqat.core.ReminderEvent(
@@ -489,6 +490,10 @@ public final class PhonePlayback extends Service {
     }
 
     private void release() {
+        if (testing) {
+            PhoneAlertTest.finished(this, eventId, "phone_test_finished");
+            testing = false;
+        }
         handler.removeCallbacksAndMessages(null);
         started = false;
         paused = false;
@@ -497,7 +502,6 @@ public final class PhonePlayback extends Service {
         voiceId = "";
         if (player != null) {
             player.setOnPreparedListener(null);
-            player.setOnSeekCompleteListener(null);
             player.setOnCompletionListener(null);
             player.setOnErrorListener(null);
             player.release();

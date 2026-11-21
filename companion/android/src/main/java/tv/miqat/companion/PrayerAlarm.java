@@ -10,6 +10,13 @@ import tv.miqat.core.ReminderEvent;
 public final class PrayerAlarm extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (PhoneAlertTest.FIRE.equals(intent.getAction())) {
+            PhoneAlertTest.fire(context, intent.getStringExtra("event"));
+            return;
+        }
+        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())
+                || Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(intent.getAction())
+                || Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) PhoneAlertTest.cancel(context);
         if (PhoneAlarms.FIRE.equals(intent.getAction())) {
             ReminderEvent event = null;
             try {

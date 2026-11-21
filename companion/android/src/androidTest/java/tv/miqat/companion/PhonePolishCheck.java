@@ -29,6 +29,10 @@ final class PhonePolishCheck {
                             "Default style must be the first carousel option: " + id);
             } catch (Exception invalid) { throw new AssertionError(invalid); }
             a.phoneUi.open("appearance");
+            PhoneUiCheck.check(a.body.findViewWithTag("phone.display.reduce-motion") == null,
+                    "Phone settings retained an unused motion toggle");
+            PhoneUiCheck.check(!a.views.motionEnabled() || android.animation.ValueAnimator.areAnimatorsEnabled(),
+                    "Phone motion must respect Android accessibility settings");
             boolean before = a.phoneUi.settings.value("appearance.home-background").equals("true");
             a.body.findViewWithTag("phone.appearance.home-background.edit").performClick();
             try {
@@ -38,6 +42,7 @@ final class PhonePolishCheck {
             a.back();
             a.phoneUi.open("fajr");
         });
+        PhoneDialogCheck.check(test, a);
         PhoneUiCheck.on(test, () -> {
             for (int day = 0; day < 7; day++) {
                 View cell = a.body.findViewWithTag("phone.call.fajr.weekdays." + day);

@@ -99,7 +99,7 @@ PhoneHome, PhoneLocationUi, PhoneAppearance, PhoneOnboarding and PhoneSound own
 their respective native journeys. PairingUi/TvSettingsUi/TvRemoteUi/TvListUi own
 TV workflows, while transports keep networking/trust separate. QiblaUi owns
 foreground sensors and opt-in, attributed map loading. PhoneCalendar maps Hijri
-month selection back to civil dates for the real prayer engine. WidgetUi owns draft configuration, WidgetOptions per-instance
+month selection back to civil dates for the real prayer engine. WidgetUi owns immediate configuration, WidgetOptions per-instance
 presentation, WidgetRenderer native RemoteViews, and PrayerWidget the existing
 schedule/launcher update lifecycle plus exact-size maps/legacy resize bounds.
 Allocated dimensions determine compact/next/daily detail; stored presets remain
@@ -114,3 +114,8 @@ gates permission/opt-in and rejects fixes invalidated by newer user calibration.
 No continuous foreground service or application network transport is added.
 Neither phone settings nor alarm recovery connect to a TV.
 See [phone guide and limits](PHONE.md) and [delivery ledger](PHONE-WORK.md).
+
+PhoneAudio/PhoneAudioLibrary retain immutable private recordings and an atomic
+named index, separate from portable settings' selected hashes. PhoneAlertTest owns
+an independent elapsed-time/boot-scoped one-shot claim; explicit delivery tests
+never replace the real schedule. PhoneTestUi owns its countdown/cancel actions.

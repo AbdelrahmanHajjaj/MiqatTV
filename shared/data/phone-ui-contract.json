@@ -2,6 +2,7 @@
   "version": 6,
   "defaultCity": "cairo",
   "defaultFajrVoice": "chebae_fajr",
+  "actions": [{"id":"tests.phone-adhan","section":"audio","label":"phone_test_adhan"},{"id":"tests.phone-notification","section":"audio","label":"phone_test_notification"},{"id":"tests.phone-cancel","section":"audio","label":"phone_test_cancel"}],
   "controls": [
     {"id":"prayer.method","section":"calculation","kind":"choice","label":"phone_method","choices":"methods","default":"EGYPTIAN"},
     {"id":"prayer.asr","section":"calculation","kind":"choice","label":"phone_asr","choices":["shafi","hanafi"],"default":"shafi"},
@@ -18,7 +19,7 @@
     {"id":"display.digits","section":"appearance","kind":"choice","label":"phone_digits","choices":["auto","western","eastern"],"default":"auto"},
     {"id":"display.clock","section":"appearance","kind":"choice","label":"phone_clock","choices":["12","24"],"default":"12"},
     {"id":"display.size","section":"appearance","kind":"number","label":"phone_size","minimum":80,"maximum":150,"step":10,"default":"100"},
-    {"id":"display.reduce-motion","section":"appearance","kind":"toggle","label":"phone_reduce_motion","default":"false"},
+    {"id":"display.reduce-motion","section":"legacy-display","kind":"toggle","label":"phone_reduce_motion","default":"false"},
     {"id":"appearance.theme","section":"appearance","kind":"choice","label":"phone_theme","choices":"themes","default":"mihrab"},
     {"id":"appearance.background","section":"appearance","kind":"choice","label":"phone_background","choices":"backgrounds","default":"miqat_signature"},
     {"id":"appearance.home-background","section":"appearance","kind":"toggle","label":"phone_home_background","default":"true","since":5},

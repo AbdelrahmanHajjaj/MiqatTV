@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.9 audio library and phone testing
+
+- Keep multiple custom adhans in a reusable named private library; default names come from the selected file. Preserve earlier imports.
+- Listen plays the full recording from the beginning. Length preview starts at the beginning and stops at the selected percentage.
+- Add cancellable Adhan and notification tests with a 30-second grace period, independent of the real prayer schedule.
+- Remove the redundant phone Reduce motion setting and fix the Coming soon sheet expanding sideways after appearing.
+
 ## 0.5.8 device adhan selection
 
 - Keep **Choose audio from device** visible in every phone adhan voice picker, without first selecting Custom audio from the list. Reuse the validated private import for default and individual prayer voices.

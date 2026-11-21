@@ -35,12 +35,12 @@ function hydrateCalendars() {
 }
 function durationAtPercent(duration,percent) {return duration*Math.max(5,Math.min(100,+percent))/100;}
 function lengthControl(recording="almalki") {
-  return `<div class="length-control" data-recording="${recording}"><div class="length-heading"><span>Adhan length</span><output data-length-value>100% · Full adhan</output></div><div class="length-line"><input type="range" class="range" min="5" max="100" step="5" value="100" aria-label="Adhan length"><button class="iconbtn" aria-label="Preview ending" data-preview-ending>${icon('play')}</button></div><small data-cutoff-time>Ending uses the selected recording’s duration.</small></div>`;
+  return `<div class="length-control" data-recording="${recording}"><div class="length-heading"><span>Adhan length</span><output data-length-value>100% · Full adhan</output></div><div class="length-line"><input type="range" class="range" min="5" max="100" step="5" value="100" aria-label="Adhan length"><button class="iconbtn" aria-label="Preview selected length" data-preview-ending>${icon('play')}</button></div><small data-cutoff-time>Ending uses the selected recording’s duration.</small></div>`;
 }
 let previewAudio=null, previewButton=null;
 function stopEndingPreview() {
   if(previewAudio) {previewAudio.pause();previewAudio.removeAttribute('src');previewAudio.load();}
-  if(previewButton) {previewButton.setAttribute('aria-label','Preview ending');previewButton.innerHTML=icon('play');}
+  if(previewButton) {previewButton.setAttribute('aria-label','Preview selected length');previewButton.innerHTML=icon('play');}
   previewAudio=null;previewButton=null;
 }
 function previewEnding(button) {
@@ -52,9 +52,9 @@ function previewEnding(button) {
   audio.onloadedmetadata=()=>{
     if(previewAudio!==audio)return;
     const end=durationAtPercent(audio.duration,percent);
-    audio.currentTime=Math.max(0,end-5);
+    audio.currentTime=0;
     control.querySelector('[data-cutoff-time]').textContent=`Ends at ${Math.floor(end/60)}:${String(Math.floor(end%60)).padStart(2,'0')} of the selected adhan`;
-    button.setAttribute('aria-label','Stop ending preview');button.innerHTML=icon('stop');
+    button.setAttribute('aria-label','Stop preview');button.innerHTML=icon('stop');
     audio.ontimeupdate=()=>{if(audio.currentTime>=end)stopEndingPreview();};
     audio.play().catch(()=>{stopEndingPreview();toast('Preview could not start.');});
   };

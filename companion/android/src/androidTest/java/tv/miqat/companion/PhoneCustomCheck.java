@@ -236,14 +236,14 @@ final class PhoneCustomCheck {
                     && !boundary.eventVibrate(onSunday),
                     "Legacy quiet hours stopped following actual event time at the date boundary");
             migrated.save(c);
-            PhoneAudio.importFile(c, c.getAssets().open("adhan/almalki.mp3"), "reminders.voice");
+            PhoneAudio.importFile(c, c.getAssets().open("adhan/almalki.mp3"), "reminders.voice", "Library default");
             PhoneStore imported = PhoneStore.read(c);
             String hash = imported.value("audio.custom.default");
             PhoneUiCheck.check(
                     imported.voice(0).equals("custom")
                             && PhoneAudio.file(c, imported, 0, true).isFile(),
                     "Imported global voice not inherited");
-            PhoneAudio.importFile(c, c.getAssets().open("adhan/chebae_fajr.mp3"), "call.fajr.voice");
+            PhoneAudio.importFile(c, c.getAssets().open("adhan/chebae_fajr.mp3"), "call.fajr.voice", "Library Fajr");
             PhoneStore perPrayer = PhoneStore.read(c);
             PhoneUiCheck.check(perPrayer.value("call.fajr.voice").equals("custom")
                             && perPrayer.value("audio.custom.default").equals(hash)
@@ -252,6 +252,81 @@ final class PhoneCustomCheck {
                             && perPrayer.value("call.dhuhr.voice").equals("inherit")
                             && perPrayer.voice(2).equals("custom"),
                     "A custom prayer recording replaced the default or another prayer's inheritance");
+            String fajrHash = perPrayer.value("audio.custom.fajr");
+            PhoneUiCheck.check(PhoneAudio.library(c).size() == 2
+                            && PhoneAudio.name(c, perPrayer, "reminders.voice").equals("Library default")
+                            && PhoneAudio.name(c, perPrayer, "call.fajr.voice").equals("Library Fajr"),
+                    "Named imports did not retain two reusable library recordings");
+            PhoneAudio.select(c, "call.dhuhr.voice", hash);
+            PhoneStore reused = PhoneStore.read(c);
+            PhoneUiCheck.check(reused.value("audio.custom.dhuhr").equals(hash)
+                            && reused.value("call.dhuhr.voice").equals("custom")
+                            && reused.value("audio.custom.fajr").equals(fajrHash),
+                    "Selecting an existing recording did not preserve other prayer selections");
+            PhoneAudio.select(c, "reminders.voice", fajrHash);
+            PhoneAudio.select(c, "call.dhuhr.voice", fajrHash);
+            PhoneAudio.cleanup(c);
+            PhoneUiCheck.check(PhoneAudio.library(c).size() == 2 && PhoneAudio.file(c, hash).isFile(),
+                    "Cleanup removed an unselected library recording");
+            PhoneAudio.select(c, "reminders.voice", hash);
+            File index = new File(directory, "custom-audio/library.json");
+            byte[] validIndex = Files.readAllBytes(index.toPath());
+            Files.write(index.toPath(), "{invalid".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            LanCheck.rejects(() -> PhoneAudio.cleanup(c));
+            LanCheck.rejects(() -> PhoneAudio.importFile(c, c.getAssets().open("adhan/almalki.mp3"),
+                    "reminders.voice", "Must not overwrite damaged index"));
+            PhoneUiCheck.check(new String(Files.readAllBytes(index.toPath()), java.nio.charset.StandardCharsets.UTF_8)
+                                    .equals("{invalid")
+                            && PhoneAudio.file(c, hash).isFile() && PhoneAudio.file(c, fajrHash).isFile()
+                            && PhoneStore.read(c).value("audio.custom.default").equals(hash),
+                    "Damaged library lost its index, recording or previous selection");
+            for (String malformed : new String[] {
+                    "{\"version\":\"1\",\"entries\":{}}", "{\"version\":1.5,\"entries\":{}}",
+                    "{\"version\":1,\"entries\":{\"" + hash + "\":123}}",
+                    "{\"version\":1,\"entries\":{\"" + hash + "\":null}}",
+                    "{\"version\":1,\"entries\":{}} trailing"}) {
+                byte[] invalidIndex = malformed.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                Files.write(index.toPath(), invalidIndex);
+                LanCheck.rejects(() -> PhoneAudio.cleanup(c));
+                PhoneUiCheck.check(Arrays.equals(invalidIndex, Files.readAllBytes(index.toPath()))
+                                && PhoneAudio.file(c, hash).isFile() && PhoneAudio.file(c, fajrHash).isFile(),
+                        "Malformed audio metadata was coerced, overwritten or deleted recordings");
+            }
+            Files.write(index.toPath(), validIndex);
+            Files.delete(index.toPath());
+            PhoneUiCheck.check(PhoneAudio.library(c).size() == 2
+                            && PhoneStore.read(c).value("audio.custom.default").equals(hash)
+                            && PhoneStore.read(c).value("audio.custom.fajr").equals(fajrHash),
+                    "Legacy slot recordings were not adopted without changing selections");
+            LanCheck.rejects(() -> PhoneAudio.select(c, "reminders.voice", "../outside"));
+            LanCheck.rejects(() -> PhoneAudio.importFile(c, c.getAssets().open("adhan/almalki.mp3"),
+                    "reminders.voice", " "));
+            PhoneUiCheck.check(PhoneAudio.library(c).size() == 2
+                            && PhoneStore.read(c).value("audio.custom.default").equals(hash),
+                    "Invalid library selection or name changed previous audio");
+            Context failedSelection = new ContextWrapper(c) {
+                @Override public Context createDeviceProtectedStorageContext() { return this; }
+                @Override public SharedPreferences getSharedPreferences(String name, int mode) {
+                    SharedPreferences delegate = c.getSharedPreferences(name, mode);
+                    return (SharedPreferences) java.lang.reflect.Proxy.newProxyInstance(
+                            SharedPreferences.class.getClassLoader(), new Class<?>[] {SharedPreferences.class},
+                            (proxy, method, arguments) -> {
+                                if (!method.getName().equals("edit")) return method.invoke(delegate, arguments);
+                                return java.lang.reflect.Proxy.newProxyInstance(
+                                        SharedPreferences.Editor.class.getClassLoader(),
+                                        new Class<?>[] {SharedPreferences.Editor.class},
+                                        (editor, operation, values) -> operation.getName().equals("commit") ? false
+                                                : operation.getReturnType().equals(Void.TYPE) ? null : editor);
+                            });
+                }
+            };
+            LanCheck.rejects(() -> PhoneAudio.importFile(failedSelection,
+                    c.getAssets().open("adhan/almalki.mp3"), "call.asr.voice", "Durable library name"));
+            PhoneUiCheck.check(PhoneStore.read(c).value("audio.custom.default").equals(hash)
+                            && PhoneStore.read(c).value("call.asr.voice").equals("inherit")
+                            && PhoneAudio.name(c, PhoneStore.read(c), "reminders.voice").equals("Durable library name")
+                            && PhoneAudio.library(c).size() == 2,
+                    "Failed selection changed settings or lost the durably named library entry");
             LanCheck.rejects(() ->
                     PhoneAudio.importFile(
                             c, new ByteArrayInputStream(new byte[] {1, 2, 3}), "reminders.voice"));

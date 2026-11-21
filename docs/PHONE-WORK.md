@@ -1,7 +1,16 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: direct device-audio selection after immediate page settings; WORK.md owns next action.
+Latest scope: named audio library, preview behavior, delayed tests and stable sheets; WORK.md owns next action.
+
+## Audio library and testing — 0.5.9/code 25
+
+Owner requested named reusable imports, complete auditions, start-to-percentage
+length previews, cancellable 30-second phone tests, no redundant motion toggle
+and a stable Coming soon sheet. The focused popup test reproduced its first-frame
+27px inset, then passed after initializing the dialog before sizing. Private
+library storage regressions pass. Integrate latest main before pushing; final
+merged runtime/UI/sizing, artifact and CI checks remain pending.
 
 ## Device adhan selection — 0.5.8/code 24
 

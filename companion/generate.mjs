@@ -39,6 +39,10 @@ export function generatePhone() {
       if(!options||!options.includes(control.default)||new Set(options).size!==options.length)throw Error('Invalid phone choices: '+id);
     } else if(control.kind!=='toggle'||!['true','false'].includes(control.default))throw Error('Invalid phone control kind: '+id);
   }
+  for(const action of contract.actions??[]) {
+    if(typeof action.id!=='string'||ids.has(action.id)||action.section!=='audio'||!text[action.label]?.en||!text[action.label]?.ar)throw Error('Invalid phone action: '+action.id);
+    ids.add(action.id);
+  }
   const hijriEvents=read('shared/data/hijri-events.json'),eventIds=new Set(),eventDates=new Set();
   if(!Array.isArray(hijriEvents)||hijriEvents.length>64)throw Error('Invalid Hijri event catalog');
   for(const event of hijriEvents) {

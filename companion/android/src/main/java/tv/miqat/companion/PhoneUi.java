@@ -304,6 +304,7 @@ final class PhoneUi {
                 a.t("phone_permissions"),
                 a.t(PhoneAlarms.status(a, settings)),
                 () -> open("permissions"));
+        PhoneTestUi.render(a, a.body);
         if (settings.value("quiet.enabled").equals("true"))
             a.views.navigationRow(
                     a.body,
@@ -394,7 +395,13 @@ final class PhoneUi {
         if (id.endsWith(".duration") && value.equals("0")) return a.t("phone_full");
         if (id.equals("appearance.background") && value.equals("plain")) return a.t("phone_plain");
         if (id.endsWith(".volume") || id.equals("display.size")) return digits(value) + "%";
-        if (value.equals("custom")) return a.t("phone_custom");
+        if (value.equals("custom")) {
+            if (id.endsWith(".voice")) {
+                try { return PhoneAudio.name(a, settings, id); }
+                catch (Exception unavailable) { return a.t("phone_custom"); }
+            }
+            return a.t("phone_custom");
+        }
         if (id.equals("quiet.mode")) return a.t("phone_" + value);
         if (id.equals("quiet.start") || id.equals("quiet.end")) {
             int minute = Integer.parseInt(value), hour = minute / 60;

@@ -102,6 +102,7 @@ final class PhoneUiCheck {
                 });
                 PhoneControlCheck.check(test,a);
                 PhonePolishCheck.run(test,a,lang,capture);
+                PhoneLibraryCheck.check(test,a,lang,capture);
                 PhoneHomeCheck.run(test,a);
                 on(test,()->a.tab("phone-settings"));
                 capture(test,a,lang+"-phone-settings",capture);

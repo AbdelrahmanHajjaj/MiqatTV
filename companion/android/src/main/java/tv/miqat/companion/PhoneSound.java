@@ -116,7 +116,7 @@ final class PhoneSound {
                 .iconButton(
                         track,
                         "play",
-                        a.t("phone_preview_ending"),
+                        a.t("phone_audio_preview_length"),
                         () -> {
                             try {
                                 if (PhonePlayback.scheduled()) {
@@ -145,9 +145,9 @@ final class PhoneSound {
                                                                 || ui.settings
                                                                         .value(base + "voice")
                                                                         .equals("inherit"))
-                                                .putExtra("ending-preview", true)
+                                                .putExtra("length-preview", true)
                                                 .putExtra(
-                                                        "ending-percent",
+                                                        "length-percent",
                                                         Math.max(
                                                                 5,
                                                                 Math.round(
@@ -181,7 +181,18 @@ final class PhoneSound {
 
     void choose(String id, List<Choices.Option> options) throws Exception {
         if (ui.choiceDialog != null) ui.choiceDialog.dismiss();
-        String[] candidate = {ui.settings.value(id)};
+        List<Choices.Option> voices = new ArrayList<>();
+        for (Choices.Option option : options) if (!option.value.equals("custom")) voices.add(option);
+        try {
+            for (PhoneAudioLibrary.Entry entry : PhoneAudio.library(a))
+                voices.add(new Choices.Option("library:" + entry.hash, entry.name));
+        } catch (Exception unavailable) { a.notice("phone_custom_audio_failed"); }
+        String selectedVoice = ui.settings.value(id);
+        if (selectedVoice.equals("custom")) {
+            String hash = ui.settings.value("audio.custom." + PhoneAudio.slot(id));
+            selectedVoice = "library:" + hash;
+        }
+        String[] candidate = {selectedVoice};
         boolean shortWindow = a.getResources().getDisplayMetrics().heightPixels
                 < a.views.dp(480) * Math.max(1f, a.getResources().getConfiguration().fontScale);
         LinearLayout layout = a.views.column();
@@ -195,12 +206,12 @@ final class PhoneSound {
         ListView list = new ListView(a);
         list.setTag("phone.voice.list");
         list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        ArrayAdapter<Choices.Option> adapter = a.views.choices(options);
+        ArrayAdapter<Choices.Option> adapter = a.views.choices(voices);
         list.setAdapter(adapter);
         a.views.filterChoices(search, list, adapter, () -> candidate[0]);
         int selected = 0;
-        for (int i = 0; i < options.size(); i++)
-            if (options.get(i).value.equals(candidate[0])) selected = i;
+        for (int i = 0; i < voices.size(); i++)
+            if (voices.get(i).value.equals(candidate[0])) selected = i;
         list.setItemChecked(selected, true);
         list.setSelection(selected);
         layout.addView(
@@ -224,7 +235,7 @@ final class PhoneSound {
                         .setTitle(shortWindow ? null : a.t(ui.data.controls.get(id).getString("label")))
                         .setView(layout)
                         .setNegativeButton(a.t("cancel"), null)
-                        .setPositiveButton(a.t("apply"), (d, which) -> ui.save(id, candidate[0]))
+                        .setPositiveButton(a.t("apply"), (d, which) -> applyVoice(id, candidate[0]))
                         .create();
         Button imported =
                 a.views.button(
@@ -241,12 +252,11 @@ final class PhoneSound {
         imported.setTag("phone.voice.import");
         Runnable update =
                 () -> {
-                    boolean custom = candidate[0].equals("custom");
-                    boolean available =
-                            !custom
-                                    || !ui.settings
-                                            .value("audio.custom." + PhoneAudio.slot(id))
-                                            .isEmpty();
+                    boolean available = true;
+                    if (candidate[0].startsWith("library:")) {
+                        try { PhoneAudio.file(a, candidate[0].substring(8)); }
+                        catch (Exception unavailable) { available = false; }
+                    }
                     play.setEnabled(available);
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(available);
                 };
@@ -285,19 +295,67 @@ final class PhoneSound {
         String id = audioImport;
         audioImport = "";
         if (uri == null || id.isEmpty()) return;
-        a.network(
-                () -> {
-                    PhoneAudio.importFile(a, a.getContentResolver().openInputStream(uri), id);
-                    return true;
-                },
-                done -> {
-                    PhoneAlarms.rebuild(a);
-                    a.render();
-                },
-                () -> {
-                    a.notice("phone_custom_audio_failed");
-                    a.render();
-                });
+        EditText name = new EditText(a);
+        name.setSingleLine(true);
+        name.setHint(a.t("phone_audio_name"));
+        name.setText(importName(uri));
+        name.setSelectAllOnFocus(true);
+        name.setTag("phone.audio.name");
+        LinearLayout panel = a.views.column();
+        panel.setPadding(a.views.dp(20), a.views.dp(8), a.views.dp(20), 0);
+        panel.addView(name);
+        AlertDialog dialog = a.views.dialog().setTitle(a.t("phone_audio_import_name"))
+                .setView(panel).setNegativeButton(a.t("cancel"), null)
+                .setPositiveButton(a.t("done"), null).create();
+        dialog.setOnDismissListener(ignored -> { if (ui.choiceDialog == dialog) ui.choiceDialog = null; });
+        ui.choiceDialog = dialog;
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(ignored -> {
+            String label;
+            try { label = PhoneAudioLibrary.validName(name.getText().toString()); }
+            catch (IllegalArgumentException invalid) { name.setError(a.t("invalid")); return; }
+            dialog.dismiss();
+            a.network(
+                    () -> {
+                        PhoneAudio.importFile(a, a.getContentResolver().openInputStream(uri), id, label);
+                        return true;
+                    },
+                    done -> {
+                        PhoneAlarms.rebuild(a);
+                        a.render();
+                        ui.editorFocus(id);
+                    },
+                    () -> {
+                        a.notice("phone_custom_audio_failed");
+                        a.render();
+                    });
+        });
+    }
+
+    private String importName(android.net.Uri uri) {
+        String display = null;
+        try (android.database.Cursor cursor = a.getContentResolver().query(uri,
+                new String[] {android.provider.OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) display = cursor.getString(0);
+        } catch (Exception unavailable) { /* A provider need not expose a display name. */ }
+        if (display == null) display = a.t("phone_audio_import_default");
+        int extension = display.lastIndexOf('.');
+        if (extension > 0) display = display.substring(0, extension);
+        display = display.replaceAll("[\\p{Cntrl}]", " ").trim();
+        if (display.isEmpty()) display = a.t("phone_audio_import_default");
+        return display.length() > 80 ? display.substring(0, 80) : display;
+    }
+
+    private void applyVoice(String id, String candidate) {
+        if (!candidate.startsWith("library:")) { ui.save(id, candidate); return; }
+        try {
+            String hash = candidate.substring(8);
+            PhoneAudio.file(a, hash);
+            Map<String,String> edits = new LinkedHashMap<>();
+            edits.put(id, "custom");
+            edits.put("audio.custom." + PhoneAudio.slot(id), hash);
+            if (ui.save(edits, false)) ui.editorFocus(id);
+        } catch (Exception unavailable) { a.notice("phone_custom_audio_failed"); }
     }
 
     void preview(String id, String candidate) {
@@ -316,12 +374,13 @@ final class PhoneSound {
                             ? Arrays.asList(PhoneStore.PRAYERS).indexOf(id.split("\\.")[1])
                             : 0;
             boolean defaults = !id.startsWith("call.") || candidate.equals("inherit");
-            String voice =
-                    candidate.equals("inherit") ? ui.settings.value("reminders.voice") : candidate;
-            a.startForegroundService(
-                    PhonePlayback.intent(a, prayer, voice, true, "preview:" + System.nanoTime())
-                            .putExtra("default-audio", !id.startsWith("call."))
-                            .putExtra("default-voice", defaults));
+            String voice = candidate.startsWith("library:") ? "custom"
+                    : candidate.equals("inherit") ? ui.settings.value("reminders.voice") : candidate;
+            Intent intent = PhonePlayback.intent(a, prayer, voice, true, "preview:" + System.nanoTime())
+                    .putExtra("default-audio", !id.startsWith("call."))
+                    .putExtra("default-voice", defaults);
+            if (candidate.startsWith("library:")) intent.putExtra("custom-audio-hash", candidate.substring(8));
+            a.startForegroundService(intent);
         } catch (Exception error) {
             a.notice("phone_audio_failed");
         }

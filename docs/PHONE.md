@@ -32,6 +32,9 @@ in an Advanced dialog with Apply/Cancel. Changing location or timezone requires
 confirmation again. Review the method against your local authority; high-latitude
 rules can still return unavailable polar times.
 
+Phone settings omit the redundant Reduce motion toggle. Android animation settings
+and earlier saved motion opt-outs remain respected.
+
 ## Prayer and sound controls
 
 Tap a prayer to customize it. Its enable switch disables all of its settings
@@ -53,24 +56,38 @@ prayer or excluded weekday stays off. Overrides use that prayer's local date,
 including before/after reminders that cross midnight.
 
 Choose the default adhan level/length or override them for a prayer. Length is
-5–100% of the selected recording. **Preview ending** plays the last five seconds
-before its effective cutoff; moving the slider never starts sound. Existing
+5–100% of the selected recording. **Preview selected length** plays from the
+beginning and stops at that percentage; moving the slider never starts sound. Existing
 seconds caps survive upgrades and remain visible until the matching percentage
 is edited. Fajr has a dedicated default recording; other prayers inherit the
 normal voice. Old retired Al Afasy selections migrate to the approved Al-Malki
 or Chebae Fajr recording. Phone settings never write to a TV.
+
+**Test Adhan** and **Test notification** in Prayer alerts schedule an explicit
+one-shot test after a 30-second grace period, with a countdown and Cancel test.
+They do not enable prayers or change the real schedule. Adhan uses the default
+recording and its configured volume/length. Notification uses the existing short-
+tone channel. Android permissions, channel edits and Do Not Disturb still apply.
+Without exact timing access, Android may deliver later; the page states that timing
+is approximate. Reboot/update, cancellation, expiry and duplicate callbacks cannot
+replay a test.
 
 An existing quiet-hour rule is retained and labeled in Prayer alerts. It keeps
 its original event-time boundaries, including overnight and equal start/end
 (full day), and takes precedence over day overrides. Review or turn it off
 explicitly; Miqat does not silently convert a time window into whole weekdays.
 
-Voice sheets keep a draft selection: tap **Listen · 12s** to audition it, Stop
+Voice sheets keep a draft selection: tap **Listen** to play it from beginning to
+end, Stop
 or Cancel to end the preview, and Apply to save. Changing the draft does not
 change an upcoming adhan. Tap **Choose audio from device** in the voice picker
 to choose that voice's recording. The action stays visible while a built-in voice
 is selected. An existing private recording can be reused without importing again.
-Miqat copies audio-only media into private local storage,
+Every import stays in the app’s private adhan library, even after switching voices.
+Keep the file name or enter a recording name when importing. Saved recordings are
+searchable in every voice picker and can be reused for the default or any prayer.
+Existing imports are retained and given a fallback name. Miqat copies audio-only
+media into private local storage,
 checks that Android can prepare it, and limits it to 20 MB / 10 minutes. Failed
 imports preserve the previous selection. Original document access is not needed
 after a successful copy. There are 13 selectable approved built-in voices; the

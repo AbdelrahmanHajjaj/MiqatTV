@@ -325,6 +325,21 @@ final class PhoneAlarms {
         }
     }
 
+    static boolean notifyTest(Context c, boolean failure) {
+        try {
+            channels(c);
+            if (!channel(c, ALERTS)) return false;
+            Notification notice = new Notification.Builder(c, ALERTS)
+                    .setSmallIcon(R.drawable.companion_icon_mihrab)
+                    .setContentTitle(text(c, "phone_test_notification"))
+                    .setContentText(failure ? text(c, "phone_test_failed") : "Miqat")
+                    .setContentIntent(open(c)).setAutoCancel(true)
+                    .setCategory(Notification.CATEGORY_REMINDER).build();
+            c.getSystemService(NotificationManager.class).notify(PhoneAlertTest.NOTICE, notice);
+            return true;
+        } catch (Exception unavailable) { return false; }
+    }
+
     static void notify(Context c, ReminderEvent event, boolean failure) {
         try {
             channels(c);

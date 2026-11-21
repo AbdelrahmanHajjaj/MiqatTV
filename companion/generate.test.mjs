@@ -108,3 +108,9 @@ test('phone event dates and prayer verse preserve their canonical sources',()=>{
   assert.deepEqual(phone.prayerVerse,JSON.parse(readFileSync(new URL('../shared/data/sacred-text.json',import.meta.url))).prayerVerse);
   assert.equal(phone.hijriEvents.find(e=>e.month===9&&e.day===27),undefined);
 });
+
+test('phone test actions are canonical and obsolete motion has no ordinary settings section',()=>{
+ const {contract}=generatePhone();
+ assert.deepEqual(contract.actions.map(a=>a.id),['tests.phone-adhan','tests.phone-notification','tests.phone-cancel']);
+ assert.equal(contract.controls.find(c=>c.id==='display.reduce-motion').section,'legacy-display');
+ });

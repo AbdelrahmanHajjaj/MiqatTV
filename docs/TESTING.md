@@ -306,3 +306,16 @@ Voice-sheet checks require device audio selection to stay visible before selecti
 Custom audio, including compact landscape and enlarged text. The private custom
 audio fixture imports distinct default/Fajr files and checks independent slots,
 inherited defaults, malformed input, interrupted copies and oversize rejection.
+
+
+0.5.9: `phone-dialog` measures actual sheet position/width across entrance frames
+and checks the configured transform for horizontal movement. It first failed at
+x=27,width=1026, then passes x=0,width=1080 after dialog initialization precedes
+window sizing. Bilingual phone UI runs it alongside actual named-library search,
+selection/re-entry and exact restoration of existing private metadata/files.
+`phone-tests` requires notification/exact access on an owned muted emulator. It
+checks real 30-second notification and Adhan delivery, cancellation, early/stale/
+reboot/duplicate rejection and unchanged real settings/claims/schedule. The runtime
+suite includes these checks, a 20-second audition fixture (past the former 12s cap),
+and recording-metadata-driven percentage cutoff from position zero. Fixture caps
+never change the product's complete Listen or percentage previews.

@@ -12,7 +12,7 @@ import java.util.*;
 final class PhoneAudio {
     static final long MAX_BYTES = 20L * 1024 * 1024;
 
-    private static File directory(Context context) throws IOException {
+    static File directory(Context context) throws IOException {
         File directory =
                 new File(
                         context.createDeviceProtectedStorageContext().getFilesDir(),
@@ -30,9 +30,14 @@ final class PhoneAudio {
     }
 
     static void importFile(Context context, InputStream input, String id) throws Exception {
+        importFile(context, input, id, PhoneAlarms.text(context, "phone_audio_import_default"));
+    }
+
+    static void importFile(Context context, InputStream input, String id, String name) throws Exception {
         if (input == null) throw new IOException("No audio file");
         try (InputStream in = input) {
             String slot = slot(id);
+            String label = PhoneAudioLibrary.validName(name);
             File directory = directory(context),
                     part = File.createTempFile("import-", ".part", directory);
             try {
@@ -56,12 +61,15 @@ final class PhoneAudio {
                 for (byte b : digest.digest())
                     hash.append(String.format(Locale.US, "%02x", b & 255));
                 synchronized (PhoneStore.LOCK) {
+                    Map<String,String> names = PhoneAudioLibrary.read(context);
                     File file = new File(directory, hash + ".audio");
                     Files.move(
                             part.toPath(),
                             file.toPath(),
                             StandardCopyOption.ATOMIC_MOVE,
                             StandardCopyOption.REPLACE_EXISTING);
+                    names.put(hash.toString(), label);
+                    PhoneAudioLibrary.write(context, names);
                     PhoneStore current = PhoneStore.read(context);
                     Map<String, String> edits = new LinkedHashMap<>();
                     edits.put(id, "custom");
@@ -108,6 +116,10 @@ final class PhoneAudio {
             throws IOException {
         String slot = defaults ? "default" : PhoneStore.PRAYERS[prayer];
         String hash = settings.value("audio.custom." + slot);
+        return file(c, hash);
+    }
+
+    static File file(Context c, String hash) throws IOException {
         if (!hash.matches("[a-f0-9]{64}")) throw new IOException("No imported audio");
         File file = new File(directory(c), hash + ".audio");
         if (!file.isFile() || file.length() < 1 || file.length() > MAX_BYTES)
@@ -115,10 +127,40 @@ final class PhoneAudio {
         return file;
     }
 
+    static List<PhoneAudioLibrary.Entry> library(Context c) throws Exception {
+        synchronized (PhoneStore.LOCK) {
+            List<PhoneAudioLibrary.Entry> entries = new ArrayList<>();
+            for (Map.Entry<String,String> item : PhoneAudioLibrary.read(c).entrySet())
+                entries.add(new PhoneAudioLibrary.Entry(item.getKey(), item.getValue()));
+            entries.sort(Comparator.comparing(item -> item.name.toLowerCase(Locale.ROOT)));
+            return entries;
+        }
+    }
+
+    static String name(Context c, PhoneStore settings, String id) throws Exception {
+        String hash = settings.value("audio.custom." + slot(id));
+        synchronized (PhoneStore.LOCK) {
+            String label = PhoneAudioLibrary.read(c).get(hash);
+            return label == null ? PhoneAlarms.text(c, "phone_custom") : label;
+        }
+    }
+
+    static void select(Context c, String id, String hash) throws Exception {
+        synchronized (PhoneStore.LOCK) {
+            if (!PhoneAudioLibrary.read(c).containsKey(hash)) throw new IOException("Unknown recording");
+            file(c, hash);
+            Map<String,String> changes = new LinkedHashMap<>();
+            changes.put(id, "custom");
+            changes.put("audio.custom." + slot(id), hash);
+            PhoneStore.read(c).changed(changes).save(c);
+        }
+    }
+
     static void cleanup(Context c) throws Exception {
         synchronized (PhoneStore.LOCK) {
             PhoneStore settings = PhoneStore.read(c);
             Set<String> keep = new HashSet<>();
+            for (String hash : PhoneAudioLibrary.read(c).keySet()) keep.add(hash + ".audio");
             for (Map.Entry<String, String> value : settings.values.entrySet())
                 if (value.getKey().startsWith("audio.custom.") && !value.getValue().isEmpty())
                     keep.add(value.getValue() + ".audio");

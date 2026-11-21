@@ -21,7 +21,7 @@ import java.util.*;
 public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
     String backgroundSuite = "";
-    boolean calendarReturn, phoneControls;
+    boolean calendarReturn, phoneControls, phoneDialog, phoneTests;
     boolean mapNetwork;
     boolean journey,
             customCheck,
@@ -49,6 +49,8 @@ public final class CompanionCheck extends Instrumentation {
         String suite = arguments == null ? "" : arguments.getString("suite", "");
         backgroundSuite = suite.startsWith("phone-background-") ? suite : "";
         phoneControls = suite.equals("phone-controls");
+        phoneDialog = suite.equals("phone-dialog");
+        phoneTests = suite.equals("phone-tests");
         calendarReturn = suite.equals("phone-calendar-return");
         journey = suite.equals("phone-journey");
         customCheck = suite.equals("phone-custom");
@@ -77,6 +79,18 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if (phoneTests) {
+                PhoneTestCheck.run(this);
+                result.putString("stream", "PASS: thirty-second phone tests preserve real settings and schedule\n");
+                finish(-1, result);
+                return;
+            }
+            if (phoneDialog) {
+                PhoneDialogCheck.run(this);
+                result.putString("stream", "PASS: sheet entrance retains its position and width\n");
+                finish(-1, result);
+                return;
+            }
             if (phoneControls) {
                 PhoneControlCheck.run(this);
                 result.putString("stream", "PASS: immediate numeric changes survive switching controls and pages\n");

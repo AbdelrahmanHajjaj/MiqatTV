@@ -62,6 +62,12 @@ final class PhoneRuntimeCheck {
         Context c = test.getTargetContext();
         SharedPreferences preferences = PhoneStore.preferences(c);
         Map<String, ?> original = new HashMap<>(preferences.getAll());
+        java.io.File audioDirectory=PhoneAudio.directory(c),audioIndex=new java.io.File(audioDirectory,"library.json");
+        byte[] originalIndex=audioIndex.exists()?java.nio.file.Files.readAllBytes(audioIndex.toPath()):null;
+        Set<String> originalAudio=new HashSet<>();
+        java.io.File[] originalFiles=audioDirectory.listFiles();
+        if(originalFiles==null)throw new java.io.IOException("Cannot snapshot fixture audio");
+        for(java.io.File file:originalFiles)if(file.getName().matches("[a-f0-9]{64}[.]audio"))originalAudio.add(file.getName());
         android.media.AudioManager systemAudio =
                 c.getSystemService(android.media.AudioManager.class);
         int alarmVolume = systemAudio.getStreamVolume(android.media.AudioManager.STREAM_ALARM);
@@ -260,47 +266,50 @@ final class PhoneRuntimeCheck {
             }
             test.runOnMainSync(() ->
                     c.startForegroundService(
-                            PhonePlayback.intent(c, 0, "almalki", true, "bounded-preview")));
+                            PhonePlayback.intent(c, 0, "almalki", true, "bounded-preview").putExtra("preview-cap-seconds",20)));
             await(test, PhonePlayback::outputStarted, 10000, "Bounded preview did not start");
             long previewStarted = SystemClock.elapsedRealtime();
             await(
                     test,
                     () -> !PhonePlayback.playing(),
-                    16000,
-                    "Preview exceeded its twelve-second bound");
+                    24000,
+                    "Audition exceeded its explicit fixture cap");
             CompanionCheck.check(
-                    SystemClock.elapsedRealtime() - previewStarted >= 10000
+                    SystemClock.elapsedRealtime() - previewStarted >= 18000
                             && !preferences.contains("audio-error"),
                     "Preview failed instead of completing its bounded playback");
+            long selectedDuration;
+            try (android.content.res.AssetFileDescriptor file = c.getAssets().openFd("adhan/almalki.mp3")) {
+                android.media.MediaMetadataRetriever metadata = new android.media.MediaMetadataRetriever();
+                try {
+                    metadata.setDataSource(file.getFileDescriptor(),file.getStartOffset(),file.getLength());
+                    selectedDuration=Long.parseLong(metadata.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION))/20;
+                } finally { metadata.release(); }
+            }
             test.runOnMainSync(() -> c.startForegroundService(
-                    PhonePlayback.intent(c, 0, "almalki", true, "ending-preview-fixture")
-                            .putExtra("ending-preview", true).putExtra("ending-percent", 50)));
-            await(test, PhonePlayback::outputStarted, 10000, "Selected recording ending did not start");
-            Notification endingNotice = Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
-                    .map(n -> n.getNotification())
-                    .filter(n -> (n.flags & Notification.FLAG_FOREGROUND_SERVICE) != 0).findFirst()
-                    .orElseThrow(() -> new AssertionError("Ending preview notification missing"));
-            android.media.session.MediaSession.Token endingToken = endingNotice.extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
-            android.media.session.MediaController endingController = new android.media.session.MediaController(c, endingToken);
-            long endingPosition = endingController.getPlaybackState().getPosition();
-            CompanionCheck.check(endingPosition >= 24000 && endingPosition <= 27000,
-                    "Ending preview ignored migrated thirty-second cap: " + endingPosition);
-            long endingStarted = SystemClock.elapsedRealtime();
-            await(test, () -> !PhonePlayback.playing(), 8000, "Ending preview exceeded five seconds");
-            CompanionCheck.check(SystemClock.elapsedRealtime() - endingStarted >= 3500
-                    && !preferences.contains("audio-error"), "Ending preview failed instead of reaching selected cutoff");
+                    PhonePlayback.intent(c, 0, "almalki", true, "percentage-preview-fixture")
+                            .putExtra("length-preview", true).putExtra("length-percent", 5)
+                            .putExtra("preview-cap-seconds",20)));
+            await(test, PhonePlayback::outputStarted, 10000, "Selected percentage preview did not start");
+            Notification selectedNotice = Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
+                    .map(n -> n.getNotification()).filter(n -> (n.flags & Notification.FLAG_FOREGROUND_SERVICE) != 0).findFirst()
+                    .orElseThrow(() -> new AssertionError("Percentage preview notification missing"));
+            android.media.session.MediaSession.Token selectedToken = selectedNotice.extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
+            long selectedPosition = new android.media.session.MediaController(c,selectedToken).getPlaybackState().getPosition();
+            CompanionCheck.check(selectedPosition>=0&&selectedPosition<1500,"Percentage preview did not start at recording beginning");
+            long percentageStarted=SystemClock.elapsedRealtime();
+            await(test,()->!PhonePlayback.playing(),20000,"Percentage preview did not stop at its selected cutoff");
+            CompanionCheck.check(SystemClock.elapsedRealtime()-percentageStarted>=selectedDuration-1500
+                    && SystemClock.elapsedRealtime()-percentageStarted<=selectedDuration+3000
+                    && !preferences.contains("audio-error"),"Percentage preview did not play the selected recording fraction");
             home[0] = LiveUiCheck.launch(test);
             test.runOnMainSync(() -> c.startForegroundService(
-                    PhonePlayback.intent(c, 0, "almalki", true, "ending-navigation-fixture")
-                            .putExtra("ending-preview", true).putExtra("ending-percent", 50)));
+                    PhonePlayback.intent(c, 0, "almalki", true, "percentage-navigation-fixture")
+                            .putExtra("length-preview", true).putExtra("length-percent", 50).putExtra("preview-cap-seconds",20)));
             await(test, PhonePlayback::outputStarted, 10000, "Navigation preview did not start");
             PhoneUiCheck.on(test, () -> home[0].phoneUi.open("audio"));
-            await(test, () -> !PhonePlayback.playing(), 3000, "Leaving the editor retained its ending preview");
+            await(test, () -> !PhonePlayback.playing(), 3000, "Leaving the editor retained its percentage preview");
             audition(test, c);
-            CompanionCheck.check(
-                    PhoneStore.read(c).value("audio.custom.fajr").isEmpty(),
-                    "Custom runtime fixture requires an unused Fajr audio slot on the owned"
-                            + " emulator");
             PhoneAudio.importFile(c, c.getAssets().open("adhan/almalki.mp3"), "call.fajr.voice");
             Map<String, String> overrides = new LinkedHashMap<>();
             overrides.put("call.fajr.default-audio", "false");
@@ -405,11 +414,14 @@ final class PhoneRuntimeCheck {
             CompanionCheck.check(
                     !PhonePlayback.playing() && !PhoneStore.preferences(c).contains("next-event"),
                     "Disabled alerts retained active playback/alarm");
+            PhoneTestCheck.run(test);
         } finally {
             shell(test, "input keyevent KEYCODE_WAKEUP");
             shell(test, "wm dismiss-keyguard");
             if (home[0] != null) PhoneUiCheck.on(test, home[0]::finish);
+            PhoneAlertTest.cancel(c);
             PhonePlayback.stop(c);
+            await(test,()->!PhonePlayback.playing(),5000,"Runtime fixture cleanup retained playback");
             PhoneAlarms.cancel(c);
             SharedPreferences.Editor restore = preferences.edit().clear();
             for (Map.Entry<String, ?> entry : original.entrySet()) {
@@ -423,7 +435,19 @@ final class PhoneRuntimeCheck {
                 else throw new IllegalStateException("Unexpected fixture preference type");
             }
             CompanionCheck.check(restore.commit(), "Cannot restore alarm fixture");
-            PhoneAudio.cleanup(c);
+            synchronized(PhoneStore.LOCK) {
+                if(originalIndex==null)java.nio.file.Files.deleteIfExists(audioIndex.toPath());
+                else {
+                    java.io.File part=java.io.File.createTempFile("runtime-index-",".part",audioDirectory);
+                    try {
+                        try(java.io.FileOutputStream output=new java.io.FileOutputStream(part)) {output.write(originalIndex);output.getFD().sync();}
+                        java.nio.file.Files.move(part.toPath(),audioIndex.toPath(),java.nio.file.StandardCopyOption.ATOMIC_MOVE,java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    } finally {java.nio.file.Files.deleteIfExists(part.toPath());}
+                }
+                java.io.File[] after=audioDirectory.listFiles();
+                if(after==null)throw new java.io.IOException("Cannot restore fixture audio");
+                for(java.io.File file:after)if(file.getName().matches("[a-f0-9]{64}[.]audio")&&!originalAudio.contains(file.getName()))java.nio.file.Files.delete(file.toPath());
+            }
             PhoneAlarms.rebuild(c);
         }
     }

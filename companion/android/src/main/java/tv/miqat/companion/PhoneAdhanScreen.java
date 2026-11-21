@@ -98,8 +98,10 @@ public final class PhoneAdhanScreen extends Activity {
             scroll.addView(content);
             label(
                     content,
-                    settings.data.prayerName(
-                            getIntent().getIntExtra("prayer", 0), PhoneAlarms.arabic(this)),
+                    eventId != null && eventId.startsWith("phone:test:")
+                            ? PhoneAlarms.text(this, "phone_test_adhan")
+                            : settings.data.prayerName(
+                                    getIntent().getIntExtra("prayer", 0), PhoneAlarms.arabic(this)),
                     32,
                     accent);
             label(content, PhoneAlarms.text(this, "phone_swipe_stop"), 14, ink);
