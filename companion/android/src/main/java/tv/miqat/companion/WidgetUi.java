@@ -98,6 +98,7 @@ final class WidgetUi {
     }
 
     private void layouts() {
+        a.body.addView(a.views.text(a.t("widget_initial_layout"), 13, a.muted));
         List<Choices.Option> layouts = new ArrayList<>();
         for (String layout : WidgetOptions.LAYOUTS)
             layouts.add(
@@ -130,7 +131,7 @@ final class WidgetUi {
         preview.setPadding(a.views.dp(4), a.views.dp(8), a.views.dp(4), a.views.dp(8));
         int height =
                 Math.round(
-                        draft.height()
+                        draft.height() * draft.size / 100f
                                 * Math.max(
                                         1f,
                                         a.getApplicationContext()
@@ -138,7 +139,7 @@ final class WidgetUi {
                                                 .getConfiguration()
                                                 .fontScale));
         android.view.View rendered =
-                WidgetRenderer.create(a.getApplicationContext(), draft, width(), height)
+                WidgetRenderer.initial(a.getApplicationContext(), draft, width(), height)
                         .apply(a.getApplicationContext(), preview);
         preview.addView(rendered, new LinearLayout.LayoutParams(-1, a.views.dp(height)));
         a.body.addView(preview);
@@ -302,7 +303,7 @@ final class WidgetUi {
         Bundle extras = new Bundle();
         extras.putParcelable(
                 AppWidgetManager.EXTRA_APPWIDGET_PREVIEW,
-                WidgetRenderer.create(a, draft, width(), draft.height()));
+                WidgetRenderer.initial(a, draft, width(), draft.height()));
         manager.requestPinAppWidget(PrayerWidget.component(a, draft.layout), extras, callback);
     }
 }

@@ -101,6 +101,9 @@ TV workflows, while transports keep networking/trust separate. QiblaUi owns
 foreground sensors and opt-in, attributed map loading. PhoneCalendar maps Hijri
 month selection back to civil dates for the real prayer engine. WidgetUi owns draft configuration, WidgetOptions per-instance
 presentation, WidgetRenderer native RemoteViews, and PrayerWidget the existing
-schedule/launcher update lifecycle. Native receiver variants share that provider.
+schedule/launcher update lifecycle plus exact-size maps/legacy resize bounds.
+Allocated dimensions determine compact/next/daily detail; stored presets remain
+initial presentations and styles are independent. PhoneDayOverrides renders each
+weekday's controls in place. Native receiver variants share that provider.
 Neither phone settings nor alarm recovery connect to a TV.
 See [phone guide and limits](PHONE.md) and [delivery ledger](PHONE-WORK.md).

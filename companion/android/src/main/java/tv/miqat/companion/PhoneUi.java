@@ -202,12 +202,12 @@ final class PhoneUi {
 
     void preferences() throws Exception {
         if (a.section.isEmpty()) {
-
+            LinearLayout group = a.views.navigationGroup(a.body);
             for (String section :
                     new String[] {"calculation", "audio", "appearance", "permissions"})
                 a.views
                         .navigationRow(
-                                a.body,
+                                group,
                                 section.equals("calculation")
                                         ? "compass"
                                         : section.equals("appearance") ? "mihrab" : "bell",
@@ -217,17 +217,16 @@ final class PhoneUi {
                         .setTag("phone.section." + section);
             a.views
                     .navigationRow(
-                            a.body, "mihrab", a.t("phone_widgets"), "", () -> a.navigate("widgets"))
+                            group, "mihrab", a.t("phone_widgets"), "", () -> a.navigate("widgets"))
                     .setTag("phone.section.widgets");
+            a.languageChoices(group);
             a.views.navigationRow(
-                    a.body, "gear", a.t("setup_again"), "", () -> a.onboarding.open());
-            a.body.addView(a.views.text(a.t("preferences"), 13, a.muted));
-            a.languageChoices(a.body);
+                    group, "gear", a.t("setup_again"), "", () -> a.onboarding.open());
             reset(a.body);
             return;
         }
         if (a.section.startsWith("days:") || a.section.startsWith("day:")) {
-            dayOverrides();
+            new PhoneDayOverrides(a, this).render(a.section.split(":")[1]);
             return;
         }
         if (Arrays.asList(PhoneStore.PRAYERS).contains(a.section) && !a.section.equals("sunrise")) {
@@ -273,6 +272,7 @@ final class PhoneUi {
 
     private void prayerRows() throws Exception {
         a.body.addView(a.views.heading(a.t("phone_prayer_settings")));
+        LinearLayout group = a.views.navigationGroup(a.body);
         for (int i = 0; i < 6; i++)
             if (i != 1) {
                 final String id = PhoneStore.PRAYERS[i];
@@ -286,7 +286,7 @@ final class PhoneUi {
                                 + (settings.vibrate(i) ? " · " + a.t("phone_vibrate") : "");
                 a.views
                         .navigationRow(
-                                a.body,
+                                group,
                                 id,
                                 data.prayerName(i, a.ar),
                                 settings.prayerEnabled(i) ? summary : a.t("off"),
@@ -387,83 +387,6 @@ final class PhoneUi {
                 a.body.getChildAt(i).setAlpha(.38f);
             }
         }
-    }
-
-    private void dayOverrides() throws Exception {
-        String[] place = a.section.split(":");
-        String prayer = place[1], base = "call." + prayer + ".";
-        int index = Arrays.asList(PhoneStore.PRAYERS).indexOf(prayer);
-        if (index < 0 || index == 1) throw new IllegalArgumentException();
-        String[] names = new java.text.DateFormatSymbols(locale()).getWeekdays();
-        if (place[0].equals("days")) {
-            for (int i = 0; i < 7; i++) {
-                final int day = i;
-                String sound = settings.value(base + "day-" + i + "-sound");
-                String summary =
-                        sound.equals("inherit")
-                                ? a.t("phone_use_defaults")
-                                : value(base + "mode", sound)
-                                        + (settings.vibrateOnDay(index, i)
-                                                ? " · " + a.t("phone_vibrate")
-                                                : "");
-                a.views
-                        .navigationRow(
-                                a.body,
-                                "clock",
-                                names[i + 1],
-                                summary,
-                                () -> open("day:" + prayer + ":" + day))
-                        .setTag("phone.day." + i);
-            }
-            return;
-        }
-        int day = Integer.parseInt(place[2]);
-        String soundId = base + "day-" + day + "-sound",
-                vibrateId = base + "day-" + day + "-vibrate";
-        a.body.addView(a.views.heading(data.prayerName(index, a.ar) + " · " + names[day + 1]));
-        boolean inherited = settings.value(soundId).equals("inherit");
-        a.views
-                .toggle(
-                        a.body,
-                        a.t("phone_use_defaults"),
-                        inherited,
-                        use -> {
-                            Map<String, String> changes = new LinkedHashMap<>();
-                            String mode = settings.value(base + "mode");
-                            changes.put(
-                                    soundId,
-                                    use
-                                            ? "inherit"
-                                            : mode.equals("notification")
-                                                    ? "notification"
-                                                    : mode.equals("adhan") ? "adhan" : "silent");
-                            if (!use)
-                                changes.put(
-                                        vibrateId,
-                                        Boolean.toString(
-                                                settings.vibrate(index)
-                                                        || mode.equals("vibration")));
-                            save(changes, false);
-                        })
-                .setTag("phone.day.inherit");
-        int start = a.body.getChildCount();
-        java.util.List<Choices.Option> choices = new ArrayList<>();
-        for (String mode : new String[] {"adhan", "notification", "silent"})
-            choices.add(new Choices.Option(mode, a.t("phone_" + mode)));
-        a.views.segmentedChoices(
-                a.body, "phone.day.sound", choices, settings.value(soundId), v -> save(soundId, v));
-        a.views
-                .toggle(
-                        a.body,
-                        a.t("phone_vibrate"),
-                        settings.vibrateOnDay(index, day),
-                        v -> save(vibrateId, Boolean.toString(v)))
-                .setTag("phone.day.vibrate");
-        if (inherited)
-            for (int i = start; i < a.body.getChildCount(); i++) {
-                a.views.disableContent(a.body.getChildAt(i));
-                a.body.getChildAt(i).setAlpha(.38f);
-            }
     }
 
     String sectionTitle() {
@@ -707,13 +630,16 @@ final class PhoneUi {
                 a.getResources().getDisplayMetrics().widthPixels
                                                 / a.getResources().getDisplayMetrics().density
                                         - 40
-                                >= 7 * 48
+                                >= 7 * 50
                         ? 7
                         : 4;
         LinearLayout track = null;
         for (int n = 0; n < 7; n++) {
             final int day = (n + 1) % 7;
-            if (n % columns == 0) track = a.views.horizontal(days);
+            if (n % columns == 0) {
+                track = a.views.horizontal(days);
+                track.setGravity(Gravity.CENTER);
+            }
             boolean on = (mask & (1 << day)) != 0;
             String name = names[day + 1];
             Button button =
@@ -721,7 +647,9 @@ final class PhoneUi {
                             track,
                             a.t("phone_weekday_letters").split(",")[day],
                             () -> save(id, Integer.toString(mask ^ (1 << day))));
-            button.setLayoutParams(new LinearLayout.LayoutParams(0, a.views.dp(48), 1));
+            LinearLayout.LayoutParams cell = new LinearLayout.LayoutParams(a.views.dp(48), a.views.dp(48));
+            cell.setMargins(a.views.dp(1), a.views.dp(3), a.views.dp(1), a.views.dp(3));
+            button.setLayoutParams(cell);
             button.setPadding(0, 0, 0, 0);
             button.setTextSize(14);
             button.setMinWidth(0);
@@ -729,7 +657,8 @@ final class PhoneUi {
             button.setContentDescription(name);
             button.setSelected(on);
             button.setTag("phone." + id + "." + day);
-            button.setBackground(a.views.background(on ? a.accent : a.surface, 28));
+            button.setBackground(new InsetDrawable(a.views.background(on ? a.accent : a.surface, 28), a.views.dp(6)));
+            button.setPadding(0, 0, 0, 0);
             button.setTextColor(on ? a.ground : a.ink);
             button.setAccessibilityDelegate(
                     new View.AccessibilityDelegate() {
@@ -747,8 +676,12 @@ final class PhoneUi {
     void number(LinearLayout row, SettingSpec spec, String saved, String label) {
         String id = spec.getId();
         boolean editing = pending.equals(id);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(a.views.dp(12), a.views.dp(6), a.views.dp(12), a.views.dp(6));
+        row.setBackground(a.views.background(a.surface, 18));
         LinearLayout track = a.views.horizontal(row);
-        track.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1.6f));
+        track.setLayoutParams(new LinearLayout.LayoutParams(a.views.dp(144), -2));
+        track.setBackground(a.views.background(a.ground, 14));
         EditText input = new EditText(a);
         input.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
         input.setSingleLine(true);
@@ -771,6 +704,7 @@ final class PhoneUi {
         input.setFocusable(editing);
         input.setMinWidth(0);
         input.setPadding(0, 0, 0, 0);
+        if (!editing) input.setBackground(null);
         input.setOnClickListener(v -> {
             if (!editing) {
                 pending = id;
@@ -800,6 +734,10 @@ final class PhoneUi {
                                 }
                             });
             a.views.square(button);
+            button.setLayoutParams(new LinearLayout.LayoutParams(a.views.dp(48), a.views.dp(48)));
+            button.setBackground(new RippleDrawable(
+                    android.content.res.ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000),
+                    a.views.background(Color.TRANSPARENT, 14), null));
             button.setTag("phone." + id + (direction < 0 ? ".minus" : ".plus"));
             button.setContentDescription(
                     a.t(direction < 0 ? "decrease" : "increase") + " " + label);

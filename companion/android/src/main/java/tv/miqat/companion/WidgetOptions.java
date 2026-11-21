@@ -54,7 +54,16 @@ final class WidgetOptions {
     }
 
     int height() {
-        return layout.equals("day") ? 260 : layout.equals("next") ? 160 : 120;
+        return layout.equals("day") ? 300 : layout.equals("next") ? 160 : 140;
+    }
+
+    String layoutFor(int width, int height, float fontScale) {
+        if (width <= 0 || height <= 0) return layout;
+        float scale = Math.max(1f, fontScale) * size / 100f;
+        int dayHeight = Math.round(80 + 220 * scale);
+        if (width >= 220 * scale && height >= dayHeight) return "day";
+        if (width >= 360 * scale && height >= 110 * scale && height < 180 * scale) return "strip";
+        return "next";
     }
 
     String encode() {

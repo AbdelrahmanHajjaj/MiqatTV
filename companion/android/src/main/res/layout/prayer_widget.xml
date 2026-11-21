@@ -3,13 +3,19 @@
 <ImageView android:id="@+id/widget_backdrop" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/widget_background" android:scaleType="fitXY" android:importantForAccessibility="no" android:contentDescription="@null" />
 <LinearLayout
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical" android:padding="12dp">
+    android:id="@+id/widget_content" android:orientation="vertical" android:padding="12dp">
     <TextView android:id="@+id/widget_title" android:layout_width="match_parent" android:layout_height="wrap_content"
         style="@style/MiqatWidgetText" android:textSize="12sp" android:text="@string/app_name" android:maxLines="2" android:ellipsize="end" />
-    <LinearLayout android:id="@+id/widget_next" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="6dp" android:paddingBottom="6dp">
-        <TextView android:id="@+id/widget_next_label" android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/MiqatWidgetText" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/widget_next_time" android:layout_width="match_parent" android:layout_height="56dp" style="@style/MiqatWidgetValue" android:textSize="34sp" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="16sp" android:autoSizeMaxTextSize="40sp" android:autoSizeStepGranularity="1sp" />
-    </LinearLayout>
+    <FrameLayout android:id="@+id/widget_next" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:layout_marginBottom="4dp">
+        <ImageView android:id="@+id/widget_next_highlight" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/widget_highlight" android:scaleType="fitXY" android:importantForAccessibility="no" android:contentDescription="@null"/>
+        <LinearLayout android:id="@+id/widget_next_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="6dp">
+            <ImageView android:id="@+id/widget_next_icon" android:layout_width="28dp" android:layout_height="28dp" android:layout_marginEnd="8dp" android:importantForAccessibility="no" android:contentDescription="@null"/>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:includeFontPadding="false" android:id="@+id/widget_next_label" android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/MiqatWidgetText" android:textSize="12sp" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:includeFontPadding="false" android:id="@+id/widget_next_time" android:layout_width="match_parent" android:layout_height="38dp" style="@style/MiqatWidgetValue" android:textSize="28sp" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="12sp" android:autoSizeMaxTextSize="32sp" android:autoSizeStepGranularity="1sp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
     <LinearLayout android:id="@+id/widget_prayers" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
     <LinearLayout android:id="@+id/widget_strip" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" />
     <TextView android:id="@+id/widget_times" android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/MiqatWidgetText" android:textSize="14sp" />

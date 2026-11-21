@@ -76,7 +76,7 @@ test('new branding settings reach both profiles with canonical scenes and opacit
 
 test('phone alert metadata keeps independent enable, weekday overrides and relative audio bounds',()=>{
  const {contract}=generatePhone();
- assert.equal(contract.version,4);
+ assert.equal(contract.version,5);
  assert.equal(contract.perPrayer.find(c=>c.suffix==='enabled').default,'true');
  for(let day=0;day<7;day++) {
   assert.deepEqual(contract.perPrayer.find(c=>c.suffix===`day-${day}-sound`).choices,['inherit','adhan','notification','silent']);

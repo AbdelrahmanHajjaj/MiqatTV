@@ -12,6 +12,11 @@ for a TV keeps a representative phone preview with Apply/Cancel. Phone prayer
 preferences save independently, with inline numeric Done/Cancel. Optional demo TVs remain
 in Preferences; they do not establish hardware support.
 
+Phone Home and the Hijri calendar share a readable six-prayer timetable. Placed
+widgets adapt their presentation to allocated size, with canonical prayer icons,
+fonts and next-prayer highlights. Settings keep style/date choices per instance.
+Home artwork can be dimmed or disabled; weekday overrides expand in place.
+
 Pair on the same home network through Settings / Phones on the active TV, then
 confirm the matching code with its physical remote. Both TV shells use unique
 pinned TLS identities and independently revocable phone credentials. Settings

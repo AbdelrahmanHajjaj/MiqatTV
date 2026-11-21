@@ -94,6 +94,8 @@ final class PhoneUiCheck {
                     a.tab("phone-settings");check(a.section.isEmpty(),"Phone settings root tab did not return from its child page");
                     check(a.body.findViewWithTag("phone.section.widgets")!=null,"Widget customization needs a settings entry");
                 });
+                PhonePolishCheck.run(test,a,lang,capture);
+                on(test,()->a.tab("phone-settings"));
                 capture(test,a,lang+"-phone-settings",capture);
                 on(test,()->a.phoneUi.open("audio"));capture(test,a,lang+"-phone-audio",capture);
                 on(test,()->{a.phoneUi.open("default-audio");a.body.findViewWithTag("phone.reminders.voice.edit").performClick();});capture(test,a,lang+"-phone-voice-sheet",capture);
@@ -209,7 +211,7 @@ final class PhoneUiCheck {
         a.phoneUi.open("appearance");
         for(JSONObject control:a.phoneUi.data.controls.values()) if(control.optString("section").equals("appearance")) {
             String id=control.optString("id");
-            if(id.startsWith("appearance."))a.body.findViewWithTag("appearance.tab."+id).performClick();
+            if(id.equals("appearance.theme")||id.equals("appearance.background"))a.body.findViewWithTag("appearance.tab."+id).performClick();
             check(a.body.findViewWithTag("phone."+id)!=null,"Missing appearance control "+id);
         }
         for(String prayer:new String[]{"fajr","dhuhr","asr","maghrib","isha"}) {
@@ -237,21 +239,20 @@ final class PhoneUiCheck {
         a.phoneUi.open("days:fajr");
         for(int day=0;day<7;day++)check(a.body.findViewWithTag("phone.day."+day)!=null,"Missing day override row "+day);
         a.body.findViewWithTag("phone.day.2").performClick();
-        check(a.section.equals("day:fajr:2"),"Tuesday row opened another day");
-        check(!a.body.findViewWithTag("phone.day.sound.silent").isEnabled(),"Inherited day must keep overrides disabled");
-        a.body.findViewWithTag("phone.day.inherit").performClick();
-        a.body.findViewWithTag("phone.day.sound.silent").performClick();
-        a.body.findViewWithTag("phone.day.vibrate").performClick();
+        check(a.section.equals("days:fajr"),"Tuesday override must expand without another page");
+        check(a.body.findViewWithTag("phone.day.2.sound.silent").isEnabled(),"Enabling Tuesday must expose its controls immediately");
+        a.body.findViewWithTag("phone.day.2.sound.silent").performClick();
+        a.body.findViewWithTag("phone.day.2.vibrate").performClick();
         check(a.phoneUi.settings.value("call.fajr.day-2-sound").equals("silent")
                 && a.phoneUi.settings.vibrateOnDay(0,2)
                 && a.phoneUi.settings.value("call.fajr.day-0-sound").equals("inherit")
                 && a.phoneUi.settings.value("call.fajr.mode").equals(original),"Day override changed another day or prayer default");
-        a.phoneUi.open("fajr");a.phoneUi.open("day:fajr:2");
-        check(a.body.findViewWithTag("phone.day.sound.silent").isSelected()
-                && ((Switch)a.body.findViewWithTag("phone.day.vibrate")).isChecked(),"Day override did not survive re-entry");
-        a.body.findViewWithTag("phone.day.inherit").performClick();
+        a.phoneUi.open("fajr");a.phoneUi.open("days:fajr");
+        check(a.body.findViewWithTag("phone.day.2.sound.silent").isSelected()
+                && ((Switch)a.body.findViewWithTag("phone.day.2.vibrate")).isChecked(),"Day override did not survive re-entry");
+        a.body.findViewWithTag("phone.day.2").performClick();
         check(a.phoneUi.settings.value("call.fajr.day-2-sound").equals("inherit")
-                && !a.body.findViewWithTag("phone.day.sound.silent").isEnabled(),"Use defaults failed to restore inheritance");
+                && a.body.findViewWithTag("phone.day.2.sound.silent")==null,"Disabling override failed to restore inheritance");
     }
 
     private static void keyboardFooter(Instrumentation test, MainActivity a,

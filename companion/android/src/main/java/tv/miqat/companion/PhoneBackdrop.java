@@ -17,6 +17,9 @@ final class PhoneBackdrop extends Drawable {
     private final Artwork artwork;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Rect source = new Rect();
+    private final RectF portraitArt = new RectF();
+    private final Paint fade = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private int sky;
 
     static Artwork read(android.content.Context context, String id) throws java.io.IOException {
         if (id.equals("plain")) return null;
@@ -44,30 +47,33 @@ final class PhoneBackdrop extends Drawable {
     }
 
     @Override
+    protected void onBoundsChange(Rect bounds) {
+        if (bounds.isEmpty() || bounds.height() <= bounds.width() || artwork.portrait != null) return;
+        Bitmap bitmap = artwork.landscape;
+        sky = bitmap.getPixel(bitmap.getWidth() / 2, 0);
+        float height = Math.max(bounds.width() * (float) bitmap.getHeight() / bitmap.getWidth(),
+                bounds.height() * .6f);
+        float width = height * bitmap.getWidth() / bitmap.getHeight();
+        portraitArt.set(bounds.exactCenterX() - width / 2, bounds.bottom - height,
+                bounds.exactCenterX() + width / 2, bounds.bottom);
+        fade.setShader(new LinearGradient(0, portraitArt.top, 0, portraitArt.top + height * .3f,
+                sky, sky & 0xffffff, Shader.TileMode.CLAMP));
+    }
+
+    @Override
     public void draw(Canvas canvas) {
         Rect bounds = getBounds();
         if (bounds.isEmpty()) return;
         boolean portrait = bounds.height() > bounds.width();
         Bitmap bitmap = portrait && artwork.portrait != null ? artwork.portrait : artwork.landscape;
         if (portrait && artwork.portrait == null) {
-            int sky = bitmap.getPixel(bitmap.getWidth() / 2, 0);
             canvas.drawColor(sky);
-            float height = bounds.width() * (float) bitmap.getHeight() / bitmap.getWidth();
-            RectF destination =
-                    new RectF(bounds.left, bounds.bottom - height, bounds.right, bounds.bottom);
-            canvas.drawBitmap(bitmap, null, destination, paint);
-            float fadeEnd = destination.top + height * .25f;
-            paint.setShader(
-                    new LinearGradient(
-                            bounds.left,
-                            destination.top,
-                            bounds.left,
-                            fadeEnd,
-                            sky,
-                            sky & 0xffffff,
-                            Shader.TileMode.CLAMP));
-            canvas.drawRect(bounds.left, destination.top, bounds.right, fadeEnd, paint);
-            paint.setShader(null);
+            int clip = canvas.save();
+            canvas.clipRect(bounds);
+            canvas.drawBitmap(bitmap, null, portraitArt, paint);
+            canvas.drawRect(bounds.left, portraitArt.top, bounds.right,
+                    portraitArt.top + portraitArt.height() * .3f, fade);
+            canvas.restoreToCount(clip);
             return;
         }
         float scale =

@@ -3,6 +3,9 @@ package tv.miqat.companion;
 import android.appwidget.*;
 import android.content.*;
 import android.os.Bundle;
+import android.os.Build;
+import android.util.SizeF;
+import android.widget.RemoteViews;
 
 import java.util.*;
 
@@ -80,15 +83,37 @@ public class PrayerWidget extends AppWidgetProvider {
     }
 
     static void update(Context context, int id) {
-        Bundle bounds = AppWidgetManager.getInstance(context).getAppWidgetOptions(id);
-        WidgetOptions options = WidgetOptions.read(context, id);
-        int width = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 280);
-        int height = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, options.height());
-        if (width <= 0) width = 280;
-        if (height <= 0) height = options.height();
-        if (height > 0 && height < 200 && options.layout.equals("day")) options.layout = "next";
-        AppWidgetManager.getInstance(context)
-                .updateAppWidget(id, WidgetRenderer.create(context, options, width, height));
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        manager.updateAppWidget(id, responsive(context, WidgetOptions.read(context, id), manager.getAppWidgetOptions(id)));
+    }
+
+    static RemoteViews responsive(Context context, WidgetOptions options, Bundle bounds) {
+        if (Build.VERSION.SDK_INT >= 31) {
+            ArrayList<SizeF> sizes = bounds.getParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES);
+            if (sizes != null && !sizes.isEmpty()) {
+                Map<SizeF, RemoteViews> layouts = new LinkedHashMap<>();
+                for (Object item : sizes) {
+                    if (!(item instanceof SizeF)) continue;
+                    SizeF size = (SizeF) item;
+                    if (!Float.isFinite(size.getWidth()) || !Float.isFinite(size.getHeight())
+                            || size.getWidth() <= 0 || size.getHeight() <= 0) continue;
+                    if (layouts.size() == 16) break;
+                    layouts.put(size, WidgetRenderer.create(context, options, Math.round(size.getWidth()), Math.round(size.getHeight())));
+                }
+                if (!layouts.isEmpty()) return new RemoteViews(layouts);
+            }
+        }
+        int minWidth = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH),
+                minHeight = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT),
+                maxWidth = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, minWidth),
+                maxHeight = bounds.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, minHeight);
+        if (minWidth <= 0 || minHeight <= 0)
+            return WidgetRenderer.create(context, options, 0, 0);
+        if (maxWidth <= 0) maxWidth = minWidth;
+        if (maxHeight <= 0) maxHeight = minHeight;
+        RemoteViews portrait = WidgetRenderer.create(context, options, minWidth, maxHeight);
+        if (minWidth == maxWidth && minHeight == maxHeight) return portrait;
+        return new RemoteViews(WidgetRenderer.create(context, options, maxWidth, minHeight), portrait);
     }
 
     static void updateAll(Context context) {

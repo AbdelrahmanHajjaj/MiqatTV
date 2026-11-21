@@ -161,7 +161,7 @@ for (const theme of data.themes) {
   const surfaceCss = ['.settings-rows button,.app-tile,.prayer,.day-row { background:' + surface.fill + ';border:' + surface.stroke + 'px solid ' + surface.edge + '; }',
     ...[['.settings-rows button', 'row'], ['.app-tile', 'tile'], ['.prayer', 'cell'], ['.day-row', 'row']].map(([selector, radius]) => selector + ' { border-radius:' + (selector === '.prayer' ? surface.prayerRadius + 'px' : surface.radius === null ? tokens.radius[radius].$value : surface.radius + 'px') + '; }'),
     '.home-prayers .prayer.next { background:rgba(' + [1, 3, 5].map(at => parseInt(surface.archFill.slice(at, at + 2), 16)).join(',') + ',' + tokens.surface['next-prayer-opacity'].$value + ');color:' + c['gold-400'] + '; }',
-    '.prayer.next { border:' + tokens.border['next-prayer'].width.$value + ' solid ' + c['gold-400'] + '; }',
+    '.prayer.next,.day-row.next { border:' + tokens.border['next-prayer'].width.$value + ' solid ' + c['gold-400'] + '; }',
     '.settings-rows button:focus,.app-tile:focus { background:' + c['gold-400'] + ';color:' + c['lapis-900'] + ';border-color:transparent; }',
     '.arch-shape { fill:' + surface.fill + ';stroke:' + surface.archEdge + ';stroke-width:' + surface.archStroke + '; }',
     '.arch-shape .inner { display:' + (surface.name === 'classic' || surface.name === 'frame' ? 'block' : 'none') + '; }'];

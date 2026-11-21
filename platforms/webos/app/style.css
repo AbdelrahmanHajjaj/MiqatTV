@@ -225,7 +225,9 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 .stepper strong { display: block; font-size: 130px; margin: 40px; }
 .day-times { position: absolute; top: 196px; left: 96px; width: 1000px; }
 [dir=rtl] .day-times { left: auto; right: 96px; }
-.day-row { height: 112px; padding: 14px 22px; background: {{color.lapis-800}}; margin-bottom: 12px; border-radius: 14px; }
+.day-row { height: 112px; padding: 14px 22px; background: {{color.lapis-800}}; margin-bottom: 12px; border: 2px solid transparent; border-radius: 14px; }
+.day-row.current { background: {{color.plaster-100}}; color: {{color.lapis-900}}; }
+.day-row.past { color: {{color.mist-400}}; }
 .day-row > span { display: inline-block; width: 30%; }
 .day-row strong { display: inline-block; width: 30%; direction: ltr; }
 .day-row button { width: 32%; }

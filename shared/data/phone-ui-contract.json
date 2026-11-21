@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "defaultCity": "cairo",
   "defaultFajrVoice": "chebae_fajr",
   "controls": [
@@ -21,6 +21,7 @@
     {"id":"display.reduce-motion","section":"appearance","kind":"toggle","label":"phone_reduce_motion","default":"false"},
     {"id":"appearance.theme","section":"appearance","kind":"choice","label":"phone_theme","choices":"themes","default":"mihrab"},
     {"id":"appearance.background","section":"appearance","kind":"choice","label":"phone_background","choices":"backgrounds","default":"miqat_signature"},
+    {"id":"appearance.home-background","section":"appearance","kind":"toggle","label":"phone_home_background","default":"true","since":5},
     {"id":"prayer.travel-refresh","section":"calculation","kind":"toggle","label":"phone_travel_refresh","default":"false","since":2},
     {"id":"quiet.enabled","section":"audio","kind":"toggle","label":"phone_quiet_enabled","default":"false","since":2},
     {"id":"quiet.start","section":"audio","kind":"number","editor":"time","label":"phone_quiet_start","minimum":0,"maximum":1439,"step":1,"default":"1320","since":2},

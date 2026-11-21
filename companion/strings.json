@@ -379,5 +379,7 @@
   "phone_map_unavailable":{"en":"Map unavailable. Compass and bearing remain available.","ar":"الخريطة غير متاحة. يمكنك استخدام البوصلة والاتجاه."},
   "phone_kaaba":{"en":"Kaaba","ar":"الكعبة"},
   "phone_default_audio_title":{"en":"Default adhan audio","ar":"صوت الأذان الافتراضي"},
-  "phone_weekday_letters":{"en":"S,M,T,W,T,F,S","ar":"ح,ن,ث,ر,خ,ج,س"}
+  "phone_weekday_letters":{"en":"S,M,T,W,T,F,S","ar":"ح,ن,ث,ر,خ,ج,س"},
+  "phone_home_background":{"en":"Background on Prayer home","ar":"خلفية صفحة الصلاة"},
+  "widget_initial_layout":{"en":"Initial presentation","ar":"العرض الأولي"}
 }

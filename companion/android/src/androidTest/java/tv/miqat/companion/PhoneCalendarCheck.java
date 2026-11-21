@@ -144,58 +144,69 @@ final class PhoneCalendarCheck {
                             && !html.contains("<script"),
                     "Unbounded or invalid Qibla map document");
         }
-        String[] month = new String[1];
         PhoneUiCheck.on(
                 test,
                 () -> {
                     a.tab("prayers");
+                    android.view.View sunrise = a.body.findViewWithTag("phone.prayer.sunrise");
+                    PhoneUiCheck.check(
+                            !sunrise.isClickable() && !sunrise.isFocusable(),
+                            "Sunrise must remain informational in the prayer list");
+                });
+        tapDayArrow(test, a, "calendar.previous-day", -1);
+        tapDayArrow(test, a, "calendar.next-day", 0);
+        tapDayArrow(test, a, "calendar.next-day", 1);
+        PhoneUiCheck.on(test, () -> a.phoneUi.home.today());
+        String[] month = new String[1];
+        PhoneUiCheck.on(
+                test,
+                () -> {
                     a.body.findViewWithTag("phone.today").performClick();
                     PhoneUiCheck.check(
                             a.phoneUi.choiceDialog != null,
                             "Home date did not open Hijri calendar");
+                    android.view.View calendarRoot =
+                            a.phoneUi.choiceDialog.getWindow().getDecorView();
+                    calendarTimes(
+                            a, calendarRoot, a.phoneUi.settings.day(System.currentTimeMillis(), 0));
                     month[0] =
-                            ((TextView)
-                                            a.phoneUi
-                                                    .choiceDialog
-                                                    .getWindow()
-                                                    .getDecorView()
-                                                    .findViewWithTag("calendar.month"))
+                            ((TextView) calendarRoot.findViewWithTag("calendar.month"))
                                     .getText()
                                     .toString();
-                    a.phoneUi
-                            .choiceDialog
-                            .getWindow()
-                            .getDecorView()
-                            .findViewWithTag("calendar.next")
-                            .performClick();
+                    calendarRoot.findViewWithTag("calendar.next").performClick();
                     PhoneUiCheck.check(
-                            !((TextView)
-                                            a.phoneUi
-                                                    .choiceDialog
-                                                    .getWindow()
-                                                    .getDecorView()
-                                                    .findViewWithTag("calendar.month"))
+                            !((TextView) calendarRoot.findViewWithTag("calendar.month"))
                                     .getText()
                                     .toString()
                                     .equals(month[0]),
                             "Next Hijri month did not change");
-                    a.phoneUi
-                            .choiceDialog
-                            .getWindow()
-                            .getDecorView()
-                            .findViewWithTag("calendar.previous")
-                            .performClick();
+                    calendarRoot.findViewWithTag("calendar.previous").performClick();
                     PhoneUiCheck.check(
-                            ((TextView)
-                                            a.phoneUi
-                                                    .choiceDialog
-                                                    .getWindow()
-                                                    .getDecorView()
-                                                    .findViewWithTag("calendar.month"))
+                            ((TextView) calendarRoot.findViewWithTag("calendar.month"))
                                     .getText()
                                     .toString()
                                     .equals(month[0]),
                             "Previous Hijri month did not restore the month");
+                    calendarRoot.findViewWithTag("calendar.day.1").performClick();
+                    calendarRoot.findViewWithTag("calendar.selected.previous-day").performClick();
+                    PhoneUiCheck.check(
+                            !((TextView) calendarRoot.findViewWithTag("calendar.month"))
+                                    .getText()
+                                    .toString()
+                                    .equals(month[0]),
+                            "Previous day did not cross the Hijri month boundary");
+                    calendarTimes(
+                            a,
+                            calendarRoot,
+                            a.phoneUi.settings.day(
+                                    System.currentTimeMillis(), a.phoneUi.home.dayOffset));
+                    calendarRoot.findViewWithTag("calendar.selected.next-day").performClick();
+                    PhoneUiCheck.check(
+                            ((TextView) calendarRoot.findViewWithTag("calendar.month"))
+                                    .getText()
+                                    .toString()
+                                    .equals(month[0]),
+                            "Next day did not restore the Hijri month");
                     IslamicCalendar current =
                             PhoneCalendar.calendar(
                                     a.phoneUi.settings, System.currentTimeMillis(), a.ar);
@@ -209,6 +220,24 @@ final class PhoneCalendarCheck {
                     PhoneUiCheck.check(
                             a.phoneUi.home.dayOffset != 0,
                             "Selecting a Hijri date did not change the prayer day");
+                    PhoneUiCheck.check(
+                            a.phoneUi.choiceDialog != null && a.phoneUi.choiceDialog.isShowing(),
+                            "Selecting a date closed the combined calendar/timetable");
+                    calendarTimes(
+                            a,
+                            calendarRoot,
+                            a.phoneUi.settings.day(
+                                    System.currentTimeMillis(), a.phoneUi.home.dayOffset));
+                    a.phoneUi
+                            .choiceDialog
+                            .getButton(android.app.AlertDialog.BUTTON_NEGATIVE)
+                            .performClick();
+                });
+        PhoneUiCheck.on(
+                test,
+                () -> {
+                    PhoneUiCheck.check(
+                            a.phoneUi.choiceDialog == null, "Calendar Done did not close the view");
                     PhoneUiCheck.check(
                             a.body.findViewWithTag("phone.prayer.fajr") != null,
                             "Selected Hijri date did not render calculated prayer times");
@@ -266,7 +295,7 @@ final class PhoneCalendarCheck {
                                                         .start
                                                 == selectedDay.start,
                                 "Selected calendar date drifted when the current civil day"
-                                    + " changed");
+                                        + " changed");
                         TextView retainedDate = a.body.findViewWithTag("phone.today");
                         PhoneUiCheck.check(
                                 retainedDate
@@ -313,11 +342,108 @@ final class PhoneCalendarCheck {
                             "Return to today failed or duplicate tomorrow Fajr remained");
                     a.body.findViewWithTag("calendar.previous-day").performClick();
                     a.back();
-                    PhoneUiCheck.check(a.phoneUi.home.dayOffset==0 && a.phoneUi.home.selectedDay==0 && !a.isFinishing(),
+                    PhoneUiCheck.check(
+                            a.phoneUi.home.dayOffset == 0
+                                    && a.phoneUi.home.selectedDay == 0
+                                    && !a.isFinishing(),
                             "Back from a browsed date exited instead of returning to Today");
                 });
         PhoneUiCheck.check(
                 PhoneStore.read(a).values.equals(original.values),
                 "Calendar navigation changed prayer settings");
+    }
+
+    private static void calendarTimes(
+            MainActivity a, android.view.View calendarRoot, PhoneSchedule.Day day) {
+        PhoneUiCheck.check(
+                calendarRoot.findViewWithTag("calendar.selected-day") != null,
+                "Calendar did not show its timetable without another click");
+        TextView date = calendarRoot.findViewWithTag("calendar.selected.date");
+        PhoneUiCheck.check(
+                date.getText()
+                        .toString()
+                        .equals(
+                                a.phoneUi.digits(
+                                        PhoneTime.hijri(a.phoneUi.settings, day.start, a.ar))),
+                "Combined calendar shows the wrong selected date");
+        PhoneUiCheck.check(day.times != null, "Calendar date has no calculated timetable");
+        for (int prayer = 0; prayer < PhoneStore.PRAYERS.length; prayer++) {
+            TextView time =
+                    calendarRoot.findViewWithTag(
+                            "calendar.prayer." + PhoneStore.PRAYERS[prayer] + ".time");
+            PhoneUiCheck.check(
+                    time != null
+                            && time.getText().toString().equals(a.phoneUi.time(day.times[prayer])),
+                    "Combined calendar timetable did not update: " + PhoneStore.PRAYERS[prayer]);
+        }
+    }
+
+    private static void tapDayArrow(
+            Instrumentation test, MainActivity a, String tag, int expectedOffset) {
+        android.graphics.Rect bounds = new android.graphics.Rect();
+        PhoneUiCheck.on(
+                test,
+                () -> {
+                    android.view.View arrow = a.body.findViewWithTag(tag);
+                    arrow.requestRectangleOnScreen(
+                            new android.graphics.Rect(0, 0, arrow.getWidth(), arrow.getHeight()),
+                            true);
+                });
+        PhoneUiCheck.on(
+                test,
+                () -> {
+                    android.view.View arrow = a.body.findViewWithTag(tag);
+                    PhoneUiCheck.check(
+                            arrow.getGlobalVisibleRect(bounds)
+                                    && bounds.width() == arrow.getWidth()
+                                    && bounds.height() == arrow.getHeight(),
+                            "Home day arrow has no complete touch target");
+                });
+        long downAt = android.os.SystemClock.uptimeMillis();
+        android.view.MotionEvent down =
+                android.view.MotionEvent.obtain(
+                        downAt,
+                        downAt,
+                        android.view.MotionEvent.ACTION_DOWN,
+                        bounds.centerX(),
+                        bounds.centerY(),
+                        0);
+        android.view.MotionEvent up =
+                android.view.MotionEvent.obtain(
+                        downAt,
+                        downAt + 40,
+                        android.view.MotionEvent.ACTION_UP,
+                        bounds.centerX(),
+                        bounds.centerY(),
+                        0);
+        try {
+            test.sendPointerSync(down);
+            test.sendPointerSync(up);
+        } finally {
+            down.recycle();
+            up.recycle();
+        }
+        test.waitForIdleSync();
+        PhoneUiCheck.on(
+                test,
+                () -> {
+                    PhoneUiCheck.check(
+                            a.phoneUi.home.dayOffset == expectedOffset
+                                    && a.phoneUi.choiceDialog == null,
+                            "Touching Home's day arrow opened a calendar instead of changing day");
+                    PhoneSchedule.Day day =
+                            a.phoneUi.settings.day(System.currentTimeMillis(), expectedOffset);
+                    for (int prayer = 0; prayer < PhoneStore.PRAYERS.length; prayer++) {
+                        TextView time =
+                                a.body.findViewWithTag(
+                                        "phone.prayer." + PhoneStore.PRAYERS[prayer] + ".time");
+                        PhoneUiCheck.check(
+                                time != null
+                                        && time.getText()
+                                                .toString()
+                                                .equals(a.phoneUi.time(day.times[prayer])),
+                                "Home day arrow did not update prayer times");
+                    }
+                });
     }
 }

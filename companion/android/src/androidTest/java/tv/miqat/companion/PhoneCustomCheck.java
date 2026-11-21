@@ -172,8 +172,21 @@ final class PhoneCustomCheck {
             PhoneUiCheck.check(fourth.eventMode(legacyVibration) == 3 && fourth.eventVibrate(legacyVibration),
                     "Legacy vibration-only mode lost haptic output after upgrade");
             fourth.save(c);
-            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 4,
+            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 5,
                     "Updated settings did not persist the new schema");
+            Map<String, String> versionFour = new LinkedHashMap<>(fourth.values);
+            versionFour.keySet().retainAll(fourth.data.idsAt(4));
+            versionFour.put("appearance.theme", "frost");
+            versionFour.put("reminders.enabled", "false");
+            PhoneStore.preferences(c).edit().putString("settings", new JSONObject()
+                    .put("version", 4).put("values", new JSONObject(versionFour)).toString()).commit();
+            PhoneStore fifth = PhoneStore.read(c);
+            PhoneUiCheck.check(fifth.values.entrySet().containsAll(versionFour.entrySet())
+                    && fifth.value("appearance.home-background").equals("true"),
+                    "v4 upgrade lost saved settings while adding the home background");
+            fifth.changed(Collections.singletonMap("appearance.home-background", "false")).save(c);
+            PhoneUiCheck.check(PhoneStore.read(c).value("appearance.home-background").equals("false"),
+                    "Home background opt-out was not preserved");
             Map<String, String> dayEdits = new LinkedHashMap<>();
             dayEdits.put("call.fajr.mode", "adhan");dayEdits.put("call.fajr.enabled", "true");
             dayEdits.put("call.fajr.weekdays", "127");dayEdits.put("quiet.enabled", "false");

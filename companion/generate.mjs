@@ -24,7 +24,7 @@ export function generatePhone() {
   const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
   const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
     prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
-  if(contract.version!==4||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
+  if(contract.version!==5||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
   const ids=new Set();
   for(const control of [...contract.controls,...contract.perPrayer]) {
     const id=control.id??control.suffix;
@@ -156,6 +156,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const directory=new URL(language==='ar'?'values-ar/':'values/',res);
     mkdirSync(directory,{recursive:true});
     const entries=catalog.prayerNames[language].map((name,i)=>['widget_preview_prayer_'+i,name]);
+    const sampleDate=new Intl.DateTimeFormat(language+'-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date('2026-11-21T12:00:00Z'));
+    const cairo=read('shared/data/cities.json').find(city=>city.id==='cairo');
+    entries.push(['widget_preview_metadata',sampleDate+' · '+cairo[language]],['widget_preview_remaining',catalog.text.phone_remaining[language].replace('%s',language==='ar'?'٠٠:٢٤':'00:24')]);
     entries.push(...sampleTimes.map((time,i)=>['widget_preview_time_'+i,language==='ar'?time.replace(/[0-9]/g,n=>'٠١٢٣٤٥٦٧٨٩'[n]):time]));
     const xml=entries.map(([name,value])=>'<string name="'+name+'">'+value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll("'","\\'")+'</string>').join('');
     writeFileSync(new URL('companion_widget_preview.xml',directory),'<resources>'+xml+'</resources>');

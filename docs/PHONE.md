@@ -19,6 +19,9 @@ Only large visual catalogs scroll horizontally. Short choices stay visible;
 long text choices such as high-latitude rules use a vertical selection stack.
 Ordinary Appearance has an Apply/Cancel draft for theme, background and display
 settings. Language and widgets are available directly in Phone settings.
+Home uses a dimmed version of the selected scene. Turn **Background on Prayer
+home** off in Appearance for plain surfaces. Existing landscape-only scenes are
+composed for tall screens; the dedicated portrait Signature remains unchanged.
 
 Approximate foreground location is supported; there is no background tracking.
 Country/city selection is local. Detected coordinates remain authoritative;
@@ -40,7 +43,8 @@ alert switch remains in permissions so an existing opt-out is recoverable.
 Repeat weekdays are visible circular toggles with full accessible names. Minute
 adjustments and before/after reminders stay in their rows beside −/+. Numeric
 edits retain Done/Cancel. Day overrides belong to one prayer and weekday and
-change only sound/vibration; Use prayer defaults removes the override. A disabled
+change only sound/vibration. Enable a weekday override to expand its controls in
+the same view; turn it off to restore prayer defaults. A disabled
 prayer or excluded weekday stays off. Overrides use that prayer's local date,
 including before/after reminders that cross midnight.
 
@@ -131,20 +135,29 @@ Android reserves the power key: locking or screen timeout does not stop audio.
 
 Prayer Home keeps location in the next-prayer card. Tap the date to open a Hijri
 month calendar, select a day, or use previous/next to browse its calculated prayer
-times. Browsing never changes scheduled alerts. There is no duplicate tomorrow
+times. Home arrows step directly by day. The calendar shows that selected day's
+timetable beneath the month grid and updates immediately; Done closes it.
+Browsing never changes scheduled alerts. There is no duplicate tomorrow
 Fajr row. Qibla and widgets are separate actions; locked future
 features follow farther down, reachable with a short scroll. Finishing first use
 removes its Home resume prompt, including after reopening the app.
 
 **Home-screen widgets** offers next-prayer, daily timetable and compact strip
-layouts with one live preview and visible layout/shape choices and visual Theme/Background catalogs. Each has a launcher entry with a suitable default
-size. Customize each placed widget independently: layout, app/fixed theme,
+presentations with one live preview and visible initial-presentation/shape choices
+and visual Theme/Background catalogs. A placed widget adapts its content to the
+allocated width and height: next prayer when narrow, a timetable strip when wide
+and short, and a daily list when tall enough. Android 12+ supports exact launcher
+size variants; older launchers use their resize bounds. Small sizes prioritize
+the prayer name/time over date/footer details. Remaining time is a snapshot at
+the existing widget refresh, rather than a separate background ticker.
+Each has a launcher entry with a suitable default
+size. Customize each placed widget independently: initial presentation, app/fixed theme,
 color/app/selected background, 0–100% background opacity, rounded/soft/square
 corners, Hijri date by default and optional Gregorian date, and label size. Text uses the app’s
 Alexandria fonts and canonical theme colors. Android’s picker has populated native
 previews with bilingual image fallbacks for older launchers. Apply saves only that widget;
-Back cancels. The launcher can reopen configuration. A resized timetable falls
-back to next prayer when short and returns to the chosen layout when enlarged.
+Back cancels. The launcher can reopen configuration. Resizing keeps saved style
+and date choices while adapting the amount of prayer detail that fits.
 
 The prayer data follows phone location, calculation, language, digits and clock.
 Compact widgets prioritize the enabled Hijri date when both dates cannot fit.
@@ -198,7 +211,7 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (0.5.0, version code 16) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.5.1, version code 17) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 

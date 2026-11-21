@@ -33,6 +33,8 @@ final class PhoneAppearance {
         int ground = Color.parseColor(palette.getString("lapis-900")),
                 surface = Color.parseColor(palette.getString("lapis-800"));
         String id = settings.value("appearance.background");
+        if (a.page.equals("prayers") && settings.value("appearance.home-background").equals("false"))
+            id = "plain";
         if (!id.equals("plain")) {
             if (!id.equals(artworkId)) {
                 artwork = PhoneBackdrop.read(a, id);
@@ -80,6 +82,15 @@ final class PhoneAppearance {
         } catch (Exception unavailable) {
             android.util.Log.w("MiqatStyle", "Background unavailable", unavailable);
         }
+    }
+
+    void homeBackground(LinearLayout shell, PhoneStore settings) {
+        background(shell, settings);
+        if (!settings.value("appearance.background").equals("plain"))
+            shell.setBackground(new LayerDrawable(new Drawable[] {
+                    shell.getBackground(),
+                    new android.graphics.drawable.ColorDrawable((a.ground & 0xffffff) | 0xb3000000)
+            }));
     }
 
     void preview(LinearLayout parent, PhoneStore settings) throws Exception {
@@ -166,6 +177,7 @@ final class PhoneAppearance {
                     if (guided) a.phoneUi.save(tab, selected);
                     else stage(tab, selected);
                 });
+        if (!guided) a.phoneUi.control(a.phoneUi.data.controls.get("appearance.home-background"));
         if (!guided && a.phoneUi.pending.isEmpty()) {
             LinearLayout actions = a.views.actionBar(a.actionHost);
             a.views

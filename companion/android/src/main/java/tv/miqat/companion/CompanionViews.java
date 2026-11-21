@@ -23,6 +23,11 @@ final class CompanionViews {
             public AlertDialog create() {
                 AlertDialog dialog = super.create();
                 dialog.getWindow().setBackgroundDrawable(background(a.surface, 24));
+                WindowManager.LayoutParams window = dialog.getWindow().getAttributes();
+                window.gravity = Gravity.BOTTOM;
+                window.width = WindowManager.LayoutParams.MATCH_PARENT;
+                window.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                dialog.getWindow().setAttributes(window);
                 dialog.setOnShowListener(ignored -> styleDialog(dialog));
                 return dialog;
             }
@@ -173,6 +178,22 @@ final class CompanionViews {
         return c;
     }
 
+    LinearLayout navigationGroup(LinearLayout parent) {
+        LinearLayout group = column();
+        group.setTag("navigation.group");
+        group.setBackground(background(a.surface, 20));
+        group.setClipToOutline(true);
+        group.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
+        group.setDividerDrawable(new android.graphics.drawable.ColorDrawable((a.muted & 0xffffff) | 0x22000000) {
+            @Override public int getIntrinsicHeight() { return dp(1); }
+        });
+        group.setDividerPadding(dp(14));
+        LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-1, -2);
+        size.bottomMargin = dp(12);
+        parent.addView(group, size);
+        return group;
+    }
+
     Button button(LinearLayout parent, String label, Runnable action) {
         Button b = new Button(a);
         b.setText(label);
@@ -248,7 +269,7 @@ final class CompanionViews {
                 });
     }
 
-    Button bindAction(Button button, String id) {
+    <T extends View> T bindAction(T button, String id) {
         if (!CompanionContract.INSTANCE.getActions().contains(id))
             throw new IllegalArgumentException("Unknown companion action: " + id);
         button.setTag(R.id.companion_action, id);
@@ -308,17 +329,26 @@ final class CompanionViews {
                         background(a.surface, 20),
                         null));
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) row.getLayoutParams();
-        lp.bottomMargin = dp(4);
+        lp.bottomMargin = "navigation.group".equals(parent.getTag()) ? 0 : dp(4);
         ImageView glyph = new ImageView(a);
         glyph.setImageDrawable(Icons.get(a, icon, a.accent));
         glyph.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         LinearLayout.LayoutParams image = new LinearLayout.LayoutParams(dp(26), dp(26));
-        image.setMarginEnd(dp(14));
+        image.setMarginEnd(dp(12));
         row.addView(glyph, image);
-        LinearLayout labels = column();
-        row.addView(labels, new LinearLayout.LayoutParams(0, -2, 1));
-        labels.addView(text(title, 16, a.ink));
-        if (!subtitle.isEmpty()) labels.addView(text(subtitle, 12, a.muted));
+        TextView label = text(title, 14, a.ink);
+        label.setTypeface(a.regular, Typeface.BOLD);
+        row.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
+        if (!subtitle.isEmpty()) {
+            TextView value = text(subtitle, 11, a.muted);
+            value.setMaxWidth(dp(140));
+            value.setMaxLines(2);
+            value.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            value.setGravity(Gravity.END);
+            value.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
+            value.setPaddingRelative(dp(10), dp(5), dp(10), dp(5));
+            row.addView(value, new LinearLayout.LayoutParams(-2, -2));
+        }
         ImageView arrow = new ImageView(a);
         arrow.setImageDrawable(Icons.get(a, "back", a.muted));
         arrow.setRotation(a.ar ? 0 : 180);
@@ -419,6 +449,7 @@ final class CompanionViews {
             button.setTextSize(13);
             button.setMinHeight(dp(48));
             button.setMinWidth(0);
+            button.setMinimumWidth(0);
             button.setPadding(dp(8), dp(10), dp(8), dp(10));
             button.setGravity(Gravity.CENTER);
             button.setContentDescription(option.toString());
@@ -436,7 +467,7 @@ final class CompanionViews {
                             null));
             button.setElevation(active ? dp(2) : 0);
             RadioGroup.LayoutParams size =
-                    new RadioGroup.LayoutParams(vertical ? -1 : 0, -2, vertical ? 0 : 1);
+                    new RadioGroup.LayoutParams(vertical ? -1 : 0, vertical ? -2 : -1, vertical ? 0 : 1);
             size.setMargins(dp(2), dp(2), dp(2), dp(2));
             group.addView(button, size);
             button.setOnClickListener(v -> changed.accept(option.value));

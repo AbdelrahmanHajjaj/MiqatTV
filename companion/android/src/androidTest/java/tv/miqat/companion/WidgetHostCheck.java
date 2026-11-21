@@ -41,6 +41,10 @@ final class WidgetHostCheck {
                                     host[0].createView(a, ids[i], manager.getAppWidgetInfo(ids[i]));
                             a.body.addView(
                                     views[i], new LinearLayout.LayoutParams(-1, a.views.dp(340)));
+                            android.os.Bundle initial = new android.os.Bundle();
+                            setBounds(initial, i == 2 ? 160 : i == 3 ? 400 : 280,
+                                    i == 2 ? 160 : i == 3 ? 140 : 330);
+                            manager.updateAppWidgetOptions(ids[i], initial);
                             PrayerWidget.update(a, ids[i]);
                         }
                     });
@@ -69,6 +73,7 @@ final class WidgetHostCheck {
                 PhoneUiCheck.check(defaults.hijri && !defaults.date,
                         "New widgets must default to Hijri without Gregorian date");
             }
+            responsivePreviews(test, a);
             pickerPreviews(test, a, ids, capture);
             WidgetOptions legacy = WidgetOptions.from(a, "{\"background\":false}");
             WidgetOptions invalid = WidgetOptions.from(a, "{\"opacity\":999,\"shape\":\"unknown\",\"scene\":\"../private\"}");
@@ -86,6 +91,12 @@ final class WidgetHostCheck {
             PhoneUiCheck.on(
                     test,
                     () -> {
+                        for (String layout : WidgetOptions.LAYOUTS) {
+                            cancelled.body.findViewWithTag("widget.layout." + layout).performClick();
+                            PhoneUiCheck.check((cancelled.body.findViewById(R.id.widget_strip).getVisibility()==View.VISIBLE)==layout.equals("strip")
+                                    && (cancelled.body.findViewById(R.id.widget_prayers).getVisibility()==View.VISIBLE)==layout.equals("day"),
+                                    "Initial presentation selector previewed another widget: "+layout);
+                        }
                         cancelled.body.findViewWithTag("widget.layout.next").performClick();
                         cancelled.back();
                     });
@@ -172,7 +183,7 @@ final class WidgetHostCheck {
                     () -> {
                         android.os.Bundle small =
                                 AppWidgetManager.getInstance(a).getAppWidgetOptions(ids[1]);
-                        small.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 160);
+                        setBounds(small, 280, 160);
                         AppWidgetManager.getInstance(a).updateAppWidgetOptions(ids[1], small);
                     });
             LiveUiCheck.untilUi(
@@ -186,7 +197,7 @@ final class WidgetHostCheck {
                     () -> {
                         android.os.Bundle large =
                                 AppWidgetManager.getInstance(a).getAppWidgetOptions(ids[1]);
-                        large.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 330);
+                        setBounds(large, 280, 330);
                         AppWidgetManager.getInstance(a).updateAppWidgetOptions(ids[1], large);
                     });
             LiveUiCheck.untilUi(
@@ -194,6 +205,11 @@ final class WidgetHostCheck {
                     () ->
                             views[1].findViewById(R.id.widget_prayers).getVisibility()
                                     == View.VISIBLE);
+            PhoneUiCheck.on(test, () -> {
+                android.os.Bundle wide = AppWidgetManager.getInstance(a).getAppWidgetOptions(ids[1]);
+                setBounds(wide, 400, 140);
+                AppWidgetManager.getInstance(a).updateAppWidgetOptions(ids[1], wide);
+            });
             MainActivity strip =
                     (MainActivity)
                             test.startActivitySync(
@@ -253,6 +269,129 @@ final class WidgetHostCheck {
         }
     }
 
+    private static void setBounds(android.os.Bundle bounds, int width, int height) {
+        bounds.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, width);
+        bounds.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, width);
+        bounds.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, height);
+        bounds.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, height);
+        if (Build.VERSION.SDK_INT >= 31) {
+            java.util.ArrayList<android.util.SizeF> sizes = new java.util.ArrayList<>();
+            sizes.add(new android.util.SizeF(width, height));
+            bounds.putParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES, sizes);
+        }
+    }
+
+    private static void responsivePreviews(Instrumentation test, MainActivity a) {
+        PhoneUiCheck.on(test, () -> {
+            WidgetOptions style = new WidgetOptions();
+            style.layout="next";style.opacity=42;style.shape="soft";style.theme="frost";
+            String saved = style.encode();
+            android.content.Context context = a.getApplicationContext();
+            float font = Math.max(1f,context.getResources().getConfiguration().fontScale);
+            for (int[] size : new int[][] {{140,500,0},{Math.round(500*font),Math.round(150*font),1},
+                    {Math.round(500*font),Math.round(250*font),0},
+                    {Math.round(300*font),Math.round(400*font),2}}) {
+                android.os.Bundle bounds = new android.os.Bundle();
+                setBounds(bounds,size[0],size[1]);
+                View rendered = PrayerWidget.responsive(context,style,bounds).apply(context,new FrameLayout(a));
+                int width = a.views.dp(size[0]), height = a.views.dp(size[1]);
+                rendered.measure(View.MeasureSpec.makeMeasureSpec(width,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(height,View.MeasureSpec.EXACTLY));
+                rendered.layout(0,0,width,height);
+                boolean strip = size[2] == 1, daily = size[2] == 2;
+                PhoneUiCheck.check((rendered.findViewById(R.id.widget_strip).getVisibility()==View.VISIBLE)==strip
+                        && (rendered.findViewById(R.id.widget_prayers).getVisibility()==View.VISIBLE)==daily,
+                        "Allocated widget dimensions did not select its presentation: "+size[0]+"x"+size[1]);
+                if(daily||strip) {
+                    LinearLayout prayers=rendered.findViewById(strip?R.id.widget_strip:R.id.widget_prayers);
+                    PhoneUiCheck.check(prayers.getChildCount()==6,"Responsive timetable lost prayer rows");
+                    int outlined=0;
+                    for(int i=0;i<6;i++) {
+                        View row=prayers.getChildAt(i);
+                        PhoneUiCheck.check(((ImageView)row.findViewById(R.id.widget_prayer_icon)).getDrawable()!=null,
+                                "Responsive prayer row lacks canonical icon");
+                        if(row.findViewById(R.id.widget_prayer_highlight).getVisibility()==View.VISIBLE)outlined++;
+                    }
+                    PhoneUiCheck.check(outlined<=1,"Widget highlighted more than one next prayer");
+                } else PhoneUiCheck.check(((ImageView)rendered.findViewById(R.id.widget_next_icon)).getDrawable()!=null,
+                        "Next-prayer widget lacks its canonical prayer icon");
+                PhoneUiCheck.check(((ImageView)rendered.findViewById(R.id.widget_backdrop)).getImageAlpha()==107
+                        && style.encode().equals(saved),"Responsive rendering overwrote per-instance style or initial presentation");
+                if(Build.VERSION.SDK_INT>=31)bounds.remove(AppWidgetManager.OPTION_APPWIDGET_SIZES);
+                View legacy=PrayerWidget.responsive(context,style,bounds).apply(context,new FrameLayout(a));
+                PhoneUiCheck.check((legacy.findViewById(R.id.widget_strip).getVisibility()==View.VISIBLE)==strip
+                        && (legacy.findViewById(R.id.widget_prayers).getVisibility()==View.VISIBLE)==daily,
+                        "Legacy min/max widget bounds did not select the same presentation");
+            }
+            try { minimumNext(a); } catch (Exception invalid) { throw new AssertionError(invalid); }
+            View wide=WidgetRenderer.create(context,new WidgetOptions(),Math.round(363*font),Math.round(200*font)).apply(context,new FrameLayout(a));
+            int wideWidth=a.views.dp(Math.round(363*font)),wideHeight=a.views.dp(Math.round(200*font));
+            wide.measure(View.MeasureSpec.makeMeasureSpec(wideWidth,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(wideHeight,View.MeasureSpec.EXACTLY));
+            wide.layout(0,0,wideWidth,wideHeight);
+            TextView wideName=wide.findViewById(R.id.widget_next_label),wideTime=wide.findViewById(R.id.widget_next_time);
+            android.graphics.Rect nameBounds=new android.graphics.Rect(),timeBounds=new android.graphics.Rect();
+            wideName.getDrawingRect(nameBounds);wideTime.getDrawingRect(timeBounds);
+            ((ViewGroup)wide).offsetDescendantRectToMyCoords(wideName,nameBounds);
+            ((ViewGroup)wide).offsetDescendantRectToMyCoords(wideTime,timeBounds);
+            PhoneUiCheck.check(wide.findViewById(R.id.widget_next_wide_row)!=null
+                    && nameBounds.centerY()==timeBounds.centerY()&&!android.graphics.Rect.intersects(nameBounds,timeBounds),
+                    "Wide next card must put the prominent prayer name and time on one row");
+            android.graphics.Typeface heading=context.getResources().getFont(a.ar?R.font.amiri_bold:R.font.marcellus_regular);
+            PhoneUiCheck.check(wideName.getTypeface().equals(heading)&&wideTime.getTypeface().equals(heading)
+                    && !((TextView)wide.findViewById(R.id.widget_next_remaining)).getText().toString().isEmpty(),
+                    "Wide next card lost canonical heading fonts or real remaining time");
+            for(String initial : WidgetOptions.LAYOUTS) {
+                style.layout=initial;
+                View selected=WidgetRenderer.initial(context,style,363,style.height()).apply(context,new FrameLayout(a));
+                PhoneUiCheck.check((selected.findViewById(R.id.widget_strip).getVisibility()==View.VISIBLE)==initial.equals("strip")
+                        && (selected.findViewById(R.id.widget_prayers).getVisibility()==View.VISIBLE)==initial.equals("day"),
+                        "Initial picker preview adapted away from selected presentation "+initial);
+            }
+            if(Build.VERSION.SDK_INT>=31) {
+                android.os.Bundle bounds=new android.os.Bundle();setBounds(bounds,300,400);
+                java.util.ArrayList<android.util.SizeF> sizes=new java.util.ArrayList<>();
+                sizes.add(new android.util.SizeF(140,100));sizes.add(new android.util.SizeF(300,400));
+                bounds.putParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES,sizes);
+                View smallest=PrayerWidget.responsive(context,style,bounds).apply(context,new FrameLayout(a));
+                PhoneUiCheck.check(smallest.findViewById(R.id.widget_prayers).getVisibility()==View.GONE,
+                        "Modern RemoteViews ignored exact host sizes and their smallest-size fallback");
+            }
+        });
+    }
+
+    private static void minimumNext(MainActivity a) throws Exception {
+        for(float font : new float[] {1f,1.5f,2f}) {
+            android.content.res.Configuration config=new android.content.res.Configuration(a.getApplicationContext().getResources().getConfiguration());
+            config.fontScale=font;
+            android.content.Context context=a.getApplicationContext().createConfigurationContext(config);
+            WidgetOptions options=new WidgetOptions();options.size=120;options.date=true;
+            RemoteViews content=WidgetRenderer.create(context,options,140,100);
+            content.setTextViewText(R.id.widget_next_label,a.phoneUi.data.prayerName(4,a.ar));
+            content.setTextViewText(R.id.widget_next_time,a.phoneUi.digits("11:48 PM"));
+            View rendered=content.apply(context,new FrameLayout(context));
+            int width=Math.round(140*context.getResources().getDisplayMetrics().density),
+                    height=Math.round(100*context.getResources().getDisplayMetrics().density);
+            rendered.measure(View.MeasureSpec.makeMeasureSpec(width,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(height,View.MeasureSpec.EXACTLY));
+            rendered.layout(0,0,width,height);
+            PhoneUiCheck.check(rendered.findViewById(R.id.widget_title).getVisibility()==View.GONE
+                    && rendered.findViewById(R.id.widget_updated).getVisibility()==View.GONE,
+                    "Minimum widget did not give prayer name/time priority over metadata");
+            for(int id : new int[]{R.id.widget_next_label,R.id.widget_next_time}) {
+                TextView text=rendered.findViewById(id);
+                android.graphics.Rect visible=new android.graphics.Rect();text.getDrawingRect(visible);
+                ((ViewGroup)rendered).offsetDescendantRectToMyCoords(text,visible);
+                PhoneUiCheck.check(text.getVisibility()==View.VISIBLE&&text.getWidth()>0&&text.getHeight()>0
+                        && new android.graphics.Rect(0,0,width,height).contains(visible),
+                        "Minimum widget core text leaves allocated bounds at font "+font+": "+visible);
+                PhoneUiCheck.check(text.getLayout()!=null&&text.getLayout().getHeight()<=text.getHeight()-text.getCompoundPaddingTop()-text.getCompoundPaddingBottom(),
+                        "Minimum widget clips core text at font "+font);
+                for(int line=0;line<text.getLayout().getLineCount();line++)
+                    PhoneUiCheck.check(text.getLayout().getEllipsisCount(line)==0
+                            && text.getLayout().getLineWidth(line)<=text.getWidth()-text.getCompoundPaddingLeft()-text.getCompoundPaddingRight()+1,
+                            "Minimum widget truncates prayer name/time at font "+font);
+            }
+        }
+    }
+
     private static void pickerPreviews(Instrumentation test, MainActivity a, int[] ids, boolean capture) throws Exception {
         for (int index : new int[] {0, 2, 3}) {
             String layout = index == 0 ? "day" : index == 2 ? "next" : "strip";
@@ -267,8 +406,8 @@ final class WidgetHostCheck {
                         "Android picker preview is empty for " + layout);
                 if (!capture) return;
                 preview.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
-                int width = a.views.dp(layout.equals("strip") ? 320 : layout.equals("next") ? 160 : 280);
-                int height = a.views.dp(layout.equals("day") ? 260 : layout.equals("next") ? 140 : 120);
+                int width = a.views.dp(layout.equals("strip") ? 400 : 280);
+                int height = a.views.dp(layout.equals("day") ? 300 : layout.equals("next") ? 160 : 140);
                 preview.measure(android.view.View.MeasureSpec.makeMeasureSpec(width, android.view.View.MeasureSpec.EXACTLY),
                         android.view.View.MeasureSpec.makeMeasureSpec(height, android.view.View.MeasureSpec.EXACTLY));
                 preview.layout(0, 0, width, height);

@@ -1,12 +1,13 @@
 # Current work
 
-Updated: 2026-11-21. Owner approved the complete revision-2 English gallery
-and requested full implementation. Continue on feature/companion-installation
-and draft PR #9. Scope and migration constraints: [PHONE-PASS8.md](PHONE-PASS8.md).
+Updated: 2026-11-21. Owner requested fidelity refinement and bug fixes after
+0.5.0. Continue on feature/companion-installation and draft PR #9. Scope:
+[PHONE-PASS9.md](PHONE-PASS9.md). Approved references remain the revision-2 gallery.
 
-Approved native implementation is complete: Java Views, phone alert migration,
-calendar/Qibla map, widgets and companion TV controls. Local validation passes;
-final-head PR CI remains before handoff. Review APK: 0.5.0/code16 at the fixed latest path;
-identity and validation are in [EVIDENCE.md](EVIDENCE.md). Preserve the draft PR
-for owner acceptance. Existing settings and quiet-hour boundaries are retained.
+Refinement implementation/local validation complete: grouped rows, spaced circles,
+compact controls/language, inline overrides, stable sheets, combined calendar,
+responsive widgets and optional dimmed artwork. Candidate0.5.1/code17 uses additive
+schema5. LG0.2.29 carries the Today styling backport. Identities and checks are in
+[EVIDENCE.md](EVIDENCE.md); draft PR9 owns final-head CI receipts. Handoff requires
+green final checks. Next: owner device review, then refine against actual feedback.
 No public release, merge or physical deployment in this review pass.

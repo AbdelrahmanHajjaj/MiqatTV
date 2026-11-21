@@ -227,6 +227,13 @@ external files directory. Inspect them, then copy English images to native
 `res/drawable-nodpi/widget_preview_*.png` and Arabic to `res/drawable-ar-nodpi/`.
 These images are native renders, not separately authored preview designs.
 
+Phone fidelity checks must inspect rendered names/time bounds as well as values;
+zero-width labels can retain correct text. The phone UI suite also checks stable
+pre-show dialog placement, day-override expansion and direct calendar navigation.
+Hosted widget checks cover initial previews, all three allocated presentations,
+modern/legacy bounds and the minimum size with enlarged text. Keep app UI scale
+separate from launcher text scale. Save native/reference comparisons under state/.
+
 
 Pass-8 phone journeys exercise welcome/location/style resumption, a single
 notification decision (including denial and explicit opt-out preservation),

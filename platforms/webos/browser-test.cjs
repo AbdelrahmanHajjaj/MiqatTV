@@ -1525,6 +1525,29 @@ const server = http.createServer((req, res) => {
       await page.locator('[data-action=prayer-day]').click();
       const paths=await page.locator('.day-row .prayer-icon path').evaluateAll(nodes=>nodes.map(el=>el.getAttribute('d')));
       assert.deepEqual(paths,await page.evaluate(()=>window.MiqatData.prayerIcons.prayers.map(p=>p.path)),'all six actual prayer labels use canonical Miqat geometry');
+      const dayRows = await page.evaluate(() => {
+        const now = new Date(), prefs = window.Miqat.prefs(JSON.parse(localStorage.getItem('fixture')).prefs);
+        const day = window.Miqat.day(now, prefs), selection = window.Miqat.select(day, now);
+        return [...document.querySelectorAll('.day-row')].map((row, i) => {
+          const expected = i === selection.next && day.times[i] === selection.nextTime
+            ? 'next' : i === selection.current ? 'current' : day.times[i] < +now ? 'past' : 'up';
+          const style = getComputedStyle(row);
+          return {expected, actual:[...row.classList].filter(c => c !== 'day-row'),
+            fill:style.backgroundColor, text:style.color, border:style.borderTopColor,
+            outlined:parseFloat(style.borderTopWidth) > 0 && style.borderTopStyle !== 'none'};
+        });
+      });
+      assert.equal(dayRows.length, 6, 'Today keeps all six civil-day times');
+      for (const row of dayRows) {
+        assert.deepEqual(row.actual, [row.expected], 'Today row follows the existing prayer selection/date');
+        if (row.expected === 'next') assert.ok(row.outlined && row.border !== row.fill,
+          'Today next prayer has a visible outline: ' + JSON.stringify(row));
+      }
+      const currentRow = dayRows.find(row => row.expected === 'current');
+      const otherRow = dayRows.find(row => row.expected === 'up' || row.expected === 'past');
+      if (currentRow && otherRow) assert.notEqual(currentRow.fill, otherRow.fill,
+        'Today current prayer is visibly distinct from other times');
+
     }
     assert.deepEqual(errors, []);
     console.log('PASS: Arabic/English controls, grouped settings, offsets and cancel, prayer bells, overlays preserving HDMI, audio stop/end/error recovery, radio, theme/layout, persistence and global sizing. Decoder and Luna boundaries are mocked; actual LG tests remain separate.');

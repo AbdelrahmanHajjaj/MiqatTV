@@ -4,15 +4,36 @@ import android.app.AlertDialog;
 import android.content.res.ColorStateList;
 import android.icu.util.IslamicCalendar;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.*;
 
 import java.text.DateFormatSymbols;
 import java.util.*;
-import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 
 /** Hijri selection maps back to a civil day; it never writes prayer settings or alarms. */
 final class PhoneCalendar {
-    private PhoneCalendar() {}
+    private final MainActivity a;
+    private final PhoneUi ui;
+    private final PhoneStore settings;
+    private final LongConsumer selected;
+    private final long openedAt = System.currentTimeMillis();
+    private IslamicCalendar month;
+    private long selectedStamp;
+    private final LinearLayout content;
+
+    private PhoneCalendar(MainActivity a, PhoneUi ui, long stamp, LongConsumer selected) {
+        this.a = a;
+        this.ui = ui;
+        this.settings = ui.settings;
+        this.selected = selected;
+        selectedStamp = stamp;
+        month = calendar(settings, selectedStamp, a.ar);
+        month.set(android.icu.util.Calendar.DATE, 1);
+        content = a.views.column();
+        content.setPadding(a.views.dp(8), a.views.dp(8), a.views.dp(8), a.views.dp(8));
+        content.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+    }
 
     static IslamicCalendar calendar(PhoneStore settings, long stamp, boolean ar) {
         IslamicCalendar date =
@@ -46,20 +67,11 @@ final class PhoneCalendar {
         return civil.getTimeInMillis();
     }
 
-    static void show(MainActivity a, PhoneUi ui, int selectedOffset, IntConsumer selected) {
-        long now = System.currentTimeMillis();
-        IslamicCalendar month =
-                calendar(ui.settings, ui.settings.day(now, selectedOffset).start, a.ar);
-        int selectedYear = month.get(android.icu.util.Calendar.YEAR);
-        int selectedMonth = month.get(android.icu.util.Calendar.MONTH);
-        int selectedDay = month.get(android.icu.util.Calendar.DATE);
-        month.set(android.icu.util.Calendar.DATE, 1);
-        LinearLayout content = a.views.column();
-        content.setPadding(a.views.dp(8), a.views.dp(8), a.views.dp(8), a.views.dp(8));
-        content.setLayoutDirection(
-                a.ar
-                        ? android.view.View.LAYOUT_DIRECTION_RTL
-                        : android.view.View.LAYOUT_DIRECTION_LTR);
+    static void show(MainActivity a, PhoneUi ui, long stamp, LongConsumer selected) {
+        new PhoneCalendar(a, ui, stamp, selected).show();
+    }
+
+    private void show() {
         ScrollView scroll = new ScrollView(a);
         scroll.addView(content);
         AlertDialog dialog =
@@ -67,116 +79,186 @@ final class PhoneCalendar {
                         .dialog()
                         .setTitle(a.t("phone_calendar"))
                         .setView(scroll)
-                        .setNegativeButton(a.t("cancel"), null)
+                        .setNegativeButton(a.t("done"), null)
                         .create();
-        Runnable[] render = new Runnable[1];
-        render[0] =
-                () -> {
-                    content.removeAllViews();
-                    LinearLayout header = a.views.horizontal(content);
-                    Button previous =
-                            a.views.iconButton(
-                                    header,
-                                    "back",
-                                    a.t("phone_previous_month"),
-                                    () -> {
-                                        month.add(android.icu.util.Calendar.MONTH, -1);
-                                        render[0].run();
-                                    });
-                    previous.setTag("calendar.previous");
-                    android.icu.text.SimpleDateFormat monthFormat =
-                            new android.icu.text.SimpleDateFormat(
-                                    "MMMM y",
-                                    Locale.forLanguageTag(
-                                            (a.ar ? "ar" : "en") + "-u-ca-islamic-umalqura"));
-                    monthFormat.setCalendar((IslamicCalendar) month.clone());
-                    TextView title =
-                            a.views.text(ui.digits(monthFormat.format(month.getTime())), 20, a.ink);
-                    title.setGravity(Gravity.CENTER);
-                    title.setTag("calendar.month");
-                    header.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
-                    Button next =
-                            a.views.iconButton(
-                                    header,
-                                    "back",
-                                    a.t("phone_next_month"),
-                                    () -> {
-                                        month.add(android.icu.util.Calendar.MONTH, 1);
-                                        render[0].run();
-                                    });
-                    next.setRotation(180);
-                    next.setTag("calendar.next");
-                    IslamicCalendar before = (IslamicCalendar) month.clone();
-                    before.add(android.icu.util.Calendar.DATE, -1);
-                    IslamicCalendar after = (IslamicCalendar) month.clone();
-                    after.add(android.icu.util.Calendar.MONTH, 1);
-                    previous.setEnabled(
-                            offset(ui.settings, now, civilStamp(ui.settings, before)) >= -366);
-                    next.setEnabled(
-                            offset(ui.settings, now, civilStamp(ui.settings, after)) <= 366);
-                    String[] weekdays = new DateFormatSymbols(ui.locale()).getShortWeekdays();
-                    int weekStart = a.ar ? Calendar.SATURDAY : Calendar.SUNDAY;
-                    LinearLayout labels = a.views.horizontal(content);
-                    for (int i = 0; i < 7; i++) {
-                        TextView label =
-                                a.views.text(weekdays[(weekStart - 1 + i) % 7 + 1], 10, a.muted);
-                        label.setGravity(Gravity.CENTER);
-                        label.setPadding(0, a.views.dp(8), 0, a.views.dp(8));
-                        labels.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
-                    }
-                    int leading =
-                            (month.get(android.icu.util.Calendar.DAY_OF_WEEK) - weekStart + 7) % 7;
-                    int count = month.getActualMaximum(android.icu.util.Calendar.DATE);
-                    LinearLayout row = null;
-                    for (int slot = 0; slot < ((leading + count + 6) / 7) * 7; slot++) {
-                        if (slot % 7 == 0) row = a.views.horizontal(content);
-                        int day = slot - leading + 1;
-                        if (day < 1 || day > count) {
-                            row.addView(
-                                    new android.view.View(a),
-                                    new LinearLayout.LayoutParams(0, a.views.dp(48), 1));
-                            continue;
-                        }
-                        IslamicCalendar date = (IslamicCalendar) month.clone();
-                        date.set(android.icu.util.Calendar.DATE, day);
-                        int delta = offset(ui.settings, now, civilStamp(ui.settings, date));
-                        Button button =
-                                a.views.button(
-                                        row,
-                                        ui.digits(Integer.toString(day)),
-                                        () -> {
-                                            dialog.dismiss();
-                                            selected.accept(delta);
-                                        });
-                        button.setTag("calendar.day." + day);
-                        button.setMinWidth(0);
-                        button.setMinimumWidth(0);
-                        button.setTextSize(13);
-                        button.setPadding(0, 0, 0, 0);
-                        button.setEnabled(delta >= -366 && delta <= 366);
-                        boolean active =
-                                selectedYear == date.get(android.icu.util.Calendar.YEAR)
-                                        && selectedMonth
-                                                == date.get(android.icu.util.Calendar.MONTH)
-                                        && selectedDay == day;
-                        button.setSelected(active);
-                        button.setTextColor(active ? a.ground : a.ink);
-                        button.setBackground(
-                                new android.graphics.drawable.RippleDrawable(
-                                        ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000),
-                                        a.views.background(active ? a.accent : a.surface, 24),
-                                        null));
-                        button.setContentDescription(
-                                ui.digits(
-                                        PhoneTime.hijri(
-                                                ui.settings, civilStamp(ui.settings, date), a.ar)));
-                        LinearLayout.LayoutParams size =
-                                new LinearLayout.LayoutParams(0, a.views.dp(48), 1);
-                        size.setMargins(a.views.dp(1), a.views.dp(2), a.views.dp(1), a.views.dp(2));
-                        button.setLayoutParams(size);
-                    }
-                };
-        render[0].run();
+        render();
         ui.showEditor(dialog);
+    }
+
+    private void render() {
+        content.removeAllViews();
+        monthHeader();
+        monthDays();
+        selectedDay();
+    }
+
+    private void monthHeader() {
+        LinearLayout header = a.views.horizontal(content);
+        Button previous =
+                a.views.iconButton(
+                        header, "back", a.t("phone_previous_month"), () -> moveMonth(-1));
+        previous.setTag("calendar.previous");
+        android.icu.text.SimpleDateFormat format =
+                new android.icu.text.SimpleDateFormat(
+                        "MMMM y",
+                        Locale.forLanguageTag((a.ar ? "ar" : "en") + "-u-ca-islamic-umalqura"));
+        format.setCalendar((IslamicCalendar) month.clone());
+        TextView title = a.views.text(ui.digits(format.format(month.getTime())), 20, a.ink);
+        title.setGravity(Gravity.CENTER);
+        title.setTag("calendar.month");
+        header.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
+        Button next =
+                a.views.iconButton(header, "back", a.t("phone_next_month"), () -> moveMonth(1));
+        next.setRotation(180);
+        next.setTag("calendar.next");
+        IslamicCalendar before = (IslamicCalendar) month.clone();
+        before.add(android.icu.util.Calendar.DATE, -1);
+        IslamicCalendar after = (IslamicCalendar) month.clone();
+        after.add(android.icu.util.Calendar.MONTH, 1);
+        previous.setEnabled(offset(settings, openedAt, civilStamp(settings, before)) >= -366);
+        next.setEnabled(offset(settings, openedAt, civilStamp(settings, after)) <= 366);
+    }
+
+    private void moveMonth(int direction) {
+        month.add(android.icu.util.Calendar.MONTH, direction);
+        render();
+    }
+
+    private void monthDays() {
+        String[] weekdays = new DateFormatSymbols(ui.locale()).getShortWeekdays();
+        int weekStart = a.ar ? Calendar.SATURDAY : Calendar.SUNDAY;
+        LinearLayout labels = a.views.horizontal(content);
+        for (int i = 0; i < 7; i++) {
+            TextView label = a.views.text(weekdays[(weekStart - 1 + i) % 7 + 1], 10, a.muted);
+            label.setGravity(Gravity.CENTER);
+            label.setPadding(0, a.views.dp(8), 0, a.views.dp(8));
+            labels.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
+        }
+        IslamicCalendar selectedDate = calendar(settings, selectedStamp, a.ar);
+        int leading = (month.get(android.icu.util.Calendar.DAY_OF_WEEK) - weekStart + 7) % 7;
+        int count = month.getActualMaximum(android.icu.util.Calendar.DATE);
+        LinearLayout row = null;
+        for (int slot = 0; slot < ((leading + count + 6) / 7) * 7; slot++) {
+            if (slot % 7 == 0) row = a.views.horizontal(content);
+            int day = slot - leading + 1;
+            if (day < 1 || day > count) {
+                row.addView(new View(a), new LinearLayout.LayoutParams(0, a.views.dp(48), 1));
+                continue;
+            }
+            IslamicCalendar date = (IslamicCalendar) month.clone();
+            date.set(android.icu.util.Calendar.DATE, day);
+            long stamp = civilStamp(settings, date);
+            int delta = offset(settings, openedAt, stamp);
+            Button button =
+                    a.views.button(
+                            row, ui.digits(Integer.toString(day)), () -> choose(stamp, false));
+            button.setTag("calendar.day." + day);
+            button.setMinWidth(0);
+            button.setMinimumWidth(0);
+            button.setTextSize(13);
+            button.setPadding(0, 0, 0, 0);
+            button.setEnabled(delta >= -366 && delta <= 366);
+            boolean active =
+                    selectedDate.get(android.icu.util.Calendar.YEAR)
+                                    == date.get(android.icu.util.Calendar.YEAR)
+                            && selectedDate.get(android.icu.util.Calendar.MONTH)
+                                    == date.get(android.icu.util.Calendar.MONTH)
+                            && selectedDate.get(android.icu.util.Calendar.DATE) == day;
+            button.setSelected(active);
+            button.setTextColor(active ? a.ground : a.ink);
+            button.setBackground(
+                    new android.graphics.drawable.RippleDrawable(
+                            ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000),
+                            a.views.background(active ? a.accent : a.surface, 24),
+                            null));
+            button.setContentDescription(ui.digits(PhoneTime.hijri(settings, stamp, a.ar)));
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, a.views.dp(48), 1);
+            size.setMargins(a.views.dp(1), a.views.dp(2), a.views.dp(1), a.views.dp(2));
+            button.setLayoutParams(size);
+        }
+    }
+
+    private void choose(long stamp, boolean followMonth) {
+        int delta = offset(settings, openedAt, stamp);
+        if (delta < -366 || delta > 366) return;
+        selectedStamp = settings.day(openedAt, delta).start;
+        if (followMonth) {
+            month = calendar(settings, selectedStamp, a.ar);
+            month.set(android.icu.util.Calendar.DATE, 1);
+        }
+        selected.accept(selectedStamp);
+        render();
+    }
+
+    private void selectedDay() {
+        int delta = offset(settings, openedAt, selectedStamp);
+        PhoneSchedule.Day day = settings.day(openedAt, delta);
+        LinearLayout timetable = a.views.column();
+        timetable.setTag("calendar.selected-day");
+        content.addView(timetable, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout heading = a.views.horizontal(timetable);
+        Button previous =
+                a.views.iconButton(
+                        heading,
+                        "back",
+                        a.t("phone_previous_day"),
+                        () -> choose(settings.day(openedAt, delta - 1).start, true));
+        previous.setTag("calendar.selected.previous-day");
+        previous.setEnabled(delta > -366);
+        TextView label =
+                a.views.text(ui.digits(PhoneTime.hijri(settings, day.start, a.ar)), 18, a.ink);
+        label.setGravity(Gravity.CENTER);
+        label.setTag("calendar.selected.date");
+        heading.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
+        Button next =
+                a.views.iconButton(
+                        heading,
+                        "back",
+                        a.t("phone_next_day"),
+                        () -> choose(settings.day(openedAt, delta + 1).start, true));
+        next.setRotation(180);
+        next.setTag("calendar.selected.next-day");
+        next.setEnabled(delta < 366);
+        java.text.SimpleDateFormat date =
+                new java.text.SimpleDateFormat("EEEE, d MMMM yyyy", ui.locale());
+        date.setTimeZone(settings.zone());
+        TextView civil = a.views.text(ui.digits(date.format(new Date(day.start))), 12, a.muted);
+        civil.setGravity(Gravity.CENTER);
+        timetable.addView(civil);
+        if (day.times == null) timetable.addView(a.views.text(a.t("phone_unavailable"), 16, a.ink));
+        else
+            for (int i = 0; i < PhoneStore.PRAYERS.length; i++) {
+                LinearLayout row = a.views.horizontal(timetable);
+                row.setMinimumHeight(a.views.dp(48));
+                row.setPadding(a.views.dp(8), a.views.dp(4), a.views.dp(8), a.views.dp(4));
+                row.setBackground(a.views.background(a.surface, 16));
+                ((LinearLayout.LayoutParams) row.getLayoutParams()).bottomMargin = a.views.dp(4);
+                ImageView glyph = new ImageView(a);
+                glyph.setImageDrawable(Icons.get(a, PhoneStore.PRAYERS[i], a.accent));
+                glyph.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+                LinearLayout.LayoutParams iconSize =
+                        new LinearLayout.LayoutParams(a.views.dp(22), a.views.dp(22));
+                iconSize.setMarginEnd(a.views.dp(10));
+                row.addView(glyph, iconSize);
+                row.addView(
+                        a.views.text(
+                                a.catalog
+                                        .data
+                                        .optJSONObject("prayerNames")
+                                        .optJSONArray(a.ar ? "ar" : "en")
+                                        .optString(i),
+                                15,
+                                a.ink),
+                        new LinearLayout.LayoutParams(0, -2, 1));
+                TextView time = a.views.text(ui.time(day.times[i]), 18, a.accent);
+                time.setTag("calendar.prayer." + PhoneStore.PRAYERS[i] + ".time");
+                row.addView(time, new LinearLayout.LayoutParams(-2, -2));
+            }
+        a.views
+                .button(
+                        timetable,
+                        a.t("phone_today"),
+                        () -> choose(settings.day(System.currentTimeMillis(), 0).start, true))
+                .setTag("calendar.selected.today");
     }
 }

@@ -93,15 +93,43 @@ final class PhoneSizeCheck {
                                                                     .getHeight(),
                                             "Prayer card outline clipped by its row at "
                                                     + expected);
-                                    int content = 0;
-                                    for (int i = 0; i < cell.getChildCount(); i++)
-                                        content += cell.getChildAt(i).getHeight();
                                     PhoneUiCheck.check(
-                                            content
-                                                    <= cell.getHeight()
-                                                            - cell.getPaddingTop()
-                                                            - cell.getPaddingBottom(),
-                                            "Prayer card text clipped at " + expected);
+                                            cell.getWidth() == ((View) cell.getParent()).getWidth(),
+                                            "Prayer list row lost its full width at " + expected);
+                                    for (int i = 0; i < cell.getChildCount(); i++) {
+                                        View child = cell.getChildAt(i);
+                                        PhoneUiCheck.check(
+                                                child.getWidth() > 0 && child.getHeight() > 0
+                                                        && child.getLeft() >= cell.getPaddingLeft()
+                                                        && child.getRight()
+                                                                <= cell.getWidth()
+                                                                        - cell.getPaddingRight()
+                                                        && child.getTop() >= cell.getPaddingTop()
+                                                        && child.getBottom()
+                                                                <= cell.getHeight()
+                                                                        - cell.getPaddingBottom(),
+                                                "Prayer row content clipped at " + expected);
+                                        if (child instanceof TextView) {
+                                            TextView label = (TextView) child;
+                                            PhoneUiCheck.check(
+                                                    label.getLayout() != null
+                                                            && label.getLayout().getHeight()
+                                                                    <= label.getHeight()
+                                                                            - label
+                                                                                    .getCompoundPaddingTop()
+                                                                            - label
+                                                                                    .getCompoundPaddingBottom(),
+                                                    "Prayer row text clipped at " + expected);
+                                        }
+                                        for (int j = 0; j < i; j++) {
+                                            View earlier = cell.getChildAt(j);
+                                            PhoneUiCheck.check(
+                                                    child.getRight() <= earlier.getLeft()
+                                                            || child.getLeft()
+                                                                    >= earlier.getRight(),
+                                                    "Prayer row label/time overlap at " + expected);
+                                        }
+                                    }
                                 }
                                 View tomorrow = a.body.findViewWithTag("phone.tomorrow");
                                 View tools =
@@ -110,23 +138,42 @@ final class PhoneSizeCheck {
                                         tomorrow == null
                                                 && a.body.findViewWithTag("phone.today") != null,
                                         "Home must expose calendar without a duplicate tomorrow"
-                                            + " Fajr row");
+                                                + " Fajr row");
                                 View qibla = a.body.findViewWithTag("qibla.open");
                                 View widgets = a.body.findViewWithTag("widgets.open");
-                                int gap =
-                                        Math.max(qibla.getLeft(), widgets.getLeft())
-                                                - Math.min(qibla.getRight(), widgets.getRight());
                                 PhoneUiCheck.check(
-                                        gap >= a.views.dp(12), "Home actions fuse together");
+                                        widgets.getTop() - qibla.getBottom() >= a.views.dp(4)
+                                                && qibla.getWidth() == tools.getWidth()
+                                                && widgets.getWidth() == tools.getWidth()
+                                                && qibla.getHeight() >= a.views.dp(48)
+                                                && widgets.getHeight() >= a.views.dp(48),
+                                        "Home tools must be separated full-width navigation rows");
                                 PhoneUiCheck.check(
                                         a.body.findViewWithTag("phone.coming-soon").getTop()
                                                 >= tools.getBottom(),
                                         "Locked features must follow prayer tools");
+                                ViewGroup hero = a.body.findViewWithTag("phone.hero");
+                                ViewGroup location = a.body.findViewWithTag("phone.location.row");
+                                View date =
+                                        (View) a.body.findViewWithTag("phone.today").getParent();
                                 PhoneUiCheck.check(
-                                        ((ViewGroup) a.body.findViewWithTag("phone.hero"))
-                                                        .findViewWithTag("phone.location")
-                                                != null,
-                                        "Location must belong to the prayer card");
+                                        hero.findViewWithTag("phone.location") == null
+                                                && location.findViewWithTag("phone.location")
+                                                        != null
+                                                && date.getBottom() <= location.getTop()
+                                                && location.getBottom()
+                                                        <= ((View) hero.getParent()).getTop(),
+                                        "Home date and location must precede the compact prayer"
+                                            + " card");
+                                View detect =
+                                        location.findViewWithTag("phone.home.location.detect");
+                                if (detect == null)
+                                    detect = location.findViewWithTag("phone.setup");
+                                PhoneUiCheck.check(
+                                        detect != null
+                                                && detect.getWidth() >= a.views.dp(48)
+                                                && detect.getHeight() >= a.views.dp(48),
+                                        "Home location detection lost its compact touch target");
                                 TextView name = a.body.findViewWithTag("phone.next.name");
                                 TextView time = a.body.findViewWithTag("phone.next.time");
                                 PhoneUiCheck.check(
@@ -275,7 +322,7 @@ final class PhoneSizeCheck {
                         float expectedSize =
                                 android.util.TypedValue.applyDimension(
                                         android.util.TypedValue.COMPLEX_UNIT_SP,
-                                        13,
+                                        12,
                                         a.getApplicationContext()
                                                 .getResources()
                                                 .getDisplayMetrics());

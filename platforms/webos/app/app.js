@@ -562,9 +562,10 @@
         html = pairingControls ? pairingControlsMarkup() : pairingMarkup();
       } else if (view === 'prayer-day') {
         dayViewMinute = Math.floor(+now / 60000);
-        var today = schedule(now), h = A.hijri(now, prefs), bearing = A.qibla(prefs);
+        var today = schedule(now), daySelection = A.select(today, now), h = A.hijri(now, prefs), bearing = A.qibla(prefs);
         html = '<section class="page">' + header(t('اليوم والقبلة', 'Today & Qibla')) + '<div class="day-times">' + today.times.map(function (time, i) {
-          return '<div class="day-row"><span>' + prayerLabel(i, s('prayerNames')[i]) + '</span><strong>' + digits(A.clock(time, prefs)) + '</strong>' +
+          var state = i === daySelection.next && time === daySelection.nextTime ? 'next' : i === daySelection.current ? 'current' : time < +now ? 'past' : 'up';
+          return '<div class="day-row ' + state + '"><span>' + prayerLabel(i, s('prayerNames')[i]) + '</span><strong>' + digits(A.clock(time, prefs)) + '</strong>' +
             (!prayerRules.isPrayer(i) ? '<span class="muted">' + t('لا أذان للشروق', 'No adhan') + '</span>' : button('bell', onOff(prefs.bells[i]), i, '', t('أذان ', 'Adhan for ') + s('prayerNames')[i], uiContract.bind(uiContract.prayerAdhanId(i), 'toggle'))) + '</div>';
         }).join('') + '</div><div class="day-details"><h2>' + escape(city[prefs.lang]) + '</h2><p>' +
           (h ? digits(h.day + ' ' + s('hijriMonths')[h.month] + ' ' + h.year) : t('التاريخ الهجري غير متاح', 'Hijri date unavailable')) +

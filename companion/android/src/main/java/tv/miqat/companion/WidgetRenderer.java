@@ -19,6 +19,8 @@ final class WidgetRenderer {
     private final RemoteViews view;
     private final WidgetOptions options;
     private final int width, height, ink, accent;
+    private final String layout;
+    private final boolean minimal, wide;
     private final PhoneStore settings;
     private final PhoneData data;
     private final boolean ar, eastern;
@@ -28,10 +30,18 @@ final class WidgetRenderer {
     private final JSONObject colors;
 
     static RemoteViews create(Context context, WidgetOptions options, int width, int height) {
+        return create(context, options, width, height, null);
+    }
+
+    static RemoteViews initial(Context context, WidgetOptions options, int width, int height) {
+        return create(context, options, width, height, options.layout);
+    }
+
+    private static RemoteViews create(Context context, WidgetOptions options, int width, int height, String initialLayout) {
         RemoteViews view = new RemoteViews(context.getPackageName(), R.layout.prayer_widget);
         view.setOnClickPendingIntent(R.id.widget_root, PhoneAlarms.open(context));
         try {
-            new WidgetRenderer(context, view, options, width, height).render();
+            new WidgetRenderer(context, view, options, width, height, initialLayout).render();
         } catch (Exception unavailable) {
             view.setInt(
                     R.id.widget_backdrop,
@@ -51,13 +61,16 @@ final class WidgetRenderer {
     }
 
     private WidgetRenderer(
-            Context context, RemoteViews view, WidgetOptions options, int width, int height)
+            Context context, RemoteViews view, WidgetOptions options, int width, int height, String initialLayout)
             throws Exception {
         this.context = context;
         this.view = view;
         this.options = options;
-        this.width = width;
-        this.height = height;
+        layout = initialLayout == null ? options.layoutFor(width, height, context.getResources().getConfiguration().fontScale) : initialLayout;
+        this.width = width > 0 ? width : options.layout.equals("strip") ? 400 : 280;
+        this.height = height > 0 ? height : options.height();
+        minimal = layout.equals("next") && this.height < 140 * Math.max(1f, context.getResources().getConfiguration().fontScale) * options.size / 100f;
+        wide = !layout.equals("strip") && !minimal && this.width >= 260 * Math.max(1f, context.getResources().getConfiguration().fontScale) * options.size / 100f;
         settings = PhoneStore.read(context);
         data = PhoneData.get(context);
         ar = PhoneAlarms.arabic(context);
@@ -75,6 +88,10 @@ final class WidgetRenderer {
     }
 
     private void render() throws Exception {
+        if (wide) {
+            view.removeAllViews(R.id.widget_next);
+            view.addView(R.id.widget_next, new RemoteViews(context.getPackageName(), ar ? R.layout.widget_next_wide_ar : R.layout.widget_next_wide));
+        }
         view.setImageViewBitmap(
                 R.id.widget_backdrop,
                 WidgetBackground.create(context, settings, options, colors, width, height));
@@ -98,14 +115,27 @@ final class WidgetRenderer {
         date.setTimeZone(settings.zone());
         String title =
                 (ar ? "ميقات" : "Miqat") + (options.date ? " · " + date.format(new Date(now)) : "");
-        boolean compact =
-                height < (options.layout.equals("strip") ? 130 : 180)
-                        && !options.layout.equals("day");
+        boolean compact = height < 180 && !layout.equals("day");
+        if (compact) view.setViewPadding(R.id.widget_content, dp(8), dp(6), dp(8), dp(6));
+        if (minimal) {
+            view.setViewPadding(R.id.widget_content, dp(4), dp(4), dp(4), dp(4));
+            view.setViewPadding(R.id.widget_next_content, dp(4), dp(4), dp(4), dp(4));
+            view.setViewVisibility(R.id.widget_next_icon, View.GONE);
+        }
+        view.setInt(R.id.widget_next_highlight, "setColorFilter", accent);
         if (options.hijri) {
             String hijri = PhoneTime.hijri(settings, now, ar);
             title = compact ? hijri : title + "\n" + hijri;
         }
         view.setInt(R.id.widget_title, "setMaxLines", options.hijri && !compact ? 2 : 1);
+        if (wide) {
+            String metadata = options.hijri ? PhoneTime.hijri(settings, now, ar) : options.date ? date.format(new Date(now)) : "";
+            title = (metadata.isEmpty() ? "" : metadata + " · ") + place();
+            if (options.hijri && options.date) title += "\n" + date.format(new Date(now));
+            view.setInt(R.id.widget_title, "setMaxLines", options.hijri && options.date ? 2 : 1);
+            view.setTextViewTextSize(R.id.widget_title, android.util.TypedValue.COMPLEX_UNIT_SP, 11 * options.size / 100f);
+            view.setTextColor(R.id.widget_next_remaining, Color.parseColor(colors.getString("mist-400")));
+        }
         view.setTextViewText(R.id.widget_title, text(title));
         prayers();
         SimpleDateFormat updated = new SimpleDateFormat("HH:mm", locale);
@@ -115,7 +145,7 @@ final class WidgetRenderer {
                 text(data.text("widget_updated", ar) + " · " + updated.format(new Date(now))));
         view.setViewVisibility(
                 R.id.widget_updated,
-                options.layout.equals("strip") || compact ? View.GONE : View.VISIBLE);
+                layout.equals("strip") || compact || minimal || layout.equals("day") && height < 360 * context.getResources().getConfiguration().fontScale ? View.GONE : View.VISIBLE);
     }
 
     private void prayers() throws Exception {
@@ -123,7 +153,7 @@ final class WidgetRenderer {
         view.removeAllViews(R.id.widget_strip);
         PhoneSchedule.Day day = settings.day(now, 0), tomorrow = settings.day(now, 1);
         boolean ready = settings.locationReady && day.times != null;
-        boolean nextOnly = options.layout.equals("next"), strip = options.layout.equals("strip");
+        boolean nextOnly = layout.equals("next"), strip = layout.equals("strip");
         view.setViewVisibility(R.id.widget_times, ready ? View.GONE : View.VISIBLE);
         view.setTextViewText(
                 R.id.widget_times,
@@ -134,10 +164,10 @@ final class WidgetRenderer {
                                         ? "phone_location_needed"
                                         : "phone_unavailable",
                                 ar));
-        view.setViewVisibility(R.id.widget_next, ready && nextOnly ? View.VISIBLE : View.GONE);
+        view.setViewVisibility(R.id.widget_next, ready && !strip ? View.VISIBLE : View.GONE);
         view.setViewVisibility(
                 R.id.widget_title,
-                nextOnly && height < 180 && !options.hijri ? View.GONE : View.VISIBLE);
+                minimal || !wide && nextOnly && height < 180 && !options.hijri && !options.date ? View.GONE : View.VISIBLE);
         view.setViewVisibility(
                 R.id.widget_prayers, ready && !nextOnly && !strip ? View.VISIBLE : View.GONE);
         view.setViewVisibility(R.id.widget_strip, ready && strip ? View.VISIBLE : View.GONE);
@@ -150,13 +180,22 @@ final class WidgetRenderer {
                 next == null
                         ? data.text("phone_unavailable", ar)
                         : data.prayerName(next.getNext(), ar));
+        if (next != null) {
+            view.setImageViewResource(R.id.widget_next_icon, prayerIcon(next.getNext()));
+            view.setInt(R.id.widget_next_icon, "setColorFilter", accent);
+        }
         view.setTextViewText(
                 R.id.widget_next_time,
                 next == null ? "—" : text(time.format(new Date((long) next.getNextTime()))));
-        view.setTextViewTextSize(
+        if (!wide) view.setTextViewTextSize(
                 R.id.widget_next_label,
                 android.util.TypedValue.COMPLEX_UNIT_SP,
                 12 * options.size / 100f);
+        if (wide) {
+            long minutes = next == null ? 0 : (long) tv.miqat.core.ReminderRules.INSTANCE.minutesLeft(next.getNextTime(), now);
+            String remaining = text(String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60));
+            view.setTextViewText(R.id.widget_next_remaining, next == null ? "" : String.format(locale, data.text("phone_remaining", ar), remaining));
+        }
         if (!nextOnly)
             for (int i = 0; i < 6; i++)
                 row(
@@ -175,14 +214,43 @@ final class WidgetRenderer {
         prayer.setTextViewText(R.id.widget_prayer_name, data.prayerName(index, ar));
         prayer.setTextViewText(
                 R.id.widget_prayer_time, text(time.format(new Date((long) day.times[index]))));
-        prayer.setTextColor(R.id.widget_prayer_name, ink);
+        prayer.setImageViewResource(R.id.widget_prayer_icon, prayerIcon(index));
+        prayer.setInt(R.id.widget_prayer_icon, "setColorFilter", next ? accent : ink);
+        prayer.setViewVisibility(R.id.widget_prayer_highlight, next ? View.VISIBLE : View.GONE);
+        prayer.setInt(R.id.widget_prayer_highlight, "setColorFilter", accent);
+        prayer.setTextColor(R.id.widget_prayer_name, next ? accent : ink);
         prayer.setTextColor(R.id.widget_prayer_time, next ? accent : ink);
         for (int id : new int[] {R.id.widget_prayer_name, R.id.widget_prayer_time})
             prayer.setTextViewTextSize(
                     id,
                     android.util.TypedValue.COMPLEX_UNIT_SP,
-                    (strip ? 11 : 13) * options.size / 100f);
+                    (strip ? 11 : 12) * options.size / 100f);
         view.addView(strip ? R.id.widget_strip : R.id.widget_prayers, prayer);
+    }
+
+    private String place() throws Exception {
+        String id = settings.value("prayer.location");
+        if (id.equals("custom")) return data.text("phone_custom_location", ar);
+        if (id.equals("detected")) return data.text("phone_current_location", ar);
+        boolean near = id.startsWith("detected:");
+        String name = data.city(near ? id.substring(9) : id).getString(ar ? "ar" : "en");
+        return near ? String.format(locale, data.text("phone_near_city", ar), name) : name;
+    }
+
+    private int prayerIcon(int prayer) {
+        switch (prayer) {
+            case 0: return R.drawable.companion_icon_fajr;
+            case 1: return R.drawable.companion_icon_sunrise;
+            case 2: return R.drawable.companion_icon_dhuhr;
+            case 3: return R.drawable.companion_icon_asr;
+            case 4: return R.drawable.companion_icon_maghrib;
+            case 5: return R.drawable.companion_icon_isha;
+            default: throw new IllegalArgumentException("Invalid prayer icon");
+        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * context.getResources().getDisplayMetrics().density);
     }
 
     private String text(String value) {

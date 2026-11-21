@@ -382,7 +382,7 @@ public final class MainActivity extends Activity {
         for (int i = 0; i < targets.length; i++) {
             final String target = targets[i];
             boolean selected = target.equals(active);
-            int tint = selected ? ground : muted;
+            int tint = selected ? accent : muted;
             Button item = views.button(nav, labels[i], () -> tab(target));
             views.flex(item);
             item.setMinHeight(views.dp(56));
@@ -397,7 +397,7 @@ public final class MainActivity extends Activity {
             item.setBackground(
                     new RippleDrawable(
                             ColorStateList.valueOf((accent & 0x00ffffff) | 0x33000000),
-                            views.background(selected ? accent : Color.TRANSPARENT, 32),
+                            views.background(selected ? color("lapis-700") : Color.TRANSPARENT, 32),
                             null));
             item.setTextColor(tint);
             if (target.equals("settings")) views.bindAction(item, "open-settings");
@@ -443,8 +443,11 @@ public final class MainActivity extends Activity {
         LinearLayout shell = views.column();
         shell.setBackgroundColor(ground);
         boolean stylePage = page.equals("phone-settings") && section.equals("appearance");
+        boolean homeBackground = page.equals("prayers")
+                && phoneUi.settings.value("appearance.home-background").equals("true");
         if (page.equals("onboarding")) onboarding.background(shell);
         else if (stylePage) phoneUi.appearance.background(shell, phoneUi.settings);
+        else if (homeBackground) phoneUi.appearance.homeBackground(shell, phoneUi.settings);
         shell.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         LinearLayout heading = views.column();
         shell.addView(heading, new LinearLayout.LayoutParams(-1, -2));
@@ -452,7 +455,7 @@ public final class MainActivity extends Activity {
         body = views.column();
         body.setPadding(views.dp(20), views.dp(4), views.dp(20), views.dp(12));
         body.setBackgroundColor(
-                page.equals("onboarding") || stylePage ? Color.TRANSPARENT : ground);
+                page.equals("onboarding") || stylePage || homeBackground ? Color.TRANSPARENT : ground);
         String screen =
                 page.equals("settings") && section.equals("appearance") ? "appearance" : page;
         if (!CompanionContract.INSTANCE.getScreens().contains(screen))
@@ -743,19 +746,16 @@ public final class MainActivity extends Activity {
                         new Choices.Option("system", t("system")),
                         new Choices.Option("ar", "العربية"),
                         new Choices.Option("en", "English"));
-        views.segmentedChoices(
-                parent,
-                "phone.language",
-                choices,
-                prefs().getString("language", "system"),
-                value -> {
+        String selected = prefs().getString("language", "system");
+        String label = selected.equals("en") ? "English" : selected.equals("ar") ? "العربية" : t("system");
+        LinearLayout row = views.navigationRow(parent, "gear", t("preferences"), label,
+                () -> phoneUi.picker(t("preferences"), choices, selected, value -> {
+                    if (value.equals(selected)) return;
                     prefs().edit().putString("language", value).apply();
                     recreate();
-                });
-        for (Choices.Option choice : choices)
-            views.bindAction(
-                    (Button) parent.findViewWithTag("phone.language." + choice.value),
-                    "choose-language");
+                }));
+        row.setTag("phone.language");
+        views.bindAction(row, "choose-language");
     }
 
     @Override

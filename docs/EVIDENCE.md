@@ -1,5 +1,49 @@
 # Validation evidence
 
+## Phone fidelity refinement — 21 November 2026
+
+Review APK **0.5.1/code 17**, `state/builds/companion/Miqat-latest.apk`,
+35,129,203 bytes; SHA-256:
+`6F459FE43F8C01E6CDC23E1478C77037847BFA0629E6D49F9D5CAE3DBAF904C0`.
+Prior signing certificate retained. Export matches build; all 25 recordings,
+25 notices/license/source files and six reviewed native widget picker PNGs match
+packaged bytes. Schema 5 preserves v1–v4 values and explicit background opt-out.
+
+Current-run native captures were compared with the approved Home, prayer and
+widget references. This exposed zero-width prayer names that value-only tests
+missed; explicit wrap-content times and positive-width/non-overlap assertions now
+protect both Home and the calendar. Screenshots also verify grouped rows,
+spaced round weekday marks, compact numeric editors, joined Arabic and portrait
+Signature/Dusk/Aurora compositions. Existing artwork masters are unchanged.
+
+Owned API 37 phone checks pass: bilingual UI, pointer-driven date arrows,
+immediate calendar timetable changes, dialog placement before show, inline day
+overrides, appearance cancellation, migration, complete setup/hosted widgets and
+native companion TV bindings. Widget checks cover API 31+ exact size maps and
+legacy min/max bounds, three responsive presentations, independent styles,
+initial preview selection, icons/highlights and measured 140×100 text at font
+scales 1/1.5/2. Six native English/Arabic picker images were regenerated and read.
+
+App scale 80–150% passes in both languages: normal portrait, Android text scale
+1.3 portrait and landscape. The landscape run used a verified 2400×1080 emulator
+viewport; rotation-setting commands had retained portrait and that failed fixture
+was preserved. This establishes layout behavior, not a physical rotation sensor.
+An earlier test expected the previous widget font size; its launcher/app scaling
+assertion now uses the revised 12sp timetable style. Required checks were kept.
+
+Build/test APK/lint: 0 errors, 41 existing warnings. Companion generation 10/10,
+canonical/shared validators and preview data/tests/build pass. LG ES5/unit/TLS
+and full bilingual browser 80–150% checks pass. Its first new outline assertion
+caught a generated CSS border-width reset; the canonical semantic rule now wins.
+LG **0.2.29** review IPK is 19,437,994 bytes, SHA-256
+`B63AE27135BD5E18D3F94E209A03E64036781AE1964ED128B8F04CEC4CF08123`;
+all 25 media files and app/service MIT notices match source. No deployment.
+
+PR #9 records final-head CI. Raw evidence remains ignored under state/. Native
+launcher pin confirmation, physical old-phone/OEM behavior, compass/sound and TV
+remote/picture/power acceptance remain for owner review. Widget remaining time is
+a snapshot at existing refreshes. No new audio/scheduling policy or dependency.
+
 ## Approved phone implementation — 21 November 2026
 
 Review APK **0.5.0/code 16**, primary checkout

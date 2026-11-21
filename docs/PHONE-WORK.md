@@ -1,7 +1,27 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest requirements: PHONE-PASS8.md, following feedback on the 0.4.6 candidate.
+Latest requirements: PHONE-PASS9.md, refining the 0.5.0 candidate against its mocks.
+
+## Refinement candidate — 0.5.1/code17
+
+Grouped prayer/settings rows, compact numbers/language, spaced weekday circles,
+inline day overrides, first-frame sheet placement and combined calendar/timetable
+are implemented. Home arrows are tested with pointer events. A dimmed Home scene
+can be disabled, and portrait scenes reuse the canonical artwork. Widgets adapt
+by allocated dimensions with modern size maps and legacy resize bounds, preserve
+per-instance styles and include canonical icons/serif heroes/highlights. Six
+reviewed native picker images were regenerated. Schema5 preserves older values.
+
+API37 native UI, migration, setup/widgets, companion TV controls and 80–150%
+sizing pass in both languages, including Android text1.3 portrait/landscape.
+Minimum140×100 widget text is checked at text scales1/1.5/2. Preview and LG
+ES5/browser checks pass. LG0.2.29 carries matching Today highlights; no Android
+TV rendering change was needed because its existing choices already have gaps.
+
+Artifact identities and limitations are in EVIDENCE.md; PR9 owns final-head CI
+receipts. Keep this PR draft for owner device review and continue this refinement
+checklist with subsequent feedback. No merge, release or physical deployment.
 
 ## Approved implementation — 0.5.0/code16
 

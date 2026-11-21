@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Refine phone 0.5.1/code17 towards the approved mockups: grouped prayer/settings
+  rows, spaced circular weekdays, compact numeric editors and a language picker.
+  Place sheets before their first frame; fix Home date-arrow touch targets and
+  show the selected timetable directly beneath the Hijri calendar.
+- Expand weekday overrides in place. Add a dimmed Home artwork toggle and adapt
+  landscape-only scenes to portrait without changing the canonical TV artwork.
+- Make placed widgets adapt among next-prayer, horizontal and daily layouts on
+  resize, including older launchers. Add canonical icons, serif prayer heroes,
+  next-prayer highlights and matching native English/Arabic picker images.
+- Carry choice spacing to the TV preview and current/next/past prayer styling to
+  LG's Today page in 0.2.29. Keep scheduling and media policy unchanged.
+
 - Implement the approved phone design in 0.5.0/code16: welcome-first setup,
   labeled country/city and compact detection, a single notification decision,
   full-page style previews, visible short choices/weekdays and inline numbers.
