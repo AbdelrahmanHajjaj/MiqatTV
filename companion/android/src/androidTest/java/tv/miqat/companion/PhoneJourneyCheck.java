@@ -33,6 +33,15 @@ final class PhoneJourneyCheck {
                     check(welcome.body.findViewWithTag("phone.location.detect") == null
                                     && welcome.body.findViewWithTag("phone.reminders.enabled.edit") == null,
                             "Welcome must introduce Miqat before location or alert controls");
+                    Set<String> welcomeCopy = new LinkedHashSet<>();
+                    for (int i = 0; i < welcome.body.getChildCount(); i++) {
+                        View child = welcome.body.getChildAt(i);
+                        if (child instanceof TextView) welcomeCopy.add(((TextView) child).getText().toString());
+                    }
+                    check(welcomeCopy.equals(new LinkedHashSet<>(Arrays.asList(
+                                    welcome.t("setup_welcome"), welcome.t("setup_welcome_tagline"),
+                                    welcome.t("setup_welcome_body")))),
+                            "Welcome retained extra promotional copy");
                 });
                 PhoneUiCheck.capture(test, welcome, lang + "-journey-welcome", captures);
                 PhoneUiCheck.on(test, welcome::finish);

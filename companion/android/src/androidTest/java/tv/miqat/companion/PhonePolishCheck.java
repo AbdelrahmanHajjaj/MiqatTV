@@ -68,15 +68,16 @@ final class PhonePolishCheck {
     }
 
     private static void stableScroll(Instrumentation test, MainActivity a) {
-        for (String action : new String[]{"plus", "plus", "minus", "save"}) {
+        for (String action : new String[]{"plus", "plus", "minus", "typed"}) {
             int[] firstFrame = {-1}, expected = {-1};
             PhoneUiCheck.on(test, () -> {
                 a.scroll.scrollTo(0, a.views.dp(100));
                 expected[0] = a.scroll.getScrollY();
-                String tag = "phone.call.fajr.before." + action;
-                View button = action.equals("save") ? a.actionHost.findViewWithTag(tag) : a.body.findViewWithTag(tag);
                 View root = a.contentRoot;
-                button.performClick();
+                if (action.equals("typed")) {
+                    a.body.findViewWithTag("phone.call.fajr.before.edit").performClick();
+                    ((android.widget.EditText) a.body.findViewWithTag("phone.call.fajr.before.input")).setText("7");
+                } else a.body.findViewWithTag("phone.call.fajr.before." + action).performClick();
                 PhoneUiCheck.check(a.contentRoot == root, "Setting edit replaced the window container");
                 android.widget.ScrollView current = a.scroll;
                 current.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {

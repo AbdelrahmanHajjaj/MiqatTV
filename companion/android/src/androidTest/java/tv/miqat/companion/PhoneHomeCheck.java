@@ -14,6 +14,7 @@ import java.util.Map;
 final class PhoneHomeCheck {
     static void run(Instrumentation test, MainActivity a) throws Exception {
         PhoneStore saved = PhoneStore.read(a);
+        String savedMessage = a.phoneUi.locationUi.locationMessage;
         PhoneUiCheck.on(test, () -> {
             a.tab("prayers");
         });
@@ -29,6 +30,8 @@ final class PhoneHomeCheck {
                 PhoneUiCheck.check(verse != null && verse.getText().toString().equals(canonical.toString())
                                 && verse.getTextDirection() == View.TEXT_DIRECTION_RTL,
                         "Home lost the exact joined TV verse or its Arabic text direction");
+                PhoneUiCheck.check(a.body.findViewWithTag("phone.verse.reference") == null,
+                        "Home retained a reference label below the verse");
                 View hero = a.body.findViewWithTag("phone.hero");
                 View date = a.body.findViewWithTag("phone.today");
                 View city = a.body.findViewWithTag("phone.location");
@@ -82,6 +85,23 @@ final class PhoneHomeCheck {
                     a.phoneUi.home.render(PhoneCalendar.civilStamp(fixture, date));
                     PhoneUiCheck.check(a.body.findViewWithTag("phone.hijri.event") == null,
                             "Ordinary Home dates retained an empty or unrelated event row");
+                    for (String message : new String[] {"phone_location_updated", "phone_location_found", "phone_location_working"}) {
+                        a.phoneUi.locationUi.locationMessage = message;
+                        a.body.removeAllViews();
+                        a.phoneUi.home.render(eventDay);
+                        PhoneUiCheck.check(a.body.findViewWithTag("phone.location.message") == null
+                                        && a.body.findViewWithTag("phone.location") != null,
+                                "Home retained location success narration or lost its city action");
+                    }
+                    a.phoneUi.locationUi.locationMessage = "phone_location_timeout";
+                    a.body.removeAllViews();
+                    a.phoneUi.home.render(eventDay);
+                    TextView failure = a.body.findViewWithTag("phone.location.message");
+                    PhoneUiCheck.check(failure != null
+                                    && failure.getText().toString().equals(a.t("phone_location_timeout"))
+                                    && ((View) a.body.findViewWithTag("phone.hero"))
+                                            .findViewWithTag("phone.location.message") == null,
+                            "Home must retain location failure feedback outside the prayer card");
                 } catch (Exception failure) { throw new AssertionError(failure); }
             });
             PhoneUiCheck.check(PhoneStore.read(a).values.equals(saved.values),
@@ -89,6 +109,7 @@ final class PhoneHomeCheck {
         } finally {
             PhoneUiCheck.on(test, () -> {
                 a.phoneUi.settings = saved;
+                a.phoneUi.locationUi.locationMessage = savedMessage;
                 a.render();
             });
         }

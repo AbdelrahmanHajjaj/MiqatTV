@@ -182,27 +182,15 @@ final class PhoneSizeCheck {
                                 a.phoneUi.open("default-audio");
                                 a.body.findViewWithTag("phone.reminders.volume.edit")
                                         .performClick();
-                                View save =
-                                        a.getWindow()
-                                                .getDecorView()
-                                                .findViewWithTag("phone.reminders.volume.save");
-                                PhoneUiCheck.check(
-                                        save != null && save.isEnabled(),
-                                        "Numeric save missing at scale");
+                                PhoneUiCheck.check(a.body.findViewWithTag("phone.reminders.volume.input").isEnabled()
+                                                && a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save") == null,
+                                        "Numeric fields must remain editable without a Done step");
                             });
-                    PhoneUiCheck.on(
-                            test,
-                            () -> {
-                                View save =
-                                        a.getWindow()
-                                                .getDecorView()
-                                                .findViewWithTag("phone.reminders.volume.save");
-                                visible(save, "Bottom numeric confirmation clipped at scale");
-                                PhoneUiCheck.check(
-                                        a.body.findViewWithTag("phone.reminders.volume.save")
-                                                == null,
-                                        "Confirmation must stay outside scrolling content");
-                            });
+                    PhoneUiCheck.on(test, () -> {
+                        for (String suffix : new String[]{"input", "minus", "plus"})
+                            visible(a.body.findViewWithTag("phone.reminders.volume." + suffix),
+                                    "Inline numeric control clipped at scale");
+                    });
                     PhoneUiCheck.on(
                             test,
                             () -> {

@@ -9,7 +9,7 @@ See [scope and evidence](../docs/COMPANION-WORK.md) and the
 The phone uses Miqat's shared artwork, tokens, palettes, icons and mihrab geometry.
 Java Views expose inline +/- controls, visible short choices and searchable catalogs. Appearance
 for a TV keeps a representative phone preview with Apply/Cancel. Phone prayer
-preferences save independently, with inline numeric Done/Cancel. Optional demo TVs remain
+preferences save independently, with immediate numeric steps and validated text entry. Optional demo TVs remain
 in Preferences; they do not establish hardware support.
 
 Phone Home and the Hijri calendar share a readable six-prayer timetable and recurring

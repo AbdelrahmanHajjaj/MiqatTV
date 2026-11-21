@@ -181,13 +181,7 @@ final class PhoneUi {
     }
 
     boolean back() {
-        if (!pending.isEmpty()) {
-            String id = pending;
-            pending = "";
-            a.render();
-            editorFocus(id);
-            return true;
-        }
+        pending = "";
         appearance.cancel();
         if (history.isEmpty()) return false;
         Bundle place = history.remove(history.size() - 1);
@@ -687,7 +681,8 @@ final class PhoneUi {
         track.setLayoutParams(new LinearLayout.LayoutParams(a.views.dp(144), -2));
         track.setBackground(a.views.background(a.ground, 14));
         EditText input = new EditText(a);
-        input.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
+        input.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN
+                | android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
         input.setSingleLine(true);
         input.setTextColor(a.ink);
         input.setTextSize(14);
@@ -700,6 +695,7 @@ final class PhoneUi {
         input.setTag("phone." + id + ".input");
         track.setTag("phone." + id + ".edit");
         track.setOnClickListener(v -> {
+            if (editing) return;
             pending = id;
             draft = saved;
             a.render();
@@ -727,12 +723,7 @@ final class PhoneUi {
                             direction < 0 ? "−" : "+",
                             () -> {
                                 try {
-                                    pending = id;
-                                    draft =
-                                            spec.adjust(
-                                                    normalize(input.getText().toString()),
-                                                    direction);
-                                    a.render();
+                                    save(id, spec.adjust(numberValue(spec, input.getText().toString()), direction));
                                 } catch (Exception invalid) {
                                     input.setError(a.t("invalid"));
                                 }
@@ -747,39 +738,52 @@ final class PhoneUi {
                     a.t(direction < 0 ? "decrease" : "increase") + " " + label);
         }
         if (!editing) return;
-        input.addTextChangedListener(
-                MainActivity.watcher(text -> {
-                    pending = id;
-                    draft = text;
-                }));
-        a.actionHost.removeAllViews();
-        LinearLayout actions = a.views.actionBar(a.actionHost);
-        a.views
-                .secondaryAction(
-                        a.views.secondaryActions(actions),
-                        a.t("cancel"),
-                        () -> {
-                            pending = "";
-                            a.render();
-                            editorFocus(id);
-                        })
-                .setTag("phone." + id + ".cancel");
-        a.views
-                .primaryAction(
-                        actions,
-                        a.t("done"),
-                        () -> {
-                            try {
-                                String next = normalize(input.getText().toString());
-                                spec.validate(next);
-                                if ((Integer.parseInt(next) - spec.getMinimum()) % spec.getStep()
-                                        != 0) throw new IllegalArgumentException();
-                                save(id, next);
-                            } catch (Exception invalid) {
-                                input.setError(a.t("invalid"));
-                            }
-                        })
-                .setTag("phone." + id + ".save");
+        input.addTextChangedListener(MainActivity.watcher(text -> {
+            pending = id;
+            draft = text;
+            if (!input.isEnabled()) return;
+            try {
+                String next = numberValue(spec, text);
+                if (!saveTypedNumber(id, next)) {
+                    input.setError(a.t("phone_save_failed"));
+                    return;
+                }
+                input.setError(null);
+            } catch (Exception invalid) {
+                input.setError(text.isEmpty() || normalize(text).equals("-") ? null : a.t("invalid"));
+            }
+        }));
+        input.setOnEditorActionListener((field, action, event) -> {
+            if (action != android.view.inputmethod.EditorInfo.IME_ACTION_DONE) return false;
+            try {
+                String next = numberValue(spec, input.getText().toString());
+                if (!saveTypedNumber(id, next)) {
+                    input.setError(a.t("phone_save_failed"));
+                    return true;
+                }
+                pending = "";
+                a.render();
+                editorFocus(id);
+            } catch (Exception invalid) { input.setError(a.t("invalid")); }
+            return true;
+        });
+    }
+
+    private boolean saveTypedNumber(String id, String next) {
+        if (a.page.equals("phone-settings") && a.section.equals("appearance")) {
+            appearance.stage(id, next, false);
+            return true;
+        }
+        return settings.value(id).equals(next)
+                || save(Collections.singletonMap(id, next), false, false);
+    }
+
+    private static String numberValue(SettingSpec spec, String text) {
+        String next = normalize(text);
+        spec.validate(next);
+        int value = Integer.parseInt(next);
+        if ((value - spec.getMinimum()) % spec.getStep() != 0) throw new IllegalArgumentException();
+        return Integer.toString(value);
     }
 
     void editorFocus(String id) {
@@ -912,18 +916,26 @@ final class PhoneUi {
     }
 
     boolean save(Map<String, String> changes, boolean recreate) {
+        return save(changes, recreate, true);
+    }
+
+    private boolean save(Map<String, String> changes, boolean recreate, boolean redraw) {
         try {
             synchronized (PhoneStore.LOCK) {
                 if (changes.keySet().stream().anyMatch(id -> id.startsWith("prayer."))
                         && !PhoneBackgroundLocation.cancel(a))
                     throw new java.io.IOException("Could not cancel earlier location request");
-                PhoneStore.read(a).changed(changes).save(a);
+                PhoneStore next = PhoneStore.read(a).changed(changes);
+                next.save(a);
+                settings = next;
             }
-            pending = "";
+            if (redraw) pending = "";
             PhoneAlarms.rebuild(a);
             PhoneBackgroundLocation.sync(a);
-            if (recreate) a.recreate();
-            else a.render();
+            if (redraw) {
+                if (recreate) a.recreate();
+                else a.render();
+            }
             return true;
         } catch (Exception failure) {
             a.notice("phone_save_failed");

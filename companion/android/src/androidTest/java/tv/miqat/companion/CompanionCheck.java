@@ -21,7 +21,7 @@ import java.util.*;
 public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
     String backgroundSuite = "";
-    boolean calendarReturn;
+    boolean calendarReturn, phoneControls;
     boolean mapNetwork;
     boolean journey,
             customCheck,
@@ -48,6 +48,7 @@ public final class CompanionCheck extends Instrumentation {
         captures = arguments != null && "true".equals(arguments.getString("capture", "false"));
         String suite = arguments == null ? "" : arguments.getString("suite", "");
         backgroundSuite = suite.startsWith("phone-background-") ? suite : "";
+        phoneControls = suite.equals("phone-controls");
         calendarReturn = suite.equals("phone-calendar-return");
         journey = suite.equals("phone-journey");
         customCheck = suite.equals("phone-custom");
@@ -76,6 +77,12 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if (phoneControls) {
+                PhoneControlCheck.run(this);
+                result.putString("stream", "PASS: immediate numeric changes survive switching controls and pages\n");
+                finish(-1, result);
+                return;
+            }
             if (calendarReturn) {
                 PhoneCalendarCheck.returnsHome(this);
                 result.putString("stream", "PASS: calendar Done, Back and cancellation return to live Home\n");
@@ -157,7 +164,7 @@ public final class CompanionCheck extends Instrumentation {
                 result.putString(
                         "stream",
                         "PASS: independent bilingual phone prayer UI, location confirmation,"
-                                + " numeric Save/Cancel, per-prayer persistence and themes\n");
+                                + " immediate numeric saves, per-prayer persistence and themes\n");
                 finish(-1, result);
                 return;
             }
@@ -595,19 +602,41 @@ public final class CompanionCheck extends Instrumentation {
                     a.tv().read().getValues().get("display.size").equals("100"),
                     "Inline Cancel persisted a draft");
             a.getWindow().getDecorView().findViewWithTag("display.size.plus").performClick();
-            check(
-                    a.tv().read().getValues().get("display.size").equals("100"),
-                    "Stepper saved before Done");
-            check(
-                    findInput(
-                                    a.getWindow()
-                                            .getDecorView()
-                                            .findViewWithTag("display.size.number-editor"))
-                            .getText()
-                            .toString()
-                            .equals("110"),
-                    "Stepper did not use the shared increment");
-            a.getWindow().getDecorView().findViewWithTag("display.size.cancel").performClick();
+            check(a.tv().read().getValues().get("display.size").equals("110")
+                            && !a.settingsUi.hasPending()
+                            && a.body.findViewWithTag("display.size.number-editor") == null,
+                    "Stepper must apply the shared increment without a per-control Done");
+            a.settingsUi.openSection("reminders");
+            a.settingsUi.openSection("display");
+            check(a.settingsUi.snapshot.getValues().get("display.size").equals("110"),
+                    "Switching settings lost the applied numeric step");
+            a.settingsUi.edit("display.size");
+            a.body.findViewWithTag("display.size.number.plus").performClick();
+            check(a.tv().read().getValues().get("display.size").equals("120")
+                            && !a.settingsUi.hasPending(),
+                    "Plus inside the manual editor still required Done");
+            boolean bearingSupported = false;
+            for (SettingSpec candidate : a.backend().getSpecs())
+                if (candidate.getId().equals("prayer.facing")) bearingSupported = true;
+            check(bearingSupported == a.catalog.control(a.profile(), "prayer.facing").optBoolean("available"),
+                    "Bearing editor capability differs from the actual backend");
+            if (bearingSupported) {
+                String bearing = a.tv().read().getValues().get("prayer.facing");
+                a.settingsUi.openSection("prayer");
+                a.settingsUi.edit("prayer.facing");
+                android.app.AlertDialog bearingEditor = a.settingsUi.editor;
+                bearingEditor.getWindow().getDecorView()
+                        .findViewWithTag("prayer.facing.number.plus").performClick();
+                String expectedBearing = a.settingsUi.spec("prayer.facing")
+                        .adjust(bearing.equals("-1") ? "0" : bearing, 1);
+                String savedBearing = a.tv().read().getValues().get("prayer.facing");
+                check(savedBearing.equals(expectedBearing)
+                                && !bearingEditor.isShowing() && !a.settingsUi.hasPending(),
+                        "Bearing step did not apply and dismiss its confirmed editor: expected="
+                                + expectedBearing + " saved=" + savedBearing + " showing="
+                                + bearingEditor.isShowing() + " pending=" + a.settingsUi.hasPending());
+            } else check(!a.settingsUi.snapshot.getValues().containsKey("prayer.facing"),
+                    "Unsupported bearing capability leaked into the settings snapshot");
             a.tv().setOnline(false);
             a.settingsUi.readSettings();
             a.section = "display";

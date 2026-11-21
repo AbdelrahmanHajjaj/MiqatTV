@@ -107,13 +107,12 @@ final class LiveUiCheck {
             else {
                 check(!a.catalog.control(a.profile(),"device.remote").getBoolean("available")&&!a.settingsUi.snapshot.getValues().containsKey("favourites.order"),"LG actual capabilities exclude unsupported Android editors");
                 check(a.settingsUi.snapshot.getValues().get("reminders.volume").equals("25"),"LG reads the native fixture value instead of demo defaults");
-                test.runOnMainSync(()->a.settingsUi.openSection("reminders"));click(test,a,"reminders.volume.plus");click(test,a,"reminders.volume.save");
+                test.runOnMainSync(()->a.settingsUi.openSection("reminders"));click(test,a,"reminders.volume.plus");
                 untilUi(test,()->!a.networkBusy&&a.settingsUi.snapshot.getValues().get("reminders.volume").equals("30"));
                 check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("reminders.volume").equals("30"),"LG volume uses the shared 5% editor and real adapter");
             }
             test.runOnMainSync(()->a.settingsUi.openSection("display"));click(test,a,"display.size.plus");
-            check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("display.size").equals("100"),"Inline number remains staged");
-            click(test,a,"display.size.save");untilUi(test,()->!a.networkBusy&&a.settingsUi.snapshot.getValues().get("display.size").equals("110"));
+            untilUi(test,()->!a.networkBusy&&a.settingsUi.snapshot.getValues().get("display.size").equals("110"));
             check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("display.size").equals("110"),"Phone saved to real TV preference adapter");
             test.runOnMainSync(()->a.settingsUi.openSection("appearance"));click(test,a,"appearance.theme.next");
             check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("appearance.theme").equals("mihrab"),"Phone preview does not write");

@@ -1,5 +1,34 @@
 # Validation evidence
 
+## Immediate controls and Home cleanup — 21 November 2026
+
+Phone review **0.5.6/code 22**, feature/companion-installation, draft PR #9.
+Welcome omits the ad/account label; Home omits the verse reference and location
+success/confirmation narration. Location setup and meaningful errors remain.
+Shared phone numeric controls save each step and valid typed value immediately,
+without replacing the active input. Full-page preview Apply/Cancel remains.
+TV +/− controls use their existing guarded confirmed-save path; manual TV typed
+entry retains Done. Unsupported LG bearing capability stays unavailable.
+
+A focused native regression failed before the fix when switching offset/before/
+after controls lost an unsaved adjustment. It now passes Arabic typing, invalid/
+off-step rejection, input identity, restored input, cross-page persistence and
+one-tap full-page preview Cancel. Bilingual phone UI and first-use/widget journeys,
+TV native bindings and pinned-TLS LAN checks pass on an owned muted read-only
+API 37 emulator. Dialog Back checks wait for actual window focus before input.
+Both languages pass 80–150% app sizing in normal portrait and Android font 1.3
+portrait/landscape. Actual Home, welcome and prayer-control renders were inspected.
+
+Production/test APK and lint pass: **0 errors, 41 existing warnings**. Generator
+11/11, canonical catalogs/shared checks and design handlers pass. The export
+preserves all 25 exact recordings, notices and existing signing identity. Private
+logs/captures remain ignored under state/. Exact-head CI is tracked in PR #9.
+No physical phone/TV acceptance, merge, release or physical deployment is claimed.
+
+Latest review export: `state/builds/companion/Miqat-latest.apk`, **35,104,834 bytes**,
+SHA256 `EED139936A27A8C7835BF330F362E8668075D02FAD347C951B7692155562DDB7`.
+
+
 ## Strip next-prayer border — 21 November 2026
 
 Phone review **0.5.5/code 21** includes the completed 0.5.4 refinements and the

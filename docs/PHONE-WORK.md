@@ -1,7 +1,17 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: calendar dismissal, clock default and next-prayer strip border; WORK.md owns next action.
+Latest scope: immediate numeric controls and quieter welcome/Home; WORK.md owns next action.
+
+## Immediate controls and Home cleanup — 0.5.6/code 22
+
+Numeric step buttons now commit each change, instead of replacing one unsaved
+number draft when another field opens. Phone typing validates/saves without
+replacing the focused field; invalid/off-step input keeps the last valid value.
+Appearance and widgets retain their full-page Apply/Cancel previews. TV step
+buttons use the existing baseline/conflict/offline guards and confirmed save path.
+Welcome ad/account copy, the reference below the verse and Home location success/
+confirmation narration are removed. Location setup and actual errors remain.
 
 ## Strip highlight — 0.5.5/code 21
 

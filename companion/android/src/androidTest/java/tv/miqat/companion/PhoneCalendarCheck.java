@@ -89,7 +89,12 @@ final class PhoneCalendarCheck {
                 if (close.equals("done")) a.phoneUi.choiceDialog.getButton(-2).performClick();
                 else if (close.equals("cancel")) a.phoneUi.choiceDialog.cancel();
             });
-            if (close.equals("back")) test.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
+            if (close.equals("back")) {
+                // Route physical Back only after Android focuses the calendar window.
+                LiveUiCheck.untilUi(test, () -> a.phoneUi.choiceDialog != null
+                        && a.phoneUi.choiceDialog.getWindow().getDecorView().hasWindowFocus());
+                test.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
+            }
             LiveUiCheck.untilUi(test, () -> a.phoneUi.choiceDialog == null);
             PhoneUiCheck.on(test, () -> {
                 PhoneUiCheck.check(a.page.equals("prayers")

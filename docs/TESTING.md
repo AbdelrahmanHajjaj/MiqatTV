@@ -287,3 +287,13 @@ Strip border regressions supply the renderer's clock explicitly and inspect
 actual selected-column visibility, upcoming time and stroke pixels before/at
 Fajr, after Dhuhr/Isha and after midnight on plain/artwork backgrounds. Overnight
 Fajr must remain outlined with tomorrow's timestamp; sunrise cannot be next.
+
+
+`phone-controls` is the focused native regression for immediate offset/before/after
+steps, valid Arabic typing without replacing the input, invalid-value rejection,
+retained restored text, cross-page persistence and full-page preview Cancel.
+The bilingual phone UI suite also runs it. Keyboard/sizing checks assert the
+inline field and step buttons remain reachable without a per-control footer.
+TV mock/native-LAN checks assert direct +/− saves (including the bearing dialog),
+confirmed values, no lingering per-control draft and retained page-level preview
+Apply/Cancel. No physical TV is used by those fixtures.

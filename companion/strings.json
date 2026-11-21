@@ -1,6 +1,5 @@
 {
   "phone_greeting":{"en":"Assalamu alaikum","ar":"السلام عليكم"},
-  "phone_verse_reference":{"en":"Qur’an 4:103","ar":"القرآن ٤:١٠٣"},
   "phone_widgets_short":{"en":"Widgets","ar":"الأدوات"},
   "phone_event_in_days":{"en":"In %s days","ar":"بعد %s أيام"},
   "phone_calendar_events":{"en":"Events this month","ar":"مناسبات هذا الشهر"},
@@ -365,7 +364,6 @@
   "setup_welcome":{"en":"Welcome to Miqat","ar":"مرحبًا بك في ميقات"},
   "setup_welcome_tagline":{"en":"Make room for prayer.","ar":"اجعل للصلاة مكانًا في يومك."},
   "setup_welcome_body":{"en":"Prayer times, adhan and a little calm throughout your day — on your phone and your TV.","ar":"مواقيت الصلاة والأذان وقليل من السكينة طوال يومك — على هاتفك وتلفازك."},
-  "setup_welcome_private":{"en":"No account. No ads.","ar":"بلا حساب. بلا إعلانات."},
   "setup_start":{"en":"Get started","ar":"ابدأ الآن"},
   "setup_explore":{"en":"Explore first","ar":"استكشف أولًا"},
   "phone_location_intro":{"en":"Set where Miqat calculates your prayer times.","ar":"حدّد الموقع الذي يحسب ميقات مواقيت الصلاة له."},

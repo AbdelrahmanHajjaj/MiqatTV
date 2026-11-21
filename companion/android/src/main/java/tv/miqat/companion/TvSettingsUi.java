@@ -451,8 +451,8 @@ final class TvSettingsUi {
                                     pendingValue,
                                     InputType.TYPE_CLASS_NUMBER
                                             | InputType.TYPE_NUMBER_FLAG_SIGNED);
-                    a.views.button(box, "−", () -> adjust(s, input, -1));
-                    a.views.button(box, "+", () -> adjust(s, input, 1));
+                    a.views.button(box, "−", () -> stepEditedNumber(s, input, -1)).setTag(id + ".number.minus");
+                    a.views.button(box, "+", () -> stepEditedNumber(s, input, 1)).setTag(id + ".number.plus");
                     break;
                 }
             case "list":
@@ -567,9 +567,13 @@ final class TvSettingsUi {
         return input;
     }
 
-    void adjust(SettingSpec s, EditText input, int direction) {
+    void stepEditedNumber(SettingSpec s, EditText input, int direction) {
+        if (!editable()) return;
         try {
-            input.setText(s.adjust(input.getText().toString(), direction));
+            String next = s.adjust(input.getText().toString(), direction);
+            input.setText(next);
+            if (s.getGroup().equals("appearance")) commitPending();
+            else save(new LinkedHashMap<>(pendingBase), Collections.singletonMap(s.getId(), next), false);
         } catch (IllegalArgumentException e) {
             input.setError(a.t("invalid"));
         }
@@ -608,11 +612,13 @@ final class TvSettingsUi {
         input.setTag(id + ".number-input");
         title.setLabelFor(input.getId());
         input.addTextChangedListener(MainActivity.watcher(value -> pendingValue = value));
-        Button minus = a.views.button(track, "−", () -> adjust(spec, input, -1));
+        Button minus = a.views.button(track, "−", () -> stepEditedNumber(spec, input, -1));
+        minus.setTag(id + ".number.minus");
         a.views.square(minus);
         minus.setContentDescription(a.t("decrease") + " " + a.title(c));
         track.addView(input, new LinearLayout.LayoutParams(0, -2, 1));
-        Button plus = a.views.button(track, "+", () -> adjust(spec, input, 1));
+        Button plus = a.views.button(track, "+", () -> stepEditedNumber(spec, input, 1));
+        plus.setTag(id + ".number.plus");
         a.views.square(plus);
         plus.setContentDescription(a.t("increase") + " " + a.title(c));
         a.actionHost.removeAllViews();
@@ -686,9 +692,8 @@ final class TvSettingsUi {
             appearance.set(s, s.adjust(values().get(id), direction));
             a.render();
         } else {
-            edit(id);
-            EditText field = a.body.findViewWithTag(id + ".number-input");
-            adjust(s, field, direction);
+            String next = s.adjust(values().get(id), direction);
+            save(new LinkedHashMap<>(snapshot.getValues()), Collections.singletonMap(id, next), false);
         }
     }
 
@@ -1051,6 +1056,8 @@ final class TvSettingsUi {
                         .apply();
             }
             if (isAppearance) appearance = null;
+            if (editor != null && hasPending() && spec(pendingId).getKind().equals("number"))
+                editor.dismiss();
             clearPending();
             a.render();
             a.notice(a.real() == null ? "saved" : "saved_tv");

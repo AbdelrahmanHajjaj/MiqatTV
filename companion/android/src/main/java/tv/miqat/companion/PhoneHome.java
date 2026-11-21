@@ -67,8 +67,8 @@ final class PhoneHome {
                         }
                         if (status != null && ui.settings != null) {
                             String state = PhoneAlarms.status(a, ui.settings);
-                            status.setText(a.t(state));
-                            status.setVisibility(state.equals("phone_alerts_ready") ? View.GONE : View.VISIBLE);
+                            status.setText(state.equals("phone_location_needed") ? "" : a.t(state));
+                            status.setVisibility(state.equals("phone_alerts_ready") || state.equals("phone_location_needed") ? View.GONE : View.VISIBLE);
                         }
                     }
                     if (playback != null)
@@ -141,14 +141,8 @@ final class PhoneHome {
         text.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         text.setGravity(Gravity.CENTER);
         text.setIncludeFontPadding(false);
-        text.setPadding(0, 0, 0, 0);
+        text.setPadding(0, 0, 0, a.views.dp(12));
         a.body.addView(text);
-        TextView reference = a.views.text(a.t("phone_verse_reference"), 12, a.muted);
-        reference.setTag("phone.verse.reference");
-        reference.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        reference.setGravity(Gravity.CENTER);
-        reference.setPadding(0, a.views.dp(2), 0, a.views.dp(12));
-        a.body.addView(reference);
     }
 
     private void eventLine(LinearLayout hero, long now) throws Exception {
@@ -198,10 +192,13 @@ final class PhoneHome {
         city.setContentDescription(a.t("phone_use_location") + ", " + ui.location());
         city.setLayoutParams(new LinearLayout.LayoutParams(-2, -2));
         metaButton(city, "compass", a.accent);
-        if (!ui.locationUi.locationMessage.isEmpty()) {
+        if (!ui.locationUi.locationMessage.isEmpty()
+                && !ui.locationUi.locationMessage.equals("phone_location_updated")
+                && !ui.locationUi.locationMessage.equals("phone_location_found")
+                && !ui.locationUi.locationMessage.equals("phone_location_working")) {
             TextView message = a.views.text(a.t(ui.locationUi.locationMessage), 12, a.muted);
             message.setTag("phone.location.message");
-            hero.addView(message);
+            a.body.addView(message);
         }
     }
 
@@ -225,9 +222,9 @@ final class PhoneHome {
         String state = PhoneAlarms.status(a, ui.settings);
         LinearLayout alerts = a.views.horizontal(a.body);
         alerts.setPadding(0, 0, 0, a.views.dp(8));
-        status = a.views.text(a.t(state), 12, a.muted);
+        status = a.views.text(state.equals("phone_location_needed") ? "" : a.t(state), 12, a.muted);
         status.setTag("phone.status");
-        status.setVisibility(state.equals("phone_alerts_ready") ? View.GONE : View.VISIBLE);
+        status.setVisibility(state.equals("phone_alerts_ready") || state.equals("phone_location_needed") ? View.GONE : View.VISIBLE);
         status.setPadding(0, 0, 0, 0);
         alerts.addView(status, new LinearLayout.LayoutParams(0, -2, 1));
         if (ui.settings.locationReady && state.equals("phone_permission_missing"))

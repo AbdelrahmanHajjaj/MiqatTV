@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.6 immediate controls and quieter Home
+
+- Save numeric +/− changes immediately across phone settings and TV controls, preserving earlier adjustments when switching fields. Valid phone numeric typing saves without replacing the field; invalid values stay rejected.
+- Keep full-page preview Apply/Cancel while removing extra per-number confirmation steps.
+- Remove the welcome ad/account label, the verse reference line and Home location success/confirmation copy. Keep location setup and meaningful errors accessible.
+
 ## 0.5.5 strip highlight
 
 - Outline the strip’s next prayer with a theme-colored rectangular border.

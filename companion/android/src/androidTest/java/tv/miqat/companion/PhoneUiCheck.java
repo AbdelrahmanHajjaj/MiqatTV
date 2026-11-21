@@ -42,16 +42,22 @@ final class PhoneUiCheck {
                             && a.body.findViewWithTag("phone.reminders.volume.plus") != null,
                             "Number and +/- must remain visible without opening a second line");
                     a.body.findViewWithTag("phone.reminders.volume.edit").performClick();
-                    EditText number=a.body.findViewWithTag("phone.reminders.volume.input");String before=a.phoneUi.settings.value("reminders.volume");number.setText("٣٥");
-                    a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.cancel").performClick();check(a.phoneUi.settings.value("reminders.volume").equals(before),"Cancel changed saved volume");
-                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("٣٥");a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Arabic numeric Save failed");
-                    a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("37");a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Off-step number accepted");
+                    EditText number=a.body.findViewWithTag("phone.reminders.volume.input");
+                    number.setText("٣٥");
+                    check(a.phoneUi.settings.volume==35 && number==a.body.findViewWithTag("phone.reminders.volume.input"),
+                            "Valid Arabic numeric entry must save without replacing its field");
+                    check(a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save")==null,
+                            "Numeric controls must not require an extra Done button");
+                    number.setText("37");
+                    check(a.phoneUi.settings.volume==35 && number.getError()!=null,"Off-step number accepted");
+                    number.setText("35");
+                    number.onEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
                     a.phoneUi.open("fajr");a.phoneUi.save("call.fajr.mode","adhan");check(!a.body.findViewWithTag("phone.call.fajr.volume.edit").isEnabled(),"Inherited audio must not expose an active override");
                     check(!a.body.findViewWithTag("phone.call.fajr.length-percent.edit").isEnabled()
                             && a.body.findViewWithTag("phone.length.preview").isEnabled()
                             && a.body.findViewWithTag("phone.length.stop").isEnabled(),
                             "Inherited length must keep its recording preview available while its slider is disabled");
-                    a.body.findViewWithTag("phone.call.fajr.default-audio.edit").performClick();a.body.findViewWithTag("phone.call.fajr.volume.edit").performClick();((EditText)a.body.findViewWithTag("phone.call.fajr.volume.input")).setText("١٥");a.getWindow().getDecorView().findViewWithTag("phone.call.fajr.volume.save").performClick();check(a.phoneUi.settings.audioVolume(0)==15&&a.phoneUi.settings.volume==35,"Per-prayer audio changed default level");a.phoneUi.save("call.fajr.default-audio","true");
+                    a.body.findViewWithTag("phone.call.fajr.default-audio.edit").performClick();a.body.findViewWithTag("phone.call.fajr.volume.edit").performClick();((EditText)a.body.findViewWithTag("phone.call.fajr.volume.input")).setText("١٥");check(a.phoneUi.settings.audioVolume(0)==15&&a.phoneUi.settings.volume==35,"Per-prayer audio changed default level");a.phoneUi.save("call.fajr.default-audio","true");
                     String mode=a.phoneUi.settings.value("call.fajr.mode");
                     check(a.body.findViewWithTag("phone.call.fajr.mode.choices."+mode).isSelected(),"Inline mode choice must show saved value");
                     a.body.findViewWithTag("phone.call.fajr.mode.choices.notification").performClick();check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
@@ -94,6 +100,7 @@ final class PhoneUiCheck {
                     a.tab("phone-settings");check(a.section.isEmpty(),"Phone settings root tab did not return from its child page");
                     check(a.body.findViewWithTag("phone.section.widgets")!=null,"Widget customization needs a settings entry");
                 });
+                PhoneControlCheck.check(test,a);
                 PhonePolishCheck.run(test,a,lang,capture);
                 PhoneHomeCheck.run(test,a);
                 on(test,()->a.tab("phone-settings"));
@@ -296,8 +303,8 @@ final class PhoneUiCheck {
                         .isFullscreenMode(), "IME fullscreen extraction hides the app footer");
                 android.graphics.Rect available = new android.graphics.Rect();
                 a.getWindow().getDecorView().getWindowVisibleDisplayFrame(available);
-                for (String tag : new String[] {"phone.reminders.volume.save",
-                        "phone.reminders.volume.cancel", "phone.reminders.volume.input"}) {
+                for (String tag : new String[] {"phone.reminders.volume.plus",
+                        "phone.reminders.volume.minus", "phone.reminders.volume.input"}) {
                     View control = a.getWindow().getDecorView().findViewWithTag(tag);
                     android.graphics.Rect bounds = new android.graphics.Rect();
                     check(control.getGlobalVisibleRect(bounds)
@@ -310,9 +317,8 @@ final class PhoneUiCheck {
                     ? "settings delete secure show_ime_with_hard_keyboard"
                     : "settings put secure show_ime_with_hard_keyboard " + original);
             on(test, () -> {
-                View cancel = a.getWindow().getDecorView()
-                        .findViewWithTag("phone.reminders.volume.cancel");
-                if (cancel != null) cancel.performClick();
+                EditText input = a.body.findViewWithTag("phone.reminders.volume.input");
+                if (input != null) input.onEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
             });
         }
     }

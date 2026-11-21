@@ -138,13 +138,19 @@ final class PhoneAppearance {
     }
 
     void stage(String id, String value) {
+        stage(id, value, true);
+    }
+
+    void stage(String id, String value, boolean redraw) {
         java.util.Map<String, String> changed = new java.util.LinkedHashMap<>(draft);
         changed.put(id, value);
         try {
             a.phoneUi.settings.changed(changed);
             draft.put(id, value);
-            a.phoneUi.pending = "";
-            a.render();
+            if (redraw) {
+                a.phoneUi.pending = "";
+                a.render();
+            }
         } catch (Exception invalid) {
             a.notice("invalid");
         }
@@ -178,7 +184,7 @@ final class PhoneAppearance {
                     else stage(tab, selected);
                 });
         if (!guided) a.phoneUi.control(a.phoneUi.data.controls.get("appearance.home-background"));
-        if (!guided && a.phoneUi.pending.isEmpty()) {
+        if (!guided) {
             LinearLayout actions = a.views.actionBar(a.actionHost);
             a.views
                     .secondaryAction(a.views.secondaryActions(actions), a.t("cancel"), a::back)

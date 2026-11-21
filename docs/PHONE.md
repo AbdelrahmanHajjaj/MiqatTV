@@ -45,7 +45,8 @@ alert switch remains in permissions so an existing opt-out is recoverable.
 Repeat weekdays are circular toggles on one row with full accessible names; the
 row scrolls when enlarged sizing needs more space. Minute
 adjustments and before/after reminders stay in their rows beside −/+. Numeric
-edits retain Done/Cancel. Day overrides belong to one prayer and weekday and
+steps and valid typed numbers save immediately without a per-control Done step.
+Day overrides belong to one prayer and weekday and
 change only sound/vibration. Enable a weekday override to expand its controls in
 the same view; turn it off to restore prayer defaults. A disabled
 prayer or excluded weekday stays off. Overrides use that prayer's local date,
@@ -91,8 +92,9 @@ follows Android. Manual city/coordinate selection turns automatic updates off;
 a stale background result cannot overwrite the newer selection. Revoking location
 access stops refresh work. Force-stopping requires reopening Miqat.
 
-Settings rows show their saved values. Tap a number to edit inline with +/- and
-Done/Cancel; small choice sets stay visible and large lists open a searchable sheet. Prayer / Your TVs / Phone settings use
+Settings rows show their saved values. Tap a number to edit inline; +/− and valid
+typed changes apply immediately. Small choice sets stay visible and large lists
+open a searchable sheet. Prayer / Your TVs / Phone settings use
 a floating main navigation bar. Detail and setup screens use Back and their own
 actions, with Remote and TV settings inside a selected TV. Voice previews last up to 12 seconds.
 Stop is available on the Prayer screen and the playback notification. A scheduled
@@ -143,7 +145,9 @@ The screen closes when playback finishes. The optional volume-key shortcut
 stops adhan while this screen is visible, including over the lock screen.
 Android reserves the power key: locking or screen timeout does not stop audio.
 
-Prayer Home keeps the greeting and exact TV Quran excerpt above the prayer card.
+Prayer Home keeps the greeting and exact TV Quran verse above the prayer card,
+without an extra reference line. Location success/confirmation copy is omitted
+from Home; setup/settings still own confirmation and location access.
 The Hijri date and one city action share the card: tap the city to refresh an
 already permitted location, or open Location settings when access is absent.
 Tap the date to open the

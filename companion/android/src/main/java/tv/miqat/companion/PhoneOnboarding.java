@@ -82,11 +82,11 @@ final class PhoneOnboarding {
             a.body.addView(title);
             for (String key :
                     new String[] {
-                        "setup_welcome_tagline", "setup_welcome_body", "setup_welcome_private"
+                        "setup_welcome_tagline", "setup_welcome_body"
                     }) {
                 TextView text =
                         a.views.text(
-                                a.t(key), key.equals("setup_welcome_private") ? 12 : 16, a.ink);
+                                a.t(key), 16, a.ink);
                 text.setGravity(android.view.Gravity.CENTER);
                 text.setTextAlignment(android.view.View.TEXT_ALIGNMENT_CENTER);
                 a.body.addView(text);
