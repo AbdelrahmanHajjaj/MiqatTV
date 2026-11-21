@@ -42,6 +42,13 @@ fixture now waits for UI idle after pause; its restoration assertion is retained
 The full API 34 alarm/playback suite passes, including actual background swipe,
 absolute media/alarm levels, notification Stop and 30-second tests.
 
+Exact-head CI still rejected the shell swipe on API 34 after all preceding phone
+suites passed. Locally it also passed with CI's animation settings, so the CI
+cause remains unproven. The fixture now waits for a settled full notification
+row, asserts SystemUI offers ACTION_DISMISS, and injects one synchronous native
+touchscreen gesture. There is no retry or dismiss-action fallback. The focused
+case passes locally; complete runtime/CI results are tracked in draft PR #9.
+
 ## Adhan playback refinements — 21 November 2026
 
 Phone **0.5.11/code 27** targets the selected media/alarm stream's maximum rather

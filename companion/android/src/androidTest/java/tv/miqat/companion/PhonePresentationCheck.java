@@ -63,6 +63,17 @@ final class PhonePresentationCheck {
         try{return android.graphics.Bitmap.createBitmap(screen,bounds.left,bounds.top,bounds.width(),bounds.height());}
         finally{screen.recycle();}
     }
+    private static void swipeRight(Instrumentation test,Rect row,int width) {
+        float start=row.left+row.width()/4f,y=row.centerY();long down=SystemClock.uptimeMillis();
+        for(int step=0;step<=20;step++) {
+            int action=step==0?MotionEvent.ACTION_DOWN:step==20?MotionEvent.ACTION_UP:MotionEvent.ACTION_MOVE;
+            MotionEvent event=MotionEvent.obtain(down,SystemClock.uptimeMillis(),action,start+(width-4-start)*step/20f,y,0);
+            event.setSource(android.view.InputDevice.SOURCE_TOUCHSCREEN);
+            try {check(test.getUiAutomation().injectInputEvent(event,true),"Notification swipe input was rejected");}
+            finally {event.recycle();}
+            if(step<20)SystemClock.sleep(16);
+        }
+    }
     static void run(Instrumentation test,String selected,boolean capture) throws Exception {
         check(Arrays.asList("all","home","swipe","screen","actions").contains(selected),"Unknown presentation case");
         Context c=test.getTargetContext();
@@ -150,20 +161,27 @@ final class PhonePresentationCheck {
                         PhoneUiCheck.capture(test,c,"adhan-notification-shade",capture);
                         Notification notification=Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
                                 .map(n->n.getNotification()).filter(n->(n.flags&Notification.FLAG_FOREGROUND_SERVICE)!=0).findFirst().get();
-                        Rect title=new Rect(),previous=new Rect();int[] stable={0};
+                        test.getUiAutomation().waitForIdle(300,5000);
+                        Rect title=new Rect(),previous=new Rect();long[] stable={SystemClock.elapsedRealtime()};
                         LiveUiCheck.until(()-> {
                             AccessibilityNodeInfo node=notificationText(test,prayerName);
-                            if(node==null){stable[0]=0;return false;}
+                            if(node==null){stable[0]=SystemClock.elapsedRealtime();return false;}
                             try {
+                                while(!String.valueOf(node.getViewIdResourceName()).endsWith("/expandableNotificationRow")) {
+                                    AccessibilityNodeInfo parent=node.getParent();node.recycle();node=parent;
+                                    check(node!=null,"Playing notification row is missing");
+                                }
+                                check(node.getActionList().contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_DISMISS),
+                                        "Android offers no dismiss action for the playing notification: "+node.getActionList());
                                 node.getBoundsInScreen(title);
-                                stable[0]=!title.isEmpty() && title.equals(previous)?stable[0]+1:0;
-                                previous.set(title);return stable[0]>=2;
-                            } finally {node.recycle();}
+                                if(title.isEmpty() || !title.equals(previous))stable[0]=SystemClock.elapsedRealtime();
+                                previous.set(title);return !title.isEmpty() && SystemClock.elapsedRealtime()-stable[0]>=500;
+                            } finally {if(node!=null)node.recycle();}
                         });
                         check(!title.isEmpty(),"Cannot locate the playing notification");
                         PhoneUiCheck.capture(test,c,"adhan-before-notification-swipe",capture);
                         int width=c.getResources().getDisplayMetrics().widthPixels;
-                        PhoneRuntimeCheck.shell(test,"input swipe "+width/4+" "+title.centerY()+" "+(width-4)+" "+title.centerY()+" 300");
+                        swipeRight(test,title,width);
                         PhoneUiCheck.capture(test,c,"adhan-after-notification-swipe",capture);
                         await(test,()->!PhonePlayback.playing(),5000,"Swiping the notification did not stop Adhan; SDK="+android.os.Build.VERSION.SDK_INT+" bounds="+title+" width="+width+" flags="+notification.flags+" style="+notification.extras.getString("android.template"));
                         check(audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==1,"Background swipe did not restore prior media volume");
