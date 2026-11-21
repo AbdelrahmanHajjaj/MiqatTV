@@ -22,11 +22,11 @@ export function prepareAdhans(root = project, check = false) {
     const stamp = join(originals, id + '.json');
     const currentHash = sha256(input);
     if (edit.outputSha256 === currentHash) continue; // Reviewed packaged bytes need no private preparation stamp.
-    if (existsSync(stamp)) {
+    if (!edit.outputSha256 && existsSync(stamp)) {
       const saved = json(stamp);
       if (saved.sourceSha256 === edit.sourceSha256 && saved.endSeconds === edit.endSeconds && saved.outputSha256 === currentHash) continue;
     }
-    const help = id + ': run node tools/prepare-adhans.mjs (FFmpeg required)';
+    const help = id + ': restore reviewed shared/media/adhan files from Git; source preparation needs FFmpeg';
     if (check) throw new Error('Unprepared adhan recording: ' + help);
     if (currentHash !== edit.sourceSha256) throw new Error('Unknown recording; refusing to trim or overwrite: ' + id);
     mkdirSync(originals, {recursive: true});
@@ -41,6 +41,7 @@ export function prepareAdhans(root = project, check = false) {
       if (!probe.streams.some(s => s.codec_type === 'audio') || Math.abs(+probe.format.duration - edit.endSeconds) > 0.1) throw new Error('Unexpected trimmed duration: ' + id);
       execFileSync('ffmpeg', ['-v', 'error', '-xerror', '-i', output, '-map', '0:a:0', '-vn', '-f', 'null', '-'], {stdio: 'pipe'});
       const result = {...edit, outputSha256: sha256(output)};
+      if (edit.outputSha256 && result.outputSha256 !== edit.outputSha256) throw new Error('Prepared recording differs from approved bytes; restore it from Git: ' + id);
       writeFileSync(pendingStamp, JSON.stringify(result, null, 2) + '\n');
       renameSync(output, input);
       renameSync(pendingStamp, stamp);

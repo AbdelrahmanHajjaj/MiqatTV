@@ -2,36 +2,36 @@
   "alafasy": {
     "sourceSha256": "06a9ef43abf7a8907df477a878704d0679d941886273b1a1834e15c2934a1629",
     "endSeconds": 233.9,
-    "outputSha256": "ddfccb0a023e77f3a658f7567779f7e29514baa283e9c4ae852ba37ba340fffb"
+    "outputSha256": "2d2fd7357c187539e5131d259e36006aae6c6e5b865db380d8c2cd31ea8c00e4"
   },
   "alarkani": {
     "sourceSha256": "8414483e630efe001e2c29eee3ff02fb62178f37372bf3ef7f24bd386e5c8462",
     "endSeconds": 233.9,
-    "outputSha256": "688bcee663b979be5037607e667cc909eff9a08b831c8354e63bf7ffef22f4fe"
+    "outputSha256": "e85110b8ce7b3bf83112a90836d9412ac85779b731d5bcd2d4552bfaead106b5"
   },
   "chebae_fajr": {
     "sourceSha256": "89580ee0304ba7812822ba3b2de0cf4a0534bb4a1ee9220c5c98f9075da318c6",
     "endSeconds": 243,
-    "outputSha256": "e3b7156275c7ce424f0d75d4c00291d850b336a54ac2b3d06b87380f57a32f09"
+    "outputSha256": "49c1182edc9a7027fd4641783b00ae0c8ebad0c8c3e6cbb2aa24d72f6cc4455f"
   },
   "alhamathani": {
     "sourceSha256": "246b2de1a7a4242bd8005f7ea00c5d89472e453c78c710eadd1879e6f0f6f9d4",
     "endSeconds": 218.5,
-    "outputSha256": "7ffe3bb29e79ed31e6060a3ddde88606f02c927893fdffbabfbdd768d84afb08"
+    "outputSha256": "01b94dbfbd850354bd02a57127ffd317ca84ecc6f7b7dfd733ec8ef29d5fb78c"
   },
   "alzahrani": {
     "sourceSha256": "b4d596a8d60f3120ed6a3d0709dd63cd589b35d4bcc9a792bfc74da80f2a14f2",
     "endSeconds": 183.5,
-    "outputSha256": "87e93a822e6027647536efe45cc2924c7db3c1a2777fd281013e617c988ea739"
+    "outputSha256": "6efc00cb8501e81c61d35923784248c7369ef2a035ae32fa4c12394058f3bc65"
   },
   "deghreri": {
     "sourceSha256": "90c46eb25feafdbb590752d16a43d5895f8806ca6454bec567a9ab8ce55cb74d",
     "endSeconds": 154.2,
-    "outputSha256": "596aff17155a1ee9b157a5762516d1fb4926cc3cd6aeec6dec3a4f6612c5ead4"
+    "outputSha256": "bf72e13ad20f8bdfe310bb42c46b328da9866ac62e8c576369a0e325b87ed652"
   },
   "alqatami": {
     "sourceSha256": "b30f4e2c44d6fcb975d2c2f797590dfb11061b11ab7e8fc5d2cdb3ea86b92fbe",
     "endSeconds": 132,
-    "outputSha256": "d5563ca68dde5990490bc654250722bf27efc2fc6c132b0f1092ff56a0a2b838"
+    "outputSha256": "d3eabc1345c8467e5682ee32cf97880a09856ff112e0ab5d72b29a7e3103ca49"
   }
 }

@@ -1,5 +1,37 @@
 # Validation evidence
 
+## Approved adhan cleanup — 21 November 2026
+
+On `feature/adhan-mild-cleanup`, based on `3c5b38e`, the maintainer approved the
+mild cleaned candidates after reviewing the 14-voice before/after set. Shipped
+files match those exact candidates; all 12 reminder hashes are unchanged.
+The adhan set is 18,335,775 bytes, down 9,457 bytes. Each complete cleaned file
+decodes without errors, preserves its decoded sample count/rate/channels/bitrate,
+and has sample peaks below full scale. This does not certify intersample peaks
+or physical-TV sound. Existing wording and cut points are unchanged.
+
+- Node 24.14.0: preparation regression and read-only check pass, including
+  rejection of stale stamps and unapproved regenerated output, input/backup
+  preservation on failure, and successful exact approved-trim reproduction.
+- Canonical catalog checks/tests and isolated shared validation pass.
+- JDK 17 / SDK 34: Android `verifyApkSize lintDebug assembleDebugAndroidTest`
+  passes; APK **22,770,463 bytes**, below 25,000,000. All 26 packaged MP3s match
+  shared/media byte-for-byte. Lint reports 0 errors and 59 untouched-area warnings.
+- All **43** Python/Java regressions pass.
+- LG `npm test` passes, including ES5/build, service, media/volume and LAN
+  regressions. IPK **21,297,060 bytes** contains all 26 exact shared recordings.
+  CLI notices about requiredACG and target Node versions remain; no service/API
+  or runtime-code change is included. The complete Arabic/English mocked browser
+  suite also passes at all supported sizes.
+
+Runtime checks are automated/local; human acceptance here covers the supplied
+listening excerpts, not physical speakers or every word of a complete playback.
+No TV deployment, release publication or physical-TV operation was performed.
+The preview does not package these MP3s; its runtime is unchanged. Original audio,
+comparison files, measurements and raw validation logs remain ignored under state/.
+
+## Foundation checks — 17 November 2026
+
 Checked on 17 November 2026 in the new Miqat checkout, using JDK 17, Node 24.14.0
 and SDK 34. Source versions: Android TV 0.7.0, installer 1.1.0, LG 0.2.23.
 

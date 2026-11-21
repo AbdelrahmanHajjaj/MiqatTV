@@ -1,18 +1,18 @@
 # Current work
 
-Updated: 2026-11-18.
+Updated: 2026-11-21.
 
 ## Approved scope and next action
 
-Refresh the README for the current Miqat branding. Remove its header icon and
-replace the old Android Home screenshots with the reviewed English/Arabic native
-captures. Keep the README short and identify emulator evidence. Correct the stale
-review-draft claims in the owning design guide; no app or artwork changes.
+Apply the maintainer-reviewed mild cleanup to all 14 shared adhan recordings.
+Keep the 12 reminders unchanged, preserve existing cuts and decoded duration,
+update approved hashes and prevent preparation from accepting stale outputs.
 
-Work is on `feature/readme-current-brand`, based on main c6ad64f. Check screenshot
-provenance, links, paths and copy, then use gh for the PR. Normal-merge after all
-required checks pass and sync main under the owner's standing instruction. The
-PR owns CI/delivery receipts. No TV operation or release is requested.
+Work is on `feature/adhan-mild-cleanup`, based on main 3c5b38e. Media and affected
+Android/LG package checks pass; see [evidence](EVIDENCE.md). The owner requested
+merging into latest main and stopping, with no additional local builds. Use gh
+for the normal-merge PR and sync main. The PR owns CI/delivery receipts.
+No TV operation or release is requested.
 
 ## Delivered and remaining limits
 
