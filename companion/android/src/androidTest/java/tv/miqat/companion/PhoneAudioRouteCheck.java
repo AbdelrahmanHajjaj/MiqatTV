@@ -106,6 +106,7 @@ final class PhoneAudioRouteCheck {
             controller.getTransportControls().pause();
             end=SystemClock.elapsedRealtime()+5000;
             while (!PhonePlayback.paused() && SystemClock.elapsedRealtime()<end) SystemClock.sleep(50);
+            test.waitForIdleSync();
             PhoneUiCheck.check(PhonePlayback.paused() && audio.getStreamVolume(stream)==1,"Pause did not restore prior volume");
             controller.getTransportControls().play();
             end=SystemClock.elapsedRealtime()+5000;

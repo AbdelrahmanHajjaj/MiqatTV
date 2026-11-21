@@ -36,6 +36,12 @@ expected rendered name and visible bounds in the same UI snapshot. The full
 bilingual phone UI suite passes on API 34 without capture delays; production
 picker code and APK bytes are unchanged.
 
+The complete local runtime sequence then caught a volume assertion observing
+the pause flag before its main-thread callback finished restoring volume. The
+fixture now waits for UI idle after pause; its restoration assertion is retained.
+The full API 34 alarm/playback suite passes, including actual background swipe,
+absolute media/alarm levels, notification Stop and 30-second tests.
+
 ## Adhan playback refinements — 21 November 2026
 
 Phone **0.5.11/code 27** targets the selected media/alarm stream's maximum rather
