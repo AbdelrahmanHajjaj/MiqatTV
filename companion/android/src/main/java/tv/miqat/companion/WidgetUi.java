@@ -67,7 +67,7 @@ final class WidgetUi {
         android.view.View preview = preview();
         appearance(preview);
         LinearLayout dates = a.views.horizontal(a.body);
-        for (String key : new String[] {"widget_date", "widget_hijri"}) {
+        for (String key : new String[] {"widget_hijri", "widget_date"}) {
             Switch date =
                     a.views.toggle(
                             dates,
@@ -83,7 +83,7 @@ final class WidgetUi {
             a.views.flex(date);
         }
         a.body.addView(a.views.text(a.t("widget_text_size"), 13, a.muted));
-        a.views.choiceRail(
+        a.views.segmentedChoices(
                 a.body,
                 "widget.size",
                 Arrays.asList(
@@ -104,7 +104,7 @@ final class WidgetUi {
                     new Choices.Option(
                             layout,
                             a.t("widget_" + (layout.equals("strip") ? "compact" : layout))));
-        a.views.choiceRail(
+        a.views.segmentedChoices(
                 a.body,
                 "widget.layout",
                 layouts,
@@ -146,7 +146,7 @@ final class WidgetUi {
     }
 
     private void appearance(android.view.View preview) {
-        a.views.choiceRail(
+        a.views.segmentedChoices(
                 a.body,
                 "widget.style",
                 Arrays.asList(
@@ -163,7 +163,7 @@ final class WidgetUi {
                 List<Choices.Option> shapes = new ArrayList<>();
                 for (String shape : WidgetOptions.SHAPES)
                     shapes.add(new Choices.Option(shape, a.t("widget_shape_" + shape)));
-                a.views.choiceRail(
+                a.views.segmentedChoices(
                         a.body,
                         "widget.shape",
                         shapes,

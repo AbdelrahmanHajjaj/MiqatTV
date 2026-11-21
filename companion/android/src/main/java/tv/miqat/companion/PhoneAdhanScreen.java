@@ -15,7 +15,6 @@ public final class PhoneAdhanScreen extends Activity {
     private String eventId;
     private boolean volumeKeys;
     private int ink, accent, ground;
-    private TextView state;
     LinearLayout content;
     AlertDialog closeDialog;
     private final Runnable session =
@@ -23,10 +22,6 @@ public final class PhoneAdhanScreen extends Activity {
                 public void run() {
                     if (!current()) finish();
                     else {
-                        state.setText(
-                                PhoneAlarms.text(
-                                        PhoneAdhanScreen.this,
-                                        PhonePlayback.paused() ? "phone_paused" : "phone_playing"));
                         clock.postDelayed(this, 500);
                     }
                 }
@@ -101,7 +96,6 @@ public final class PhoneAdhanScreen extends Activity {
                             ? View.LAYOUT_DIRECTION_RTL
                             : View.LAYOUT_DIRECTION_LTR);
             scroll.addView(content);
-            state = label(content, PhoneAlarms.text(this, "phone_playing"), 18, ink);
             label(
                     content,
                     settings.data.prayerName(
@@ -195,7 +189,7 @@ public final class PhoneAdhanScreen extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (state != null) clock.post(session);
+        if (content != null) clock.post(session);
     }
 
     @Override

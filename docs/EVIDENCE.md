@@ -1,5 +1,74 @@
 # Validation evidence
 
+## Approved phone implementation — 21 November 2026
+
+Review APK **0.5.0/code 16**, primary checkout
+`state/builds/companion/Miqat-latest.apk`, 35,121,868 bytes; SHA-256:
+`067203783FCC52012580B6C23A7366E1B361A57787869CEE5A8D7619B2C56EC0`.
+Export matches the built APK; prior signing certificate retained. All 25 exact
+recordings and 25 license/notice/source files match canonical packaged bytes.
+The transparent mark is the approved canonical asset; no dependency was added.
+
+Build/test APK/lint pass: 0 errors, 41 warnings. Companion portable rules
+`check jvmJar`, generator 10/10, catalog/shared validators, QR and Android-shared
+checks pass. The approved English gallery has 125 states across 15 route families;
+it remains separate design evidence, not native acceptance.
+
+Owned API34 emulator evidence:
+
+- Bilingual phone UI, atomic Advanced coordinates/timezone Apply/Cancel, inline
+  numbers, visible prayer/day choices, disabled controls, appearance/voice drafts,
+  native widgets, calendar month/day/year/correction and selected-date restoration
+  pass. Selected dates use all six actual engine results, never mock times.
+- Precise and coarse one-shot location, stale/denied fixes, single confirmation,
+  Home routing, unmapped coordinates and calibration-preserving travel refresh
+  pass. Test-only framework GPS/network fixtures isolate emulator position.
+- Supported Android/LG setup, native TV bindings, media rows, numeric drafts and
+  capability boundaries pass. Pin-unavailable launcher fallback remains covered.
+- App scale 80–150% passes in both languages: normal portrait and Android text
+  scale 1.3 in portrait/landscape. Circular weekday text and minimum touch bounds
+  pass after correcting compact-control padding. Portrait/default text restored.
+- Real foreground OSM tiles, route/endpoints/label and full attribution were
+  rendered and inspected. Map SVG parsing/geometry and square viewport pass.
+  Welcome, Arabic location and full-page style renders were also inspected.
+- Final bilingual fresh-use, Explore first/resume, existing opt-out and actual
+  notification denial pass. Exact-access denial registers a disclosed approximate
+  event; notification denial schedules none. Actual alarm delivery, retained
+  custom 30-second cutoff, percentage ending preview, navigation cleanup,
+  twelve-second audition, pause/Stop, focus interruption, silent/vibration
+  channels and duplicate/early/expired rejection pass. System alarm volume is
+  preserved. Headless emulator output was muted; this is not an audible audition.
+
+Earlier failures were retained under ignored state/: reused-task instrumentation
+launches, an unowned emulator GPS position and a released test activity reference.
+Fixtures now launch bounded isolated activities and own their mock providers;
+production detection assertions were not weakened. Final location-dialog review
+also found and fixed early timezone saving with a bilingual regression.
+
+No physical sensor accuracy, audible output, OEM background reliability, launcher
+pin confirmation or TV remote/picture/sound/power acceptance is claimed. Timing
+access denial uses a disclosed inexact fallback; Android may delay it beyond the
+existing two-minute stale-event limit. No merge, release or physical deployment.
+Raw logs, screenshots and emulator ownership receipts remain ignored under state/.
+
+## Phone design review after 0.4.6 — 20 November 2026
+
+Design-only gallery: docs/design/phone-polish/index.html; research and proposal
+boundaries are linked there. `node --check docs/design/phone-polish/mockups.js`
+and `node docs/design/phone-polish/check.cjs` pass: 122 unique artboards, all
+15 current route families, internal destinations, weekday controls and setup
+invariants. Browser checks confirm canonical fonts/art/icons load, no empty icons
+or missing mock destinations and no horizontal content overflow. At an actual
+391px CSS viewport the review page has no horizontal overflow.
+
+Rendered welcome/location/style, calculation and prayer controls inspected.
+Location → notification denial → style navigation, full-page Dusk palette,
+weekday/stepper interaction, country search, widget-only Frost theme/shape,
+background opacity without fading text and layout selection pass as browser
+mocks. Captures remain under ignored state/phone-polish-*.
+No new native acceptance, scheduler/migration tests, physical operation, build
+or APK. The existing 0.4.6 artifact is unchanged. Review scope: PHONE-PASS8.md.
+
 ## Phone interaction refinement — 20 November 2026
 
 Review APK **0.4.6/code 15**, `state/builds/companion/Miqat-latest.apk`,
@@ -1000,3 +1069,26 @@ head gate. The owner will test one combined build and supply feedback. Keep the
 PR draft and stop implementation after handoff. Physical/OEM, actual public binary
 transfer and iOS-app acceptance remain unclaimed; the pre-existing next-TV audio
 finding stays explicitly recorded in PHONE-AUDIT.md.
+
+
+## Phone design revision 2 — 21 November 2026
+
+Design artifacts only in docs/design/phone-polish; production app unchanged.
+125 states cover all 15 current route families. check.cjs passes graph/route,
+permission-flow, prayer enable/sound/length, Hijri month/year boundaries,
+Qibla bearing and research-anchor assertions. JavaScript syntax and diff
+whitespace checks pass.
+
+Browser checks: disable/re-enable prayer configuration; Short tone disables
+Adhan audio while retaining vibration; save Tuesday independently; next/previous
+Hijri month and selected civil day; Hijri-first widget/Gregorian toggle; TV
+media targets aligned horizontally at 48px with 10px gaps. Four OSM tiles
+loaded on explicit request with the computed Cairo-to-Kaaba route. Transparent
+welcome branding and calendar renders inspected. Private captures under state/
+phone-polish-r2-*.jpg.
+
+Ending-preview timing math is checked; actual audible cutoff, sensors, native
+permission/OEM behavior and scheduled delivery were not accepted. Dates use
+browser Umm al-Qura; prayer times are illustrative fixtures, not calculations.
+Exact-alarm fallback, existing schedule migration and production map provider/
+privacy remain implementation work. No APK, release, deployment or merge.

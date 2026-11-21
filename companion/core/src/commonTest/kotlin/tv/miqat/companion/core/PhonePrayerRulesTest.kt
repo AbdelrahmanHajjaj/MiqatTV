@@ -59,4 +59,17 @@ class PhonePrayerRulesTest {
         assertFailsWith<IllegalArgumentException> { PhonePrayerRules.validate(0.0, 0.0, modes, none, none, 100, 31) }
         assertFailsWith<IllegalArgumentException> { PhonePrayerRules.nextEvent(arrayOf(doubleArrayOf(Double.NaN)), 0.0, modes, none, none, emptyArray()) }
     }
+    @Test fun weekdayOverrideCannotEnableDisabledPrayerAndCutoffFollowsRecordingLength() {
+        assertEquals(0, PhonePrayerRules.effectiveMode(2, false, 2))
+        assertEquals(0, PhonePrayerRules.effectiveMode(0, true, 2))
+        assertEquals(4, PhonePrayerRules.effectiveMode(2, true, 4))
+        assertEquals(2, PhonePrayerRules.effectiveMode(2, true, -1))
+        assertEquals(150000, PhonePrayerRules.cutoffMillis(200000, 75, 0))
+        assertEquals(75000, PhonePrayerRules.cutoffMillis(100000, 75, 0))
+        assertEquals(30000, PhonePrayerRules.cutoffMillis(200000, 75, 30))
+        assertEquals(200000, PhonePrayerRules.cutoffMillis(200000, 100, 0))
+        assertFailsWith<IllegalArgumentException> { PhonePrayerRules.cutoffMillis(0, 100, 0) }
+        assertFailsWith<IllegalArgumentException> { PhonePrayerRules.cutoffMillis(200000, 101, 0) }
+        assertFailsWith<IllegalArgumentException> { PhonePrayerRules.cutoffMillis(200000, 74, 0) }
+    }
 }

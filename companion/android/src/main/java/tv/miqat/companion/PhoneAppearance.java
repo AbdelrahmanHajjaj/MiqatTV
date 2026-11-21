@@ -57,6 +57,31 @@ final class PhoneAppearance {
         return content;
     }
 
+    void background(LinearLayout shell, PhoneStore settings) {
+        try {
+            if (a.page.equals("phone-settings") && a.section.equals("appearance"))
+                settings = candidate(settings);
+            String id = settings.value("appearance.background");
+            if (id.equals("plain")) {
+                shell.setBackgroundColor(a.ground);
+                return;
+            }
+            if (!id.equals(artworkId)) {
+                artwork = PhoneBackdrop.read(a, id);
+                artworkId = id;
+            }
+            shell.setBackground(
+                    new LayerDrawable(
+                            new Drawable[] {
+                                new PhoneBackdrop(artwork),
+                                new android.graphics.drawable.ColorDrawable(
+                                        (a.ground & 0xffffff) | 0x66000000)
+                            }));
+        } catch (Exception unavailable) {
+            android.util.Log.w("MiqatStyle", "Background unavailable", unavailable);
+        }
+    }
+
     void preview(LinearLayout parent, PhoneStore settings) throws Exception {
         LinearLayout content = hero(parent, settings);
         content.setTag("phone.appearance.preview");
@@ -121,7 +146,7 @@ final class PhoneAppearance {
     void editor(LinearLayout parent, boolean guided) throws Exception {
         PhoneStore candidate = a.phoneUi.settings;
         preview(parent, candidate);
-        a.views.choiceRail(
+        a.views.segmentedChoices(
                 parent,
                 "appearance.tab",
                 java.util.Arrays.asList(
@@ -210,6 +235,7 @@ final class PhoneAppearance {
             name.setMaxLines(2);
             name.setEllipsize(android.text.TextUtils.TruncateAt.END);
             tile.addView(name);
+            tile.setBackground(a.views.background(a.surface, 16));
             tile.setPadding(a.views.dp(4), a.views.dp(4), a.views.dp(4), a.views.dp(6));
             tile.setTag("phone." + id + ".option." + option);
             tile.setContentDescription(label);

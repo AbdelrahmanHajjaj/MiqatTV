@@ -1,9 +1,27 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-20. Branch feature/companion-installation, draft PR #9.
-Approved requirements: PHONE-PASS7.md, PHONE-PASS6.md and preceding phone passes.
+Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
+Latest requirements: PHONE-PASS8.md, following feedback on the 0.4.6 candidate.
 
-## Active candidate — 0.4.6/code 15
+## Approved implementation — 0.5.0/code16
+
+Owner approved the revision-2 English design and requested full implementation.
+The native Java Views now bind welcome/location/style, country/city and advanced
+location, shared visible choices, per-prayer enable/sound/vibration/day overrides,
+relative length/ending preview, real Hijri date browsing, explicit Qibla map,
+Hijri-first widgets and supported-only TV controls. Canonical assets are reused;
+no dependency or physical-device operation was added.
+
+Schema 4 retains legacy settings, quiet-hour event boundaries and seconds caps.
+Timing access is optional with disclosed inexact scheduling limitations. The
+research/gallery remain design evidence; native acceptance is recorded separately
+in EVIDENCE.md. Build/lint, portable policy, generators, bilingual UI/location and
+journey and actual playback checks pass. Final-head PR CI remains the handoff gate.
+The fixed latest review export is 0.5.0/code16, SHA256 prefix 067203783FCC5201.
+No merge, release publication, physical deployment or iOS app in this pass.
+Earlier candidate evidence below remains historical.
+
+## Review candidate — 0.4.6/code 15
 
 Owner rejected the prior interaction structure. PHONE-PASS7.md now owns scope.
 Baseline native renders captured on 20 November: first use has large empty areas;

@@ -53,10 +53,12 @@ final class PhoneUi {
         sound.audioImport = b.getString("phone-audio-import", "");
         locationUi.advancedLocation = b.getBoolean("phone-location-advanced");
         home.dayOffset = Math.max(-366, Math.min(366, b.getInt("phone-day")));
+        home.selectedDay = b.getLong("phone-selected-day", 0);
         pending = b.getString("phone-pending", "");
         draft = b.getString("phone-draft", "");
         locationUi.latitude = b.getString("phone-lat", "");
         locationUi.longitude = b.getString("phone-lng", "");
+        locationUi.selectedCountry = b.getString("phone-country", "");
     }
 
     void save(Bundle b) {
@@ -65,10 +67,12 @@ final class PhoneUi {
         b.putString("phone-audio-import", sound.audioImport);
         b.putBoolean("phone-location-advanced", locationUi.advancedLocation);
         b.putInt("phone-day", home.dayOffset);
+        b.putLong("phone-selected-day", home.selectedDay);
         b.putString("phone-pending", pending);
         b.putString("phone-draft", draft);
         b.putString("phone-lat", locationUi.latitude);
         b.putString("phone-lng", locationUi.longitude);
+        b.putString("phone-country", locationUi.selectedCountry);
     }
 
     void stop() {
@@ -81,14 +85,20 @@ final class PhoneUi {
         try {
             data = PhoneData.get(a);
             settings = PhoneStore.read(a);
+            PhoneStore paletteSettings =
+                    a.page.equals("phone-settings") && a.section.equals("appearance")
+                            ? appearance.candidate(settings)
+                            : settings;
             JSONObject c =
                     a.catalog
                             .data
                             .getJSONObject("themes")
                             .getJSONObject(
                                     a.page.equals("onboarding")
+                                                    && (a.onboarding == null
+                                                            || !a.onboarding.style())
                                             ? "mihrab"
-                                            : settings.value("appearance.theme"))
+                                            : paletteSettings.value("appearance.theme"))
                             .getJSONObject("colors");
             a.ground = Color.parseColor(c.getString("lapis-900"));
             a.surface = Color.parseColor(c.getString("lapis-800"));
@@ -153,6 +163,7 @@ final class PhoneUi {
 
     void open(String section) {
         if (a.page.equals("phone-settings") && a.section.equals(section)) return;
+        PhonePlayback.stopPreview(a);
         int existing = -1;
         for (int i = 0; i < history.size(); i++)
             if (history.get(i).getString("page", "").equals("phone-settings")
@@ -204,11 +215,36 @@ final class PhoneUi {
                                 "",
                                 () -> open(section))
                         .setTag("phone.section." + section);
+            a.views
+                    .navigationRow(
+                            a.body, "mihrab", a.t("phone_widgets"), "", () -> a.navigate("widgets"))
+                    .setTag("phone.section.widgets");
             a.views.navigationRow(
                     a.body, "gear", a.t("setup_again"), "", () -> a.onboarding.open());
             a.body.addView(a.views.text(a.t("preferences"), 13, a.muted));
             a.languageChoices(a.body);
             reset(a.body);
+            return;
+        }
+        if (a.section.startsWith("days:") || a.section.startsWith("day:")) {
+            dayOverrides();
+            return;
+        }
+        if (Arrays.asList(PhoneStore.PRAYERS).contains(a.section) && !a.section.equals("sunrise")) {
+            prayerEditor();
+            return;
+        }
+        if (a.section.equals("legacy-quiet")) {
+            a.body.addView(a.views.text(a.t("phone_legacy_quiet_body"), 14, a.muted));
+            for (JSONObject c : data.controls.values())
+                if (c.getString("id").startsWith("quiet.")) control(c);
+            return;
+        }
+        if (a.section.equals("default-audio")) {
+            for (String id :
+                    new String[] {
+                        "reminders.voice", "reminders.volume", "reminders.length-percent"
+                    }) control(data.controls.get(id));
             return;
         }
         if (a.section.equals("permissions")) {
@@ -240,48 +276,201 @@ final class PhoneUi {
         for (int i = 0; i < 6; i++)
             if (i != 1) {
                 final String id = PhoneStore.PRAYERS[i];
+                String mode = settings.value("call." + id + ".mode");
                 String summary =
-                        value("call." + id + ".mode", settings.value("call." + id + ".mode"))
+                        value("call." + id + ".mode", mode.equals("vibration") ? "silent" : mode)
                                 + " · "
-                                + value("call." + id + ".voice", settings.voice(i));
+                                + value(
+                                        "call." + id + ".weekdays",
+                                        settings.value("call." + id + ".weekdays"))
+                                + (settings.vibrate(i) ? " · " + a.t("phone_vibrate") : "");
                 a.views
                         .navigationRow(
-                                a.body, "bell", data.prayerName(i, a.ar), summary, () -> open(id))
+                                a.body,
+                                id,
+                                data.prayerName(i, a.ar),
+                                settings.prayerEnabled(i) ? summary : a.t("off"),
+                                () -> open(id))
                         .setTag("phone.prayer-settings." + id);
             }
     }
 
     private void audio() throws Exception {
+        prayerRows();
         a.views.navigationRow(
-                a.body,
-                "bell",
-                a.t(PhoneAlarms.status(a, settings)),
-                a.t("phone_permissions"),
-                () -> open("permissions"));
-        for (JSONObject c : data.controls.values())
-            if (c.getString("section").equals("audio") && !c.getString("id").startsWith("quiet."))
-                control(c);
+                a.body, "bell", a.t("phone_default_audio_title"), "", () -> open("default-audio"));
+        control(data.controls.get("reminders.full-screen"));
+        control(data.controls.get("reminders.volume-keys"));
         if (settings.value("reminders.full-screen").equals("true")
                 && !PhoneAlarms.fullScreenAllowed(a))
-            a.views.button(
+            a.views.navigationRow(
                     a.body,
+                    "gear",
                     a.t("phone_full_screen_access"),
+                    "",
                     () ->
                             system(
                                     new Intent(
                                             Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT,
                                             android.net.Uri.parse(
                                                     "package:" + a.getPackageName()))));
+        a.views.navigationRow(
+                a.body,
+                "gear",
+                a.t("phone_permissions"),
+                a.t(PhoneAlarms.status(a, settings)),
+                () -> open("permissions"));
+        if (settings.value("quiet.enabled").equals("true"))
+            a.views.navigationRow(
+                    a.body,
+                    "clock",
+                    a.t("phone_legacy_quiet"),
+                    a.t("phone_legacy_quiet_summary"),
+                    () -> open("legacy-quiet"));
+    }
 
-        prayerRows();
+    private void prayerEditor() throws Exception {
+        int prayer = Arrays.asList(PhoneStore.PRAYERS).indexOf(a.section);
+        String base = "call." + a.section + ".";
+        LinearLayout heading = a.views.horizontal(a.body);
+        ImageView glyph = new ImageView(a);
+        glyph.setImageDrawable(Icons.get(a, a.section, a.accent));
+        heading.addView(glyph, new LinearLayout.LayoutParams(a.views.dp(28), a.views.dp(28)));
+        Switch enabled =
+                a.views.toggle(
+                        heading,
+                        data.prayerName(prayer, a.ar),
+                        settings.prayerEnabled(prayer),
+                        on -> {
+                            PhonePlayback.stopPreview(a);
+                            Map<String, String> changes = new LinkedHashMap<>();
+                            changes.put(base + "enabled", Boolean.toString(on));
+                            if (on && settings.value(base + "mode").equals("off"))
+                                changes.put(base + "mode", "adhan");
+                            save(changes, false);
+                        });
+        a.views.flex(enabled);
+        enabled.setTag("phone." + base + "enabled.edit");
+        int start = a.body.getChildCount();
+        for (String suffix : new String[] {"mode", "vibrate", "weekdays"})
+            control(data.controls.get(base + suffix));
+        a.views
+                .navigationRow(
+                        a.body,
+                        "clock",
+                        a.t("phone_day_overrides"),
+                        "",
+                        () -> open("days:" + a.section))
+                .setTag("phone.day-overrides");
+        for (String suffix :
+                new String[] {
+                    "offset",
+                    "before",
+                    "after",
+                    "voice",
+                    "default-audio",
+                    "volume",
+                    "length-percent"
+                }) {
+            int first = a.body.getChildCount();
+            control(data.controls.get(base + suffix));
+            if (Arrays.asList("voice", "default-audio", "volume", "length-percent").contains(suffix)
+                    && !settings.value(base + "mode").equals("adhan"))
+                for (int i = first; i < a.body.getChildCount(); i++) {
+                    a.views.disableContent(a.body.getChildAt(i));
+                    a.body.getChildAt(i).setAlpha(.4f);
+                }
+        }
+        if (!settings.prayerEnabled(prayer)) {
+            for (int i = start; i < a.body.getChildCount(); i++) {
+                a.views.disableContent(a.body.getChildAt(i));
+                a.body.getChildAt(i).setAlpha(.38f);
+            }
+        }
+    }
 
-        a.body.addView(a.views.text(a.t("phone_quiet_title"), 18, a.ink));
-        for (JSONObject c : data.controls.values())
-            if (c.getString("section").equals("audio") && c.getString("id").startsWith("quiet."))
-                control(c);
+    private void dayOverrides() throws Exception {
+        String[] place = a.section.split(":");
+        String prayer = place[1], base = "call." + prayer + ".";
+        int index = Arrays.asList(PhoneStore.PRAYERS).indexOf(prayer);
+        if (index < 0 || index == 1) throw new IllegalArgumentException();
+        String[] names = new java.text.DateFormatSymbols(locale()).getWeekdays();
+        if (place[0].equals("days")) {
+            for (int i = 0; i < 7; i++) {
+                final int day = i;
+                String sound = settings.value(base + "day-" + i + "-sound");
+                String summary =
+                        sound.equals("inherit")
+                                ? a.t("phone_use_defaults")
+                                : value(base + "mode", sound)
+                                        + (settings.vibrateOnDay(index, i)
+                                                ? " · " + a.t("phone_vibrate")
+                                                : "");
+                a.views
+                        .navigationRow(
+                                a.body,
+                                "clock",
+                                names[i + 1],
+                                summary,
+                                () -> open("day:" + prayer + ":" + day))
+                        .setTag("phone.day." + i);
+            }
+            return;
+        }
+        int day = Integer.parseInt(place[2]);
+        String soundId = base + "day-" + day + "-sound",
+                vibrateId = base + "day-" + day + "-vibrate";
+        a.body.addView(a.views.heading(data.prayerName(index, a.ar) + " · " + names[day + 1]));
+        boolean inherited = settings.value(soundId).equals("inherit");
+        a.views
+                .toggle(
+                        a.body,
+                        a.t("phone_use_defaults"),
+                        inherited,
+                        use -> {
+                            Map<String, String> changes = new LinkedHashMap<>();
+                            String mode = settings.value(base + "mode");
+                            changes.put(
+                                    soundId,
+                                    use
+                                            ? "inherit"
+                                            : mode.equals("notification")
+                                                    ? "notification"
+                                                    : mode.equals("adhan") ? "adhan" : "silent");
+                            if (!use)
+                                changes.put(
+                                        vibrateId,
+                                        Boolean.toString(
+                                                settings.vibrate(index)
+                                                        || mode.equals("vibration")));
+                            save(changes, false);
+                        })
+                .setTag("phone.day.inherit");
+        int start = a.body.getChildCount();
+        java.util.List<Choices.Option> choices = new ArrayList<>();
+        for (String mode : new String[] {"adhan", "notification", "silent"})
+            choices.add(new Choices.Option(mode, a.t("phone_" + mode)));
+        a.views.segmentedChoices(
+                a.body, "phone.day.sound", choices, settings.value(soundId), v -> save(soundId, v));
+        a.views
+                .toggle(
+                        a.body,
+                        a.t("phone_vibrate"),
+                        settings.vibrateOnDay(index, day),
+                        v -> save(vibrateId, Boolean.toString(v)))
+                .setTag("phone.day.vibrate");
+        if (inherited)
+            for (int i = start; i < a.body.getChildCount(); i++) {
+                a.views.disableContent(a.body.getChildAt(i));
+                a.body.getChildAt(i).setAlpha(.38f);
+            }
     }
 
     String sectionTitle() {
+        if (a.section.startsWith("days:") || a.section.startsWith("day:"))
+            return a.t("phone_day_overrides");
+        if (a.section.equals("default-audio")) return a.t("phone_default_audio_title");
+        if (a.section.equals("legacy-quiet")) return a.t("phone_legacy_quiet");
         if (Arrays.asList(PhoneStore.PRAYERS).contains(a.section))
             try {
                 return data.prayerName(Arrays.asList(PhoneStore.PRAYERS).indexOf(a.section), a.ar);
@@ -336,6 +525,35 @@ final class PhoneUi {
         String id = c.getString("id"),
                 label = a.t(c.getString("label")),
                 saved = settings.value(id);
+        if (id.endsWith(".length-percent")) {
+            sound.length(id);
+            return;
+        }
+        if (c.optString("editor").equals("weekdays")) {
+            weekdayButtons(id, saved, label);
+            return;
+        }
+        if (id.startsWith("call.") && id.endsWith(".mode")) {
+            a.body.addView(a.views.text(label, 14, a.ink));
+            java.util.List<Choices.Option> choices = new ArrayList<>();
+            for (String mode : new String[] {"adhan", "notification", "silent"})
+                choices.add(new Choices.Option(mode, a.t("phone_" + mode)));
+            String selected =
+                    saved.equals("vibration") ? "silent" : saved.equals("off") ? "adhan" : saved;
+            a.views.segmentedChoices(
+                    a.body,
+                    "phone." + id + ".choices",
+                    choices,
+                    selected,
+                    v -> {
+                        Map<String, String> changes = new LinkedHashMap<>();
+                        changes.put(id, v);
+                        if (saved.equals("vibration"))
+                            changes.put(id.replace(".mode", ".vibrate"), "true");
+                        save(changes, false);
+                    });
+            return;
+        }
         SettingSpec spec = data.spec(c);
         LinearLayout row = a.views.column();
         row.setPadding(a.views.dp(4), a.views.dp(2), a.views.dp(4), a.views.dp(2));
@@ -350,8 +568,22 @@ final class PhoneUi {
                     a.views.toggle(
                             row,
                             label,
-                            saved.equals("true"),
+                            saved.equals("true")
+                                    || id.startsWith("call.")
+                                            && id.endsWith(".vibrate")
+                                            && settings.value(id.replace(".vibrate", ".mode"))
+                                                    .equals("vibration"),
                             on -> {
+                                if (id.startsWith("call.")
+                                        && id.endsWith(".vibrate")
+                                        && settings.value(id.replace(".vibrate", ".mode"))
+                                                .equals("vibration")) {
+                                    Map<String, String> changes = new LinkedHashMap<>();
+                                    changes.put(id, Boolean.toString(on));
+                                    changes.put(id.replace(".vibrate", ".mode"), "silent");
+                                    save(changes, false);
+                                    return;
+                                }
                                 if (id.equals("reminders.enabled")
                                         && on
                                         && !settings.locationReady) {
@@ -364,71 +596,35 @@ final class PhoneUi {
             toggle.setTag("phone." + id + ".edit");
             return;
         }
-        if (!pending.equals(id)) row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setOrientation(LinearLayout.HORIZONTAL);
         TextView title = a.views.text(label, 14, a.ink);
-        title.setPadding(0, 0, 0, a.views.dp(2));
-        row.addView(
-                title,
-                new LinearLayout.LayoutParams(
-                        pending.equals(id) ? -1 : 0, -2, pending.equals(id) ? 0 : 1));
+        row.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
         if (c.getString("kind").equals("number")) {
-            boolean inherited =
-                    id.startsWith("call.")
-                            && (id.endsWith(".volume") || id.endsWith(".duration"))
-                            && settings.value(
-                                            id.substring(0, id.lastIndexOf('.') + 1)
-                                                    + "default-audio")
-                                    .equals("true");
-            if (inherited) {
-                summary(
-                        row,
-                        id,
-                        value(
-                                id,
-                                Integer.toString(
-                                        id.endsWith(".volume")
-                                                ? settings.volume
-                                                : settings.duration)),
-                        () -> {});
-                a.views.disableContent(row);
-                row.setAlpha(0.55f);
-                return;
-            }
-            if (pending.equals(id)) number(row, spec, saved, label);
-            else
+            if (c.optString("editor").equals("time")) {
                 summary(
                         row,
                         id,
                         value(id, saved),
                         () -> {
-                            if (c.optString("editor").equals("time")) {
-                                int minute = Integer.parseInt(saved);
-                                showEditor(
-                                        new TimePickerDialog(
-                                                a,
-                                                (view, hour, minutes) ->
-                                                        save(
-                                                                id,
-                                                                Integer.toString(
-                                                                        hour * 60 + minutes)),
-                                                minute / 60,
-                                                minute % 60,
-                                                settings.value("display.clock").equals("24")));
-                                return;
-                            }
-                            if (c.optString("editor").equals("weekdays")) {
-                                weekdays(id, saved, label);
-                                return;
-                            }
-                            pending = id;
-                            draft = saved;
-                            a.render();
-                            View editor = a.body.findViewWithTag("phone." + id);
-                            editor.post(() ->
-                                    editor.requestRectangleOnScreen(
-                                            new Rect(0, 0, editor.getWidth(), editor.getHeight()),
-                                            true));
+                            int minute = Integer.parseInt(saved);
+                            showEditor(
+                                    new TimePickerDialog(
+                                            a,
+                                            (view, h, m) -> save(id, Integer.toString(h * 60 + m)),
+                                            minute / 60,
+                                            minute % 60,
+                                            settings.value("display.clock").equals("24")));
                         });
+                return;
+            }
+            number(row, spec, saved, label);
+            if (id.startsWith("call.")
+                    && id.endsWith(".volume")
+                    && settings.value(id.substring(0, id.lastIndexOf('.') + 1) + "default-audio")
+                            .equals("true")) {
+                a.views.disableContent(row);
+                row.setAlpha(.4f);
+            }
             return;
         }
         java.util.List<String> options = data.options(c);
@@ -436,10 +632,22 @@ final class PhoneUi {
             java.util.List<Choices.Option> choices = new ArrayList<>();
             for (String option : options)
                 choices.add(new Choices.Option(option, value(id, option)));
-            a.views.choiceRail(
-                    row, "phone." + id + ".choices", choices, saved, choice -> save(id, choice));
-            row.getChildAt(row.getChildCount() - 1)
-                    .setLayoutParams(new LinearLayout.LayoutParams(0, -2, 2));
+            row.setOrientation(LinearLayout.VERTICAL);
+            title.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+            if (id.equals("prayer.high-latitude"))
+                a.views.verticalChoices(
+                        row,
+                        "phone." + id + ".choices",
+                        choices,
+                        saved,
+                        choice -> save(id, choice));
+            else
+                a.views.segmentedChoices(
+                        row,
+                        "phone." + id + ".choices",
+                        choices,
+                        saved,
+                        choice -> save(id, choice));
             return;
         }
         summary(
@@ -488,42 +696,64 @@ final class PhoneUi {
         a.views.styleDialog(dialog);
     }
 
-    void weekdays(String id, String saved, String label) {
+    private void weekdayButtons(String id, String saved, String label) {
+        a.body.addView(a.views.text(label, 14, a.ink));
+        LinearLayout days = a.views.column();
+        days.setTag("phone." + id);
+        a.body.addView(days);
         int mask = Integer.parseInt(saved);
-        boolean[] selected = new boolean[7];
-        String[] names = new String[7],
-                days = new java.text.DateFormatSymbols(locale()).getWeekdays();
-        for (int i = 0; i < 7; i++) {
-            names[i] = days[i + 1];
-            selected[i] = (mask & (1 << i)) != 0;
+        String[] names = new java.text.DateFormatSymbols(locale()).getWeekdays();
+        int columns =
+                a.getResources().getDisplayMetrics().widthPixels
+                                                / a.getResources().getDisplayMetrics().density
+                                        - 40
+                                >= 7 * 48
+                        ? 7
+                        : 4;
+        LinearLayout track = null;
+        for (int n = 0; n < 7; n++) {
+            final int day = (n + 1) % 7;
+            if (n % columns == 0) track = a.views.horizontal(days);
+            boolean on = (mask & (1 << day)) != 0;
+            String name = names[day + 1];
+            Button button =
+                    a.views.button(
+                            track,
+                            a.t("phone_weekday_letters").split(",")[day],
+                            () -> save(id, Integer.toString(mask ^ (1 << day))));
+            button.setLayoutParams(new LinearLayout.LayoutParams(0, a.views.dp(48), 1));
+            button.setPadding(0, 0, 0, 0);
+            button.setTextSize(14);
+            button.setMinWidth(0);
+            button.setMinimumWidth(0);
+            button.setContentDescription(name);
+            button.setSelected(on);
+            button.setTag("phone." + id + "." + day);
+            button.setBackground(a.views.background(on ? a.accent : a.surface, 28));
+            button.setTextColor(on ? a.ground : a.ink);
+            button.setAccessibilityDelegate(
+                    new View.AccessibilityDelegate() {
+                        @Override
+                        public void onInitializeAccessibilityNodeInfo(
+                                View v, android.view.accessibility.AccessibilityNodeInfo info) {
+                            super.onInitializeAccessibilityNodeInfo(v, info);
+                            info.setCheckable(true);
+                            info.setChecked(on);
+                        }
+                    });
         }
-        showEditor(
-                a.views
-                        .dialog()
-                        .setTitle(label)
-                        .setMultiChoiceItems(
-                                names, selected, (dialog, index, on) -> selected[index] = on)
-                        .setNegativeButton(a.t("cancel"), null)
-                        .setPositiveButton(
-                                a.t("done"),
-                                (dialog, which) -> {
-                                    int result = 0;
-                                    for (int i = 0; i < 7; i++) if (selected[i]) result |= 1 << i;
-                                    save(id, Integer.toString(result));
-                                })
-                        .create());
     }
 
     void number(LinearLayout row, SettingSpec spec, String saved, String label) {
         String id = spec.getId();
         boolean editing = pending.equals(id);
         LinearLayout track = a.views.horizontal(row);
+        track.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1.6f));
         EditText input = new EditText(a);
-        input.setImeOptions(
-                input.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
-
+        input.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
         input.setSingleLine(true);
         input.setTextColor(a.ink);
+        input.setTextSize(14);
         input.setTypeface(a.regular);
         input.setGravity(Gravity.CENTER);
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
@@ -531,47 +761,55 @@ final class PhoneUi {
         input.setTextDirection(View.TEXT_DIRECTION_LTR);
         input.setContentDescription(label);
         input.setTag("phone." + id + ".input");
-        Runnable changed =
-                () -> {
-                    pending = id;
-                    draft = input.getText().toString();
-                };
-        Button minus =
-                a.views.button(
-                        track,
-                        "−",
-                        () -> {
-                            try {
-                                input.setText(
-                                        spec.adjust(normalize(input.getText().toString()), -1));
-                                changed.run();
-                            } catch (Exception invalid) {
-                                input.setError(a.t("invalid"));
-                            }
-                        });
-        a.views.square(minus);
-        minus.setContentDescription(a.t("decrease") + " " + label);
-        track.addView(input, new LinearLayout.LayoutParams(0, -2, 1));
+        track.setTag("phone." + id + ".edit");
+        track.setOnClickListener(v -> {
+            pending = id;
+            draft = saved;
+            a.render();
+        });
+        input.setFocusableInTouchMode(editing);
+        input.setFocusable(editing);
+        input.setMinWidth(0);
+        input.setPadding(0, 0, 0, 0);
+        input.setOnClickListener(v -> {
+            if (!editing) {
+                pending = id;
+                draft = saved;
+                a.render();
+                View next = a.body.findViewWithTag("phone." + id + ".input");
+                if (next != null) next.requestFocus();
+            }
+        });
+        for (int direction : new int[] {-1, 1}) {
+            if (direction == 1)
+                track.addView(input, new LinearLayout.LayoutParams(0, a.views.dp(48), 1));
+            Button button =
+                    a.views.button(
+                            track,
+                            direction < 0 ? "−" : "+",
+                            () -> {
+                                try {
+                                    pending = id;
+                                    draft =
+                                            spec.adjust(
+                                                    normalize(input.getText().toString()),
+                                                    direction);
+                                    a.render();
+                                } catch (Exception invalid) {
+                                    input.setError(a.t("invalid"));
+                                }
+                            });
+            a.views.square(button);
+            button.setTag("phone." + id + (direction < 0 ? ".minus" : ".plus"));
+            button.setContentDescription(
+                    a.t(direction < 0 ? "decrease" : "increase") + " " + label);
+        }
+        if (!editing) return;
         input.addTextChangedListener(
                 MainActivity.watcher(text -> {
                     pending = id;
                     draft = text;
                 }));
-        Button plus =
-                a.views.button(
-                        track,
-                        "+",
-                        () -> {
-                            try {
-                                input.setText(
-                                        spec.adjust(normalize(input.getText().toString()), 1));
-                                changed.run();
-                            } catch (Exception invalid) {
-                                input.setError(a.t("invalid"));
-                            }
-                        });
-        a.views.square(plus);
-        plus.setContentDescription(a.t("increase") + " " + label);
         a.actionHost.removeAllViews();
         LinearLayout actions = a.views.actionBar(a.actionHost);
         a.views
@@ -704,8 +942,16 @@ final class PhoneUi {
         }
         Map<String, String> changes = new LinkedHashMap<>();
         changes.put(id, value);
+        if (id.endsWith(".length-percent"))
+            changes.put(id.replace(".length-percent", ".duration"), "0");
         if (id.equals("prayer.zone")) changes.put("prayer.location-ready", "false");
-        save(changes, id.equals("display.size"));
+        if (!save(changes, id.equals("display.size"))) return;
+        if (id.equals("reminders.enabled")
+                && !PhoneStore.preferences(a)
+                        .edit()
+                        .putBoolean(
+                                "onboarding-enable-with-permission", Boolean.parseBoolean(value))
+                        .commit()) a.notice("phone_save_failed");
         if (!id.equals("display.size")) editorFocus(id);
         if (id.equals("prayer.travel-refresh")) {
             if (value.equals("true")) {
@@ -716,7 +962,7 @@ final class PhoneUi {
         if (!a.page.equals("onboarding")
                 && id.equals("reminders.enabled")
                 && value.equals("true")
-                && (!PhoneAlarms.notifications(a) || !PhoneAlarms.exact(a))) open("permissions");
+                && !PhoneAlarms.notifications(a)) open("permissions");
     }
 
     boolean save(Map<String, String> changes, boolean recreate) {
@@ -734,6 +980,11 @@ final class PhoneUi {
     }
 
     void permissions() {
+        try {
+            control(data.controls.get("reminders.enabled"));
+        } catch (Exception invalid) {
+            a.notice("invalid");
+        }
         a.body.addView(a.views.text(a.t(PhoneAlarms.status(a, settings)), 18, a.ink));
         if (!PhoneAlarms.notifications(a))
             a.views.button(
@@ -775,6 +1026,7 @@ final class PhoneUi {
     }
 
     void requestExact() {
+        if (Build.VERSION.SDK_INT < 31) return;
         system(
                 new Intent(
                         Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,

@@ -22,7 +22,9 @@ final class PhoneAlarms {
             PLAYBACK = "phone-adhan",
             SCREEN = "phone-adhan-screen",
             SILENT = "phone-silent",
-            VIBRATION = "phone-vibration";
+            VIBRATION = "phone-vibration",
+            ALERTS_VIBRATION = "phone-prayers-vibrate",
+            REMINDERS_VIBRATION = "phone-reminders-vibrate";
     private static final int EVENT = 41701, MAINTENANCE = 41702;
 
     private static AlarmManager manager(Context c) {
@@ -78,12 +80,19 @@ final class PhoneAlarms {
 
     static void channels(Context c) throws Exception {
         NotificationManager manager = c.getSystemService(NotificationManager.class);
-        manager.createNotificationChannel(
-                new NotificationChannel(
-                        ALERTS, text(c, "phone_home"), NotificationManager.IMPORTANCE_HIGH));
-        manager.createNotificationChannel(
-                new NotificationChannel(
-                        REMINDERS, text(c, "phone_audio"), NotificationManager.IMPORTANCE_HIGH));
+        for (String id : new String[] {ALERTS, REMINDERS, ALERTS_VIBRATION, REMINDERS_VIBRATION}) {
+            boolean vibrate = id.equals(ALERTS_VIBRATION) || id.equals(REMINDERS_VIBRATION);
+            String name = text(c, id.equals(ALERTS) || id.equals(ALERTS_VIBRATION) ? "phone_home" : "phone_audio");
+            if (vibrate) name += " · " + text(c, "phone_vibrate");
+            NotificationChannel tone = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
+            tone.setSound(android.net.Uri.parse("android.resource://" + c.getPackageName() + "/raw/miqat_short_tone"),
+                    new android.media.AudioAttributes.Builder()
+                            .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+                            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
+            tone.enableVibration(vibrate);
+            if (vibrate) tone.setVibrationPattern(new long[] {0, 120, 100, 120});
+            manager.createNotificationChannel(tone);
+        }
         NotificationChannel audio =
                 new NotificationChannel(
                         PLAYBACK, text(c, "phone_adhan"), NotificationManager.IMPORTANCE_LOW);
@@ -98,7 +107,7 @@ final class PhoneAlarms {
                             NotificationManager.IMPORTANCE_HIGH);
             quiet.setSound(null, null);
             quiet.enableVibration(mode == 3);
-            if (mode == 3) quiet.setVibrationPattern(new long[] {0, 300, 200, 300});
+            if (mode == 3) quiet.setVibrationPattern(new long[] {0, 120, 100, 120});
             manager.createNotificationChannel(quiet);
         }
     }
@@ -127,27 +136,31 @@ final class PhoneAlarms {
                 && channel.getImportance() != NotificationManager.IMPORTANCE_NONE;
     }
 
+    private static String noticeChannel(int mode, boolean vibrate, boolean reminder) {
+        if (mode == 3 || mode == 4 && vibrate) return VIBRATION;
+        if (mode == 4) return SILENT;
+        return reminder ? vibrate ? REMINDERS_VIBRATION : REMINDERS
+                : vibrate ? ALERTS_VIBRATION : ALERTS;
+    }
+
+    private static void requiredMode(Set<String> channels, PhoneStore settings, int prayer, int mode, boolean vibrate) {
+        if (mode == 0) return;
+        channels.add(mode == 2 ? playbackChannelFor(settings) : noticeChannel(mode, vibrate, false));
+        if (settings.before[prayer] > 0 || settings.after[prayer] > 0)
+            channels.add(noticeChannel(mode, vibrate, true));
+    }
+
     static Set<String> requiredChannels(PhoneStore settings) {
         Set<String> required = new HashSet<>();
         boolean quiet = settings.value("quiet.enabled").equals("true"),
                 allDay = quiet && settings.number("quiet.start") == settings.number("quiet.end");
         for (int i = 0; i < 6; i++)
-            if (i != 1
-                    && settings.modes[i] > 0
-                    && settings.number("call." + PhoneStore.PRAYERS[i] + ".weekdays") > 0) {
-                int mode = allDay ? settings.quietMode() : settings.modes[i];
-                if (mode > 0)
-                    required.add(
-                            mode == 1
-                                    ? ALERTS
-                                    : mode == 2
-                                            ? playbackChannelFor(settings)
-                                            : mode == 3 ? VIBRATION : SILENT);
-                if ((mode == 1 || mode == 2) && (settings.before[i] > 0 || settings.after[i] > 0))
-                    required.add(REMINDERS);
-                if (quiet && !allDay && settings.quietMode() > 0)
-                    required.add(settings.quietMode() == 3 ? VIBRATION : SILENT);
-            }
+            if (i != 1 && settings.prayerEnabled(i))
+                for (int weekday = 0; weekday < 7; weekday++) {
+                    if ((settings.number("call." + PhoneStore.PRAYERS[i] + ".weekdays") & (1 << weekday)) == 0) continue;
+                    if (!allDay) requiredMode(required, settings, i, settings.effectiveMode(i, weekday), settings.vibrateOnDay(i, weekday));
+                    if (quiet) requiredMode(required, settings, i, settings.quietMode(), settings.quietMode() == 3);
+                }
         return required;
     }
 
@@ -158,11 +171,11 @@ final class PhoneAlarms {
     static String status(Context c, PhoneStore settings) {
         if (!settings.enabled || !settings.anyAlerts()) return "phone_alerts_off";
         if (!settings.locationReady) return "phone_location_needed";
-        if (!notifications(c) || !exact(c)) return "phone_permission_missing";
+        if (!notifications(c)) return "phone_permission_missing";
         for (String id : requiredChannels(settings))
             if (!channel(c, id)) return "phone_permission_missing";
         String error = PhoneStore.preferences(c).getString("alarm-error", "");
-        return error.isEmpty() ? "phone_alerts_ready" : error;
+        return error.isEmpty() ? exact(c) ? "phone_alerts_ready" : "phone_alerts_approximate" : error;
     }
 
     static String rebuild(Context context) {
@@ -188,8 +201,7 @@ final class PhoneAlarms {
                 if (!settings.enabled
                         || !settings.anyAlerts()
                         || !settings.locationReady
-                        || !notifications(c)
-                        || !exact(c)) return state;
+                        || !notifications(c)) return state;
                 long now = System.currentTimeMillis();
                 double[][] days = settings.days(now);
                 ReminderEvent event = settings.nextEvent(days, now, handled(c));
@@ -241,18 +253,26 @@ final class PhoneAlarms {
         if (!PhoneStore.preferences(c).edit().putString("next-event", value.toString()).commit())
             throw new java.io.IOException("Cannot save alarm");
         long time = Math.max((long) event.getTime(), now + 500);
+        PendingIntent operation = pending(c, FIRE, EVENT, event.getId());
         try {
-            manager(c)
-                    .setAlarmClock(
-                            new AlarmManager.AlarmClockInfo(time, open(c)),
-                            pending(c, FIRE, EVENT, event.getId()));
-        } catch (SecurityException denied) {
-            PhoneStore.preferences(c)
-                    .edit()
-                    .remove("next-event")
-                    .putString("alarm-error", "phone_permission_missing")
-                    .apply();
-            throw denied;
+            if (exact(c)) {
+                try {
+                    manager(c).setAlarmClock(new AlarmManager.AlarmClockInfo(time, open(c)), operation);
+                    return;
+                } catch (SecurityException revoked) {
+                    // Exact access can be revoked between inspection and registration.
+                }
+            }
+            manager(c).setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, operation);
+            value.put("approximate", true);
+            if (!PhoneStore.preferences(c).edit().putString("next-event", value.toString()).commit()) {
+                manager(c).cancel(operation);
+                throw new java.io.IOException("Cannot save approximate alarm");
+            }
+        } catch (RuntimeException failure) {
+            PhoneStore.preferences(c).edit().remove("next-event")
+                    .putString("alarm-error", "phone_permission_missing").apply();
+            throw failure;
         }
     }
 
@@ -284,7 +304,7 @@ final class PhoneAlarms {
             PhoneStore settings = PhoneStore.read(c);
             if (!settings.enabled
                     || !settings.locationReady
-                    || settings.modes[prayer] == 0
+                    || !settings.prayerEnabled(prayer)
                     || !notifications(c)) return null;
             List<String> claims = new ArrayList<>(Arrays.asList(handled(c)));
             if (claims.contains(id)) return null;
@@ -308,14 +328,11 @@ final class PhoneAlarms {
     static void notify(Context c, ReminderEvent event, boolean failure) {
         try {
             channels(c);
-            int mode = PhoneStore.read(c).eventMode(event);
+            PhoneStore settings = PhoneStore.read(c);
+            if (!settings.enabled || !settings.locationReady) return;
+            int mode = settings.eventMode(event);
             if (mode == 0) return;
-            String channel =
-                    mode == 3
-                            ? VIBRATION
-                            : mode == 4
-                                    ? SILENT
-                                    : event.getKind().equals("call") ? ALERTS : REMINDERS;
+            String channel = noticeChannel(mode, settings.eventVibrate(event), !event.getKind().equals("call"));
             if (!channel(c, channel)) return;
             PhoneData data = PhoneData.get(c);
             String name = data.prayerName(event.getPrayer(), arabic(c));

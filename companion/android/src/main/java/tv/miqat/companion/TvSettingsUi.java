@@ -255,91 +255,95 @@ final class TvSettingsUi {
                     || id.equals("appearance.home")) continue;
             if (group.equals("remote") && !a.section.equals("remote")) continue;
             count++;
+            String kind = c.optString("kind");
+            if (c.optBoolean("available") && (kind.equals("action") || group.equals("tests"))) {
+                LinearLayout action = a.views.navigationRow(
+                        content, a.views.sectionIcon(group), a.title(c), "", () -> {
+                            if (editable()) action(c);
+                        });
+                action.setTag(id);
+                action.setEnabled(editable());
+                View activate = action.getChildAt(action.getChildCount() - 1);
+                activate.setTag(id + ".activate");
+                activate.setEnabled(editable());
+                activate.setOnClickListener(v -> {if (editable()) action(c);});
+                continue;
+            }
             LinearLayout row = a.views.card(content);
             row.setTag(id);
             LinearLayout top = a.views.horizontal(row);
             TextView label = a.views.text(a.title(c), 16, a.ink);
+            if (c.optString("label").startsWith("prayerNames:")
+                    && (id.startsWith("offsets.") || id.startsWith("prayer.adhan-"))) {
+                String prayer = id.startsWith("offsets.") ? id.substring(8) : id.substring(13);
+                label.setCompoundDrawablesRelative(Icons.get(a, prayer, a.accent), null, null, null);
+                label.setCompoundDrawablePadding(a.views.dp(10));
+            }
             top.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
             if (!c.optBoolean("available")) {
                 row.addView(a.views.text(a.t("unavailable"), 12, a.muted));
                 continue;
             }
-            String kind = c.optString("kind");
-            if (kind.equals("action") || group.equals("tests")) {
-                Button b = a.views.iconButton(top, "back", a.title(c), () -> action(c));
-                b.setRotation(180);
-                b.setTag(id + ".activate");
-                b.setEnabled(editable());
-                row.setOnClickListener(v -> {
-                    if (editable()) action(c);
-                });
-                row.setFocusable(true);
-                row.setEnabled(editable());
-                row.setContentDescription(a.title(c));
-                b.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-                b.setFocusable(false);
-            } else {
-                String value = values().get(id);
-                if (kind.equals("toggle")) {
-                    Switch toggle = new Switch(a);
-                    toggle.setMinHeight(a.views.dp(48));
-                    toggle.setTextColor(a.accent);
-                    toggle.setTypeface(a.regular);
-                    toggle.setThumbTintList(
-                            new ColorStateList(
-                                    new int[][] {
-                                        new int[] {android.R.attr.state_checked}, new int[] {}
-                                    },
-                                    new int[] {a.accent, a.muted}));
-                    toggle.setTrackTintList(
-                            ColorStateList.valueOf((a.muted & 0x00ffffff) | 0x55000000));
+            String value = values().get(id);
+            if (kind.equals("toggle")) {
+                Switch toggle = new Switch(a);
+                toggle.setMinHeight(a.views.dp(48));
+                toggle.setTextColor(a.accent);
+                toggle.setTypeface(a.regular);
+                toggle.setThumbTintList(
+                        new ColorStateList(
+                                new int[][] {
+                                    new int[] {android.R.attr.state_checked}, new int[] {}
+                                },
+                                new int[] {a.accent, a.muted}));
+                toggle.setTrackTintList(
+                        ColorStateList.valueOf((a.muted & 0x00ffffff) | 0x55000000));
+                toggle.setChecked(value.equals("true"));
+                toggle.setEnabled(editable());
+                toggle.setTag(id + ".edit");
+                toggle.setContentDescription(a.title(c) + ", " + display(id, value));
+                top.addView(toggle, new LinearLayout.LayoutParams(-2, a.views.dp(48)));
+                toggle.setOnClickListener(v -> {
+                    String next = String.valueOf(toggle.isChecked());
                     toggle.setChecked(value.equals("true"));
-                    toggle.setEnabled(editable());
-                    toggle.setTag(id + ".edit");
-                    toggle.setContentDescription(a.title(c) + ", " + display(id, value));
-                    top.addView(toggle, new LinearLayout.LayoutParams(-2, a.views.dp(48)));
-                    toggle.setOnClickListener(v -> {
-                        String next = String.valueOf(toggle.isChecked());
-                        toggle.setChecked(value.equals("true"));
-                        if (c.optString("save").equals("appearance")) {
-                            if (appearance == null) {
-                                openSection("appearance");
-                                return;
-                            }
-                            appearance.set(spec(id), next);
-                            a.render();
-                        } else
-                            save(snapshot.getValues(), Collections.singletonMap(id, next), false);
-                    });
-                    continue;
-                }
-                if (kind.equals("choice")) {
-                    Choices.add(a, row, c, spec(id), isPending(id) ? pendingValue : value);
-                    continue;
-                }
-                if (kind.equals("number")
-                        && tv.miqat.core.UiContract.INSTANCE.numberEditor(id).equals("inline")) {
-                    numberControls(row, c, spec(id), value);
-                    continue;
-                }
-                row.addView(a.views.text(display(id, value), 14, a.accent));
-                Button b =
-                        a.views.iconButton(
-                                top,
-                                "edit",
-                                a.t("edit"),
-                                () -> {
-                                    if (c.optString("save").equals("appearance")
-                                            && !a.section.equals("appearance")) {
-                                        openSection("appearance");
-                                        return;
-                                    }
-                                    edit(id);
-                                });
-                b.setContentDescription(a.title(c) + ", " + display(id, value));
-                b.setEnabled(editable());
-                b.setTag(id + ".edit");
+                    if (c.optString("save").equals("appearance")) {
+                        if (appearance == null) {
+                            openSection("appearance");
+                            return;
+                        }
+                        appearance.set(spec(id), next);
+                        a.render();
+                    } else
+                        save(snapshot.getValues(), Collections.singletonMap(id, next), false);
+                });
+                continue;
             }
+            if (kind.equals("choice")) {
+                Choices.add(a, row, c, spec(id), isPending(id) ? pendingValue : value);
+                continue;
+            }
+            if (kind.equals("number")
+                    && tv.miqat.core.UiContract.INSTANCE.numberEditor(id).equals("inline")) {
+                numberControls(top, c, spec(id), value);
+                continue;
+            }
+            row.addView(a.views.text(display(id, value), 14, a.accent));
+            Button b =
+                    a.views.iconButton(
+                            top,
+                            "edit",
+                            a.t("edit"),
+                            () -> {
+                                if (c.optString("save").equals("appearance")
+                                        && !a.section.equals("appearance")) {
+                                    openSection("appearance");
+                                    return;
+                                }
+                                edit(id);
+                            });
+            b.setContentDescription(a.title(c) + ", " + display(id, value));
+            b.setEnabled(editable());
+            b.setTag(id + ".edit");
         }
         if (count == 0) content.addView(a.views.text(a.t("no_results"), 15, a.muted));
     }
@@ -581,12 +585,17 @@ final class TvSettingsUi {
         String id = spec.getId();
         LinearLayout row = a.body.findViewWithTag(id);
         row.removeAllViews();
-        row.addView(a.views.text(a.title(c), 16, a.ink));
-        row.addView(a.views.text(spec.getMinimum() + " – " + spec.getMaximum(), 13, a.muted));
-        LinearLayout fields = a.views.column();
-        fields.setTag(id + ".number-editor");
-        row.addView(fields);
-        LinearLayout track = a.views.horizontal(fields);
+        LinearLayout top = a.views.horizontal(row);
+        TextView title = a.views.text(a.title(c), 16, a.ink);
+        if (c.optString("label").startsWith("prayerNames:")) {
+            title.setCompoundDrawablesRelative(
+                    Icons.get(a, id.substring(8), a.accent), null, null, null);
+            title.setCompoundDrawablePadding(a.views.dp(10));
+        }
+        top.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
+        LinearLayout track = a.views.horizontal(top);
+        track.setTag(id + ".number-editor");
+        track.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1.5f));
         EditText input = new EditText(a);
         input.setImeOptions(
                 input.getImeOptions() | android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN);
@@ -597,7 +606,7 @@ final class TvSettingsUi {
         input.setGravity(Gravity.CENTER);
         input.setTextDirection(View.TEXT_DIRECTION_LTR);
         input.setTag(id + ".number-input");
-        ((TextView) row.getChildAt(0)).setLabelFor(input.getId());
+        title.setLabelFor(input.getId());
         input.addTextChangedListener(MainActivity.watcher(value -> pendingValue = value));
         Button minus = a.views.button(track, "−", () -> adjust(spec, input, -1));
         a.views.square(minus);
@@ -648,6 +657,7 @@ final class TvSettingsUi {
     void numberControls(LinearLayout row, JSONObject c, SettingSpec s, String value) {
         String id = s.getId();
         LinearLayout track = a.views.horizontal(row);
+        track.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1.5f));
         Button minus = a.views.button(track, "−", () -> stepNumber(id, -1));
         a.views.square(minus);
         minus.setEnabled(editable() && Integer.parseInt(value) > s.getMinimum());
@@ -695,13 +705,14 @@ final class TvSettingsUi {
                     for (int i = 0; i < order.size(); i++) {
                         final int index = i;
                         String item = order.get(i);
-                        LinearLayout row = a.views.card(items);
+                        LinearLayout row = a.views.horizontal(a.views.card(items));
                         row.addView(
                                 a.views.text(
                                         a.catalog.value(a.profile(), spec.getId(), item, a.ar),
                                         15,
-                                        a.ink));
+                                        a.ink), new LinearLayout.LayoutParams(0, -2, 1));
                         LinearLayout actions = a.views.horizontal(row);
+                        actions.setLayoutParams(new LinearLayout.LayoutParams(-2, -2));
                         Button earlier =
                                 a.views.button(
                                         actions,
@@ -735,7 +746,10 @@ final class TvSettingsUi {
                                             pendingValue = String.join(",", order);
                                             refresh[0].run();
                                         });
-                        a.views.flex(remove);
+                        a.views.square(remove);
+                        remove.setText("×");
+                        remove.setContentDescription(a.t("remove") + " · "
+                                + a.catalog.value(a.profile(), spec.getId(), item, a.ar));
                     }
                     Button add = a.views.button(items, a.t("add"), () -> {});
                     add.setOnClickListener(view -> {

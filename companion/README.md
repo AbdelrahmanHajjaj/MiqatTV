@@ -7,7 +7,7 @@ See [scope and evidence](../docs/COMPANION-WORK.md) and the
 [foreground LAN protocol](../docs/COMPANION-LAN.md).
 
 The phone uses Miqat's shared artwork, tokens, palettes, icons and mihrab geometry.
-Java Views expose inline +/- controls, carousels and anchored choices. Appearance
+Java Views expose inline +/- controls, visible short choices and searchable catalogs. Appearance
 for a TV keeps a representative phone preview with Apply/Cancel. Phone prayer
 preferences save independently, with inline numeric Done/Cancel. Optional demo TVs remain
 in Preferences; they do not establish hardware support.
@@ -33,7 +33,7 @@ chooser, preparation guide and latest/stable/preview channel selection. Advanced
 switches to local APK/IPK selection. Android uses the shared installer runtime
 with optional reviewed cleanup/recovery and the phone's selected theme/language.
 LG uses Developer Mode, explicit SSH host-key approval and verified public/local
-IPKs. Unsupported platforms remain visibly locked Coming soon. Successful setup
+IPKs. Unsupported platforms are omitted. Successful setup
 offers ordinary pairing; installation never grants everyday remote access.
 SSH credentials are session-only and separate from normal LAN pairing.
 See [LG setup and limits](../docs/WEBOS.md).
@@ -62,7 +62,8 @@ Verification still runs, with concise results in chat.
 Native suites use `tv.miqat.companion.test/tv.miqat.companion.CompanionCheck`,
 optionally with `-e suite lan`, `camera`, `live`, `live-lg`, `phone-ui`, `phone-size`, `phone-denied` or `phone-runtime`.
 The runtime suite needs explicitly granted notification/exact-alarm access on
-an owned muted emulator; the denied suite requires one of those permissions denied. Owned-emulator live
+an owned muted emulator; the denied suite checks notification denial prevents output and exact-only denial
+uses approximate scheduling. Owned-emulator live
 fixtures run via `companion/check-live.ps1` and `companion/check-lg.cjs` (historical
 Node executable supplied as its final argument). These are not physical-TV passes.
 

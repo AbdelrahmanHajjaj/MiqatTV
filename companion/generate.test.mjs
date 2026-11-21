@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import {test} from 'node:test';
-import {generate,generatePhone} from './generate.mjs';
+import {generate,generatePhone,shortTone} from './generate.mjs';
 import {vectorIcon} from './icons.mjs';
 const data=generate();
 test('phone controls retain independent defaults, real canonical locations/voices and bilingual metadata',()=>{
@@ -71,5 +71,32 @@ test('new branding settings reach both profiles with canonical scenes and opacit
     assert.ok(opacity.available);assert.equal(opacity.save,'appearance');assert.equal(opacity.default,'85');
     const choices=profile.find(c=>c.id==='appearance.background').options.map(c=>c.value);
     assert.ok(choices.includes('miqat_signature')&&choices.includes('miqat_quiet'));
+  }
+});
+
+test('phone alert metadata keeps independent enable, weekday overrides and relative audio bounds',()=>{
+ const {contract}=generatePhone();
+ assert.equal(contract.version,4);
+ assert.equal(contract.perPrayer.find(c=>c.suffix==='enabled').default,'true');
+ for(let day=0;day<7;day++) {
+  assert.deepEqual(contract.perPrayer.find(c=>c.suffix===`day-${day}-sound`).choices,['inherit','adhan','notification','silent']);
+  assert.equal(contract.perPrayer.find(c=>c.suffix===`day-${day}-vibrate`).default,'false');
+ }
+ for(const c of [contract.controls.find(c=>c.id==='reminders.length-percent'),contract.perPrayer.find(c=>c.suffix==='length-percent')])
+  assert.deepEqual([c.minimum,c.maximum,c.step,c.default],[5,100,5,'100']);
+ const tone=shortTone();
+ assert.equal(tone.toString('ascii',0,4),'RIFF');assert.equal(tone.toString('ascii',8,12),'WAVE');
+ assert.equal(tone.readUInt32LE(4),tone.length-8);assert.equal(tone.readUInt32LE(40),tone.length-44);
+ assert.ok(Math.abs((tone.length-44)/2/tone.readUInt32LE(24)-0.18)<0.0001);
+ for(const prayer of JSON.parse(readFileSync(new URL('../shared/design/prayer-icons.json',import.meta.url))).prayers)
+  assert.ok(vectorIcon(`<path d="${prayer.path}"/>`).includes(prayer.path));
+});
+
+test('native literal copy references resolve to bilingual canonical text',()=>{
+  const directory=new URL('./android/src/main/java/tv/miqat/companion/',import.meta.url);
+  for(const name of readdirSync(directory).filter(name=>name.endsWith('.java'))){
+    const source=readFileSync(new URL(name,directory),'utf8');
+    for(const [,key] of source.matchAll(/\bt\("([^"\n]+)"\)/g))
+      assert.ok(data.text[key]?.en&&data.text[key]?.ar,`${name}: unknown text ${key}`);
   }
 });

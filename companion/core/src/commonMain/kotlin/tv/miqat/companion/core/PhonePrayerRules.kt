@@ -48,6 +48,20 @@ object PhonePrayerRules {
         return next.takeIf { it.nextTime > now }
     }
 
+    /** A weekday override changes sound only; it can never enable a disabled prayer. */
+    fun effectiveMode(mode: Int, enabled: Boolean, dayMode: Int): Int {
+        require(mode in 0..4 && dayMode in -1..4)
+        return if (!enabled || mode == 0) 0 else if (dayMode < 0) mode else dayMode
+    }
+
+    /** The legacy seconds cap survives upgrades until the user edits recording-relative length. */
+    fun cutoffMillis(recordingMillis: Int, percent: Int, legacySeconds: Int): Int {
+        require(recordingMillis > 0 && percent in 5..100 && percent % 5 == 0)
+        require(legacySeconds in 0..600)
+        val cutoff = recordingMillis.toLong() * percent / 100
+        return minOf(cutoff, if (legacySeconds == 0) cutoff else legacySeconds * 1000L).toInt()
+    }
+
     fun due(time: Double, now: Double): Boolean {
         require(time.isFinite() && now.isFinite())
         return now >= time && now - time < LATE_WINDOW_MS

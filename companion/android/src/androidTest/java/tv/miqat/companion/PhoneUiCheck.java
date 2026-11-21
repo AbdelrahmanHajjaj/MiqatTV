@@ -28,18 +28,29 @@ final class PhoneUiCheck {
                     check(a.body.getLayoutDirection()==(lang.equals("ar")?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR),"Phone prayer direction");
                 });
                 capture(test,a,lang+"-phone-home",capture);
+                PhoneCalendarCheck.run(test,a);
+                if(test instanceof CompanionCheck && ((CompanionCheck)test).mapNetwork) PhoneCalendarCheck.mapNetwork(test,a,capture);
                 on(test,()->{
-                    a.phoneUi.open("audio");Switch enabled=a.body.findViewWithTag("phone.reminders.enabled.edit");
+                    a.phoneUi.open("permissions");Switch enabled=a.body.findViewWithTag("phone.reminders.enabled.edit");
                     if(!a.phoneUi.settings.locationReady){enabled.performClick();check(a.section.equals("calculation")&&!a.phoneUi.settings.enabled,"Alerts require location confirmation");}
                     a.phoneUi.open("calculation");if(!a.phoneUi.settings.locationReady)a.getWindow().getDecorView().findViewWithTag("phone.location.confirm").performClick();check(a.phoneUi.settings.locationReady,"Location confirmation not saved");check(a.getWindow().getDecorView().findViewWithTag("phone.location.confirm")==null,"Confirmed location retains a redundant confirmation");
-                    a.phoneUi.open("audio");
-                    check(a.body.findViewWithTag("phone.reminders.volume.input")==null,"Number editor must stay closed until tapped");
+                    advancedLocationDraft(a);
+                    a.phoneUi.open("default-audio");
+                    EditText visibleNumber = a.body.findViewWithTag("phone.reminders.volume.input");
+                    check(visibleNumber != null && !visibleNumber.isFocusable()
+                            && a.body.findViewWithTag("phone.reminders.volume.minus") != null
+                            && a.body.findViewWithTag("phone.reminders.volume.plus") != null,
+                            "Number and +/- must remain visible without opening a second line");
                     a.body.findViewWithTag("phone.reminders.volume.edit").performClick();
                     EditText number=a.body.findViewWithTag("phone.reminders.volume.input");String before=a.phoneUi.settings.value("reminders.volume");number.setText("٣٥");
                     a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.cancel").performClick();check(a.phoneUi.settings.value("reminders.volume").equals(before),"Cancel changed saved volume");
                     a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("٣٥");a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Arabic numeric Save failed");
                     a.body.findViewWithTag("phone.reminders.volume.edit").performClick();number=a.body.findViewWithTag("phone.reminders.volume.input");number.setText("37");a.getWindow().getDecorView().findViewWithTag("phone.reminders.volume.save").performClick();check(a.phoneUi.settings.volume==35,"Off-step number accepted");
-                    a.phoneUi.open("fajr");check(!a.body.findViewWithTag("phone.call.fajr.volume.edit").isEnabled(),"Inherited audio must not expose an active override");
+                    a.phoneUi.open("fajr");a.phoneUi.save("call.fajr.mode","adhan");check(!a.body.findViewWithTag("phone.call.fajr.volume.edit").isEnabled(),"Inherited audio must not expose an active override");
+                    check(!a.body.findViewWithTag("phone.call.fajr.length-percent.edit").isEnabled()
+                            && a.body.findViewWithTag("phone.length.preview").isEnabled()
+                            && a.body.findViewWithTag("phone.length.stop").isEnabled(),
+                            "Inherited length must keep its recording preview available while its slider is disabled");
                     a.body.findViewWithTag("phone.call.fajr.default-audio.edit").performClick();a.body.findViewWithTag("phone.call.fajr.volume.edit").performClick();((EditText)a.body.findViewWithTag("phone.call.fajr.volume.input")).setText("١٥");a.getWindow().getDecorView().findViewWithTag("phone.call.fajr.volume.save").performClick();check(a.phoneUi.settings.audioVolume(0)==15&&a.phoneUi.settings.volume==35,"Per-prayer audio changed default level");a.phoneUi.save("call.fajr.default-audio","true");
                     String mode=a.phoneUi.settings.value("call.fajr.mode");
                     check(a.body.findViewWithTag("phone.call.fajr.mode.choices."+mode).isSelected(),"Inline mode choice must show saved value");
@@ -47,9 +58,7 @@ final class PhoneUiCheck {
                     a.phoneUi.open("calculation");a.phoneUi.save("prayer.zone","Asia/Tokyo");check(!a.phoneUi.settings.locationReady,"Changed timezone must need confirmation");
                     a.phoneUi.save("prayer.zone","system");a.getWindow().getDecorView().findViewWithTag("phone.location.confirm").performClick();
                     a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");a.getWindow().getDecorView().findViewWithTag("appearance.apply").performClick();check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
-                    for(JSONObject c:a.phoneUi.data.controls.values()){
-                        a.phoneUi.open(c.optString("section"));if(c.optString("id").startsWith("appearance."))a.body.findViewWithTag("appearance.tab."+c.optString("id")).performClick();check(a.body.findViewWithTag("phone."+c.optString("id"))!=null,"Missing phone control "+c.optString("id"));
-                    }
+                    boundControls(a);
                     a.tab("prayers");
                     try {
                         PhoneSchedule.Day day=a.phoneUi.settings.day(System.currentTimeMillis(),0);
@@ -64,18 +73,30 @@ final class PhoneUiCheck {
                     a.tab("phone-settings");
                 });
                 String priorQuiet=PhoneStore.read(context).value("quiet.start");
-                on(test,()->{a.phoneUi.open("audio");a.body.findViewWithTag("phone.quiet.start.edit").performClick();check(a.phoneUi.choiceDialog instanceof android.app.TimePickerDialog,"Quiet hours need a clock editor");((android.app.TimePickerDialog)a.phoneUi.choiceDialog).updateTime(21,30);a.phoneUi.choiceDialog.getButton(-2).performClick();});
+                on(test,()->{a.phoneUi.open("legacy-quiet");a.body.findViewWithTag("phone.quiet.start.edit").performClick();check(a.phoneUi.choiceDialog instanceof android.app.TimePickerDialog,"Quiet hours need a clock editor");((android.app.TimePickerDialog)a.phoneUi.choiceDialog).updateTime(21,30);a.phoneUi.choiceDialog.getButton(-2).performClick();});
                 LiveUiCheck.untilUi(test,()->a.phoneUi.choiceDialog==null);check(PhoneStore.read(context).value("quiet.start").equals(priorQuiet),"Clock Cancel saved a draft");
                 on(test,()->{a.body.findViewWithTag("phone.quiet.start.edit").performClick();((android.app.TimePickerDialog)a.phoneUi.choiceDialog).updateTime(21,30);a.phoneUi.choiceDialog.getButton(-1).performClick();});
                 LiveUiCheck.untilUi(test,()->a.phoneUi.settings.number("quiet.start")==1290);
-                on(test,()->{a.phoneUi.open("fajr");a.body.findViewWithTag("phone.call.fajr.weekdays.edit").performClick();});
-                LiveUiCheck.untilUi(test,()->a.phoneUi.choiceDialog.getListView().isItemChecked(0));
-                on(test,()->{check(a.phoneUi.choiceDialog.getListView().getCount()==7,"Weekday editor missing days");check(a.phoneUi.choiceDialog.getListView().isItemChecked(0),"Saved Sunday missing");a.phoneUi.choiceDialog.getListView().performItemClick(null,0,0);check(!a.phoneUi.choiceDialog.getListView().isItemChecked(0),"Weekday tap did not deselect Sunday");a.phoneUi.choiceDialog.getButton(-1).performClick();});
-                LiveUiCheck.untilUi(test,()->a.phoneUi.settings.number("call.fajr.weekdays")==126);
-                on(test,()->{a.phoneUi.save("call.fajr.weekdays","127");a.tab("phone-settings");check(a.section.isEmpty(),"Phone settings root tab did not return from its child page");});
+                on(test,()->{
+                    a.phoneUi.open("fajr");
+                    check(a.phoneUi.choiceDialog==null,"Weekdays must be visible directly on the prayer page");
+                    for(int day=0;day<7;day++) {
+                        View button=a.body.findViewWithTag("phone.call.fajr.weekdays."+day);
+                        check(button!=null&&button.isSelected(),"Saved weekday missing "+day);
+                        check(button.getContentDescription()!=null,"Weekday lacks its full accessible name");
+                    }
+                    a.body.findViewWithTag("phone.call.fajr.weekdays.0").performClick();
+                    check(a.phoneUi.settings.number("call.fajr.weekdays")==126
+                            && !a.body.findViewWithTag("phone.call.fajr.weekdays.0").isSelected(),
+                            "Inline Sunday toggle did not persist its weekday mask");
+                    a.phoneUi.save("call.fajr.weekdays","127");
+                    dayOverrides(a);
+                    a.tab("phone-settings");check(a.section.isEmpty(),"Phone settings root tab did not return from its child page");
+                    check(a.body.findViewWithTag("phone.section.widgets")!=null,"Widget customization needs a settings entry");
+                });
                 capture(test,a,lang+"-phone-settings",capture);
                 on(test,()->a.phoneUi.open("audio"));capture(test,a,lang+"-phone-audio",capture);
-                on(test,()->a.body.findViewWithTag("phone.reminders.voice.edit").performClick());capture(test,a,lang+"-phone-voice-sheet",capture);
+                on(test,()->{a.phoneUi.open("default-audio");a.body.findViewWithTag("phone.reminders.voice.edit").performClick();});capture(test,a,lang+"-phone-voice-sheet",capture);
                 String savedVoice = PhoneStore.read(context).value("reminders.voice");
                 java.util.List<String> voices = a.phoneUi.data.options(a.phoneUi.data.controls.get("reminders.voice"));
                 int candidateIndex = savedVoice.equals(voices.get(0)) ? 1 : 0;
@@ -116,6 +137,123 @@ final class PhoneUiCheck {
             check(restore.commit(),"Cannot restore phone fixture");context.getSharedPreferences("companion",0).edit().putString("language",language).commit();PhoneAlarms.rebuild(context);
         }
     }
+    private static void advancedLocationDraft(MainActivity a) {
+        Map<String,String> original = new LinkedHashMap<>(a.phoneUi.settings.values);
+        a.phoneUi.locationUi.advanced();
+        android.app.AlertDialog advanced = a.phoneUi.locationUi.locationDialog;
+        View window = advanced.getWindow().getDecorView();
+        EditText latitude = window.findViewWithTag("phone_latitude");
+        EditText longitude = window.findViewWithTag("phone_longitude");
+        latitude.setText("51.5"); longitude.setText("-0.12");
+        window.findViewWithTag("phone.location.zone").performClick();
+        a.phoneUi.choiceDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).performClick();
+        check(advanced.isShowing() && latitude.getText().toString().equals("51.5"),
+                "Cancelling timezone discarded the coordinate draft");
+        window.findViewWithTag("phone.location.zone").performClick();
+        chooseTimezone(a, "Europe/London");
+        check(advanced.isShowing() && a.phoneUi.settings.values.equals(original)
+                        && longitude.getText().toString().equals("-0.12"),
+                "Choosing timezone saved early or discarded coordinates");
+        advanced.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).performClick();
+        check(a.phoneUi.settings.values.equals(original), "Advanced Cancel changed location/timezone");
+        a.phoneUi.locationUi.advanced();
+        advanced = a.phoneUi.locationUi.locationDialog;
+        window = advanced.getWindow().getDecorView();
+        latitude = window.findViewWithTag("phone_latitude");
+        longitude = window.findViewWithTag("phone_longitude");
+        latitude.setText("91"); longitude.setText("-0.12");
+        window.findViewWithTag("phone.location.zone").performClick();
+        chooseTimezone(a, "Europe/London");
+        advanced.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick();
+        check(advanced.isShowing() && a.phoneUi.settings.values.equals(original),
+                "Invalid coordinates partially saved the timezone draft");
+        latitude.setText("51.5");
+        advanced.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick();
+        check(a.phoneUi.settings.latitude == 51.5 && a.phoneUi.settings.longitude == -0.12
+                        && a.phoneUi.settings.value("prayer.zone").equals("Europe/London")
+                        && !a.phoneUi.settings.locationReady,
+                "Advanced Apply did not save coordinates and timezone together");
+        check(a.phoneUi.save(original, false), "Could not restore location draft fixture");
+    }
+    private static void chooseTimezone(MainActivity a, String zone) {
+        ListView choices = a.phoneUi.choiceDialog.getWindow().getDecorView()
+                .findViewWithTag("phone.choice.list");
+        for(int i=0;i<choices.getAdapter().getCount();i++) {
+            Choices.Option option = (Choices.Option) choices.getAdapter().getItem(i);
+            if(option.value.equals(zone)) { choices.performItemClick(null,i,i); return; }
+        }
+        throw new AssertionError("Timezone choice missing: " + zone);
+    }
+    private static void boundControls(MainActivity a) {
+        a.phoneUi.open("calculation");
+        for(String tag:new String[]{"phone.country","phone.city","phone.location.detect","phone.location.advanced"})
+            check(a.body.findViewWithTag(tag)!=null,"Missing labeled location control "+tag);
+        for(JSONObject control:a.phoneUi.data.controls.values())
+            if(control.optString("section").equals("calculation"))
+                check(a.body.findViewWithTag("phone."+control.optString("id"))!=null,"Missing calculation control "+control.optString("id"));
+        a.phoneUi.open("audio");
+        for(String prayer:new String[]{"fajr","dhuhr","asr","maghrib","isha"})
+            check(a.body.findViewWithTag("phone.prayer-settings."+prayer)!=null,"Missing prayer settings entry "+prayer);
+        for(String id:new String[]{"reminders.full-screen","reminders.volume-keys"})
+            check(a.body.findViewWithTag("phone."+id+".edit")!=null,"Missing optional presentation switch "+id);
+        check(a.body.findViewWithTag("phone.reminders.duration")==null,"Retired seconds editor must not duplicate relative length");
+        a.phoneUi.open("default-audio");
+        android.os.Bundle progress=new android.os.Bundle();
+        progress.putFloat(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE,75f);
+        a.body.findViewWithTag("phone.reminders.length-percent.edit").performAccessibilityAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.getId(),progress);
+        check(a.phoneUi.settings.number("reminders.length-percent")==75 && a.phoneUi.settings.duration==0,"Accessible length edit did not save relative cutoff");
+
+        a.phoneUi.open("default-audio");
+        for(String id:new String[]{"reminders.voice","reminders.volume","reminders.length-percent"})
+            check(a.body.findViewWithTag("phone."+id)!=null,"Missing default audio control "+id);
+        a.phoneUi.open("appearance");
+        for(JSONObject control:a.phoneUi.data.controls.values()) if(control.optString("section").equals("appearance")) {
+            String id=control.optString("id");
+            if(id.startsWith("appearance."))a.body.findViewWithTag("appearance.tab."+id).performClick();
+            check(a.body.findViewWithTag("phone."+id)!=null,"Missing appearance control "+id);
+        }
+        for(String prayer:new String[]{"fajr","dhuhr","asr","maghrib","isha"}) {
+            a.phoneUi.open(prayer);String prefix="phone.call."+prayer+".";
+            check(a.body.findViewWithTag(prefix+"enabled.edit") instanceof Switch,"Missing prayer enable switch "+prayer);
+            for(String suffix:new String[]{"vibrate.edit","weekdays","offset.input","before.input","after.input","voice.edit","default-audio.edit","volume.input","length-percent.edit"})
+                check(a.body.findViewWithTag(prefix+suffix)!=null,"Missing prayer control "+prefix+suffix);
+            for(String mode:new String[]{"adhan","notification","silent"})
+                check(a.body.findViewWithTag(prefix+"mode.choices."+mode)!=null,"Missing sound choice "+mode);
+            check(a.body.findViewWithTag(prefix+"mode.choices.off")==null
+                    && a.body.findViewWithTag(prefix+"mode.choices.vibration")==null,"Retired modes leaked into sound choices");
+            a.body.findViewWithTag(prefix+"enabled.edit").performClick();
+            check(!a.phoneUi.settings.prayerEnabled(Arrays.asList(PhoneStore.PRAYERS).indexOf(prayer))
+                    && !a.body.findViewWithTag(prefix+"mode.choices.adhan").isEnabled()
+                    && !a.body.findViewWithTag(prefix+"weekdays.0").isEnabled()
+                    && !a.body.findViewWithTag(prefix+"offset.plus").isEnabled(),"Disabled prayer left configuration active");
+            a.body.findViewWithTag(prefix+"enabled.edit").performClick();
+        }
+        a.phoneUi.open("permissions");
+        check(a.body.findViewWithTag("phone.reminders.enabled.edit")!=null,"Existing global opt-out lost its settings control");
+    }
+
+    private static void dayOverrides(MainActivity a) {
+        String original=a.phoneUi.settings.value("call.fajr.mode");
+        a.phoneUi.open("days:fajr");
+        for(int day=0;day<7;day++)check(a.body.findViewWithTag("phone.day."+day)!=null,"Missing day override row "+day);
+        a.body.findViewWithTag("phone.day.2").performClick();
+        check(a.section.equals("day:fajr:2"),"Tuesday row opened another day");
+        check(!a.body.findViewWithTag("phone.day.sound.silent").isEnabled(),"Inherited day must keep overrides disabled");
+        a.body.findViewWithTag("phone.day.inherit").performClick();
+        a.body.findViewWithTag("phone.day.sound.silent").performClick();
+        a.body.findViewWithTag("phone.day.vibrate").performClick();
+        check(a.phoneUi.settings.value("call.fajr.day-2-sound").equals("silent")
+                && a.phoneUi.settings.vibrateOnDay(0,2)
+                && a.phoneUi.settings.value("call.fajr.day-0-sound").equals("inherit")
+                && a.phoneUi.settings.value("call.fajr.mode").equals(original),"Day override changed another day or prayer default");
+        a.phoneUi.open("fajr");a.phoneUi.open("day:fajr:2");
+        check(a.body.findViewWithTag("phone.day.sound.silent").isSelected()
+                && ((Switch)a.body.findViewWithTag("phone.day.vibrate")).isChecked(),"Day override did not survive re-entry");
+        a.body.findViewWithTag("phone.day.inherit").performClick();
+        check(a.phoneUi.settings.value("call.fajr.day-2-sound").equals("inherit")
+                && !a.body.findViewWithTag("phone.day.sound.silent").isEnabled(),"Use defaults failed to restore inheritance");
+    }
+
     private static void keyboardFooter(Instrumentation test, MainActivity a,
             String language, boolean capture) throws Exception {
         if (android.os.Build.VERSION.SDK_INT < 30) return;
@@ -133,7 +271,7 @@ final class PhoneUiCheck {
         try {
             PhoneRuntimeCheck.shell(test, "settings put secure show_ime_with_hard_keyboard 1");
             on(test, () -> {
-                a.phoneUi.open("audio");
+                a.phoneUi.open("default-audio");
                 a.body.findViewWithTag("phone.reminders.volume.edit").performClick();
                 EditText input = a.body.findViewWithTag("phone.reminders.volume.input");
                 input.requestFocus();

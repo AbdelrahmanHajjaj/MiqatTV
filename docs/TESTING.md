@@ -166,8 +166,9 @@ enlarged OS text; pass `-e orientation portrait` or `-e orientation landscape`
 to assert the requested configuration. Check screenshot dimensions: changing a
 rotation setting alone may not rotate an emulator. Restore the session's prior
 display settings afterwards.
-`phone-denied` requires exact-alarm or notification access denied and proves no
-scheduling/playback. `phone-runtime` requires both permissions granted on an owned
+`phone-denied` requires exact-alarm or notification access denied. Notification
+denial must prevent scheduling/playback; exact-only denial registers a disclosed
+approximate alarm without starting playback. `phone-runtime` requires both permissions granted on an owned
 muted emulator; it exercises actual AlarmManager delivery, foreground output,
 Stop/focus loss, disabled cleanup, recovery and early/expired/duplicate rejection.
 The fixture saves/restores phone settings; it does not operate a TV. Companion CI
@@ -225,3 +226,18 @@ It renders `en-picker-{day,next,strip}.png` and Arabic counterparts under the ap
 external files directory. Inspect them, then copy English images to native
 `res/drawable-nodpi/widget_preview_*.png` and Arabic to `res/drawable-ar-nodpi/`.
 These images are native renders, not separately authored preview designs.
+
+
+Pass-8 phone journeys exercise welcome/location/style resumption, a single
+notification decision (including denial and explicit opt-out preservation),
+country/city detection and advanced-dialog Cancel. Phone UI covers direct weekday
+choices, independent day overrides, master disabling, accessible percent edits,
+and Hijri month/day selection against actual calculated times. The runtime
+suite checks the selected recording's ending preview, including retained legacy
+seconds caps. Short-tone/vibration channels preserve Android-owned user edits.
+
+The optional `-e suite phone-ui -e map-network true -e capture true` check loads
+real OSM tiles only after a simulated explicit Load map tap, using public Cairo
+fixture coordinates. It checks native square geometry, restricted WebView access
+and provider failures; inspect the resulting map capture for route/markers and
+attribution. Ordinary CI phone UI uses no map network request.

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Implement the approved phone design in 0.5.0/code16: welcome-first setup,
+  labeled country/city and compact detection, a single notification decision,
+  full-page style previews, visible short choices/weekdays and inline numbers.
+- Add Hijri month/day prayer browsing and an explicit online Qibla map with
+  attribution, alongside the offline compass. Use the transparent Miqat mark.
+- Unify per-prayer enable, Adhan/Short tone/Silent, independent vibration and
+  weekday overrides. Add recording-relative length and ending preview; preserve
+  legacy quiet windows, saved modes and seconds caps until deliberately edited.
+- Keep alarm access out of onboarding, with a disclosed approximate scheduling
+  fallback. Add Widgets in settings, default new widgets to Hijri, and refine
+  supported-only TV setup, prayer icons and spaced media/action rows.
+
 - Refine phone 0.4.6/code15: two-page first use, single live appearance/widget
   previews with direct carousels, compact inline choices and searchable voices.
   Show numbered TV preparation together with release selection and LG credentials;

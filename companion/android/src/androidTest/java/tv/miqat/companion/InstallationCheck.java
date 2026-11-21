@@ -30,11 +30,7 @@ final class InstallationCheck {
             CompanionCheck.check(!info.exported, "Embedded installer must not be exported");
             File key = new File(test.getTargetContext().getFilesDir(), "adb.key");
             boolean hadKey = key.exists();
-            MainActivity phone =
-                    (MainActivity)
-                            test.startActivitySync(
-                                    new Intent(test.getTargetContext(), MainActivity.class)
-                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            MainActivity phone = LiveUiCheck.launch(test);
             test.runOnMainSync(() -> phone.tab("tvs"));
             test.waitForIdleSync();
             Activity installer = open(test, phone);

@@ -90,15 +90,16 @@ quiet-hour, display-digit and Qibla bearing rules live in `shared/core` for JVM/
 the pinned TV Adhan source using explicit civil timezone inputs. `PhoneStore`
 validates and persists phone-only preferences/claims in device-protected storage;
 backup and transfer exclude it. TV credentials stay in their encrypted store.
-`PhoneAlarms` keeps one next exact event plus an inexact daily recovery check when
-needed. The private receiver reschedules after boot/time changes and durably
+`PhoneAlarms` keeps one next exact event when access is allowed, an explicitly
+approximate inexact fallback otherwise, plus a daily recovery check when needed. The private receiver reschedules after boot/time changes and durably
 claims eligible events before output. `PhonePlayback` is a private, non-sticky
 foreground service only during approved local playback, with focus loss, Stop,
 timeout and permission/settings cleanup. `PhoneUi` coordinates phone settings;
 PhoneHome, PhoneLocationUi, PhoneAppearance, PhoneOnboarding and PhoneSound own
 their respective native journeys. PairingUi/TvSettingsUi/TvRemoteUi/TvListUi own
 TV workflows, while transports keep networking/trust separate. QiblaUi owns
-foreground sensors. WidgetUi owns draft configuration, WidgetOptions per-instance
+foreground sensors and opt-in, attributed map loading. PhoneCalendar maps Hijri
+month selection back to civil dates for the real prayer engine. WidgetUi owns draft configuration, WidgetOptions per-instance
 presentation, WidgetRenderer native RemoteViews, and PrayerWidget the existing
 schedule/launcher update lifecycle. Native receiver variants share that provider.
 Neither phone settings nor alarm recovery connect to a TV.

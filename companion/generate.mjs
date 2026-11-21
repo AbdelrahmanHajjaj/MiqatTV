@@ -6,12 +6,25 @@ import {vectorIcon} from './icons.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
+// A short local alert tone; no recording, network or extra media dependency.
+export function shortTone() {
+  const rate=22050, samples=Math.round(rate*0.18), buffer=Buffer.alloc(44+samples*2);
+  buffer.write('RIFF');buffer.writeUInt32LE(buffer.length-8,4);buffer.write('WAVEfmt ',8);
+  buffer.writeUInt32LE(16,16);buffer.writeUInt16LE(1,20);buffer.writeUInt16LE(1,22);
+  buffer.writeUInt32LE(rate,24);buffer.writeUInt32LE(rate*2,28);buffer.writeUInt16LE(2,32);buffer.writeUInt16LE(16,34);
+  buffer.write('data',36);buffer.writeUInt32LE(samples*2,40);
+  for(let i=0;i<samples;i++) {
+    const envelope=Math.min(1,i/(rate*0.01),(samples-1-i)/(rate*0.03));
+    buffer.writeInt16LE(Math.round(Math.sin(2*Math.PI*880*i/rate)*6500*envelope),44+i*2);
+  }
+  return buffer;
+}
 export function generatePhone() {
   const contract=read('shared/data/phone-ui-contract.json'),cities=read('shared/data/cities.json'),voices=read('shared/data/voices.json');
   const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
   const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
     prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
-  if(contract.version!==3||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
+  if(contract.version!==4||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
   const ids=new Set();
   for(const control of [...contract.controls,...contract.perPrayer]) {
     const id=control.id??control.suffix;
@@ -132,7 +145,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   mkdirSync(new URL('values/',res),{recursive:true});
   mkdirSync(new URL('drawable-nodpi/',res),{recursive:true});
   writeFileSync(new URL('drawable-nodpi/miqat_icon.png',res),readFileSync(new URL('shared/design/artwork/icon.png',root)));
-  for(const [id,svg] of Object.entries(read('shared/design/icons.json')))writeFileSync(new URL('drawable/companion_icon_'+id+'.xml',res),vectorIcon(svg,id==='back'));
+  writeFileSync(new URL('drawable-nodpi/miqat_mark.png',res),readFileSync(new URL('shared/design/assets/qr-mark.png',root)));
+  mkdirSync(new URL('raw/',res),{recursive:true});
+  writeFileSync(new URL('raw/miqat_short_tone.wav',res),shortTone());
+  for(const [id,svg] of Object.entries({...read('shared/design/icons.json'),...Object.fromEntries(read('shared/design/prayer-icons.json').prayers.map(p=>[p.id,`<path d="${p.path}"/>`]))}))writeFileSync(new URL('drawable/companion_icon_'+id+'.xml',res),vectorIcon(svg,id==='back'));
   const catalog=generate(), colors=catalog.colors;
   writeFileSync(new URL('values/companion_colors.xml',res),'<resources>'+['lapis-900','lapis-800','gold-400','plaster-100','mist-400'].map(id=>'<color name="companion_'+id.replaceAll('-','_')+'">'+colors[id]+'</color>').join('')+'</resources>');
   const sampleTimes=['05:10','06:30','12:00','15:15','17:30','19:00'];

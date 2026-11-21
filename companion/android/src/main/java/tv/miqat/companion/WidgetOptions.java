@@ -11,7 +11,7 @@ final class WidgetOptions {
     static final String[] LAYOUTS = {"next", "day", "strip"};
     static final String[] SHAPES = {"rounded", "soft", "square"};
     String layout = "day", theme = "app", scene = "plain", shape = "rounded";
-    boolean date = true, hijri;
+    boolean date, hijri = true;
     int size = 100, opacity = 100;
 
     static WidgetOptions read(Context context, int id) {
@@ -44,8 +44,8 @@ final class WidgetOptions {
                                     data.optInt(
                                             "opacity",
                                             data.optBoolean("background", true) ? 100 : 0)));
-            options.hijri = data.optBoolean("hijri", false);
-            options.date = data.optBoolean("date", true);
+            options.hijri = data.optBoolean("hijri", true);
+            options.date = data.optBoolean("date", false);
             options.size = data.optInt("size") == 120 ? 120 : 100;
         } catch (Exception invalid) {
             /* Invalid presentation falls back without losing prayer settings. */

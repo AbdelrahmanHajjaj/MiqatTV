@@ -21,7 +21,11 @@ final class TvSetup {
     void restore(Bundle state) {
         platform = state.getString("setup-platform", "");
         channel = state.getString("setup-channel", "latest");
-        step = Math.min(1, state.getInt("setup-step"));
+        step = Math.max(0, Math.min(1, state.getInt("setup-step")));
+        if (!(platform.equals("android") || platform.equals("lg"))) {
+            platform = "";
+            step = 0;
+        }
         local = state.getBoolean("setup-local");
     }
 
@@ -67,18 +71,14 @@ final class TvSetup {
         for (int i = 0; i < platforms.length(); i++) {
             JSONObject item = platforms.optJSONObject(i);
             String id = item.optString("id");
-            boolean supported = !item.isNull("setup");
+            if (!(id.equals("android") || id.equals("lg")) || item.isNull("setup")) continue;
             LinearLayout row =
                     a.views.navigationRow(
                             a.body,
-                            supported ? "tv" : "lock",
+                            "tv",
                             a.catalog.label(item, a.ar),
-                            supported ? "" : a.t("coming_soon"),
+                            "",
                             () -> {
-                                if (!supported) {
-                                    a.info(a.t("coming_soon"), a.catalog.label(item, a.ar));
-                                    return;
-                                }
                                 if (!platform.equals(id)) {
                                     channel = "latest";
                                     local = false;
@@ -91,8 +91,7 @@ final class TvSetup {
                                 } else a.render();
                             });
             row.setTag("setup.platform." + id);
-            row.setContentDescription(
-                    a.catalog.label(item, a.ar) + (supported ? "" : ", " + a.t("coming_soon")));
+            row.setContentDescription(a.catalog.label(item, a.ar));
         }
     }
 
@@ -156,7 +155,7 @@ final class TvSetup {
         java.util.List<Choices.Option> channels = new java.util.ArrayList<>();
         for (String id : new String[] {"latest", "stable", "preview"})
             channels.add(new Choices.Option(id, a.t("tv_channel_" + id)));
-        a.views.choiceRail(
+        a.views.segmentedChoices(
                 a.body,
                 "setup.channel",
                 channels,

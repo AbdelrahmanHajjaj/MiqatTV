@@ -1,12 +1,12 @@
 # Current work
 
-Updated: 2026-11-20. Owner scope: PHONE-PASS7.md. Review build 0.4.6/code15,
-feature/companion-installation, draft PR #9. Implemented two-page first use,
-single live app/widget previews with direct carousels, numbered TV preparation
-with relevant fields/source, compact controls and searchable long choices.
-Native bilingual journeys, UI/persistence, hosted widgets, invalid LG input and
-enlarged-text portrait/landscape pass. Exact APK receipt: EVIDENCE.md.
+Updated: 2026-11-21. Owner approved the complete revision-2 English gallery
+and requested full implementation. Continue on feature/companion-installation
+and draft PR #9. Scope and migration constraints: [PHONE-PASS8.md](PHONE-PASS8.md).
 
-Final-head CI is tracked on draft PR #9; private logs/captures under ignored state/.
-Stop for owner review after CI/handoff. No merge/release/physical deployment,
-iOS or new feature scope. Earlier 0.4.5 evidence is historical.
+Approved native implementation is complete: Java Views, phone alert migration,
+calendar/Qibla map, widgets and companion TV controls. Local validation passes;
+final-head PR CI remains before handoff. Review APK: 0.5.0/code16 at the fixed latest path;
+identity and validation are in [EVIDENCE.md](EVIDENCE.md). Preserve the draft PR
+for owner acceptance. Existing settings and quiet-hour boundaries are retained.
+No public release, merge or physical deployment in this review pass.

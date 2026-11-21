@@ -28,11 +28,7 @@ final class PhoneSizeCheck {
                             .edit()
                             .putString("language", lang)
                             .commit();
-                    MainActivity a =
-                            (MainActivity)
-                                    test.startActivitySync(
-                                            new Intent(c, MainActivity.class)
-                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                    MainActivity a = LiveUiCheck.launch(test);
                     active[0] = a;
                     final int expected = size;
                     PhoneUiCheck.on(test, () -> a.tab("prayers"));
@@ -111,8 +107,10 @@ final class PhoneSizeCheck {
                                 View tools =
                                         (View) a.body.findViewWithTag("qibla.open").getParent();
                                 PhoneUiCheck.check(
-                                        tomorrow != null && tomorrow.getBottom() <= tools.getTop(),
-                                        "Tomorrow Fajr must precede secondary actions");
+                                        tomorrow == null
+                                                && a.body.findViewWithTag("phone.today") != null,
+                                        "Home must expose calendar without a duplicate tomorrow"
+                                            + " Fajr row");
                                 View qibla = a.body.findViewWithTag("qibla.open");
                                 View widgets = a.body.findViewWithTag("widgets.open");
                                 int gap =
@@ -143,7 +141,7 @@ final class PhoneSizeCheck {
                                                                         time.getRight())
                                                         >= a.views.dp(12),
                                         "Prayer name and time overlap");
-                                a.phoneUi.open("audio");
+                                a.phoneUi.open("default-audio");
                                 a.body.findViewWithTag("phone.reminders.volume.edit")
                                         .performClick();
                                 View save =
@@ -180,10 +178,12 @@ final class PhoneSizeCheck {
                                         a.phoneUi.digits("0123").equals("٠١٢٣"),
                                         "Eastern digits ignored");
                             });
-                    PhoneUiCheck.on(test, () -> a.phoneUi.open("audio"));
+                    PhoneUiCheck.on(test, () -> a.phoneUi.open("fajr"));
+                    PhoneUiCheck.on(test, () -> weekdays(a, expected));
+                    PhoneUiCheck.on(test, () -> a.phoneUi.open("default-audio"));
                     if (size == 80 || size == 150) {
                         extended(test, a, expected, capture);
-                        PhoneUiCheck.on(test, () -> a.phoneUi.open("audio"));
+                        PhoneUiCheck.on(test, () -> a.phoneUi.open("legacy-quiet"));
                         PhoneUiCheck.on(
                                 test,
                                 () ->
@@ -205,21 +205,13 @@ final class PhoneSizeCheck {
                                 test,
                                 () -> {
                                     a.phoneUi.open("fajr");
-                                    a.body.findViewWithTag("phone.call.fajr.weekdays.edit")
-                                            .performClick();
+                                    View days = a.body.findViewWithTag("phone.call.fajr.weekdays");
+                                    days.requestRectangleOnScreen(
+                                            new Rect(0, 0, days.getWidth(), days.getHeight()),
+                                            true);
                                 });
-                        PhoneUiCheck.on(
-                                test,
-                                () -> {
-                                    Rect bounds = new Rect();
-                                    View done = a.phoneUi.choiceDialog.getButton(-1);
-                                    PhoneUiCheck.check(
-                                            done.getGlobalVisibleRect(bounds)
-                                                    && bounds.height() == done.getHeight(),
-                                            "Weekday save clipped at " + expected);
-                                });
+                        PhoneUiCheck.on(test, () -> weekdays(a, expected));
                         PhoneUiCheck.capture(test, a, lang + "-phone-weekdays-" + size, capture);
-                        PhoneUiCheck.on(test, () -> a.phoneUi.choiceDialog.dismiss());
                     }
                     PhoneUiCheck.on(test, () -> a.tab("prayers"));
                     if (size == 80 || size == 150)
@@ -318,8 +310,15 @@ final class PhoneSizeCheck {
         android.content.SharedPreferences prefs = PhoneStore.preferences(a);
         boolean hadStep = prefs.contains("onboarding-step");
         int oldStep = prefs.getInt("onboarding-step", 0);
+        boolean hadWelcome = prefs.contains("onboarding-welcome");
+        boolean oldWelcome = prefs.getBoolean("onboarding-welcome", false);
         try {
-            prefs.edit().putInt("onboarding-step", 1).commit();
+            PhoneUiCheck.check(
+                    prefs.edit()
+                            .putBoolean("onboarding-welcome", true)
+                            .putInt("onboarding-step", 2)
+                            .commit(),
+                    "Cannot prepare onboarding style fixture");
             PhoneUiCheck.on(test, () -> a.navigate("onboarding"));
             PhoneUiCheck.on(
                     test,
@@ -364,6 +363,8 @@ final class PhoneSizeCheck {
             android.content.SharedPreferences.Editor restore = prefs.edit();
             if (hadStep) restore.putInt("onboarding-step", oldStep);
             else restore.remove("onboarding-step");
+            if (hadWelcome) restore.putBoolean("onboarding-welcome", oldWelcome);
+            else restore.remove("onboarding-welcome");
             PhoneUiCheck.check(restore.commit(), "Cannot restore onboarding size fixture");
             PhoneUiCheck.on(
                     test,
@@ -371,6 +372,39 @@ final class PhoneSizeCheck {
                         if (a.phoneUi.choiceDialog != null) a.phoneUi.choiceDialog.dismiss();
                         a.tab("prayers");
                     });
+        }
+    }
+
+    private static void weekdays(MainActivity a, int size) {
+        ViewGroup days = a.body.findViewWithTag("phone.call.fajr.weekdays");
+        PhoneUiCheck.check(
+                days != null && a.phoneUi.choiceDialog == null,
+                "Weekdays must be inline at " + size);
+        String[] names = new java.text.DateFormatSymbols(a.phoneUi.locale()).getWeekdays();
+        for (int day = 0; day < 7; day++) {
+            TextView button = days.findViewWithTag("phone.call.fajr.weekdays." + day);
+            PhoneUiCheck.check(
+                    button != null
+                            && button.getWidth() >= a.views.dp(48)
+                            && button.getHeight() >= a.views.dp(48),
+                    "Weekday touch target too small at " + size + ": " + day);
+            PhoneUiCheck.check(
+                    names[day + 1].contentEquals(button.getContentDescription()),
+                    "Weekday accessibility name missing at " + size);
+            View row = (View) button.getParent();
+            PhoneUiCheck.check(
+                    button.getLeft() >= 0
+                            && button.getRight() <= row.getWidth()
+                            && button.getTop() >= 0
+                            && button.getBottom() <= row.getHeight(),
+                    "Weekday target clipped by row at " + size);
+            PhoneUiCheck.check(
+                    button.getLayout() != null
+                            && button.getLayout().getHeight()
+                                    <= button.getHeight()
+                                            - button.getCompoundPaddingTop()
+                                            - button.getCompoundPaddingBottom(),
+                    "Weekday letter clipped at " + size);
         }
     }
 

@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "defaultCity": "cairo",
   "defaultFajrVoice": "chebae_fajr",
   "controls": [
@@ -25,7 +25,8 @@
     {"id":"quiet.enabled","section":"audio","kind":"toggle","label":"phone_quiet_enabled","default":"false","since":2},
     {"id":"quiet.start","section":"audio","kind":"number","editor":"time","label":"phone_quiet_start","minimum":0,"maximum":1439,"step":1,"default":"1320","since":2},
     {"id":"quiet.end","section":"audio","kind":"number","editor":"time","label":"phone_quiet_end","minimum":0,"maximum":1439,"step":1,"default":"420","since":2},
-    {"id":"quiet.mode","section":"audio","kind":"choice","label":"phone_quiet_mode","choices":["off","vibration","silent"],"default":"silent","since":2}
+    {"id":"quiet.mode","section":"audio","kind":"choice","label":"phone_quiet_mode","choices":["off","vibration","silent"],"default":"silent","since":2},
+    {"id":"reminders.length-percent","section":"audio","kind":"number","label":"phone_length","minimum":5,"maximum":100,"step":5,"default":"100","since":4}
   ],
   "perPrayer": [
     {"suffix":"mode","kind":"choice","label":"phone_mode","choices":["off","notification","adhan","vibration","silent"],"default":"adhan"},
@@ -37,6 +38,22 @@
     {"suffix":"default-audio","kind":"toggle","label":"phone_default_audio","default":"true","since":2},
     {"suffix":"volume","kind":"number","label":"phone_volume","minimum":0,"maximum":100,"step":5,"default":"70","since":2},
     {"suffix":"duration","kind":"number","label":"phone_duration","minimum":0,"maximum":600,"step":30,"default":"0","since":2},
-    {"suffix":"weekdays","kind":"number","editor":"weekdays","label":"phone_weekdays","minimum":0,"maximum":127,"step":1,"default":"127","since":2}
+    {"suffix":"weekdays","kind":"number","editor":"weekdays","label":"phone_weekdays","minimum":0,"maximum":127,"step":1,"default":"127","since":2},
+    {"suffix":"enabled","kind":"toggle","label":"phone_prayer_enabled","default":"true","since":4},
+    {"suffix":"length-percent","kind":"number","label":"phone_length","minimum":5,"maximum":100,"step":5,"default":"100","since":4},
+    {"suffix":"day-0-sound","kind":"choice","label":"phone_day_sound","choices":["inherit","adhan","notification","silent"],"default":"inherit","since":4},
+    {"suffix":"day-0-vibrate","kind":"toggle","label":"phone_day_vibrate","default":"false","since":4},
+    {"suffix":"day-1-sound","kind":"choice","label":"phone_day_sound","choices":["inherit","adhan","notification","silent"],"default":"inherit","since":4},
+    {"suffix":"day-1-vibrate","kind":"toggle","label":"phone_day_vibrate","default":"false","since":4},
+    {"suffix":"day-2-sound","kind":"choice","label":"phone_day_sound","choices":["inherit","adhan","notification","silent"],"default":"inherit","since":4},
+    {"suffix":"day-2-vibrate","kind":"toggle","label":"phone_day_vibrate","default":"false","since":4},
+    {"suffix":"day-3-sound","kind":"choice","label":"phone_day_sound","choices":["inherit","adhan","notification","silent"],"default":"inherit","since":4},
+    {"suffix":"day-3-vibrate","kind":"toggle","label":"phone_day_vibrate","default":"false","since":4},
+    {"suffix":"day-4-sound","kind":"choice","label":"phone_day_sound","choices":["inherit","adhan","notification","silent"],"default":"inherit","since":4},
+    {"suffix":"day-4-vibrate","kind":"toggle","label":"phone_day_vibrate","default":"false","since":4},
+    {"suffix":"day-5-sound","kind":"choice","label":"phone_day_sound","choices":["inherit","adhan","notification","silent"],"default":"inherit","since":4},
+    {"suffix":"day-5-vibrate","kind":"toggle","label":"phone_day_vibrate","default":"false","since":4},
+    {"suffix":"day-6-sound","kind":"choice","label":"phone_day_sound","choices":["inherit","adhan","notification","silent"],"default":"inherit","since":4},
+    {"suffix":"day-6-vibrate","kind":"toggle","label":"phone_day_vibrate","default":"false","since":4}
   ]
 }

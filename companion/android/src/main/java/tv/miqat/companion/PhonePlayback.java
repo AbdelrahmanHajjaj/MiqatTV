@@ -24,10 +24,10 @@ public final class PhonePlayback extends Service {
     private AudioFocusRequest focus;
     private MediaSession media;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean preview, started, paused, defaultAudio;
+    private boolean preview, started, paused, defaultAudio, endingPreview;
     private String eventId = "", voiceId = "";
     private android.graphics.Bitmap artwork;
-    private int generation, prayerIndex = -1;
+    private int generation, prayerIndex = -1, previewPercent = 100, clipStart;
     private double prayerTime;
     private long resumedAt, playedMs;
 
@@ -104,8 +104,12 @@ public final class PhonePlayback extends Service {
     }
 
     private long limit(PhoneStore settings) {
-        int duration = settings.audioDuration(defaultAudio ? -1 : prayerIndex);
-        return 1000L * (preview ? 12 : duration == 0 ? 600 : duration);
+        if (preview && !endingPreview) return Math.min(12000, player.getDuration());
+        int end = tv.miqat.companion.core.PhonePrayerRules.INSTANCE.cutoffMillis(
+                player.getDuration(),
+                endingPreview ? previewPercent : settings.audioPercent(defaultAudio ? -1 : prayerIndex),
+                settings.audioDuration(defaultAudio ? -1 : prayerIndex));
+        return Math.max(0, end - clipStart);
     }
 
     @Override
@@ -133,12 +137,17 @@ public final class PhonePlayback extends Service {
         release();
         active = this;
         preview = intent.getBooleanExtra("preview", false);
+        endingPreview = preview && intent.getBooleanExtra("ending-preview", false);
+        previewPercent = intent.getIntExtra("ending-percent", 100);
+        clipStart = 0;
         eventId = id == null ? "" : id;
         final int token = ++generation;
         prayerIndex = -1;
         defaultAudio = intent.getBooleanExtra("default-audio", false);
         prayerTime = intent.getDoubleExtra("prayerTime", System.currentTimeMillis());
         try {
+            if (endingPreview && (previewPercent < 5 || previewPercent > 100 || previewPercent % 5 != 0))
+                throw new IllegalArgumentException("Invalid preview length");
             PhoneAlarms.channels(this);
             PhoneStore settings = PhoneStore.read(this);
             if (!PhoneAlarms.channel(
@@ -425,19 +434,44 @@ public final class PhonePlayback extends Service {
             ready.setVolume(
                     latest.audioVolume(defaultAudio ? -1 : prayer) / 100f,
                     latest.audioVolume(defaultAudio ? -1 : prayer) / 100f);
+            if (endingPreview) {
+                int end = tv.miqat.companion.core.PhonePrayerRules.INSTANCE.cutoffMillis(
+                        ready.getDuration(), previewPercent, latest.audioDuration(defaultAudio ? -1 : prayer));
+                clipStart = Math.max(0, end - 5000);
+                ready.setOnSeekCompleteListener(seeked -> {
+                    if (player != seeked || active != this) return;
+                    seeked.setOnSeekCompleteListener(null);
+                    beginOutput(seeked, latest, prayer, attributes);
+                });
+                ready.seekTo(clipStart, MediaPlayer.SEEK_CLOSEST);
+            } else beginOutput(ready, latest, prayer, attributes);
+        } catch (Exception invalid) {
+            failed();
+        }
+    }
+
+    private void beginOutput(MediaPlayer ready, PhoneStore settings, int prayer, AudioAttributes attributes) {
+        try {
+            settings = PhoneStore.read(this);
+            if (!PhoneAlarms.notifications(this) || !preview
+                    && (!settings.enabled || !settings.locationReady || !allowed(settings, prayer))) {
+                stopSelf();
+                return;
+            }
             handler.removeCallbacksAndMessages(null);
             started = true;
             paused = false;
             playedMs = 0;
             resumedAt = SystemClock.elapsedRealtime();
             ready.start();
+            updateMediaState(ready.getCurrentPosition());
             PhoneStore.preferences(this).edit().remove("audio-error").apply();
-            if (!preview && latest.vibrate(prayer))
-                getSystemService(Vibrator.class)
-                        .vibrate(
-                                VibrationEffect.createWaveform(new long[] {0, 300, 200, 300}, -1),
-                                attributes);
-            armLimit(latest);
+            Vibrator vibrator = getSystemService(Vibrator.class);
+            if (!preview && vibrator != null && vibrator.hasVibrator()
+                    && settings.eventVibrate(new tv.miqat.core.ReminderEvent(
+                            eventId, "call", prayer, prayerTime, prayerTime)))
+                vibrator.vibrate(VibrationEffect.createWaveform(new long[] {0, 120, 100, 120}, -1), attributes);
+            armLimit(settings);
         } catch (Exception invalid) {
             failed();
         }
@@ -463,6 +497,7 @@ public final class PhonePlayback extends Service {
         voiceId = "";
         if (player != null) {
             player.setOnPreparedListener(null);
+            player.setOnSeekCompleteListener(null);
             player.setOnCompletionListener(null);
             player.setOnErrorListener(null);
             player.release();

@@ -64,6 +64,11 @@ final class WidgetHostCheck {
                                 && strip.getVisibility() == View.VISIBLE
                                 && strip.getChildCount() == 6;
                     });
+            for (int id : ids) {
+                WidgetOptions defaults = WidgetOptions.read(a, id);
+                PhoneUiCheck.check(defaults.hijri && !defaults.date,
+                        "New widgets must default to Hijri without Gregorian date");
+            }
             pickerPreviews(test, a, ids, capture);
             WidgetOptions legacy = WidgetOptions.from(a, "{\"background\":false}");
             WidgetOptions invalid = WidgetOptions.from(a, "{\"opacity\":999,\"shape\":\"unknown\",\"scene\":\"../private\"}");
@@ -107,6 +112,7 @@ final class WidgetHostCheck {
                                         && config.body.findViewById(R.id.widget_root).getAlpha() == 1f,
                                 "Opacity must affect only the widget background");
                         config.body.findViewWithTag("widget.widget_hijri").performClick();
+                        config.body.findViewWithTag("widget.widget_date").performClick();
                         config.body.findViewWithTag("widget.style.shape").performClick();
                         config.body.findViewWithTag("widget.shape.soft").performClick();
                         config.body.findViewWithTag("widget.style.appearance.background").performClick();
@@ -132,16 +138,23 @@ final class WidgetHostCheck {
             WidgetOptions saved = WidgetOptions.read(a, ids[0]);
             PhoneUiCheck.check(
                     saved.layout.equals("next")
-                            && saved.size == 120 && saved.opacity == 42 && saved.hijri
+                            && saved.size == 120 && saved.opacity == 42 && !saved.hijri && saved.date
                             && saved.shape.equals("soft") && saved.scene.equals("app")
                             && WidgetOptions.read(a, ids[1]).layout.equals("day")
                             && WidgetOptions.read(a, ids[1]).opacity == 100
-                            && !WidgetOptions.read(a, ids[1]).hijri,
+                            && WidgetOptions.read(a, ids[1]).hijri && !WidgetOptions.read(a, ids[1]).date,
                     "Widget instances did not retain independent configuration");
             String hijri = a.phoneUi.digits(PhoneTime.hijri(PhoneStore.read(a), System.currentTimeMillis(), a.ar));
             PhoneUiCheck.on(test, () -> {
-                PhoneUiCheck.check(((TextView) views[0].findViewById(R.id.widget_title)).getText().toString().contains(hijri),
-                        "Optional Hijri date is missing from the actual hosted widget");
+                PhoneUiCheck.check(((TextView) views[1].findViewById(R.id.widget_title)).getText().toString().contains(hijri),
+                        "Default Hijri date is missing from the actual hosted widget");
+                java.text.SimpleDateFormat date = new java.text.SimpleDateFormat(
+                        "EEE d MMM", new java.util.Locale(a.ar ? "ar" : "en"));
+                date.setTimeZone(original.zone());
+                String gregorian = a.phoneUi.digits(date.format(new java.util.Date()));
+                PhoneUiCheck.check(((TextView) views[0].findViewById(R.id.widget_title))
+                                .getText().toString().contains(gregorian),
+                        "Opting into Gregorian did not update the actual hosted widget");
                 ImageView background = views[0].findViewById(R.id.widget_backdrop);
                 android.graphics.Bitmap bitmap = ((android.graphics.drawable.BitmapDrawable) background.getDrawable()).getBitmap();
                 PhoneUiCheck.check(background.getImageAlpha() == 107

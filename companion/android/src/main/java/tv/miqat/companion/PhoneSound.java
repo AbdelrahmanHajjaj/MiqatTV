@@ -18,6 +18,167 @@ final class PhoneSound {
         ui = phoneUi;
     }
 
+    void length(String id) {
+        String base = id.substring(0, id.lastIndexOf('.') + 1);
+        boolean defaults = id.startsWith("reminders.");
+        int prayer = defaults ? 0 : Arrays.asList(PhoneStore.PRAYERS).indexOf(id.split("\\.")[1]);
+        boolean inherited = !defaults && ui.settings.value(base + "default-audio").equals("true");
+        int percent =
+                inherited ? ui.settings.number("reminders.length-percent") : ui.settings.number(id);
+        LinearLayout panel = a.views.card(a.body);
+        panel.setTag("phone." + id);
+        TextView label =
+                a.views.text(a.t("phone_length") + " · " + ui.digits(percent + "%"), 14, a.ink);
+        panel.addView(label);
+        LinearLayout track = a.views.horizontal(panel);
+        SeekBar slider =
+                new SeekBar(a) {
+                    @Override
+                    public boolean performAccessibilityAction(int action, android.os.Bundle args) {
+                        if (!isEnabled()) return false;
+                        if (action
+                                == android.view.accessibility.AccessibilityNodeInfo
+                                        .AccessibilityAction.ACTION_SET_PROGRESS
+                                        .getId()) {
+                            String key =
+                                    android.view.accessibility.AccessibilityNodeInfo
+                                            .ACTION_ARGUMENT_PROGRESS_VALUE;
+                            if (args == null || !args.containsKey(key)) return false;
+                            float requested = args.getFloat(key);
+                            if (!Float.isFinite(requested)) return false;
+                            PhonePlayback.stopPreview(a);
+                            ui.save(
+                                    id,
+                                    Integer.toString(
+                                            Math.max(
+                                                    5,
+                                                    Math.min(
+                                                            100, Math.round(requested / 5f) * 5))));
+                            return true;
+                        }
+                        boolean handled = super.performAccessibilityAction(action, args);
+                        if (handled
+                                && (action
+                                                == android.view.accessibility.AccessibilityNodeInfo
+                                                        .ACTION_SCROLL_FORWARD
+                                        || action
+                                                == android.view.accessibility.AccessibilityNodeInfo
+                                                        .ACTION_SCROLL_BACKWARD)) {
+                            PhonePlayback.stopPreview(a);
+                            ui.save(
+                                    id,
+                                    Integer.toString(
+                                            Math.max(5, Math.round(getProgress() / 5f) * 5)));
+                        }
+                        return handled;
+                    }
+                };
+        slider.setMin(5);
+        slider.setMax(100);
+        slider.setKeyProgressIncrement(5);
+        slider.setProgress(percent);
+        slider.setProgressTintList(android.content.res.ColorStateList.valueOf(a.accent));
+        slider.setThumbTintList(android.content.res.ColorStateList.valueOf(a.accent));
+        slider.setContentDescription(a.t("phone_length"));
+        slider.setTag("phone." + id + ".edit");
+        track.addView(slider, new LinearLayout.LayoutParams(0, a.views.dp(48), 1));
+        slider.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+                    public void onProgressChanged(SeekBar bar, int progress, boolean user) {
+                        int value = Math.max(5, Math.round(progress / 5f) * 5);
+                        label.setText(a.t("phone_length") + " · " + ui.digits(value + "%"));
+                        if (user) PhonePlayback.stopPreview(a);
+                    }
+
+                    public void onStartTrackingTouch(SeekBar bar) {
+                        PhonePlayback.stopPreview(a);
+                    }
+
+                    public void onStopTrackingTouch(SeekBar bar) {
+                        ui.save(
+                                id,
+                                Integer.toString(
+                                        Math.max(5, Math.round(bar.getProgress() / 5f) * 5)));
+                    }
+                });
+        slider.setOnKeyListener((v, key, event) -> {
+            if (event.getAction() == android.view.KeyEvent.ACTION_UP
+                    && (key == android.view.KeyEvent.KEYCODE_DPAD_LEFT
+                            || key == android.view.KeyEvent.KEYCODE_DPAD_RIGHT)) {
+                ui.save(
+                        id,
+                        Integer.toString(Math.max(5, Math.round(slider.getProgress() / 5f) * 5)));
+                return true;
+            }
+            return false;
+        });
+        a.views
+                .iconButton(
+                        track,
+                        "play",
+                        a.t("phone_preview_ending"),
+                        () -> {
+                            try {
+                                if (PhonePlayback.scheduled()) {
+                                    a.notice("phone_stop_first");
+                                    return;
+                                }
+                                if (!PhoneAlarms.notifications(a)) {
+                                    ui.open("permissions");
+                                    return;
+                                }
+                                String voice =
+                                        defaults
+                                                ? ui.settings.value("reminders.voice")
+                                                : ui.settings.voice(prayer);
+                                a.startForegroundService(
+                                        PhonePlayback.intent(
+                                                        a,
+                                                        prayer,
+                                                        voice,
+                                                        true,
+                                                        "preview:" + System.nanoTime())
+                                                .putExtra("default-audio", defaults)
+                                                .putExtra(
+                                                        "default-voice",
+                                                        defaults
+                                                                || ui.settings
+                                                                        .value(base + "voice")
+                                                                        .equals("inherit"))
+                                                .putExtra("ending-preview", true)
+                                                .putExtra(
+                                                        "ending-percent",
+                                                        Math.max(
+                                                                5,
+                                                                Math.round(
+                                                                                slider.getProgress()
+                                                                                        / 5f)
+                                                                        * 5)));
+                            } catch (Exception failed) {
+                                a.notice("phone_audio_failed");
+                            }
+                        })
+                .setTag("phone.length.preview");
+        a.views
+                .iconButton(track, "close", a.t("phone_stop"), () -> PhonePlayback.stopPreview(a))
+                .setTag("phone.length.stop");
+        panel.addView(a.views.text(a.t("phone_length_hint"), 12, a.muted));
+        int oldLimit = ui.settings.audioDuration(defaults ? -1 : prayer);
+        if (oldLimit > 0)
+            panel.addView(
+                    a.views.text(
+                            String.format(
+                                    ui.locale(),
+                                    a.t("phone_legacy_duration"),
+                                    ui.digits(Integer.toString(oldLimit))),
+                            12,
+                            a.accent));
+        if (inherited) {
+            slider.setEnabled(false);
+            slider.setAlpha(.4f);
+        }
+    }
+
     void choose(String id, List<Choices.Option> options) throws Exception {
         if (ui.choiceDialog != null) ui.choiceDialog.dismiss();
         String[] candidate = {ui.settings.value(id)};

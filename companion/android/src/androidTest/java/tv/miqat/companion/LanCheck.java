@@ -402,12 +402,7 @@ final class LanCheck {
                             && !adapter.needsRefresh
                             && writes[0] == written);
             check(phoneRequest.reconnect() != null && writes[0] == written);
-            MainActivity activity =
-                    (MainActivity)
-                            test.startActivitySync(
-                                    new android.content.Intent(context, MainActivity.class)
-                                            .addFlags(
-                                                    android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+            MainActivity activity = LiveUiCheck.launch(test);
             Throwable[] uiFailure = {null};
             delayRemote[0] = true;
             try {

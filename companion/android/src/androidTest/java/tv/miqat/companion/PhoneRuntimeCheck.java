@@ -24,13 +24,22 @@ final class PhoneRuntimeCheck {
             Map<String, String> changes = new LinkedHashMap<>();
             changes.put("reminders.enabled", "true");
             changes.put("prayer.location-ready", "true");
+            changes.put("quiet.enabled", "false");
+            changes.put("call.fajr.enabled", "true");
+            changes.put("call.fajr.mode", "adhan");
+            changes.put("call.fajr.weekdays", "127");
             original.changed(changes).save(c);
-            CompanionCheck.check(
-                    PhoneAlarms.rebuild(c).equals("phone_permission_missing"),
-                    "Permission denial must be visible");
-            CompanionCheck.check(
-                    !PhoneStore.preferences(c).contains("next-event") && !PhonePlayback.playing(),
-                    "Denied alerts scheduled or played");
+            String status = PhoneAlarms.rebuild(c);
+            if (!PhoneAlarms.notifications(c)) {
+                CompanionCheck.check(status.equals("phone_permission_missing"), "Notification denial must be visible");
+                CompanionCheck.check(!PhoneStore.preferences(c).contains("next-event"), "Denied notifications scheduled alerts");
+            } else {
+                CompanionCheck.check(status.equals("phone_alerts_approximate"), "Inexact fallback must be disclosed");
+                String record = PhoneStore.preferences(c).getString("next-event", "");
+                CompanionCheck.check(!record.isEmpty() && new org.json.JSONObject(record).optBoolean("approximate"),
+                        "Exact access denial did not register an approximate alarm");
+            }
+            CompanionCheck.check(!PhonePlayback.playing(), "Permission inspection started playback");
             android.content.pm.ActivityInfo receiver =
                     c.getPackageManager()
                             .getReceiverInfo(new ComponentName(c, PrayerAlarm.class), 0);
@@ -72,6 +81,7 @@ final class PhoneRuntimeCheck {
             changes.put("reminders.full-screen", "false");
             changes.put("reminders.volume-keys", "false");
             changes.put("call.fajr.mode", "adhan");
+            changes.put("call.fajr.enabled", "true");
             changes.put("call.fajr.weekdays", "127");
             changes.put("quiet.enabled", "false");
             changes.put("prayer.latitude", "30.0444");
@@ -262,6 +272,30 @@ final class PhoneRuntimeCheck {
                     SystemClock.elapsedRealtime() - previewStarted >= 10000
                             && !preferences.contains("audio-error"),
                     "Preview failed instead of completing its bounded playback");
+            test.runOnMainSync(() -> c.startForegroundService(
+                    PhonePlayback.intent(c, 0, "almalki", true, "ending-preview-fixture")
+                            .putExtra("ending-preview", true).putExtra("ending-percent", 50)));
+            await(test, PhonePlayback::outputStarted, 10000, "Selected recording ending did not start");
+            Notification endingNotice = Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
+                    .map(n -> n.getNotification())
+                    .filter(n -> (n.flags & Notification.FLAG_FOREGROUND_SERVICE) != 0).findFirst()
+                    .orElseThrow(() -> new AssertionError("Ending preview notification missing"));
+            android.media.session.MediaSession.Token endingToken = endingNotice.extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
+            android.media.session.MediaController endingController = new android.media.session.MediaController(c, endingToken);
+            long endingPosition = endingController.getPlaybackState().getPosition();
+            CompanionCheck.check(endingPosition >= 24000 && endingPosition <= 27000,
+                    "Ending preview ignored migrated thirty-second cap: " + endingPosition);
+            long endingStarted = SystemClock.elapsedRealtime();
+            await(test, () -> !PhonePlayback.playing(), 8000, "Ending preview exceeded five seconds");
+            CompanionCheck.check(SystemClock.elapsedRealtime() - endingStarted >= 3500
+                    && !preferences.contains("audio-error"), "Ending preview failed instead of reaching selected cutoff");
+            home[0] = LiveUiCheck.launch(test);
+            test.runOnMainSync(() -> c.startForegroundService(
+                    PhonePlayback.intent(c, 0, "almalki", true, "ending-navigation-fixture")
+                            .putExtra("ending-preview", true).putExtra("ending-percent", 50)));
+            await(test, PhonePlayback::outputStarted, 10000, "Navigation preview did not start");
+            PhoneUiCheck.on(test, () -> home[0].phoneUi.open("audio"));
+            await(test, () -> !PhonePlayback.playing(), 3000, "Leaving the editor retained its ending preview");
             audition(test, c);
             CompanionCheck.check(
                     PhoneStore.read(c).value("audio.custom.fajr").isEmpty(),
@@ -430,7 +464,7 @@ final class PhoneRuntimeCheck {
             PhoneUiCheck.on(
                     test,
                     () -> {
-                        a.phoneUi.open("audio");
+                        a.phoneUi.open("default-audio");
                         a.body.findViewWithTag("phone.reminders.voice.edit").performClick();
                         android.widget.ListView choices =
                                 a.phoneUi

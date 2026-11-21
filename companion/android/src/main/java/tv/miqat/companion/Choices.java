@@ -1,6 +1,5 @@
 package tv.miqat.companion;
 
-import android.graphics.Color;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
@@ -42,39 +41,22 @@ final class Choices {
         List<String> visible = new ArrayList<>(spec.getOptions());
         visible.removeIf(option -> Catalog.retiredVoice(id, option));
         if (editor.equals("segments")) {
-            HorizontalScrollView viewport = new HorizontalScrollView(a);
-            viewport.setHorizontalScrollBarEnabled(false);
-            RadioGroup track = new RadioGroup(a);
-            track.setOrientation(LinearLayout.HORIZONTAL);
-            track.setPadding(a.views.dp(4), a.views.dp(4), a.views.dp(4), a.views.dp(4));
-            track.setBackground(a.views.background(a.ground, 24));
-            track.setTag(id + ".segments");
+            LinearLayout options = a.views.column();
+            options.setTag(id + ".edit");
+            row.addView(options);
+            List<Option> choices = new ArrayList<>();
+            for (String option : visible)
+                choices.add(new Option(option, a.catalog.value(a.profile(), id, option, a.ar)));
+            a.views.segmentedChoices(options, id + ".segments", choices, value, option -> {
+                if (!option.equals(value)) a.settingsUi.selectChoice(id, option);
+            });
             for (String option : visible) {
-                RadioButton chip = new RadioButton(a);
-                chip.setButtonDrawable(null);
-                chip.setMinHeight(a.views.dp(48));
-                chip.setMinWidth(a.views.dp(72));
-                chip.setPadding(a.views.dp(14), 0, a.views.dp(14), 0);
-                chip.setTextSize(13);
-                chip.setTypeface(a.regular);
-                chip.setGravity(Gravity.CENTER);
-                chip.setText(a.catalog.value(a.profile(), id, option, a.ar));
-                chip.setChecked(option.equals(value));
-                chip.setTextColor(option.equals(value) ? a.ground : a.muted);
-                chip.setBackground(
-                        a.views.background(option.equals(value) ? a.ink : Color.TRANSPARENT, 22));
-                chip.setEnabled(a.settingsUi.editable());
-                chip.setContentDescription(a.title(control) + ", " + chip.getText());
+                View chip = options.findViewWithTag(id + ".segments." + option);
                 chip.setTag(id + ".option." + option);
-                track.addView(chip, new RadioGroup.LayoutParams(-2, -2));
-                chip.setOnClickListener(v -> {
-                    if (!option.equals(value)) a.settingsUi.selectChoice(id, option);
-                });
+                chip.setContentDescription(a.title(control) + ", "
+                        + a.catalog.value(a.profile(), id, option, a.ar));
             }
-            viewport.addView(track);
-            row.addView(viewport);
-            viewport.setTag(id + ".edit");
-            viewport.setEnabled(a.settingsUi.editable());
+            if (!a.settingsUi.editable()) a.views.disableContent(options);
         } else if (editor.equals("carousel")) {
             int index = visible.indexOf(value);
             LinearLayout track = a.views.horizontal(row);

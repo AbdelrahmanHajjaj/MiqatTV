@@ -64,7 +64,7 @@ final class PhoneStore {
             if (!(schema instanceof Integer))
                 throw new IOException("Invalid phone settings version type");
             int version = (Integer) schema;
-            if (version < 1 || version > 3)
+            if (version < 1 || version > 4)
                 throw new IOException("Unsupported phone settings version");
             JSONObject fields = record.getJSONObject("values");
             Map<String, String> values = new LinkedHashMap<>();
@@ -75,7 +75,7 @@ final class PhoneStore {
                 if (!(value instanceof String)) throw new IOException("Invalid phone setting type");
                 values.put(key, (String) value);
             }
-            if (version < 3) {
+            if (version < 4) {
                 if (!values.keySet().equals(data.idsAt(version)))
                     throw new IOException("Invalid older phone fields");
                 Map<String, String> merged = new LinkedHashMap<>(data.defaults);
@@ -98,7 +98,7 @@ final class PhoneStore {
 
     void save(Context context) throws Exception {
         String stored =
-                new JSONObject().put("version", 3).put("values", new JSONObject(values)).toString();
+                new JSONObject().put("version", 4).put("values", new JSONObject(values)).toString();
         synchronized (LOCK) {
             if (!preferences(context).edit().putString("settings", stored).commit())
                 throw new IOException("Phone settings could not be saved");
@@ -126,7 +126,7 @@ final class PhoneStore {
     }
 
     boolean vibrate(int prayer) {
-        return value("call." + PRAYERS[prayer] + ".vibrate").equals("true");
+        return modes[prayer] == 3 || value("call." + PRAYERS[prayer] + ".vibrate").equals("true");
     }
 
     boolean anyAlerts() {
@@ -134,7 +134,7 @@ final class PhoneStore {
                 && value("quiet.mode").equals("off")
                 && number("quiet.start") == number("quiet.end")) return false;
         for (int i = 0; i < 6; i++)
-            if (i != 1 && modes[i] > 0 && number("call." + PRAYERS[i] + ".weekdays") > 0)
+            if (i != 1 && prayerEnabled(i) && number("call." + PRAYERS[i] + ".weekdays") > 0)
                 return true;
         return false;
     }
@@ -156,14 +156,43 @@ final class PhoneStore {
         return mode.equals("off") ? 0 : mode.equals("vibration") ? 3 : 4;
     }
 
-    int eventMode(tv.miqat.core.ReminderEvent event) {
+    boolean prayerEnabled(int prayer) {
+        return prayer != 1 && modes[prayer] > 0
+                && value("call." + PRAYERS[prayer] + ".enabled").equals("true");
+    }
+
+    int audioPercent(int prayer) {
+        return prayer < 0 || value("call." + PRAYERS[prayer] + ".default-audio").equals("true")
+                ? number("reminders.length-percent")
+                : number("call." + PRAYERS[prayer] + ".length-percent");
+    }
+
+    int effectiveMode(int prayer, int weekday) {
+        String override = value("call." + PRAYERS[prayer] + ".day-" + weekday + "-sound");
+        return PhonePrayerRules.INSTANCE.effectiveMode(modes[prayer], prayerEnabled(prayer),
+                override.equals("inherit") ? -1
+                        : Arrays.asList("off", "notification", "adhan", "vibration", "silent").indexOf(override));
+    }
+
+    boolean vibrateOnDay(int prayer, int weekday) {
+        String key = "call." + PRAYERS[prayer] + ".day-" + weekday;
+        return value(key + "-sound").equals("inherit")
+                ? vibrate(prayer) : value(key + "-vibrate").equals("true");
+    }
+
+    private Calendar prayerDate(tv.miqat.core.ReminderEvent event) {
         Calendar date = new GregorianCalendar(zone());
         date.setTimeInMillis((long) event.getPrayerTime());
+        return date;
+    }
+
+    int eventMode(tv.miqat.core.ReminderEvent event) {
+        Calendar date = prayerDate(event);
         int weekday = date.get(Calendar.DAY_OF_WEEK) - 1;
         date.setTimeInMillis((long) event.getTime());
         int minute = date.get(Calendar.HOUR_OF_DAY) * 60 + date.get(Calendar.MINUTE);
         return tv.miqat.core.ReminderRules.INSTANCE.alertMode(
-                modes[event.getPrayer()],
+                effectiveMode(event.getPrayer(), weekday),
                 weekday,
                 number("call." + PRAYERS[event.getPrayer()] + ".weekdays"),
                 minute,
@@ -171,6 +200,20 @@ final class PhoneStore {
                 number("quiet.start"),
                 number("quiet.end"),
                 quietMode());
+    }
+
+    boolean eventVibrate(tv.miqat.core.ReminderEvent event) {
+        int mode = eventMode(event);
+        if (mode == 0) return false;
+        Calendar date = prayerDate(event);
+        int weekday = date.get(Calendar.DAY_OF_WEEK) - 1;
+        date.setTimeInMillis((long) event.getTime());
+        int minute = date.get(Calendar.HOUR_OF_DAY) * 60 + date.get(Calendar.MINUTE);
+        if (value("quiet.enabled").equals("true")
+                && tv.miqat.core.ReminderRules.INSTANCE.alertMode(
+                        2, weekday, 127, minute, true, number("quiet.start"), number("quiet.end"), 0) == 0)
+            return mode == 3;
+        return vibrateOnDay(event.getPrayer(), weekday);
     }
 
     tv.miqat.core.ReminderEvent nextEvent(double[][] days, long now, String[] handled) {

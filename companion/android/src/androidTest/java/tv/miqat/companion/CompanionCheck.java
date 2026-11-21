@@ -20,6 +20,7 @@ import java.util.*;
 /** Run only on an explicitly selected owned phone emulator; no TV/device integration. */
 public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
+    boolean mapNetwork;
     boolean journey,
             customCheck,
             releaseCheck,
@@ -41,6 +42,7 @@ public final class CompanionCheck extends Instrumentation {
     public void onCreate(Bundle arguments) {
         super.onCreate(arguments);
         expectedOrientation = arguments == null ? "" : arguments.getString("orientation", "");
+        mapNetwork = arguments != null && "true".equals(arguments.getString("map-network", "false"));
         captures = arguments != null && "true".equals(arguments.getString("capture", "false"));
         String suite = arguments == null ? "" : arguments.getString("suite", "");
         journey = suite.equals("phone-journey");
@@ -126,7 +128,7 @@ public final class CompanionCheck extends Instrumentation {
                 PhoneRuntimeCheck.denied(this);
                 result.putString(
                         "stream",
-                        "PASS: denied prayer permissions keep alarms and playback off; components"
+                        "PASS: denied prayer permissions respect notification denial and optional timing fallback;"
                                 + " private and direct-boot aware\n");
                 finish(-1, result);
                 return;
@@ -203,10 +205,7 @@ public final class CompanionCheck extends Instrumentation {
                         .edit()
                         .putString("language", lang)
                         .commit();
-                Intent intent =
-                        new Intent(getTargetContext(), MainActivity.class)
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                MainActivity activity = (MainActivity) startActivitySync(intent);
+                MainActivity activity = LiveUiCheck.launch(this);
                 Throwable[] error = {null};
                 runOnMainSync(() -> {
                     try {
@@ -364,6 +363,22 @@ public final class CompanionCheck extends Instrumentation {
             a.page = "overview";
             a.render();
             int remoteWrites = a.tv().getWriteCount();
+            for (String[] pair : new String[][] {
+                {"radio.play", "radio.stop"}, {"tests.adhan-short", "tests.cancel"}
+            }) {
+                View play = a.body.findViewWithTag(pair[0]);
+                View stop = a.body.findViewWithTag(pair[1]);
+                check(play.getParent() == stop.getParent()
+                                && ((android.widget.LinearLayout) play.getParent()).getOrientation()
+                                        == android.widget.LinearLayout.HORIZONTAL,
+                        "Media Play/Stop controls must stay beside each other");
+                android.widget.LinearLayout.LayoutParams left =
+                        (android.widget.LinearLayout.LayoutParams) play.getLayoutParams();
+                android.widget.LinearLayout.LayoutParams right =
+                        (android.widget.LinearLayout.LayoutParams) stop.getLayoutParams();
+                check(left.getMarginEnd() + right.getMarginStart() >= a.views.dp(10),
+                        "Media controls touch");
+            }
             for (String id :
                     new String[] {
                         "device.home",
@@ -599,6 +614,15 @@ public final class CompanionCheck extends Instrumentation {
                     a.getWindow().getDecorView().findViewWithTag("prayer.asr.segments")
                             instanceof android.widget.RadioGroup,
                     "Short choices are not segmented");
+            for (String prayer : new String[] {"fajr", "dhuhr", "asr", "maghrib", "isha"}) {
+                a.section = "prayer-day";
+                a.render();
+                android.widget.LinearLayout row = a.body.findViewWithTag("prayer.adhan-" + prayer);
+                android.widget.TextView label = (android.widget.TextView)
+                        ((android.widget.LinearLayout) row.getChildAt(0)).getChildAt(0);
+                check(label.getCompoundDrawablesRelative()[0] != null,
+                        "Prayer glyph missing from TV controls: " + prayer);
+            }
             a.section = "reminders";
             a.render();
             android.widget.AutoCompleteTextView choices =

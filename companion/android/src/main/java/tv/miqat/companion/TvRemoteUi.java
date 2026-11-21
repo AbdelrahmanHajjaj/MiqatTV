@@ -290,9 +290,6 @@ final class TvRemoteUi {
                             state.optString("input"),
                             () -> sendCommand("device.exit-input", ""))
                     .setEnabled(a.online() && (a.real() == null || !a.real().remoteUncertain));
-        JSONObject media = state.optJSONObject("media");
-        String kind = media == null ? "" : media.optString("kind"),
-                status = media == null ? "idle" : media.optString("state");
         for (String section : new String[] {"radio", "adhan"}) {
             LinearLayout card = a.views.card(a.body);
             card.setPadding(a.views.dp(18), a.views.dp(10), a.views.dp(18), a.views.dp(10));
@@ -310,32 +307,30 @@ final class TvRemoteUi {
                             a.t(section.equals("radio") ? "radio_title" : "adhan_preview"),
                             16,
                             a.ink));
-            labels.addView(
-                    a.views.text(
-                            a.t(
-                                    !kind.equals(section)
-                                            ? "idle"
-                                            : status.equals("playing")
-                                                    ? "playing"
-                                                    : status.equals("loading")
-                                                            ? "loading"
-                                                            : "idle"),
-                            12,
-                            a.muted));
-            commandButton(
-                    row,
+            LinearLayout controls = a.views.horizontal(row);
+            controls.setLayoutParams(new LinearLayout.LayoutParams(-2, -2));
+            Button play = commandButton(
+                    controls,
                     section.equals("radio") ? "radio.play" : "tests.adhan-short",
                     "play",
                     a.t("play")
                             + " · "
                             + a.t(section.equals("radio") ? "radio_title" : "adhan_preview"));
-            commandButton(
-                    row,
+            Button stop = commandButton(
+                    controls,
                     section.equals("radio") ? "radio.stop" : "tests.cancel",
                     "stop",
                     a.t("stop")
                             + " · "
                             + a.t(section.equals("radio") ? "radio_title" : "adhan_preview"));
+            for (Button button : new Button[] {play, stop}) {
+                LinearLayout.LayoutParams spacing = (LinearLayout.LayoutParams) button.getLayoutParams();
+                spacing.setMarginStart(a.views.dp(5));
+                spacing.setMarginEnd(a.views.dp(5));
+                button.setBackground(new RippleDrawable(
+                        ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000),
+                        a.views.background(a.ground, 24), null));
+            }
         }
     }
 

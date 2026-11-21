@@ -3,7 +3,6 @@ package tv.miqat.companion;
 import android.app.Instrumentation;
 import android.content.*;
 import android.view.*;
-import android.view.accessibility.AccessibilityEvent;
 import android.widget.*;
 
 import java.util.*;
@@ -24,86 +23,84 @@ final class PhoneJourneyCheck {
                         .edit()
                         .putString("language", lang)
                         .commit();
+                exploreFirst(test);
+                check(prefs.edit().clear().commit(), "Could not reset fresh-use fixture after Explore first");
+                MainActivity welcome = LiveUiCheck.launch(test);
+                current[0] = welcome;
+                PhoneUiCheck.on(test, () -> {
+                    check(welcome.page.equals("onboarding") && welcome.onboarding.step() == 0,
+                            "Fresh use must begin with the welcome");
+                    check(welcome.body.findViewWithTag("phone.location.detect") == null
+                                    && welcome.body.findViewWithTag("phone.reminders.enabled.edit") == null,
+                            "Welcome must introduce Miqat before location or alert controls");
+                });
+                PhoneUiCheck.capture(test, welcome, lang + "-journey-welcome", captures);
+                PhoneUiCheck.on(test, welcome::finish);
+                LiveUiCheck.untilUi(test, welcome::isDestroyed);
                 MainActivity a = LiveUiCheck.launch(test);
                 current[0] = a;
+                PhoneUiCheck.on(test, () -> {
+                    check(a.page.equals("onboarding") && a.onboarding.step() == 0,
+                            "Unfinished welcome did not resume");
+                    a.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick();
+                    check(a.onboarding.step() == 1 && !a.phoneUi.settings.locationReady,
+                            "Get started must open unconfirmed location setup");
+                    check(a.body.findViewWithTag("phone.location.detect") != null
+                                    && a.body.findViewWithTag("phone.reminders.enabled.edit") == null,
+                            "Location needs compact detection without an alert switch");
+                    check(((Button) a.getWindow().getDecorView().findViewWithTag("onboarding.next"))
+                                    .getText().toString().equals(a.t("phone_confirm_location")),
+                            "Location confirmation must not be replaced with permission instructions");
+                });
                 PhoneUiCheck.capture(test, a, lang + "-journey-location", captures);
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            check(
-                                    a.page.equals("onboarding")
-                                            && !a.phoneUi.settings.locationReady,
-                                    "Fresh setup must require location confirmation");
-                            check(
-                                    a.body.findViewWithTag("phone.reminders.enabled.edit") != null
-                                            && a.body.findViewWithTag("phone.location.detect")
-                                                    != null,
-                                    "Location and alerts must share the first page");
-                            a.body.findViewWithTag("phone.reminders.enabled.edit").performClick();
-                            check(
-                                    !a.phoneUi.settings.locationReady
-                                            && !a.phoneUi.settings.enabled,
-                                    "First-use draft must not enable alerts before location"
-                                            + " confirmation");
-                            a.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("onboarding.next")
-                                    .performClick();
-                            if (a.body.findViewWithTag("phone.appearance.preview") != null)
-                                a.back();
-                            check(
-                                    a.phoneUi.settings.locationReady && a.phoneUi.settings.enabled,
-                                    "Bundled choices were not saved");
-                        });
-                PhoneUiCheck.capture(test, a, lang + "-journey-alerts", captures);
                 PhoneUiCheck.on(test, a::finish);
                 LiveUiCheck.untilUi(test, a::isDestroyed);
+                MainActivity location = LiveUiCheck.launch(test);
+                current[0] = location;
+                PhoneUiCheck.on(test, () -> {
+                    check(location.page.equals("onboarding") && location.onboarding.step() == 1
+                                    && !location.phoneUi.settings.locationReady,
+                            "Location setup progress lost after reopening");
+                    location.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick();
+                    check(location.onboarding.step() == 2 && location.phoneUi.settings.locationReady,
+                            "Confirm location must save location and continue to style");
+                });
+                resolveNotificationRequest(test, location);
+                PhoneUiCheck.on(test, () -> {
+                    check(location.phoneUi.settings.enabled == PhoneAlarms.notifications(location),
+                            "Onboarding alert preference must follow the notification decision");
+                    check(prefs.getBoolean("onboarding-notifications-asked", false),
+                            "Notification decision was not retained");
+                    location.back();
+                    check(location.onboarding.step() == 1, "Style Back must return to location");
+                    location.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick();
+                    check(location.onboarding.step() == 2
+                                    && !prefs.getBoolean("onboarding-notifications-pending", false),
+                            "Confirming location again repeated the notification request");
+                    location.phoneUi.save("reminders.enabled", "false");
+                    location.onboarding.notificationResult();
+                    check(!location.phoneUi.settings.enabled,
+                            "A duplicate notification callback re-enabled alerts");
+                });
+                PhoneUiCheck.on(test, location::finish);
+                LiveUiCheck.untilUi(test, location::isDestroyed);
                 MainActivity resumed = LiveUiCheck.launch(test);
                 current[0] = resumed;
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            check(
-                                    resumed.page.equals("onboarding")
-                                            && resumed.phoneUi.settings.locationReady
-                                            && resumed.phoneUi.settings.enabled,
-                                    "First-use progress lost after reopening");
-                            android.widget.Button next =
-                                    resumed.getWindow()
-                                            .getDecorView()
-                                            .findViewWithTag("onboarding.next");
-                            String required =
-                                    !PhoneAlarms.notifications(resumed)
-                                            ? "phone_permission_notifications"
-                                            : !PhoneAlarms.exact(resumed)
-                                                    ? "phone_permission_exact"
-                                                    : "setup_next";
-                            check(
-                                    next.getText().toString().equals(resumed.t(required)),
-                                    "Continue must request only missing access");
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("onboarding.skip")
-                                    .performClick();
-                            check(
-                                    resumed.body.findViewWithTag("phone.appearance.preview") != null
-                                            && resumed.body.findViewWithTag(
-                                                            "appearance.tab.appearance.theme")
-                                                    != null
-                                            && resumed.body.findViewWithTag(
-                                                            "appearance.tab.appearance.background")
-                                                    != null,
-                                    "Second page needs one preview and both direct visual choices");
-                            check(
-                                    resumed.getWindow()
-                                                    .getDecorView()
-                                                    .findViewWithTag("onboarding.skip")
-                                            == null,
-                                    "Finish needs no duplicate Skip");
-                            resumed.body
-                                    .findViewWithTag("appearance.tab.appearance.theme")
-                                    .performClick();
-                        });
+                PhoneUiCheck.on(test, () -> {
+                    check(resumed.page.equals("onboarding") && resumed.onboarding.step() == 2
+                                    && resumed.phoneUi.settings.locationReady,
+                            "Style setup progress lost after reopening");
+                    check(resumed.body.findViewWithTag("phone.appearance.preview") != null
+                                    && resumed.body.findViewWithTag("appearance.tab.appearance.theme") != null
+                                    && resumed.body.findViewWithTag("appearance.tab.appearance.background") != null,
+                            "Style needs one live preview and direct visual choices");
+                    check(resumed.getWindow().getDecorView().findViewWithTag("onboarding.skip") == null,
+                            "Finish needs no duplicate Skip");
+                    check(((Button) resumed.getWindow().getDecorView().findViewWithTag("onboarding.next"))
+                                    .getText().toString().equals(resumed.t("setup_finish")),
+                            "Setup must finish without alarm access instructions");
+                    resumed.body.findViewWithTag("appearance.tab.appearance.theme").performClick();
+                });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-personalization", captures);
                 String before = PhoneStore.read(context).value("appearance.theme");
                 int frostAccent =
@@ -172,6 +169,21 @@ final class PhoneJourneyCheck {
                             check(
                                     resumed.body.findViewWithTag("onboarding.resume") == null,
                                     "Repeated setup restored a completed Home prompt");
+                            resumed.phoneUi.save("reminders.enabled", "false");
+                            check(prefs.edit().putBoolean("onboarding-complete", false)
+                                            .remove("onboarding-enable-with-permission")
+                                            .remove("onboarding-notifications-asked")
+                                            .remove("onboarding-notifications-pending").commit(),
+                                    "Could not prepare an existing opted-out setup fixture");
+                            resumed.onboarding.open();
+                            resumed.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick();
+                            resumed.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick();
+                            check(resumed.onboarding.step() == 2 && !resumed.phoneUi.settings.enabled
+                                            && !prefs.getBoolean("onboarding-notifications-pending", false),
+                                    "Incomplete setup erased an existing notification opt-out");
+                            resumed.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick();
+                            check(resumed.page.equals("prayers") && !resumed.onboarding.needed(),
+                                    "Existing opted-out user could not finish setup");
                             resumed.phoneUi.open("appearance");
                             resumed.body
                                     .findViewWithTag("appearance.tab.appearance.theme")
@@ -276,7 +288,7 @@ final class PhoneJourneyCheck {
                             resumed.body.findViewWithTag("pair.open").performClick();
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-platforms", captures);
-                comingSoon(test, resumed);
+                supportedPlatforms(test, resumed);
                 PhoneUiCheck.on(
                         test,
                         () -> {
@@ -385,70 +397,106 @@ final class PhoneJourneyCheck {
         }
     }
 
-    private static void comingSoon(Instrumentation test, MainActivity a) throws Exception {
-        List<String> windows = new ArrayList<>();
-        AccessibilityEvent dialog;
+    private static void exploreFirst(Instrumentation test) throws Exception {
+        MainActivity a = LiveUiCheck.launch(test);
+        SharedPreferences prefs = PhoneStore.preferences(a);
         try {
-            dialog =
-                    test.getUiAutomation()
-                            .executeAndWaitForEvent(
-                                    () ->
-                                            PhoneUiCheck.on(
-                                                    test,
-                                                    () -> {
-                                                        check(
-                                                                a.page.equals("tv-setup"),
-                                                                "Pair and setup must start with the"
-                                                                        + " same platform choice");
-                                                        a.body.findViewWithTag(
-                                                                        "setup.platform.roku")
-                                                                .performClick();
-                                                        check(
-                                                                a.page.equals("tv-setup")
-                                                                        && !a.networkBusy,
-                                                                "Unsupported TV started setup");
-                                                    }),
-                                    event -> {
-                                        if (event.getEventType()
-                                                != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
-                                            return false;
-                                        windows.add(event.getClassName() + ": " + event.getText());
-                                        return "android.app.AlertDialog"
-                                                        .equals(
-                                                                String.valueOf(
-                                                                        event.getClassName()))
-                                                && event.getText()
-                                                        .toString()
-                                                        .contains(a.t("coming_soon"));
-                                    },
-                                    10000);
-        } catch (java.util.concurrent.TimeoutException timeout) {
-            throw new AssertionError(
-                    "Coming soon dialog window event missing; observed " + windows, timeout);
+            PhoneUiCheck.on(test, () -> {
+                check(a.onboarding.step() == 0 && a.page.equals("onboarding"),
+                        "Explore first must start at the fresh welcome");
+                a.getWindow().getDecorView().findViewWithTag("onboarding.skip").performClick();
+                check(a.page.equals("prayers") && !a.phoneUi.settings.enabled,
+                        "Explore first must open prayers without enabling alerts");
+                check(prefs.getBoolean("onboarding-enable-with-permission", false),
+                        "Explore first incorrectly recorded an explicit notification opt-out");
+                a.phoneUi.open("appearance");
+                a.body.findViewWithTag("appearance.tab.appearance.theme").performClick();
+                a.body.findViewWithTag("phone.appearance.theme.option.dusk").performClick();
+                a.getWindow().getDecorView().findViewWithTag("appearance.apply").performClick();
+                check(prefs.contains("settings") && !a.phoneUi.settings.enabled
+                                && a.phoneUi.settings.value("appearance.theme").equals("dusk"),
+                        "Ordinary theme Apply did not create the expected disabled-alert settings");
+                check(prefs.getBoolean("onboarding-enable-with-permission", false),
+                        "An unrelated settings save changed the first-use notification choice");
+                a.onboarding.open();
+                a.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick();
+                check(a.onboarding.step() == 1
+                                && prefs.getBoolean("onboarding-enable-with-permission", false)
+                                && !prefs.getBoolean("onboarding-notifications-asked", false)
+                                && !prefs.getBoolean("onboarding-notifications-pending", false),
+                        "Resuming setup after Explore first mistook default false for an opt-out");
+            });
+        } finally {
+            PhoneUiCheck.on(test, a::finish);
+            LiveUiCheck.untilUi(test, a::isDestroyed);
         }
-        dialog.recycle();
-        View[] focusedDialog = {null};
-        LiveUiCheck.untilUi(
-                test,
-                () -> {
-                    if (a.hasWindowFocus()) return false;
-                    if (android.os.Build.VERSION.SDK_INT < 29) return true;
-                    for (View window :
-                            android.view.inspector.WindowInspector.getGlobalWindowViews()) {
-                        if (window != a.getWindow().getDecorView() && window.hasWindowFocus()) {
-                            focusedDialog[0] = window;
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-        LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
-        LiveUiCheck.untilUi(
-                test,
-                () ->
-                        a.hasWindowFocus()
-                                && (focusedDialog[0] == null
-                                        || !focusedDialog[0].isAttachedToWindow()));
+    }
+
+    private static void resolveNotificationRequest(Instrumentation test, MainActivity a) throws Exception {
+        SharedPreferences prefs = PhoneStore.preferences(a);
+        android.accessibilityservice.AccessibilityServiceInfo service = test.getUiAutomation().getServiceInfo();
+        int originalFlags = service.flags;
+        service.flags |= android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
+        test.getUiAutomation().setServiceInfo(service);
+        Set<String> observed = new LinkedHashSet<>();
+        boolean clicked = false;
+        try {
+            long deadline = android.os.SystemClock.uptimeMillis() + 10000;
+            while (prefs.getBoolean("onboarding-notifications-pending", false)
+                    && android.os.SystemClock.uptimeMillis() < deadline) {
+                android.view.accessibility.AccessibilityNodeInfo root =
+                        test.getUiAutomation().getRootInActiveWindow();
+                if (root != null) {
+                    try {
+                        String owner = String.valueOf(root.getPackageName());
+                        observed.add(owner);
+                        if (!clicked && owner.contains("permissioncontroller"))
+                            clicked = declineNotification(root, observed);
+                    } finally { root.recycle(); }
+                }
+                android.os.SystemClock.sleep(50);
+            }
+        } finally {
+            service.flags = originalFlags;
+            test.getUiAutomation().setServiceInfo(service);
+        }
+        check(!prefs.getBoolean("onboarding-notifications-pending", false),
+                "System notification decision did not return to onboarding; observed=" + observed);
+        LiveUiCheck.untilUi(test, () -> a.hasWindowFocus() && a.onboarding.step() == 2);
+    }
+
+    private static boolean declineNotification(
+            android.view.accessibility.AccessibilityNodeInfo node, Set<String> observed) {
+        String id = node.getViewIdResourceName();
+        if (id != null) observed.add(id);
+        // Google builds can retain AOSP resource IDs under a different owning package.
+        if (id != null && (id.endsWith(":id/permission_deny_button") || id.endsWith(":id/permission_deny_and_dont_ask_again_button"))
+                && node.isVisibleToUser() && node.isEnabled() && node.isClickable()) {
+            check(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK),
+                    "Could not decline the system notification request");
+            return true;
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            android.view.accessibility.AccessibilityNodeInfo child = node.getChild(i);
+            if (child == null) continue;
+            try {
+                if (declineNotification(child, observed)) return true;
+            } finally { child.recycle(); }
+        }
+        return false;
+    }
+
+    private static void supportedPlatforms(Instrumentation test, MainActivity a) {
+        PhoneUiCheck.on(test, () -> {
+            check(a.page.equals("tv-setup"), "Setup and pairing must share the platform chooser");
+            check(a.body.findViewWithTag("setup.platform.android") != null
+                            && a.body.findViewWithTag("setup.platform.lg") != null,
+                    "Supported TV setup entries missing");
+            for (String id : new String[] {"tizen", "roku", "other"})
+                check(a.body.findViewWithTag("setup.platform." + id) == null,
+                        "Unsupported TV setup entry offered: " + id);
+            check(!a.networkBusy, "Opening setup started networking");
+        });
     }
 
     private static void cancelledResult(Instrumentation test, MainActivity a) throws Exception {

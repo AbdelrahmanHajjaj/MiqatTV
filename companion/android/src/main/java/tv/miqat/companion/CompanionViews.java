@@ -263,6 +263,7 @@ final class CompanionViews {
     }
 
     void square(View view) {
+        view.setPadding(0, 0, 0, 0);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(48), dp(48));
         lp.setMarginStart(dp(3));
         lp.setMarginEnd(dp(3));
@@ -375,47 +376,70 @@ final class CompanionViews {
         }
     }
 
-    void choiceRail(
+    void segmentedChoices(
             LinearLayout parent,
             String tag,
             java.util.List<Choices.Option> choices,
             String selected,
             java.util.function.Consumer<String> changed) {
-        HorizontalScrollView scroll = new HorizontalScrollView(a);
-        scroll.setHorizontalScrollBarEnabled(false);
-        scroll.setTag(tag);
-        LinearLayout track = new LinearLayout(a);
-        scroll.addView(track);
-        parent.addView(scroll, new LinearLayout.LayoutParams(-1, -2));
+        choiceButtons(parent, tag, choices, selected, changed, false);
+    }
+
+    void verticalChoices(
+            LinearLayout parent,
+            String tag,
+            java.util.List<Choices.Option> choices,
+            String selected,
+            java.util.function.Consumer<String> changed) {
+        choiceButtons(parent, tag, choices, selected, changed, true);
+    }
+
+    private void choiceButtons(
+            LinearLayout parent,
+            String tag,
+            java.util.List<Choices.Option> choices,
+            String selected,
+            java.util.function.Consumer<String> changed,
+            boolean vertical) {
+        RadioGroup group = new RadioGroup(a);
+        group.setOrientation(vertical ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
+        group.setTag(tag);
+        group.setPadding(dp(4), dp(4), dp(4), dp(4));
+        group.setBackground(background((a.ground & 0xffffff) | 0xbb000000, 20));
+        LinearLayout.LayoutParams outer = new LinearLayout.LayoutParams(-1, -2);
+        outer.topMargin = dp(4);
+        outer.bottomMargin = dp(12);
+        parent.addView(group, outer);
         for (Choices.Option option : choices) {
-            Button button = button(track, option.toString(), () -> changed.accept(option.value));
-            button.setTag(tag + "." + option.value);
+            RadioButton button = new RadioButton(a);
+            button.setId(View.generateViewId());
+            button.setButtonDrawable(null);
+            button.setText(option.toString());
+            button.setTypeface(a.regular);
             button.setTextSize(13);
-            button.setMaxLines(2);
-            button.setMinWidth(dp(72));
-            button.setMaxWidth(dp(200));
-            button.setPadding(dp(14), dp(8), dp(14), dp(8));
+            button.setMinHeight(dp(48));
+            button.setMinWidth(0);
+            button.setPadding(dp(8), dp(10), dp(8), dp(10));
+            button.setGravity(Gravity.CENTER);
+            button.setContentDescription(option.toString());
+            button.setTag(tag + "." + option.value);
             boolean active = option.value.equals(selected);
+            button.setChecked(active);
             button.setSelected(active);
-            button.setTextColor(active ? a.ground : a.ink);
+            button.setTextColor(active ? a.accent : a.muted);
+            GradientDrawable fill = background(active ? a.surface : Color.TRANSPARENT, 16);
+            fill.setStroke(dp(1), active ? a.accent : (a.muted & 0xffffff) | 0x33000000);
             button.setBackground(
                     new RippleDrawable(
                             ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000),
-                            background(active ? a.accent : a.surface, 20),
+                            fill,
                             null));
-            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-2, -2);
-            size.setMarginEnd(dp(6));
-            size.topMargin = dp(4);
-            size.bottomMargin = dp(8);
-            button.setLayoutParams(size);
-            if (active)
-                scroll.post(() ->
-                        scroll.scrollTo(
-                                Math.max(
-                                        0,
-                                        button.getLeft()
-                                                - (scroll.getWidth() - button.getWidth()) / 2),
-                                0));
+            button.setElevation(active ? dp(2) : 0);
+            RadioGroup.LayoutParams size =
+                    new RadioGroup.LayoutParams(vertical ? -1 : 0, -2, vertical ? 0 : 1);
+            size.setMargins(dp(2), dp(2), dp(2), dp(2));
+            group.addView(button, size);
+            button.setOnClickListener(v -> changed.accept(option.value));
         }
     }
 

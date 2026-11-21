@@ -101,7 +101,7 @@ public final class MainActivity extends Activity {
                                             .getLanguage()
                                             .equals("ar");
             regular = getResources().getFont(R.font.alexandria_regular);
-            heading = Typeface.create(regular, Typeface.BOLD);
+            heading = getResources().getFont(ar ? R.font.amiri_bold : R.font.marcellus_regular);
             ground = color("lapis-900");
             surface = color("lapis-800");
             accent = color("gold-400");
@@ -442,14 +442,17 @@ public final class MainActivity extends Activity {
         renderedLocation = location;
         LinearLayout shell = views.column();
         shell.setBackgroundColor(ground);
+        boolean stylePage = page.equals("phone-settings") && section.equals("appearance");
         if (page.equals("onboarding")) onboarding.background(shell);
+        else if (stylePage) phoneUi.appearance.background(shell, phoneUi.settings);
         shell.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         LinearLayout heading = views.column();
         shell.addView(heading, new LinearLayout.LayoutParams(-1, -2));
         toolbar(heading);
         body = views.column();
         body.setPadding(views.dp(20), views.dp(4), views.dp(20), views.dp(12));
-        body.setBackgroundColor(page.equals("onboarding") ? Color.TRANSPARENT : ground);
+        body.setBackgroundColor(
+                page.equals("onboarding") || stylePage ? Color.TRANSPARENT : ground);
         String screen =
                 page.equals("settings") && section.equals("appearance") ? "appearance" : page;
         if (!CompanionContract.INSTANCE.getScreens().contains(screen))
@@ -517,9 +520,9 @@ public final class MainActivity extends Activity {
             views.iconButton(toolbar, "back", t("back"), this::back).setTag("navigation.back");
         View backButton = toolbar.findViewWithTag("navigation.back");
         if (backButton != null) backButton.setEnabled(!networkBusy || page.equals("pair"));
-        if (page.equals("tvs")) {
+        if (page.equals("tvs") || page.equals("prayers")) {
             ImageView brand = new ImageView(this);
-            brand.setImageResource(R.drawable.miqat_icon);
+            brand.setImageResource(R.drawable.miqat_mark);
             brand.setContentDescription(ar ? "ميقات" : "Miqat");
             LinearLayout.LayoutParams mark =
                     new LinearLayout.LayoutParams(views.dp(40), views.dp(40));
@@ -565,7 +568,9 @@ public final class MainActivity extends Activity {
         title.setTypeface(heading);
         title.setMaxLines(2);
         title.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        titles.addView(title);
+        if (!page.equals("prayers")
+                && !page.equals("tvs")
+                && !(page.equals("onboarding") && onboarding.step() == 0)) titles.addView(title);
         if (page.equals("prayers"))
             views.iconButton(toolbar, "bell", t("phone_audio"), () -> phoneUi.open("audio"));
         String subtitle =
@@ -738,7 +743,7 @@ public final class MainActivity extends Activity {
                         new Choices.Option("system", t("system")),
                         new Choices.Option("ar", "العربية"),
                         new Choices.Option("en", "English"));
-        views.choiceRail(
+        views.segmentedChoices(
                 parent,
                 "phone.language",
                 choices,
@@ -842,6 +847,7 @@ public final class MainActivity extends Activity {
     public void onRequestPermissionsResult(int request, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(request, permissions, results);
         if (request == 75) {
+            onboarding.notificationResult();
             PhoneAlarms.rebuild(this);
             render();
         }
@@ -918,7 +924,8 @@ public final class MainActivity extends Activity {
             return;
         }
         if (page.equals("prayers")) {
-            finish();
+            if (phoneUi.home.dayOffset != 0 || phoneUi.home.selectedDay != 0) phoneUi.home.today();
+            else finish();
             return;
         }
         if (page.equals("preferences")) {

@@ -72,8 +72,7 @@ final class PhoneCustomCheck {
                     .commit();
             LanCheck.rejects(() -> PhoneStore.read(c));
             Map<String, String> versionTwo = new LinkedHashMap<>(migrated.values);
-            versionTwo.remove("reminders.full-screen");
-            versionTwo.remove("reminders.volume-keys");
+            versionTwo.keySet().retainAll(migrated.data.idsAt(2));
             PhoneStore.preferences(c)
                     .edit()
                     .putString(
@@ -155,6 +154,52 @@ final class PhoneCustomCheck {
                     PhoneAlarms.requiredChannels(sunday.changed(edits))
                             .equals(Collections.singleton(PhoneAlarms.VIBRATION)),
                     "Vibration reminders required an audible channel");
+            Map<String, String> versionThree = new LinkedHashMap<>(migrated.values);
+            versionThree.keySet().retainAll(migrated.data.idsAt(3));
+            versionThree.put("reminders.duration", "60");
+            versionThree.put("call.fajr.mode", "vibration");
+            versionThree.put("quiet.enabled", "true");
+            PhoneStore.preferences(c).edit().putString("settings", new JSONObject()
+                    .put("version", 3).put("values", new JSONObject(versionThree)).toString()).commit();
+            PhoneStore fourth = PhoneStore.read(c);
+            PhoneUiCheck.check(fourth.values.entrySet().containsAll(versionThree.entrySet())
+                    && fourth.audioPercent(0) == 100 && fourth.audioDuration(0) == 60
+                    && fourth.vibrate(0), "v3 upgrade lost legacy sound, seconds or quiet settings");
+            Calendar legacyNoon = new GregorianCalendar(fourth.zone());
+            legacyNoon.clear();legacyNoon.set(2026, 10, 22, 12, 0);
+            ReminderEvent legacyVibration = new ReminderEvent("legacy-vibration", "call", 0,
+                    legacyNoon.getTimeInMillis(), legacyNoon.getTimeInMillis());
+            PhoneUiCheck.check(fourth.eventMode(legacyVibration) == 3 && fourth.eventVibrate(legacyVibration),
+                    "Legacy vibration-only mode lost haptic output after upgrade");
+            fourth.save(c);
+            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 4,
+                    "Updated settings did not persist the new schema");
+            Map<String, String> dayEdits = new LinkedHashMap<>();
+            dayEdits.put("call.fajr.mode", "adhan");dayEdits.put("call.fajr.enabled", "true");
+            dayEdits.put("call.fajr.weekdays", "127");dayEdits.put("quiet.enabled", "false");
+            dayEdits.put("call.fajr.day-0-sound", "silent");dayEdits.put("call.fajr.day-0-vibrate", "true");
+            dayEdits.put("call.fajr.length-percent", "75");dayEdits.put("call.fajr.default-audio", "false");
+            PhoneStore perDay = fourth.changed(dayEdits);
+            Calendar sundayDate = new GregorianCalendar(perDay.zone());
+            sundayDate.clear();sundayDate.set(2026, 10, 22, 0, 4);
+            long prayerAt = sundayDate.getTimeInMillis();
+            ReminderEvent onSunday = new ReminderEvent("fixture", "call", 0, prayerAt, prayerAt);
+            ReminderEvent beforeSunday = new ReminderEvent("fixture-before", "before", 0, prayerAt - 300000, prayerAt);
+            PhoneUiCheck.check(perDay.eventMode(onSunday) == 4 && perDay.eventVibrate(onSunday)
+                    && perDay.effectiveMode(0, 1) == 2 && !perDay.vibrateOnDay(0, 1)
+                    && perDay.audioPercent(0) == 75 && perDay.audioDuration(0) == 0,
+                    "Day sound/vibration or per-prayer percent leaked into defaults");
+            PhoneStore disabled = perDay.changed(Collections.singletonMap("call.fajr.enabled", "false"));
+            PhoneUiCheck.check(disabled.eventMode(onSunday) == 0 && !disabled.eventVibrate(onSunday),
+                    "Day override re-enabled a disabled prayer");
+            dayEdits.clear();dayEdits.put("call.fajr.day-0-sound", "adhan");
+            dayEdits.put("quiet.enabled", "true");dayEdits.put("quiet.start", "0");
+            dayEdits.put("quiet.end", "60");dayEdits.put("quiet.mode", "silent");
+            PhoneStore boundary = perDay.changed(dayEdits);
+            PhoneUiCheck.check(boundary.eventMode(beforeSunday) == 2 && boundary.eventMode(onSunday) == 4
+                    && !boundary.eventVibrate(onSunday),
+                    "Legacy quiet hours stopped following actual event time at the date boundary");
+            migrated.save(c);
             PhoneAudio.importFile(c, c.getAssets().open("adhan/almalki.mp3"), "reminders.voice");
             PhoneStore imported = PhoneStore.read(c);
             String hash = imported.value("audio.custom.default");
