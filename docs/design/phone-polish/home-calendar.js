@@ -1,5 +1,6 @@
 /* Design proposal only. No location, permission, storage or notification APIs. */
 'use strict';
+if(typeof location!=='undefined'&&new URLSearchParams(location.search).get('preview')==='home')document.body.classList.add('home-only');
 const sourceRoot='../../../', dayMs=86400000;
 const islamic=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
 const numericHijri=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'numeric',year:'numeric',timeZone:'UTC'});
