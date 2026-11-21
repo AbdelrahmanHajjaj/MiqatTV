@@ -47,6 +47,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
+            trap 'mkdir -p state; adb pull /sdcard/Android/data/tv.miqat.companion/files/adhan-swipe-failure.png state/adhan-swipe-failure.png >/dev/null 2>&1 || true' EXIT
             # A cold Google APIs image can leave Pixel Launcher ANR covering the test app.
             adb shell am force-stop com.google.android.apps.nexuslauncher
             adb install -r companion/android/build/outputs/apk/debug/companion-debug.apk
@@ -111,6 +112,13 @@ jobs:
             timeout 420s adb shell am instrument -r -w -e suite phone-runtime tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-runtime-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-runtime-result.log
             grep -q 'PASS: phone actual alarm delivery' phone-runtime-result.log
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: phone-swipe-failure
+          path: state/adhan-swipe-failure.png
+          if-no-files-found: ignore
+          retention-days: 3
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: github.event_name != 'pull_request'
         with:
