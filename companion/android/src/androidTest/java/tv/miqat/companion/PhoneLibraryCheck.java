@@ -160,14 +160,13 @@ final class PhoneLibraryCheck {
     }
 
     private static void visibleLabel(Instrumentation test, MainActivity a, String expected) throws Exception {
-        LiveUiCheck.untilUi(test, () -> list(a).getChildCount() > 0);
-        PhoneUiCheck.on(test, () -> {
+        LiveUiCheck.untilUi(test, () -> {
+            if (list(a).getChildCount() == 0) return false;
             TextView label = (TextView) list(a).getChildAt(0);
             android.graphics.Rect bounds = new android.graphics.Rect();
-            PhoneUiCheck.check(label.getText().toString().equals(expected)
+            return label.getText().toString().equals(expected)
                             && label.getWidth() > 0 && label.getGlobalVisibleRect(bounds)
-                            && bounds.width() > 0 && bounds.height() > 0,
-                    "Named library entry is not visibly rendered in the native picker");
+                            && bounds.width() > 0 && bounds.height() > 0;
         });
     }
 }

@@ -30,6 +30,12 @@ Follow-up changes are tests/docs only. The 0.5.11/code 27 APK and its recorded
 SHA256 remain unchanged. Exact-head CI is tracked in draft PR #9; no release,
 merge or physical deployment.
 
+CI then exposed a library search assertion reading the previous visible child
+after the adapter changed from one result to another. It now waits for the
+expected rendered name and visible bounds in the same UI snapshot. The full
+bilingual phone UI suite passes on API 34 without capture delays; production
+picker code and APK bytes are unchanged.
+
 ## Adhan playback refinements — 21 November 2026
 
 Phone **0.5.11/code 27** targets the selected media/alarm stream's maximum rather
