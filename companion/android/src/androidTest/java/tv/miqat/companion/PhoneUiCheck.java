@@ -95,6 +95,7 @@ final class PhoneUiCheck {
                     check(a.body.findViewWithTag("phone.section.widgets")!=null,"Widget customization needs a settings entry");
                 });
                 PhonePolishCheck.run(test,a,lang,capture);
+                PhoneHomeCheck.run(test,a);
                 on(test,()->a.tab("phone-settings"));
                 capture(test,a,lang+"-phone-settings",capture);
                 on(test,()->a.phoneUi.open("audio"));capture(test,a,lang+"-phone-audio",capture);
@@ -189,10 +190,17 @@ final class PhoneUiCheck {
     private static void boundControls(MainActivity a) {
         a.phoneUi.open("calculation");
         for(String tag:new String[]{"phone.country","phone.city","phone.location.detect","phone.location.advanced"})
-            check(a.body.findViewWithTag(tag)!=null,"Missing labeled location control "+tag);
+            check(a.getWindow().getDecorView().findViewWithTag(tag)!=null,"Missing labeled location control "+tag);
         for(JSONObject control:a.phoneUi.data.controls.values())
-            if(control.optString("section").equals("calculation"))
+            if(control.optString("section").equals("calculation")
+                    && !control.optString("id").equals("prayer.zone")
+                    && !control.optString("id").equals("prayer.travel-refresh"))
                 check(a.body.findViewWithTag("phone."+control.optString("id"))!=null,"Missing calculation control "+control.optString("id"));
+        a.body.findViewWithTag("phone.location.advanced").performClick();
+        check(a.phoneUi.locationUi.locationDialog.getWindow().getDecorView()
+                        .findViewWithTag("phone.location.zone") != null,
+                "Advanced location must expose the timezone editor");
+        a.phoneUi.locationUi.locationDialog.getButton(-2).performClick();
         a.phoneUi.open("audio");
         for(String prayer:new String[]{"fajr","dhuhr","asr","maghrib","isha"})
             check(a.body.findViewWithTag("phone.prayer-settings."+prayer)!=null,"Missing prayer settings entry "+prayer);

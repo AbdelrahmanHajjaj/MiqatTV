@@ -41,6 +41,7 @@ final class PhoneUi {
 
     void restore(Bundle b) {
         appearance.restore(b);
+        locationUi.background.restore(b);
         ArrayList<Bundle> saved = b.getParcelableArrayList("phone-history");
         if (saved != null)
             for (Bundle place : saved)
@@ -63,6 +64,7 @@ final class PhoneUi {
 
     void save(Bundle b) {
         appearance.save(b);
+        locationUi.background.save(b);
         b.putParcelableArrayList("phone-history", new ArrayList<>(history));
         b.putString("phone-audio-import", sound.audioImport);
         b.putBoolean("phone-location-advanced", locationUi.advancedLocation);
@@ -263,11 +265,17 @@ final class PhoneUi {
             }
             for (JSONObject c : data.controls.values())
                 if (c.getString("section").equals(a.section)
-                        && !c.getString("id").startsWith("appearance.")) control(c);
+                        && !c.getString("id").startsWith("appearance.")
+                        && !c.getString("id").equals("prayer.travel-refresh")
+                        && !c.getString("id").equals("prayer.zone")
+                        && !c.getString("id").equals("prayer.background-location")) control(c);
         } finally {
             settings = saved;
         }
-        if (a.section.equals("calculation")) locationUi.confirmLocation();
+        if (a.section.equals("calculation")) {
+            locationUi.advancedRow();
+            locationUi.confirmLocation();
+        }
     }
 
     private void prayerRows() throws Exception {
@@ -448,6 +456,10 @@ final class PhoneUi {
         String id = c.getString("id"),
                 label = a.t(c.getString("label")),
                 saved = settings.value(id);
+        if (id.equals("prayer.background-location")) {
+            locationUi.background.control(a.body);
+            return;
+        }
         if (id.endsWith(".length-percent")) {
             sound.length(id);
             return;
@@ -878,7 +890,11 @@ final class PhoneUi {
         changes.put(id, value);
         if (id.endsWith(".length-percent"))
             changes.put(id.replace(".length-percent", ".duration"), "0");
-        if (id.equals("prayer.zone")) changes.put("prayer.location-ready", "false");
+        if (id.equals("prayer.zone")) {
+            changes.put("prayer.location-ready", "false");
+            changes.put("prayer.background-location", "false");
+            changes.put("prayer.travel-refresh", "false");
+        }
         if (!save(changes, id.equals("display.size"))) return;
         if (id.equals("reminders.enabled")
                 && !PhoneStore.preferences(a)
@@ -901,9 +917,15 @@ final class PhoneUi {
 
     boolean save(Map<String, String> changes, boolean recreate) {
         try {
-            PhoneStore.read(a).changed(changes).save(a);
+            synchronized (PhoneStore.LOCK) {
+                if (changes.keySet().stream().anyMatch(id -> id.startsWith("prayer."))
+                        && !PhoneBackgroundLocation.cancel(a))
+                    throw new java.io.IOException("Could not cancel earlier location request");
+                PhoneStore.read(a).changed(changes).save(a);
+            }
             pending = "";
             PhoneAlarms.rebuild(a);
+            PhoneBackgroundLocation.sync(a);
             if (recreate) a.recreate();
             else a.render();
             return true;

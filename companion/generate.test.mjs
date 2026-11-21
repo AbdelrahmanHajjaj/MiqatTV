@@ -62,7 +62,7 @@ test('companion copy is bilingual and compact/mihrab positions remain independen
     assert.deepEqual(controls.find(x=>x.id==='appearance.compact-position').options.map(x=>x.value),['top','bottom']);
   }
   const manifest=readFileSync(new URL('android/src/main/AndroidManifest.xml',import.meta.url),'utf8');
-  assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','USE_FULL_SCREEN_INTENT','VIBRATE'].map(x=>'android.permission.'+x));
+  assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','ACCESS_BACKGROUND_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','USE_FULL_SCREEN_INTENT','VIBRATE'].map(x=>'android.permission.'+x));
 });
 
 test('new branding settings reach both profiles with canonical scenes and opacity drafts',()=>{
@@ -76,7 +76,7 @@ test('new branding settings reach both profiles with canonical scenes and opacit
 
 test('phone alert metadata keeps independent enable, weekday overrides and relative audio bounds',()=>{
  const {contract}=generatePhone();
- assert.equal(contract.version,5);
+ assert.equal(contract.version,6);
  assert.equal(contract.perPrayer.find(c=>c.suffix==='enabled').default,'true');
  for(let day=0;day<7;day++) {
   assert.deepEqual(contract.perPrayer.find(c=>c.suffix===`day-${day}-sound`).choices,['inherit','adhan','notification','silent']);
@@ -99,4 +99,11 @@ test('native literal copy references resolve to bilingual canonical text',()=>{
     for(const [,key] of source.matchAll(/\bt\("([^"\n]+)"\)/g))
       assert.ok(data.text[key]?.en&&data.text[key]?.ar,`${name}: unknown text ${key}`);
   }
+});
+
+test('phone event dates and prayer verse preserve their canonical sources',()=>{
+  const phone=generatePhone();
+  assert.deepEqual(phone.hijriEvents,JSON.parse(readFileSync(new URL('../shared/data/hijri-events.json',import.meta.url))));
+  assert.deepEqual(phone.prayerVerse,JSON.parse(readFileSync(new URL('../shared/data/sacred-text.json',import.meta.url))).prayerVerse);
+  assert.equal(phone.hijriEvents.find(e=>e.month===9&&e.day===27),undefined);
 });

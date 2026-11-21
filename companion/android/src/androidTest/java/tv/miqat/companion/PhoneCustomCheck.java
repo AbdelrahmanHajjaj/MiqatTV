@@ -172,7 +172,7 @@ final class PhoneCustomCheck {
             PhoneUiCheck.check(fourth.eventMode(legacyVibration) == 3 && fourth.eventVibrate(legacyVibration),
                     "Legacy vibration-only mode lost haptic output after upgrade");
             fourth.save(c);
-            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 5,
+            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 6,
                     "Updated settings did not persist the new schema");
             Map<String, String> versionFour = new LinkedHashMap<>(fourth.values);
             versionFour.keySet().retainAll(fourth.data.idsAt(4));
@@ -187,6 +187,18 @@ final class PhoneCustomCheck {
             fifth.changed(Collections.singletonMap("appearance.home-background", "false")).save(c);
             PhoneUiCheck.check(PhoneStore.read(c).value("appearance.home-background").equals("false"),
                     "Home background opt-out was not preserved");
+            Map<String, String> versionFive = new LinkedHashMap<>(PhoneStore.read(c).values);
+            versionFive.keySet().retainAll(fifth.data.idsAt(5));
+            versionFive.put("prayer.travel-refresh", "true");
+            PhoneStore.preferences(c).edit().putString("settings", new JSONObject()
+                    .put("version", 5).put("values", new JSONObject(versionFive)).toString()).commit();
+            PhoneStore sixth = PhoneStore.read(c);
+            PhoneUiCheck.check(sixth.values.entrySet().containsAll(versionFive.entrySet())
+                            && sixth.value("prayer.background-location").equals("false"),
+                    "Upgrade must preserve foreground travel without granting background consent");
+            sixth.save(c);
+            PhoneUiCheck.check(PhoneStore.read(c).value("prayer.background-location").equals("false"),
+                    "Background location must remain off after persisting migration");
             Map<String, String> dayEdits = new LinkedHashMap<>();
             dayEdits.put("call.fajr.mode", "adhan");dayEdits.put("call.fajr.enabled", "true");
             dayEdits.put("call.fajr.weekdays", "127");dayEdits.put("quiet.enabled", "false");

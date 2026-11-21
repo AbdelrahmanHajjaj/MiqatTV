@@ -142,38 +142,29 @@ final class PhoneSizeCheck {
                                 View qibla = a.body.findViewWithTag("qibla.open");
                                 View widgets = a.body.findViewWithTag("widgets.open");
                                 PhoneUiCheck.check(
-                                        widgets.getTop() - qibla.getBottom() >= a.views.dp(4)
-                                                && qibla.getWidth() == tools.getWidth()
-                                                && widgets.getWidth() == tools.getWidth()
+                                        (widgets.getLeft() - qibla.getRight() >= a.views.dp(8)
+                                                || qibla.getLeft() - widgets.getRight() >= a.views.dp(8))
+                                                && Math.abs(qibla.getWidth() - widgets.getWidth()) <= 1
                                                 && qibla.getHeight() >= a.views.dp(48)
                                                 && widgets.getHeight() >= a.views.dp(48),
-                                        "Home tools must be separated full-width navigation rows");
+                                        "Home tools must have separate equal-width touch targets");
                                 PhoneUiCheck.check(
                                         a.body.findViewWithTag("phone.coming-soon").getTop()
                                                 >= tools.getBottom(),
                                         "Locked features must follow prayer tools");
                                 ViewGroup hero = a.body.findViewWithTag("phone.hero");
                                 ViewGroup location = a.body.findViewWithTag("phone.location.row");
-                                View date =
-                                        (View) a.body.findViewWithTag("phone.today").getParent();
+                                View date = a.body.findViewWithTag("phone.today");
+                                View detect = location.findViewWithTag("phone.location");
                                 PhoneUiCheck.check(
-                                        hero.findViewWithTag("phone.location") == null
-                                                && location.findViewWithTag("phone.location")
-                                                        != null
-                                                && date.getBottom() <= location.getTop()
-                                                && location.getBottom()
-                                                        <= ((View) hero.getParent()).getTop(),
-                                        "Home date and location must precede the compact prayer"
-                                            + " card");
-                                View detect =
-                                        location.findViewWithTag("phone.home.location.detect");
-                                if (detect == null)
-                                    detect = location.findViewWithTag("phone.setup");
+                                        hero.findViewWithTag("phone.location") == detect
+                                                && hero.findViewWithTag("phone.today") == date
+                                                && date.getParent() == detect.getParent(),
+                                        "Home date and location must share the prayer card");
                                 PhoneUiCheck.check(
-                                        detect != null
-                                                && detect.getWidth() >= a.views.dp(48)
+                                        detect.getWidth() >= a.views.dp(48)
                                                 && detect.getHeight() >= a.views.dp(48),
-                                        "Home location detection lost its compact touch target");
+                                        "Home location action lost its touch target");
                                 TextView name = a.body.findViewWithTag("phone.next.name");
                                 TextView time = a.body.findViewWithTag("phone.next.time");
                                 PhoneUiCheck.check(

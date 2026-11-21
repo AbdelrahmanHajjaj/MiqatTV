@@ -1,15 +1,14 @@
 # Current work
 
-Updated: 2026-11-21. Owner requested a mock-first Home/calendar/location revision
-on feature/companion-installation, draft PR #9. Proposal:
-[Home, location & Hijri events](design/phone-polish/home-calendar.html).
+Updated: 2026-11-21. Owner approved the combined greeting + canonical TV verse
+in the [Home/calendar/location proposal](design/phone-polish/home-calendar.html)
+and requested native implementation on feature/companion-installation, draft PR #9.
 
-The date and single city action share the prayer card. Compare combined greeting/TV verse, either alone, and no header.
-The owner liked the proposal and requested the combined-header preview first. Calendar events have markers, selected-day labels and a brief
-Home line. User explicitly chose optional location updates while the app is closed;
-the proposal includes background permission opt-in, denial and manual fallback.
+Implemented 0.5.3/code 19: date and single city action inside the prayer card,
+compact Location fields, calendar events and optional location updates while the
+app is closed. Background access requires fresh explicit opt-in; previous
+foreground travel preferences do not grant it. Preserve manual calibration,
+alert opt-outs, Arabic/English and existing TV behavior.
 
-Design checks and browser review are complete; see EVIDENCE.md. Review this proposal
-before native implementation. The current review APK remains 0.5.2/code 18;
-background location and calendar events are not implemented in that APK.
-No merge, release or physical deployment requested.
+Native acceptance and review export are recorded in EVIDENCE.md. Check final-head
+CI, then keep PR #9 draft for owner review. No merge, release or physical deployment requested.

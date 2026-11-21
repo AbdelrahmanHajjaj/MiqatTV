@@ -517,7 +517,7 @@ public final class MainActivity extends Activity {
     private void toolbar(LinearLayout shell) {
         LinearLayout toolbar = views.horizontal(shell);
         toolbar.setPadding(views.dp(12), views.dp(6), views.dp(12), views.dp(6));
-        toolbar.setMinimumHeight(views.dp(64));
+        toolbar.setMinimumHeight(views.dp(page.equals("prayers") ? 56 : 64));
         if (page.equals("onboarding")
                 || page.equals("tv-setup")
                 || page.equals("qibla")
@@ -583,6 +583,18 @@ public final class MainActivity extends Activity {
         if (!page.equals("prayers")
                 && !page.equals("tvs")
                 && !(page.equals("onboarding") && onboarding.step() == 0)) titles.addView(title);
+        if (page.equals("prayers")) {
+            TextView greeting = views.text(t("phone_greeting"), 20, ink);
+            greeting.setTypeface(heading);
+            greeting.setTag("phone.greeting");
+            greeting.setPadding(0, 0, 0, 0);
+            titles.addView(greeting);
+        }
+        if (page.equals("phone-settings") && section.equals("calculation")) {
+            title.setText(t("phone_location_title"));
+            title.setTextSize(20);
+            phoneUi.locationUi.addDetect(toolbar);
+        }
         if (page.equals("prayers"))
             views.iconButton(toolbar, "bell", t("phone_audio"), () -> phoneUi.open("audio"));
         String subtitle =
@@ -842,6 +854,7 @@ public final class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (phoneUi != null) {
+            phoneUi.locationUi.background.resume();
             PhoneAlarms.rebuild(this);
             if (page.equals("prayers")
                     || page.equals("phone-settings")
@@ -861,6 +874,8 @@ public final class MainActivity extends Activity {
             render();
         }
         if (request == 78 && phoneUi != null) phoneUi.locationUi.locationPermissionResult();
+        if ((request == 80 || request == 81) && phoneUi != null)
+            phoneUi.locationUi.background.result(request);
     }
 
     @Override
@@ -869,6 +884,12 @@ public final class MainActivity extends Activity {
         phoneForeground = true;
         pairingUi.schedulePoll();
         if (lgSetup != null && page.equals("lg-setup")) render();
+    }
+
+    @Override
+    protected void onPause() {
+        if (phoneUi != null) phoneUi.locationUi.background.pause();
+        super.onPause();
     }
 
     @Override

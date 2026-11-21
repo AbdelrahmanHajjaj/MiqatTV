@@ -24,7 +24,7 @@ export function generatePhone() {
   const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
   const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
     prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
-  if(contract.version!==5||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
+  if(contract.version!==6||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
   const ids=new Set();
   for(const control of [...contract.controls,...contract.perPrayer]) {
     const id=control.id??control.suffix;
@@ -39,7 +39,16 @@ export function generatePhone() {
       if(!options||!options.includes(control.default)||new Set(options).size!==options.length)throw Error('Invalid phone choices: '+id);
     } else if(control.kind!=='toggle'||!['true','false'].includes(control.default))throw Error('Invalid phone control kind: '+id);
   }
-  return {contract,cities,voices,backgrounds};
+  const hijriEvents=read('shared/data/hijri-events.json'),eventIds=new Set(),eventDates=new Set();
+  if(!Array.isArray(hijriEvents)||hijriEvents.length>64)throw Error('Invalid Hijri event catalog');
+  for(const event of hijriEvents) {
+    const date=event.month+':'+event.day;
+    if(!/^[a-z][a-z0-9-]*$/.test(event.id)||eventIds.has(event.id)||eventDates.has(date)||
+      !Number.isInteger(event.month)||event.month<1||event.month>12||!Number.isInteger(event.day)||event.day<1||event.day>30||
+      typeof event.en!=='string'||!event.en.trim()||typeof event.ar!=='string'||!event.ar.trim())throw Error('Invalid Hijri event: '+event.id);
+    eventIds.add(event.id);eventDates.add(date);
+  }
+  return {contract,cities,voices,backgrounds,hijriEvents,prayerVerse:read('shared/data/sacred-text.json').prayerVerse};
 }
 export function generate(platforms = ['android','lg']) {
   const controls = read('shared/data/ui-contract.json'), strings = read('shared/data/strings.json');

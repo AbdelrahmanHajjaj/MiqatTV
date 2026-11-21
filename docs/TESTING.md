@@ -255,3 +255,20 @@ on one row with complete targets when they fit, and preserve narrow scrolling.
 Next-widget checks measure occupied height, canonical fonts and unclipped core
 text at minimum bounds; a short landscape voice picker must keep its preview,
 recording row and Apply reachable with enlarged text.
+
+
+Phone background location: on an owned emulator, `phone-background-denied` checks
+actual opt-in disclosure Cancel, manual fallback and absence of scheduled work.
+Grant coarse/fine/background location for `phone-background-prepare`; it checks
+real switch enable/disable, saves a typed private preference fixture and schedules
+the Cairo fixture. End instrumentation, run `am kill tv.miqat.companion` (not
+force-stop), verify no app PID, inject London GPS (`emu geo fix -0.1278 51.5074`),
+and force `cmd jobscheduler run -f tv.miqat.companion 41703`. Allow the bounded
+20-second request to finish, then run `phone-background-verify`. It checks
+closed-process persistence, unchanged prayer calibration, stale/manual/off-on
+rejection and restores preferences in finally. A failed pre-verify run leaves
+its private fixture for verification/restoration, so do not start a second prepare.
+A forced emulator job proves the closed-process path, not OEM timing or Doze latency.
+The bilingual phone UI suite checks the exact canonical verse, in-card date/city,
+actual event calendar links, timezone/Hijri correction and ordinary dates without
+an empty event row. Migrations must keep the new background opt-in false.

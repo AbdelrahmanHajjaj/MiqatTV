@@ -42,7 +42,7 @@ final class PhoneLocationCheck {
                 PhoneUiCheck.on(test,()->{
                     a.phoneUi.open("calculation");
                     PhoneUiCheck.check(a.body.findViewWithTag("phone_latitude")==null,"Coordinates must stay in Advanced");
-                    a.body.findViewWithTag("phone.location.detect").performClick();
+                    a.getWindow().getDecorView().findViewWithTag("phone.location.detect").performClick();
                 });
                 LiveUiCheck.untilUi(test,()->!a.phoneUi.locationUi.locator.running
                         && a.phoneUi.locationUi.locationMessage.equals("phone_location_found")
@@ -77,19 +77,15 @@ final class PhoneLocationCheck {
                 });
                 PhoneUiCheck.on(test,()->{
                     a.tab("prayers");
-                    Location homeFix=new Location("home-fixture");
-                    homeFix.setLatitude(51.5074);homeFix.setLongitude(-0.1278);homeFix.setAccuracy(3000);
-                    homeFix.setTime(System.currentTimeMillis());homeFix.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-                    a.phoneUi.locationUi.offerLocation(homeFix);
-                    PhoneUiCheck.check(a.page.equals("phone-settings")&&a.section.equals("calculation")
-                            && !a.phoneUi.settings.locationReady&&a.phoneUi.locationUi.locationDialog==null,
-                            "Home detection must open the unconfirmed location editor");
-                    android.view.View confirm=a.getWindow().getDecorView().findViewWithTag("phone.location.confirm");
-                    PhoneUiCheck.check(confirm!=null,"Home detection has no confirmation action");
-                    confirm.performClick();
-                    PhoneUiCheck.check(a.phoneUi.settings.locationReady
-                            && a.getWindow().getDecorView().findViewWithTag("phone.location.confirm")==null,
-                            "Home detection did not finish with one explicit confirmation");
+                    a.body.findViewWithTag("phone.location").performClick();
+                });
+                LiveUiCheck.untilUi(test,()->!a.phoneUi.locationUi.locator.running
+                        && a.phoneUi.locationUi.locationMessage.equals("phone_location_updated"));
+                PhoneUiCheck.on(test,()->{
+                    PhoneUiCheck.check(a.page.equals("prayers") && a.phoneUi.settings.locationReady
+                                    && a.phoneUi.settings.value("prayer.location").startsWith("detected")
+                                    && a.getWindow().getDecorView().findViewWithTag("phone.location.confirm")==null,
+                            "Confirmed Home location must refresh in place without another confirmation");
                 });
                 PhoneUiCheck.capture(test,a,lang+"-phone-detected-location",capture);
                 PhoneUiCheck.on(test,()->{

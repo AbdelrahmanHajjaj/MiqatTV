@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import tv.miqat.companion.core.PhonePrayerRules;
 
-/** A bounded foreground fix. No background permission, tracking service or coordinates sent by Miqat. */
+/** A bounded OS fix; callers gate foreground/background access. Miqat sends no coordinates. */
 final class PhoneLocation {
     private final LocationManager manager;
     private final Context context;

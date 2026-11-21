@@ -6,7 +6,6 @@ import android.os.*;
 import android.view.*;
 import android.widget.*;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /** Daily prayer rendering and its foreground countdown; no preference or alarm ownership. */
@@ -69,8 +68,11 @@ final class PhoneHome {
                                                             minutes / 60,
                                                             minutes % 60))));
                         }
-                        if (status != null && ui.settings != null)
-                            status.setText(a.t(PhoneAlarms.status(a, ui.settings)));
+                        if (status != null && ui.settings != null) {
+                            String state = PhoneAlarms.status(a, ui.settings);
+                            status.setText(a.t(state));
+                            status.setVisibility(state.equals("phone_alerts_ready") ? View.GONE : View.VISIBLE);
+                        }
                     }
                     if (playback != null)
                         playback.setVisibility(PhonePlayback.playing() ? View.VISIBLE : View.GONE);
@@ -116,22 +118,71 @@ final class PhoneHome {
         renderedDay = civilDay(now);
         renderedZone = ui.settings.zone().getID();
         lastTick = now;
-        PhoneSchedule.Day day = dateNavigation(now);
+        verse();
+        PhoneSchedule.Day day = ui.settings.day(now, dayOffset);
+        LinearLayout hero = ui.appearance.hero(a.body, ui.settings);
+        hero.setPadding(a.views.dp(12), a.views.dp(4), a.views.dp(12), a.views.dp(12));
+        hero.setTag(dayOffset == 0 ? "phone.hero" : "phone.date.card");
+        cardMetadata(hero, day);
         int next = -1;
         boolean tomorrowNext = false;
         if (dayOffset == 0) {
-            locationRow();
             PhoneSchedule.Day tomorrow = ui.settings.day(now, 1);
-            LinearLayout hero = ui.appearance.hero(a.body, ui.settings);
-            hero.setPadding(a.views.dp(16), a.views.dp(16), a.views.dp(16), a.views.dp(16));
-            hero.setTag("phone.hero");
             tv.miqat.core.PrayerSelection selection = nextPrayer(hero, now, true);
             next = selection == null ? -1 : selection.getNext();
             tomorrowNext = selection != null && selection.getNextTime() >= tomorrow.start;
+            eventLine(hero, now);
             alertStatus();
+        } else {
+            a.views.button(hero, a.t("phone_today"), this::today).setTag("calendar.today");
         }
         renderTimes(day, next, tomorrowNext);
         if (dayOffset == 0) destinations();
+    }
+
+    private void verse() throws Exception {
+        org.json.JSONArray lines = ui.data.source.getJSONArray("prayerVerse");
+        StringBuilder sacred = new StringBuilder();
+        for (int i = 0; i < lines.length(); i++) {
+            if (i != 0) sacred.append(' ');
+            sacred.append(lines.getString(i));
+        }
+        TextView text = a.views.text(sacred.toString(), 19, a.ink);
+        text.setTag("phone.verse");
+        text.setTypeface(a.getResources().getFont(R.font.amiri_bold));
+        text.setTextLocale(new Locale("ar"));
+        text.setTextDirection(View.TEXT_DIRECTION_RTL);
+        text.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        text.setGravity(Gravity.CENTER);
+        text.setIncludeFontPadding(false);
+        text.setPadding(0, 0, 0, 0);
+        a.body.addView(text);
+        TextView reference = a.views.text(a.t("phone_verse_reference"), 12, a.muted);
+        reference.setTag("phone.verse.reference");
+        reference.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        reference.setGravity(Gravity.CENTER);
+        reference.setPadding(0, a.views.dp(2), 0, a.views.dp(12));
+        a.body.addView(reference);
+    }
+
+    private void eventLine(LinearLayout hero, long now) throws Exception {
+        PhoneHijriEvents.Entry event = PhoneHijriEvents.upcoming(a, ui.settings, now, a.ar);
+        if (event == null) return;
+        String when = event.offset == 0 ? a.t("phone_today") : event.offset == 1
+                ? a.t("phone_tomorrow")
+                : String.format(ui.locale(), a.t("phone_event_in_days"), ui.digits(Integer.toString(event.offset)));
+        Button entry = a.views.button(hero, event.label + " · " + when, () -> openCalendar(event.date));
+        entry.setTag("phone.hijri.event");
+        entry.setBackground(new RippleDrawable(
+                ColorStateList.valueOf((a.accent & 0xffffff) | 0x22000000),
+                a.views.background((a.accent & 0xffffff) | 0x10000000, 10), null));
+        entry.setTextSize(12);
+        entry.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        entry.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        entry.setPaddingRelative(a.views.dp(4), a.views.dp(4), a.views.dp(4), a.views.dp(4));
+        LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-1, -2);
+        size.topMargin = a.views.dp(10);
+        entry.setLayoutParams(size);
     }
 
     private void selectDay(int offset, long now) {
@@ -140,25 +191,54 @@ final class PhoneHome {
         a.render();
     }
 
-    private void locationRow() throws Exception {
-        LinearLayout controls = a.views.horizontal(a.body);
-        controls.setTag("phone.location.row");
-        ((LinearLayout.LayoutParams) controls.getLayoutParams()).bottomMargin = a.views.dp(8);
-        LinearLayout location =
-                a.views.navigationRow(
-                        controls, "compass", ui.location(), "", () -> ui.open("calculation"));
-        a.views.flex(location);
-        location.setBackground(new RippleDrawable(
+    private void cardMetadata(LinearLayout hero, PhoneSchedule.Day day) throws Exception {
+        LinearLayout metadata = a.views.horizontal(hero);
+        metadata.setTag("phone.location.row");
+        metadata.setGravity(Gravity.CENTER_VERTICAL);
+        Button date = a.views.button(metadata,
+                ui.digits(PhoneTime.hijri(ui.settings, day.start, a.ar)), this::openCalendar);
+        date.setTag("phone.today");
+        date.setTextSize(12);
+        date.setMaxLines(2);
+        date.setContentDescription(a.t("phone_calendar") + ", " + date.getText());
+        date.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1));
+        metaButton(date, "clock", a.muted);
+        Button city = a.views.button(metadata,
+                ui.locationUi.locator.running ? a.t("phone_location_working") : ui.location(),
+                () -> {
+                    if (PhoneLocation.allowed(a)) ui.locationUi.useLocation();
+                    else ui.open("calculation");
+                });
+        city.setTag("phone.location");
+        city.setTextSize(12);
+        city.setMaxWidth(a.views.dp(120));
+        city.setSingleLine(true);
+        city.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        city.setEnabled(!ui.locationUi.locator.running);
+        city.setContentDescription(a.t("phone_use_location") + ", " + ui.location());
+        city.setLayoutParams(new LinearLayout.LayoutParams(-2, -2));
+        metaButton(city, "compass", a.accent);
+        if (!ui.locationUi.locationMessage.isEmpty()) {
+            TextView message = a.views.text(a.t(ui.locationUi.locationMessage), 12, a.muted);
+            message.setTag("phone.location.message");
+            hero.addView(message);
+        }
+    }
+
+    private void metaButton(Button button, String glyph, int tint) {
+        button.setMinWidth(0);
+        button.setMinimumWidth(0);
+        button.setPaddingRelative(0, a.views.dp(4), a.views.dp(6), a.views.dp(4));
+        button.setTextColor(tint);
+        button.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        button.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        Drawable icon = Icons.get(a, glyph, tint);
+        icon.setBounds(0, 0, a.views.dp(16), a.views.dp(16));
+        button.setCompoundDrawablesRelative(icon, null, null, null);
+        button.setCompoundDrawablePadding(a.views.dp(6));
+        button.setBackground(new RippleDrawable(
                 ColorStateList.valueOf((a.accent & 0xffffff) | 0x22000000),
-                a.views.background(android.graphics.Color.TRANSPARENT, 20), null));
-        location.setTag("phone.location");
-        Button detect =
-                a.views.iconButton(
-                        controls, "compass", a.t("phone_use_location"), ui.locationUi::useLocation);
-        detect.setTag(ui.settings.locationReady ? "phone.home.location.detect" : "phone.setup");
-        detect.setEnabled(!ui.locationUi.locator.running);
-        if (!ui.locationUi.locationMessage.isEmpty())
-            a.body.addView(a.views.text(a.t(ui.locationUi.locationMessage), 12, a.muted));
+                a.views.background(android.graphics.Color.TRANSPARENT, 16), null));
     }
 
     private void alertStatus() {
@@ -167,6 +247,7 @@ final class PhoneHome {
         alerts.setPadding(0, 0, 0, a.views.dp(8));
         status = a.views.text(a.t(state), 12, a.muted);
         status.setTag("phone.status");
+        status.setVisibility(state.equals("phone_alerts_ready") ? View.GONE : View.VISIBLE);
         status.setPadding(0, 0, 0, 0);
         alerts.addView(status, new LinearLayout.LayoutParams(0, -2, 1));
         if (ui.settings.locationReady && state.equals("phone_permission_missing"))
@@ -194,35 +275,13 @@ final class PhoneHome {
         a.render();
     }
 
-    private PhoneSchedule.Day dateNavigation(long now) {
-        LinearLayout dateBar = a.views.horizontal(a.body);
-        ((LinearLayout.LayoutParams) dateBar.getLayoutParams()).bottomMargin = a.views.dp(12);
-        PhoneSchedule.Day day = ui.settings.day(now, dayOffset);
-        SimpleDateFormat date = new SimpleDateFormat("EEEE", ui.locale());
-        date.setTimeZone(ui.settings.zone());
-        Button dateLabel =
-                a.views.button(
-                        dateBar,
-                        ui.digits(PhoneTime.hijri(ui.settings, day.start, a.ar)),
-                        this::openCalendar);
-        a.views.flex(dateLabel);
-        dateLabel.setMinimumWidth(0);
-        dateLabel.setMinWidth(0);
-        dateLabel.setBackground(new RippleDrawable(
-                ColorStateList.valueOf((a.accent & 0xffffff) | 0x22000000),
-                a.views.background(android.graphics.Color.TRANSPARENT, 20), null));
-        dateLabel.setTag("phone.today");
-        dateLabel.append(" · " + ui.digits(date.format(new Date(day.start))));
-        dateLabel.setContentDescription(a.t("phone_calendar") + ", " + dateLabel.getText());
-        dateLabel.setTextSize(12);
-        if (dayOffset != 0 || selectedDay != 0)
-            a.views.button(a.body, a.t("phone_today"), this::today).setTag("calendar.today");
-        return day;
-    }
-
     private void openCalendar() {
         long openedAt = System.currentTimeMillis();
         long stamp = selectedDay == 0 ? ui.settings.day(openedAt, 0).start : selectedDay;
+        openCalendar(stamp);
+    }
+
+    private void openCalendar(long stamp) {
         PhoneCalendar.show(
                 a,
                 ui,
@@ -249,8 +308,8 @@ final class PhoneHome {
             boolean editable = i != 1;
             LinearLayout row = a.views.horizontal(prayers);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setMinimumHeight(a.views.dp(64));
-            row.setPadding(a.views.dp(14), a.views.dp(10), a.views.dp(14), a.views.dp(10));
+            row.setMinimumHeight(a.views.dp(52));
+            row.setPadding(a.views.dp(12), a.views.dp(8), a.views.dp(12), a.views.dp(8));
             row.setTag("phone.prayer." + PhoneStore.PRAYERS[i]);
             row.setSelected(dayOffset == 0 && !tomorrowNext && i == next);
             GradientDrawable shape = a.views.background(android.graphics.Color.TRANSPARENT, 18);
@@ -319,20 +378,21 @@ final class PhoneHome {
     }
 
     private void destinations() {
-        LinearLayout tools = a.views.column();
-        tools.setPadding(0, a.views.dp(12), 0, 0);
+        LinearLayout tools = a.views.horizontal(a.body);
+        tools.setPadding(0, a.views.dp(8), 0, 0);
         tools.setTag("phone.tools");
-        a.body.addView(tools, new LinearLayout.LayoutParams(-1, -2));
-        a.views
-                .navigationRow(tools, "clock", a.t("phone_calendar"), "", this::openCalendar)
-                .setTag("calendar.open");
-        a.views
-                .navigationRow(tools, "compass", a.t("phone_qibla"), "", () -> a.navigate("qibla"))
-                .setTag("qibla.open");
-        a.views
-                .navigationRow(
-                        tools, "mihrab", a.t("phone_widgets"), "", () -> a.navigate("widgets"))
-                .setTag("widgets.open");
+        for (String destination : new String[] {"qibla", "widgets"}) {
+            Button action = a.views.button(tools,
+                    a.t(destination.equals("qibla") ? "phone_qibla" : "phone_widgets_short"),
+                    () -> a.navigate(destination));
+            action.setTag(destination + ".open");
+            action.setContentDescription(a.t(destination.equals("qibla") ? "phone_qibla" : "phone_widgets"));
+            action.setTextSize(12);
+            a.views.leadingIcon(action, destination.equals("qibla") ? "compass" : "mihrab");
+            LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, -2, 1);
+            if (destination.equals("qibla")) size.setMarginEnd(a.views.dp(8));
+            action.setLayoutParams(size);
+        }
         LinearLayout more = a.views.column();
         more.setTag("phone.coming-soon");
         more.setPadding(0, a.views.dp(24), 0, 0);
@@ -362,8 +422,7 @@ final class PhoneHome {
                 a.views.text(
                         a.t("phone_next")
                                 + (target >= tomorrow.start ? " · " + a.t("phone_tomorrow") : "")
-                                + " · "
-                                + ui.location(),
+                                + (live ? "" : " · " + ui.location()),
                         12,
                         a.muted);
         label.setTag("phone.next.label");

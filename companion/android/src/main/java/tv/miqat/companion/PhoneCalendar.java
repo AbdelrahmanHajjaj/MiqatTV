@@ -3,6 +3,8 @@ package tv.miqat.companion;
 import android.app.AlertDialog;
 import android.content.res.ColorStateList;
 import android.icu.util.IslamicCalendar;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
@@ -74,10 +76,24 @@ final class PhoneCalendar {
     private void show() {
         ScrollView scroll = new ScrollView(a);
         scroll.addView(content);
+        LinearLayout title = new LinearLayout(a);
+        title.setGravity(Gravity.CENTER_VERTICAL);
+        title.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(8), 0);
+        title.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+        TextView name = a.views.text(a.t("phone_calendar"), 20, a.ink);
+        name.setTypeface(a.heading);
+        title.addView(name, new LinearLayout.LayoutParams(0, -2, 1));
+        Button today = a.views.button(title, a.t("phone_today"),
+                () -> choose(settings.day(System.currentTimeMillis(), 0).start, true));
+        today.setTag("calendar.selected.today");
+        today.setMinWidth(0);
+        today.setMinimumWidth(0);
+        today.setTextSize(12);
+        today.setLayoutParams(new LinearLayout.LayoutParams(-2, a.views.dp(48)));
         AlertDialog dialog =
                 a.views
                         .dialog()
-                        .setTitle(a.t("phone_calendar"))
+                        .setCustomTitle(title)
                         .setView(scroll)
                         .setNegativeButton(a.t("done"), null)
                         .create();
@@ -90,6 +106,7 @@ final class PhoneCalendar {
         monthHeader();
         monthDays();
         selectedDay();
+        monthEvents();
     }
 
     private void monthHeader() {
@@ -166,12 +183,21 @@ final class PhoneCalendar {
                             && selectedDate.get(android.icu.util.Calendar.DATE) == day;
             button.setSelected(active);
             button.setTextColor(active ? a.ground : a.ink);
+            String event = PhoneHijriEvents.label(a, settings, stamp, a.ar);
+            Drawable shape = a.views.background(active ? a.accent : a.surface, 24);
+            if (!event.isEmpty()) {
+                LayerDrawable marked = new LayerDrawable(new Drawable[] {
+                        shape, a.views.background(active ? a.ground : a.accent, 2)});
+                marked.setLayerSize(1, a.views.dp(4), a.views.dp(4));
+                marked.setLayerGravity(1, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+                marked.setLayerInsetBottom(1, a.views.dp(4));
+                shape = marked;
+            }
             button.setBackground(
                     new android.graphics.drawable.RippleDrawable(
-                            ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000),
-                            a.views.background(active ? a.accent : a.surface, 24),
-                            null));
-            button.setContentDescription(ui.digits(PhoneTime.hijri(settings, stamp, a.ar)));
+                            ColorStateList.valueOf((a.accent & 0xffffff) | 0x33000000), shape, null));
+            button.setContentDescription(ui.digits(PhoneTime.hijri(settings, stamp, a.ar))
+                    + (event.isEmpty() ? "" : ", " + event));
             LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, a.views.dp(48), 1);
             size.setMargins(a.views.dp(1), a.views.dp(2), a.views.dp(1), a.views.dp(2));
             button.setLayoutParams(size);
@@ -225,6 +251,16 @@ final class PhoneCalendar {
         TextView civil = a.views.text(ui.digits(date.format(new Date(day.start))), 12, a.muted);
         civil.setGravity(Gravity.CENTER);
         timetable.addView(civil);
+        String eventLabel = PhoneHijriEvents.label(a, settings, day.start, a.ar);
+        if (!eventLabel.isEmpty()) {
+            TextView event = a.views.text(eventLabel, 12, a.accent);
+            event.setTag("calendar.selected.event");
+            event.setPadding(a.views.dp(10), a.views.dp(6), a.views.dp(10), a.views.dp(6));
+            event.setBackground(a.views.background(a.surface, 12));
+            LinearLayout.LayoutParams eventSize = new LinearLayout.LayoutParams(-1, -2);
+            eventSize.bottomMargin = a.views.dp(8);
+            timetable.addView(event, eventSize);
+        }
         if (day.times == null) timetable.addView(a.views.text(a.t("phone_unavailable"), 16, a.ink));
         else
             for (int i = 0; i < PhoneStore.PRAYERS.length; i++) {
@@ -254,11 +290,24 @@ final class PhoneCalendar {
                 time.setTag("calendar.prayer." + PhoneStore.PRAYERS[i] + ".time");
                 row.addView(time, new LinearLayout.LayoutParams(-2, -2));
             }
-        a.views
-                .button(
-                        timetable,
-                        a.t("phone_today"),
-                        () -> choose(settings.day(System.currentTimeMillis(), 0).start, true))
-                .setTag("calendar.selected.today");
+
     }
+    private void monthEvents() {
+        boolean heading = false;
+        for (int day = 1; day <= month.getActualMaximum(android.icu.util.Calendar.DATE); day++) {
+            IslamicCalendar date = (IslamicCalendar) month.clone();
+            date.set(android.icu.util.Calendar.DATE, day);
+            long stamp = civilStamp(settings, date);
+            int delta = offset(settings, openedAt, stamp);
+            String event = PhoneHijriEvents.label(a, settings, stamp, a.ar);
+            if (event.isEmpty() || delta < -366 || delta > 366) continue;
+            if (!heading) {
+                content.addView(a.views.heading(a.t("phone_calendar_events")));
+                heading = true;
+            }
+            a.views.navigationRow(content, "clock", event, ui.digits(Integer.toString(day)),
+                    () -> choose(stamp, false)).setTag("calendar.event." + day);
+        }
+    }
+
 }

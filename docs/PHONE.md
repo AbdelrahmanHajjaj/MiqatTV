@@ -24,7 +24,7 @@ Home uses a dimmed version of the selected scene. Turn **Background on Prayer
 home** off in Appearance for plain surfaces. Existing landscape-only scenes are
 composed for tall screens; the dedicated portrait Signature remains unchanged.
 
-Approximate foreground location is supported; there is no background tracking.
+Approximate location is supported, including optional background updates.
 Country/city selection is local. Detected coordinates remain authoritative;
 a nearest-city label never replaces them. Manual coordinates and timezone are
 in an Advanced dialog with Apply/Cancel. Changing location or timezone requires
@@ -75,12 +75,20 @@ retired recording is removed from distribution. Imported files
 are excluded from backup/transfer and removed by
 **Reset phone prayer settings**. This reset keeps your paired TVs.
 
-In **Location & calculation**, **Update location when opening Miqat** is opt-in.
-It refreshes at most every 30 minutes while the prayer screens are open, preserves
-your calculation method/adjustments and needs foreground location access. Failed
-or cancelled refreshes keep the saved location and show a retry message. Device
-timezone follows Android; an explicitly chosen fixed timezone stays fixed. No
-continuous background tracking or automatic religious travel rulings are applied.
+In **Location**, **Update location automatically** is optional and off by default.
+It explains background use before asking for Android access. Android 10 has a
+separate background permission; newer versions use **Allow all the time** in
+Android app settings. Declining keeps manual location usable. Previously enabled
+foreground refresh remains a foreground-only preference until this new opt-in.
+
+When enabled, Miqat requests a bounded location fix through Android's persisted
+periodic scheduler, including while the app is closed. Android chooses the time
+and may defer updates in Doze or restricted battery modes; this is not continuous
+tracking or immediate travel detection. There is no idle foreground service.
+The calculation method and prayer adjustments stay unchanged, while timezone
+follows Android. Manual city/coordinate selection turns automatic updates off;
+a stale background result cannot overwrite the newer selection. Revoking location
+access stops refresh work. Force-stopping requires reopening Miqat.
 
 Settings rows show their saved values. Tap a number to edit inline with +/- and
 Done/Cancel; small choice sets stay visible and large lists open a searchable sheet. Prayer / Your TVs / Phone settings use
@@ -109,8 +117,7 @@ Prayer opens a Qibla compass for the confirmed location. Its numeric bearing is
 clockwise from true north; a supported foreground orientation sensor provides
 the arrow relative to the top of the phone. Keep the phone level and follow the
 calibration/accuracy guidance away from magnets and metal. Without a suitable
-sensor, use the numeric bearing with a separate compass. There is no background
-location or sensor service, and an undefined bearing at the destination is
+sensor, use the numeric bearing with a separate compass. The compass has no background sensor service; an undefined bearing at the destination is
 reported explicitly. Physical compass accuracy still needs device testing.
 
 Adhan continues while using other apps or with the screen off. Its notification
@@ -135,9 +142,18 @@ The screen closes when playback finishes. The optional volume-key shortcut
 stops adhan while this screen is visible, including over the lock screen.
 Android reserves the power key: locking or screen timeout does not stop audio.
 
-Prayer Home shows location above its next-prayer card. Tap the date to open the
+Prayer Home keeps the greeting and exact TV Quran excerpt above the prayer card.
+The Hijri date and one city action share the card: tap the city to refresh an
+already permitted location, or open Location settings when access is absent.
+Tap the date to open the
 Hijri month calendar and browse dates. The selected day's timetable appears
 beneath the month grid and updates immediately; Done closes it.
+Event dates have accessible markers, a selected-day label and a month event list.
+The Home card shows today's event or the nearest event within three days, with
+no empty event row on ordinary dates. The initial catalog includes Ramadan's
+start, Eid al-Fitr, Day of Arafah, Eid al-Adha and Ashura; it follows the same
+Umm al-Qura calculation, timezone and manual Hijri correction as the calendar.
+This is a calculated calendar, not a local moon-sighting announcement.
 Browsing never changes scheduled alerts. There is no duplicate tomorrow
 Fajr row. Qibla and widgets are separate actions; locked future
 features follow farther down, reachable with a short scroll. Finishing first use

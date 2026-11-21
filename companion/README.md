@@ -12,7 +12,9 @@ for a TV keeps a representative phone preview with Apply/Cancel. Phone prayer
 preferences save independently, with inline numeric Done/Cancel. Optional demo TVs remain
 in Preferences; they do not establish hardware support.
 
-Phone Home and the Hijri calendar share a readable six-prayer timetable. Placed
+Phone Home and the Hijri calendar share a readable six-prayer timetable and recurring
+Hijri events. Optional automatic location requires explicit background access and
+uses Android scheduled jobs while the app is closed. Placed
 widgets adapt their presentation to allocated size, with canonical prayer icons,
 fonts and next-prayer highlights. Settings keep style/date choices per instance.
 Home artwork can be dimmed or disabled; weekday overrides expand in place.

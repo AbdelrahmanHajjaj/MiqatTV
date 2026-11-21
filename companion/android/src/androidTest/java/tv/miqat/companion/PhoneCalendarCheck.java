@@ -72,6 +72,7 @@ final class PhoneCalendarCheck {
 
     static void run(Instrumentation test, MainActivity a) throws Exception {
         PhoneStore original = PhoneStore.read(a);
+        events(test, a, original);
         Map<String, String> changed = new LinkedHashMap<>();
         changed.put("prayer.zone", "America/New_York");
         changed.put("prayer.hijri-offset", "2");
@@ -353,6 +354,68 @@ final class PhoneCalendarCheck {
         PhoneUiCheck.check(
                 PhoneStore.read(a).values.equals(original.values),
                 "Calendar navigation changed prayer settings");
+    }
+
+    private static void events(Instrumentation test, MainActivity a, PhoneStore original) throws Exception {
+        Map<String, String> values = new LinkedHashMap<>();
+        values.put("prayer.zone", "Asia/Riyadh");
+        values.put("prayer.hijri-offset", "0");
+        PhoneStore fixture = original.changed(values);
+        IslamicCalendar date = PhoneCalendar.calendar(fixture, System.currentTimeMillis(), false);
+        date.set(android.icu.util.Calendar.MONTH, 11);
+        date.set(android.icu.util.Calendar.DATE, 9);
+        long arafah = PhoneCalendar.civilStamp(fixture, date);
+        String event = PhoneHijriEvents.label(a, fixture, arafah, a.ar);
+        PhoneUiCheck.check(!event.isEmpty(), "Arafah event missing from its Hijri date");
+        long previous = fixture.day(arafah, -1).start;
+        PhoneHijriEvents.Entry soon = PhoneHijriEvents.upcoming(a, fixture, previous, a.ar);
+        PhoneUiCheck.check(soon != null && soon.offset == 1 && soon.label.equals(event),
+                "Upcoming event did not follow the next civil day");
+        PhoneUiCheck.check(PhoneHijriEvents.upcoming(a, fixture, fixture.day(arafah, -4).start, a.ar) == null,
+                "Home showed an event beyond its three-day horizon");
+        PhoneStore adjusted = fixture.changed(Collections.singletonMap("prayer.hijri-offset", "1"));
+        String eid = PhoneHijriEvents.label(a, fixture, fixture.day(arafah, 1).start, a.ar);
+        PhoneUiCheck.check(!eid.isEmpty() && !eid.equals(event)
+                        && PhoneHijriEvents.label(a, adjusted, arafah, a.ar).equals(eid),
+                "Events ignored the shared Hijri adjustment");
+        PhoneUiCheck.check(Arrays.equals(fixture.day(arafah, 0).times, adjusted.day(arafah, 0).times),
+                "Event correction changed calculated prayer times");
+        date.set(android.icu.util.Calendar.HOUR_OF_DAY, 0);
+        date.set(android.icu.util.Calendar.MINUTE, 30);
+        PhoneStore otherZone = fixture.changed(Collections.singletonMap("prayer.zone", "America/New_York"));
+        PhoneUiCheck.check(PhoneHijriEvents.label(a, otherZone, date.getTimeInMillis(), a.ar).isEmpty(),
+                "Event label used another prayer timezone's day");
+        PhoneStore before = a.phoneUi.settings;
+        try {
+            PhoneUiCheck.on(test, () -> {
+                a.phoneUi.settings = fixture;
+                PhoneCalendar.show(a, a.phoneUi, arafah, ignored -> {});
+                android.view.View root = a.phoneUi.choiceDialog.getWindow().getDecorView();
+                TextView selected = root.findViewWithTag("calendar.selected.event");
+                PhoneUiCheck.check(selected != null && selected.getText().toString().equals(event),
+                        "Selected calendar event was not shown above its times");
+                android.widget.Button day = root.findViewWithTag("calendar.day.9");
+                PhoneUiCheck.check(day.getContentDescription().toString().contains(event)
+                                && ((android.graphics.drawable.RippleDrawable)day.getBackground()).getDrawable(0)
+                                        instanceof android.graphics.drawable.LayerDrawable,
+                        "Event day has no visible marker or accessible event name");
+                root.findViewWithTag("calendar.event.10").performClick();
+                selected = root.findViewWithTag("calendar.selected.event");
+                PhoneUiCheck.check(selected != null && selected.getText().toString().equals(eid),
+                        "Month event row did not select its day in place");
+                calendarTimes(a, root, fixture.day(arafah, 1));
+                root.findViewWithTag("calendar.day.11").performClick();
+                PhoneUiCheck.check(root.findViewWithTag("calendar.selected.event") == null,
+                        "Ordinary selected date retained a stale event label");
+            });
+        } finally {
+            PhoneUiCheck.on(test, () -> {
+                if (a.phoneUi.choiceDialog != null) a.phoneUi.choiceDialog.dismiss();
+                a.phoneUi.settings = before;
+            });
+        }
+        PhoneUiCheck.check(PhoneStore.read(a).values.equals(original.values),
+                "Browsing calendar events wrote prayer settings");
     }
 
     private static void calendarTimes(

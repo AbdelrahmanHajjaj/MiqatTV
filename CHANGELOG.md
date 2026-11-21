@@ -1,9 +1,14 @@
 # Changelog
 
-## Design review — Home, calendar and location
+## 0.5.3 phone Home, calendar and location
 
-- Added an English interactive proposal for a compact prayer card, Hijri event
-  markers and optional background-location setup. Android runtime is unchanged.
+- Keep both the welcome greeting and canonical Quran excerpt; move Hijri date and
+  one city action into the prayer card with compact Location settings.
+- Mark five recurring Hijri events in the calendar, show selected-day event details
+  with prayer times, and add one relevant current/upcoming event on Home.
+- Add optional location refresh while the app is closed, with explicit Android
+  background permission, manual fallback and protection from stale fixes.
+- Preserve existing settings and foreground-only travel consent during upgrades.
 
 ## 0.5.2 phone refinement
 

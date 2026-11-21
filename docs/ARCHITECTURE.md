@@ -105,5 +105,12 @@ schedule/launcher update lifecycle plus exact-size maps/legacy resize bounds.
 Allocated dimensions determine compact/next/daily detail; stored presets remain
 initial presentations and styles are independent. PhoneDayOverrides renders each
 weekday's controls in place. Native receiver variants share that provider.
+`PhoneHijriEvents` adapts the canonical recurring event catalog to corrected ICU
+calendar dates; `companion/core` selects current/upcoming events from explicit
+inputs. The exact Home verse is projected from the existing TV source.
+`PhoneBackgroundPermission` owns fresh optional consent. `PhoneLocationJob` owns
+one bounded OS location request per persisted periodic job; `PhoneBackgroundLocation`
+gates permission/opt-in and rejects fixes invalidated by newer user calibration.
+No continuous foreground service or application network transport is added.
 Neither phone settings nor alarm recovery connect to a TV.
 See [phone guide and limits](PHONE.md) and [delivery ledger](PHONE-WORK.md).

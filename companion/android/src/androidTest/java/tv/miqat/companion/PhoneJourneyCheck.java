@@ -157,9 +157,14 @@ final class PhoneJourneyCheck {
                         test,
                         () -> {
                             resumed.body.findViewWithTag("phone.location").performClick();
-                            check(
-                                    resumed.section.equals("calculation"),
-                                    "Prayer card location action must open location settings");
+                            if (PhoneLocation.allowed(resumed)) {
+                                check(resumed.page.equals("prayers") && resumed.phoneUi.settings.locationReady
+                                                && (resumed.phoneUi.locationUi.locator.running
+                                                    || resumed.phoneUi.locationUi.locationMessage.equals("phone_location_updated")),
+                                        "Permitted city action must refresh without leaving Home");
+                                resumed.phoneUi.locationUi.cancelLocation();
+                            } else check(resumed.section.equals("calculation"),
+                                    "Denied city action must open location settings");
                             resumed.tab("prayers");
                             resumed.onboarding.open();
                             resumed.back();

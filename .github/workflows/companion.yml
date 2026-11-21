@@ -54,6 +54,9 @@ jobs:
             timeout 420s adb shell am instrument -r -w -e suite phone-custom tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-custom-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-custom-result.log
             grep -q 'PASS: v1 migration' phone-custom-result.log
+            timeout 90s adb shell am instrument -r -w -e suite phone-background-denied tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-background-denied-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-background-denied-result.log
+            grep -q 'PASS: phone-background-denied' phone-background-denied-result.log
             timeout 420s adb shell am instrument -r -w -e suite public-release tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee public-release-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' public-release-result.log
             grep -q 'PASS: public release selection' public-release-result.log
@@ -70,6 +73,20 @@ jobs:
             timeout 420s adb shell am instrument -r -w -e suite phone-location tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-location-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-location-result.log
             grep -q 'PASS: bilingual one-shot location' phone-location-result.log
+            adb shell pm grant tv.miqat.companion android.permission.ACCESS_BACKGROUND_LOCATION
+            adb emu geo fix -0.1278 51.5074
+            timeout 90s adb shell am instrument -r -w -e suite phone-background-prepare tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-background-prepare-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-background-prepare-result.log
+            grep -q 'PASS: phone-background-prepare' phone-background-prepare-result.log
+            adb shell am kill tv.miqat.companion
+            test -z "$(adb shell pidof tv.miqat.companion)"
+            adb emu geo fix -0.1278 51.5074
+            adb shell cmd jobscheduler run -f tv.miqat.companion 41703
+            sleep 22
+            timeout 90s adb shell am instrument -r -w -e suite phone-background-verify tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-background-verify-result.log
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-background-verify-result.log
+            grep -q 'PASS: phone-background-verify' phone-background-verify-result.log
+            adb shell pm revoke tv.miqat.companion android.permission.ACCESS_BACKGROUND_LOCATION
             timeout 420s adb shell am instrument -r -w tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee companion-ui-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' companion-ui-result.log
             grep -q 'PASS: bilingual native bindings' companion-ui-result.log

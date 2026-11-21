@@ -16,6 +16,8 @@ final class PhoneLocationUi {
     final MainActivity a;
     final PhoneUi ui;
     final PhoneLocation locator;
+    final PhoneBackgroundPermission background;
+    private boolean homeRequest;
     boolean locationPermissionPending, advancedLocation, travelRequest;
     long travelAttempt;
     String locationMessage = "";
@@ -26,12 +28,14 @@ final class PhoneLocationUi {
         a = activity;
         this.ui = ui;
         locator = new PhoneLocation(a);
+        background = new PhoneBackgroundPermission(a, ui);
     }
 
     void cancelLocation() {
         if (locator.running)
             locationMessage = travelRequest ? "phone_travel_failed" : "phone_location_cancelled";
         locator.close();
+        homeRequest = false;
         locationPermissionPending = false;
         if (locationDialog != null) {
             locationDialog.dismiss();
@@ -65,11 +69,8 @@ final class PhoneLocationUi {
             /* Coordinates need no catalog match. */
         }
         if (selectedCountry.isEmpty() && city != null) selectedCountry = country(city, false);
-        LinearLayout panel = a.views.card(a.body);
-        LinearLayout countryRow = a.views.horizontal(panel);
-        LinearLayout field = a.views.column();
-        countryRow.addView(field, new LinearLayout.LayoutParams(0, -2, 1));
-        field.addView(a.views.text(a.t("phone_country"), 13, a.muted));
+        LinearLayout panel = a.views.navigationGroup(a.body);
+        panel.setTag("phone.location.fields");
         String countryLabel = a.t("phone_choose_country");
         if (!selectedCountry.isEmpty()) {
             for (int i = 0; i < ui.data.cities.length(); i++) {
@@ -80,31 +81,18 @@ final class PhoneLocationUi {
                 }
             }
         }
-        a.views.button(field, countryLabel + "  ⌄", this::chooseCountry).setTag("phone.country");
-        a.views
-                .iconButton(
-                        countryRow,
-                        locator.running ? "close" : "compass",
-                        a.t(locator.running ? "phone_location_cancel" : "phone_use_location"),
-                        () -> {
-                            if (locator.running) {
-                                cancelLocation();
-                                a.render();
-                            } else useLocation();
-                        })
-                .setTag("phone.location.detect");
-        panel.addView(a.views.text(a.t("phone_city"), 13, a.muted));
+        LinearLayout countryRow = fieldRow(panel, "phone_country", countryLabel, "phone.country", this::chooseCountry);
+        if (a.page.equals("onboarding")) addDetect(countryRow);
+        android.view.View divider = new android.view.View(a);
+        divider.setBackgroundColor((a.muted & 0xffffff) | 0x22000000);
+        panel.addView(divider, new LinearLayout.LayoutParams(-1, a.views.dp(1)));
         boolean matches = city != null && country(city, false).equals(selectedCountry);
-        a.views
-                .button(
-                        panel,
-                        (matches || selectedCountry.isEmpty()
-                                        ? ui.location()
-                                        : a.t("phone_choose_city"))
-                                + "  ⌄",
-                        this::chooseCity)
-                .setTag("phone.city");
-        panel.addView(a.views.text(ui.settings.zone().getID(), 13, a.muted));
+        fieldRow(panel, "phone_city", matches || selectedCountry.isEmpty() ? ui.location() : a.t("phone_choose_city"),
+                "phone.city", this::chooseCity);
+        TextView timezone = a.views.text(a.t("phone_zone") + " · " + ui.settings.zone().getID(), 11, a.muted);
+        timezone.setPadding(a.views.dp(4), a.views.dp(4), 0, a.views.dp(12));
+        a.body.addView(timezone);
+        if (!a.page.equals("onboarding")) background.control(a.body);
         if (!locationMessage.isEmpty())
             a.body.addView(a.views.text(a.t(locationMessage), 14, a.accent));
         if (locationMessage.equals("phone_location_disabled"))
@@ -122,9 +110,43 @@ final class PhoneLocationUi {
                                             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                                             android.net.Uri.parse(
                                                     "package:" + a.getPackageName()))));
-        a.views
-                .navigationRow(a.body, "gear", a.t("phone_advanced"), "", this::advanced)
+        if (a.page.equals("onboarding")) advancedRow();
+    }
+
+    void advancedRow() {
+        a.views.navigationRow(a.body, "gear", a.t("phone_advanced"), "", this::advanced)
                 .setTag("phone.location.advanced");
+    }
+
+    private LinearLayout fieldRow(LinearLayout panel, String label, String value, String tag, Runnable action) {
+        LinearLayout row = a.views.horizontal(panel);
+        row.setMinimumHeight(a.views.dp(52));
+        row.setPadding(a.views.dp(12), 0, a.views.dp(12), 0);
+        TextView name = a.views.text(a.t(label), 12, a.muted);
+        name.setPadding(0, 0, a.views.dp(8), 0);
+        row.addView(name, new LinearLayout.LayoutParams(-2, -2));
+        Button field = a.views.button(row, value + "  ⌄", action);
+        field.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1));
+        field.setTag(tag);
+        field.setMinWidth(0);
+        field.setMinimumWidth(0);
+        field.setMaxLines(2);
+        field.setTextSize(13);
+        field.setGravity(android.view.Gravity.END | android.view.Gravity.CENTER_VERTICAL);
+        field.setPadding(a.views.dp(4), 0, 0, 0);
+        field.setContentDescription(a.t(label) + ", " + value);
+        field.setBackground(new android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf((a.accent & 0xffffff) | 0x22000000),
+                a.views.background(android.graphics.Color.TRANSPARENT, 12), null));
+        return row;
+    }
+
+    void addDetect(LinearLayout parent) {
+        a.views.iconButton(parent, locator.running ? "close" : "compass",
+                a.t(locator.running ? "phone_location_cancel" : "phone_use_location"), () -> {
+                    if (locator.running) { cancelLocation(); a.render(); }
+                    else useLocation();
+                }).setTag("phone.location.detect");
     }
 
     private void chooseCountry() {
@@ -169,6 +191,8 @@ final class PhoneLocationUi {
                             JSONObject city = ui.data.city(id);
                             Map<String, String> changes = new LinkedHashMap<>();
                             changes.put("prayer.location", id);
+                            changes.put("prayer.background-location", "false");
+                            changes.put("prayer.travel-refresh", "false");
                             changes.put("prayer.latitude", city.getString("lat"));
                             changes.put("prayer.longitude", city.getString("lng"));
                             changes.put("prayer.method", city.getString("method"));
@@ -248,6 +272,8 @@ final class PhoneLocationUi {
                         || Math.abs(y) > 180) throw new IllegalArgumentException();
                 Map<String, String> changes = new LinkedHashMap<>();
                 changes.put("prayer.location", "custom");
+                changes.put("prayer.background-location", "false");
+                changes.put("prayer.travel-refresh", "false");
                 changes.put("prayer.latitude", Double.toString(x));
                 changes.put("prayer.longitude", Double.toString(y));
                 changes.put("prayer.zone", draftZone[0]);
@@ -312,7 +338,12 @@ final class PhoneLocationUi {
                                 city == null ? "detected" : "detected:" + city.getString("id"));
                         values.put("prayer.latitude", Double.toString(fix.getLatitude()));
                         values.put("prayer.longitude", Double.toString(fix.getLongitude()));
-                        PhoneStore.read(a).changed(values).save(a);
+                        synchronized (PhoneStore.LOCK) {
+                            if (!PhoneBackgroundLocation.cancel(a))
+                                throw new java.io.IOException("Could not cancel earlier location request");
+                            PhoneStore.read(a).changed(values).save(a);
+                        }
+                        PhoneBackgroundLocation.sync(a);
                         selectedCountry = city == null ? "" : country(city, false);
                         PhoneStore.preferences(a)
                                 .edit()
@@ -335,6 +366,7 @@ final class PhoneLocationUi {
 
     void useLocation() {
         travelRequest = false;
+        homeRequest = a.page.equals("prayers") && ui.settings.locationReady;
         if (!PhoneLocation.allowed(a)) {
             locationPermissionPending = true;
             a.requestPermissions(
@@ -379,7 +411,7 @@ final class PhoneLocationUi {
             changes.put("prayer.latitude", Double.toString(fix.getLatitude()));
             changes.put("prayer.longitude", Double.toString(fix.getLongitude()));
             changes.put("prayer.zone", "system");
-            changes.put("prayer.location-ready", "false");
+            changes.put("prayer.location-ready", Boolean.toString(homeRequest));
             if (!ui.settings.locationReady && city != null) {
                 changes.put("prayer.method", city.getString("method"));
                 changes.put("prayer.asr", city.optBoolean("hanafi") ? "hanafi" : "shafi");
@@ -387,8 +419,9 @@ final class PhoneLocationUi {
             latitude = "";
             longitude = "";
             selectedCountry = city == null ? "" : country(city, false);
-            locationMessage = "phone_location_found";
-            if (ui.save(changes, false) && a.page.equals("prayers")) ui.open("calculation");
+            locationMessage = homeRequest ? "phone_location_updated" : "phone_location_found";
+            if (ui.save(changes, false) && a.page.equals("prayers") && !homeRequest) ui.open("calculation");
+            homeRequest = false;
         } catch (Exception invalid) {
             locationMessage = "phone_location_timeout";
             a.render();

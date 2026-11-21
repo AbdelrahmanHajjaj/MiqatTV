@@ -1,5 +1,46 @@
 # Validation evidence
 
+## Approved Home/calendar/location implementation — 21 November 2026
+
+Phone review candidate **0.5.3/code 19**, feature/companion-installation, draft PR #9.
+Both headers, in-card Hijri date/single city action, compact Location controls,
+five-event calendar and explicit optional background location are implemented.
+Schema 6 preserves v1–v5 preferences without expanding foreground-only consent.
+
+Local checks: companion core `check jvmJar`, generator 11/11, catalogs/shared
+validation, QR/Android-shared checks and design handler checks pass. Final native
+build/test APK/lint passes with **0 errors, 41 existing warnings**. APK verification
+confirms all **25 exact recordings**, **25 packaged notices/source files** and the
+unchanged signing certificate.
+
+Owned, muted, read-only API 37 emulator evidence: bilingual phone UI, actual
+calendar event/day/timezone/Hijri correction, migration, one-shot precise/coarse/
+denied location, in-place Home refresh, first-use/style/widget journeys and
+native TV bindings pass. App sizes **80–150%** pass in both languages, normal
+portrait and Android font **1.3** portrait/landscape. Rendered Home captures show
+the greeting, canonical joined Arabic verse, date/city metadata and six prayers.
+No physical device or TV was operated.
+
+Background checks exercise real opt-in on/off and disclosure Cancel, permission
+denial/manual fallback and absent scheduled work. After instrumentation ended,
+the app process was killed and verified absent; a forced persisted job saved
+injected London coordinates from a Cairo baseline. Verification checks unchanged
+prayer settings, authoritative coordinates, timestamp, stale/manual/off-on
+rejection and restoration. The final production APK passed this closed-process
+check. A forced job proves the execution path; it does not establish Android's
+natural cadence, Doze latency, reboot timing or OEM battery behavior.
+
+Raw captures/logs and failed attempts remain ignored under state/. Initial native
+assertions still expected the old external metadata/timezone layout; they now
+check the approved in-card/Advanced locations. The cancelled-disclosure check
+waits for actual window focus before asserting. No product assertion was weakened.
+Final-head Android/LG/preview and Apple portability results are exposed by PR #9.
+
+Latest review export: `state/builds/companion/Miqat-latest.apk`, **35,285,640 bytes**,
+SHA256 `76CCAA9B6209E52A364DB6A035B650F374490C81C467ECEDC53AE9524F118810`.
+Keep the PR draft; no merge, release or physical deployment is authorized here.
+
+
 ## Home/calendar/location design proposal — 21 November 2026
 
 Owner follow-up: the demo now defaults to greeting plus the TV verse. Browser

@@ -47,6 +47,8 @@ public final class PrayerAlarm extends BroadcastReceiver {
         new Thread(
                         () -> {
                             try {
+                                if (!PhoneAlarms.FIRE.equals(intent.getAction()))
+                                    PhoneBackgroundLocation.sync(app);
                                 PhoneAlarms.rebuild(app);
                             } finally {
                                 pending.finish();

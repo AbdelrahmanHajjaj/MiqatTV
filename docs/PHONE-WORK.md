@@ -1,25 +1,23 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: mock-first Home/calendar/location proposal; WORK.md owns next action.
+Latest scope: approved Home/calendar/location implementation; WORK.md owns next action.
 
-## Home, location and calendar proposal
+## Home, location and calendar — 0.5.3/code 19
 
-English interactive proposal: design/phone-polish/home-calendar.html. Date/city
-share the prayer hero, greeting fits the existing toolbar, and the exact canonical
-TV verse is an alternative. A single city action refreshes location or opens the
-full Location page when permission is absent. Country/city fields are compact.
+Owner approved both headers: toolbar greeting and exact canonical TV Quran excerpt.
+Native Home now puts the date and one city action inside the prayer hero. A
+permitted city action refreshes in place; denied access opens compact full Location
+settings. Calendar event markers, selected-day labels, month event rows and one
+relevant Home line use a canonical five-event catalog and corrected calendar.
 
-Owner explicitly requested optional automatic updates while Miqat is closed.
-Prototype opt-in/denial/revocation and simulated travel are functional, with manual
-selection drafts and retained-permission reuse. This is approved feature intent,
-not background runtime support in the current 0.5.2 APK. Calendar events, month
-markers and one relevant Home line are also design-only pending review.
+Automatic location while closed is a fresh optional opt-in with Android background
+permission. A persisted periodic job obtains bounded fixes, preserves prayer
+calibration and rejects late results after manual changes or opt-out. Schema 6
+preserves v1–v5 preferences without expanding old foreground consent.
 
-Browser checks at 360/390px, date/event selection, six immediate prayer rows,
-header variants and background/manual state transitions pass. Existing gallery
-and new handler self-checks pass. Raw screenshots remain ignored under state/.
-Review the proposal before native work; no new APK or hardware checks in this pass.
+Native acceptance and final-head CI are recorded in EVIDENCE.md. No physical-device
+deployment, merge or release is part of this review delivery.
 
 ## Recording feedback — 0.5.2/code 18
 

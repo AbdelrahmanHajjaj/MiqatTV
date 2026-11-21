@@ -20,6 +20,7 @@ import java.util.*;
 /** Run only on an explicitly selected owned phone emulator; no TV/device integration. */
 public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
+    String backgroundSuite = "";
     boolean mapNetwork;
     boolean journey,
             customCheck,
@@ -45,6 +46,7 @@ public final class CompanionCheck extends Instrumentation {
         mapNetwork = arguments != null && "true".equals(arguments.getString("map-network", "false"));
         captures = arguments != null && "true".equals(arguments.getString("capture", "false"));
         String suite = arguments == null ? "" : arguments.getString("suite", "");
+        backgroundSuite = suite.startsWith("phone-background-") ? suite : "";
         journey = suite.equals("phone-journey");
         customCheck = suite.equals("phone-custom");
         releaseCheck = suite.equals("public-release");
@@ -72,6 +74,15 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if (!backgroundSuite.isEmpty()) {
+                if (backgroundSuite.equals("phone-background-prepare")) PhoneBackgroundCheck.prepare(this);
+                else if (backgroundSuite.equals("phone-background-verify")) PhoneBackgroundCheck.verify(this);
+                else if (backgroundSuite.equals("phone-background-denied")) PhoneBackgroundCheck.denied(this);
+                else throw new AssertionError("Unknown background suite");
+                result.putString("stream", "PASS: " + backgroundSuite + "\n");
+                finish(-1, result);
+                return;
+            }
             if (journey) {
                 PhoneJourneyCheck.run(this, captures);
                 result.putString(
