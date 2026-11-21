@@ -77,6 +77,7 @@ final class PhoneAdhanCheck {
                 "Selected notification artwork missing");
         PhoneRuntimeCheck.shell(test, "cmd statusbar expand-notifications");
         try {
+            PhonePresentationCheck.expandNotification(test,settings.data.prayerName(event.getPrayer(),ar));
             LiveUiCheck.until(() -> {
                 android.view.accessibility.AccessibilityNodeInfo control = stopControl(test, c);
                 if (control == null) return false;
@@ -101,21 +102,7 @@ final class PhoneAdhanCheck {
 
     private static android.view.accessibility.AccessibilityNodeInfo stopControl(
             Instrumentation test, Context c) {
-        android.view.accessibility.AccessibilityNodeInfo root =
-                test.getUiAutomation().getRootInActiveWindow();
-        if (root == null) return null;
-        try {
-            if (!"com.android.systemui".contentEquals(root.getPackageName())) return null;
-            android.view.accessibility.AccessibilityNodeInfo selected = null;
-            for (android.view.accessibility.AccessibilityNodeInfo node :
-                    root.findAccessibilityNodeInfosByText(PhoneAlarms.text(c, "phone_stop"))) {
-                if (selected == null && node.isVisibleToUser()) selected = node;
-                else node.recycle();
-            }
-            return selected;
-        } finally {
-            root.recycle();
-        }
+        return PhonePresentationCheck.notificationText(test,PhoneAlarms.text(c,"phone_stop"));
     }
 
     static void screen(Instrumentation test, Context c) throws Exception {

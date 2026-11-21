@@ -119,3 +119,20 @@ PhoneAudio/PhoneAudioLibrary retain immutable private recordings and an atomic
 named index, separate from portable settings' selected hashes. PhoneAlertTest owns
 an independent elapsed-time/boot-scoped one-shot claim; explicit delivery tests
 never replace the real schedule. PhoneTestUi owns its countdown/cancel actions.
+
+PhoneVolume temporarily owns only the chosen stream index, deriving the nearest
+positive step from PhonePrayerRules.volumeIndex and the OS maximum. A private
+restore record is committed before changing it. Pause/stop/failure releases it
+only if the current index is still Miqat's applied value. A manual change is
+preserved; unchanged settings do not reassert volume. Recovery after process
+death runs at the next Miqat entry. No extra service or network work is added.
+
+PlaybackWave renders the Home card's bounded foreground animation and canonical
+playback-controls action. It captures no audio and respects Android and retained
+motion preferences. The resumed MainActivity can open the opted-in Adhan screen
+without relying on lock-screen intents. Background presentation remains owned by
+Android. Playback notifications retain their MediaSession token and standard
+Pause/Stop actions in a non-MediaStyle alert, enabling supported system swipes.
+Core prayer alarms declare USE_EXACT_ALARM on Android 13+, with the legacy
+SCHEDULE_EXACT_ALARM declaration limited to Android 12. Notification permission
+and user prayer opt-outs still gate delivery; the audio stream toggle is separate.

@@ -18,7 +18,8 @@ final class PhoneHome {
         this.ui = ui;
     }
 
-    private TextView countdown, status, playback;
+    private TextView countdown, status;
+    private PlaybackWave playback;
     private long nextTime, lastTick;
     private int renderedDay;
     private String renderedZone = "";
@@ -72,7 +73,7 @@ final class PhoneHome {
                         }
                     }
                     if (playback != null)
-                        playback.setVisibility(PhonePlayback.playing() ? View.VISIBLE : View.GONE);
+                        playback.sync();
                     clock.postDelayed(this, 1000);
                 }
             };
@@ -115,12 +116,17 @@ final class PhoneHome {
         LinearLayout hero = ui.appearance.hero(a.body, ui.settings);
         hero.setPadding(a.views.dp(12), a.views.dp(4), a.views.dp(12), a.views.dp(12));
         hero.setTag("phone.hero");
+        hero.setClipToPadding(false);
         cardMetadata(hero, day);
         PhoneSchedule.Day tomorrow = ui.settings.day(now, 1);
         tv.miqat.core.PrayerSelection selection = nextPrayer(hero, now, true);
         int next = selection == null ? -1 : selection.getNext();
         boolean tomorrowNext = selection != null && selection.getNextTime() >= tomorrow.start;
         eventLine(hero, now);
+        playback=new PlaybackWave(a);
+        LinearLayout.LayoutParams waveSize=new LinearLayout.LayoutParams(-1,a.views.dp(48));
+        waveSize.setMargins(-a.views.dp(12),0,-a.views.dp(12),-a.views.dp(12));
+        hero.addView(playback,waveSize);
         alertStatus();
         renderTimes(day, next, tomorrowNext);
         destinations();
@@ -231,17 +237,6 @@ final class PhoneHome {
             a.views
                     .iconButton(alerts, "gear", a.t("phone_repair"), () -> ui.open("permissions"))
                     .setTag("phone.setup");
-        playback =
-                a.views.iconButton(
-                        alerts,
-                        "stop",
-                        a.t("phone_stop"),
-                        () -> {
-                            PhonePlayback.stop(a);
-                            a.render();
-                        });
-        playback.setTag("phone.stop");
-        playback.setVisibility(PhonePlayback.playing() ? View.VISIBLE : View.GONE);
         String audioError = PhoneStore.preferences(a).getString("audio-error", "");
         if (!audioError.isEmpty()) a.body.addView(a.views.text(a.t(audioError), 13, a.accent));
     }

@@ -20,6 +20,7 @@ import java.util.*;
 /** Run only on an explicitly selected owned phone emulator; no TV/device integration. */
 public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
+    String presentation = "";
     String backgroundSuite = "";
     boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary, phoneAudioRoute;
     boolean mapNetwork;
@@ -53,6 +54,7 @@ public final class CompanionCheck extends Instrumentation {
         phoneTests = suite.equals("phone-tests");
         phoneLibrary = suite.equals("phone-library");
         phoneAudioRoute = suite.equals("phone-audio-route");
+        if (suite.equals("phone-presentation")) presentation = arguments.getString("case","all");
         calendarReturn = suite.equals("phone-calendar-return");
         journey = suite.equals("phone-journey");
         customCheck = suite.equals("phone-custom");
@@ -81,6 +83,11 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if (!presentation.isEmpty()) {
+                PhonePresentationCheck.run(this,presentation,captures);
+                result.putString("stream","PASS: Adhan card, notification swipe and foreground screen\n");
+                finish(-1,result);return;
+            }
             if (phoneAudioRoute) {
                 PhoneAudioRouteCheck.run(this,captures);
                 result.putString("stream", "PASS: media default and optional alarm audio routing\n");

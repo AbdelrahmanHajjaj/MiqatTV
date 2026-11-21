@@ -8,6 +8,11 @@ import tv.miqat.core.PrayerSelection
 object PhonePrayerRules {
     const val LATE_WINDOW_MS = 120000.0
 
+    fun volumeIndex(percent: Int, maximum: Int): Int {
+        require(percent in 0..100 && maximum > 0)
+        return if (percent == 0) 0 else maxOf(1, ((maximum.toLong() * percent + 50) / 100).toInt())
+    }
+
     fun validate(latitude: Double, longitude: Double, modes: IntArray, before: IntArray,
         after: IntArray, volume: Int, durationSeconds: Int) {
         require(latitude.isFinite() && latitude in -90.0..90.0 && longitude.isFinite() && longitude in -180.0..180.0)

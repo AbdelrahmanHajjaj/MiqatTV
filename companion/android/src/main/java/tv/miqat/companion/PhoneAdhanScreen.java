@@ -63,7 +63,7 @@ public final class PhoneAdhanScreen extends Activity {
         try {
             PhoneStore settings = PhoneStore.read(this);
             setVolumeControlStream(PhonePlayback.attributes(settings).getVolumeControlStream());
-            if (!settings.value("reminders.full-screen").equals("true")) {
+            if (!getIntent().getBooleanExtra("manual",false) && !settings.value("reminders.full-screen").equals("true")) {
                 finish();
                 return;
             }

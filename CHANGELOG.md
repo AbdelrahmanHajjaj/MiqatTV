@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.11 Adhan playback refinements
+
+- Set the Adhan level against the selected media/alarm stream's maximum, independent of its previous volume. Apply default and per-prayer levels to playback, Listen and length previews.
+- Restore the previous stream level on pause or finish, preserving manual volume changes. Recover an interrupted restoration at the next Miqat entry.
+- Show an animated playing band across the prayer card's bottom edge, with accessible playback controls and reduced-motion support. Remove the detached square Stop button.
+- Let supported Android versions swipe the playback notification to stop Adhan, retaining Pause/Stop and progress.
+- Open the optional Adhan screen while Miqat is active, independently of lock-screen permission. Use Android 13+'s automatically granted alarm permission for core prayer timing.
+
 ## 0.5.10 Adhan volume
 
 - Use media volume for Adhan by default. Add the optional **Use alarm sound** toggle in Prayer alerts to use alarm volume instead.

@@ -180,6 +180,8 @@ final class PhoneAlarms {
 
     static String rebuild(Context context) {
         Context c = context.getApplicationContext();
+        try { PhoneVolume.recover(c); }
+        catch (Exception restricted) { android.util.Log.w("Miqat","Volume restoration deferred",restricted); }
         PrayerWidget.updateAll(c);
         synchronized (PhoneStore.LOCK) {
             try {

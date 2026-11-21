@@ -43,6 +43,20 @@ public final class MainActivity extends Activity {
     int networkGeneration;
     PairingUi pairingUi;
     boolean phoneForeground;
+    private static java.lang.ref.WeakReference<MainActivity> resumed=new java.lang.ref.WeakReference<>(null);
+    private String shownAdhan="";
+
+    static void showPlayingAdhan() {
+        MainActivity a=resumed.get();
+        if(a==null || a.isFinishing() || !PhonePlayback.scheduled() || !PhonePlayback.outputStarted())return;
+        try {
+            String id=PhonePlayback.currentId();
+            if(!a.shownAdhan.equals(id) && PhoneStore.read(a).value("reminders.full-screen").equals("true")) {
+                a.shownAdhan=id;PhonePlayback.openControls(a);
+            }
+        } catch(Exception unavailable) { android.util.Log.w("Miqat","Cannot open Adhan controls",unavailable); }
+    }
+
     int selected;
     boolean ar;
     String page = "prayers", section = "", query = "";
@@ -823,6 +837,7 @@ public final class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        resumed=new java.lang.ref.WeakReference<>(this);
         if (phoneUi != null) {
             phoneUi.locationUi.background.resume();
             PhoneAlarms.rebuild(this);
@@ -833,6 +848,7 @@ public final class MainActivity extends Activity {
             phoneUi.home.start();
             phoneUi.locationUi.refreshTravel();
         }
+        getWindow().getDecorView().post(MainActivity::showPlayingAdhan);
     }
 
     @Override
@@ -858,6 +874,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        if(resumed.get()==this)resumed.clear();
         if (phoneUi != null) phoneUi.locationUi.background.pause();
         super.onPause();
     }

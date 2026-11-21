@@ -7,6 +7,17 @@ class PhonePrayerRulesTest {
     private val none = IntArray(6)
     private val times = doubleArrayOf(600000.0, 900000.0, 1200000.0, 1800000.0, 2400000.0, 3000000.0)
 
+    @Test fun volumeUsesTheStreamMaximumAndAvailableSteps() {
+        assertEquals(11,PhonePrayerRules.volumeIndex(70,15))
+        assertEquals(5,PhonePrayerRules.volumeIndex(70,7))
+        assertEquals(0,PhonePrayerRules.volumeIndex(0,15))
+        assertEquals(1,PhonePrayerRules.volumeIndex(5,7))
+        assertEquals(Int.MAX_VALUE,PhonePrayerRules.volumeIndex(100,Int.MAX_VALUE))
+        assertFailsWith<IllegalArgumentException> { PhonePrayerRules.volumeIndex(-1,15) }
+        assertFailsWith<IllegalArgumentException> { PhonePrayerRules.volumeIndex(101,15) }
+        assertFailsWith<IllegalArgumentException> { PhonePrayerRules.volumeIndex(70,0) }
+    }
+
     @Test fun nextPrayerSkipsSunriseAndUsesTomorrowWithoutInventingPolarTimes() {
         val tomorrow=times.map { it+86400000 }.toDoubleArray()
         assertEquals(2,PhonePrayerRules.nextPrayer(times,tomorrow,600000.0)!!.next)

@@ -1,7 +1,19 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: media volume by default and optional alarm sound; WORK.md owns next action.
+Latest scope: maximum-based level, in-card playback, swipe dismissal and presentation; WORK.md owns next action.
+
+## Adhan playback refinements — 0.5.11/code 27
+
+Adhan percentages target the selected stream's maximum, rounded to an available
+step. PhoneVolume owns temporary changes with persisted recovery and preserves
+manual changes. Default/per-prayer levels apply to normal playback and previews.
+Actual media/alarm route, pause/resume, live editing, zero and recovery checks
+pass. Add the animated in-card playback control, swipe-dismissible alert layout,
+foreground full screen and automatically granted Android 13+ prayer timing.
+Native motion/reduced-motion, real background swipe with restoration, foreground
+screen, full runtime and bilingual UI checks pass. Exact-head CI is tracked by
+PR #9; WORK.md owns next action.
 
 ## Adhan volume — 0.5.10/code 26
 

@@ -332,3 +332,23 @@ attributes: media by default, alarm only after opting in, then media again after
 opting out. It drives the real bilingual toggle and checks immediate persistence
 and Activity volume-key routing. The phone runtime suite includes it; storage
 fixtures check schema-6 migration preserves every field with alarm sound off.
+
+
+The audio-route fixture starts the actual selected stream at 1, then requires a
+70% Adhan level to set the maximum-based index (11/15 for media, 5/7 for alarm).
+It checks both routes, pause/resume, zero, live 50% edits, manual volume changes
+and restoration. Persisted recovery covers owned, user-changed and invalid
+records. The fixture restores stream levels/settings and runs from a visible
+activity because Android 17 restricts background volume APIs, including shell
+media-session commands. The normal runtime suite includes this regression.
+
+
+`phone-presentation` (`-e case home|swipe|screen`, default all) drives actual
+scheduled playback. It checks the full-width card band, accessible canonical
+control, changing native pixels with motion enabled and stable pixels with
+reduced motion. The fixture temporarily enables/restores the owned emulator's
+animator scale. It targets the SystemUI notification row through the accessibility
+tree, sends a real horizontal swipe and requires audio to stop. It also requires
+the opted-in foreground screen, even when lock-screen access is denied. On
+Android 13+ it verifies automatically granted core-alarm permission. Full runtime
+includes these checks; no system restriction is disabled.

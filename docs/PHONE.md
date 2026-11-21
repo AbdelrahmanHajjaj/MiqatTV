@@ -57,8 +57,13 @@ including before/after reminders that cross midnight.
 
 Adhan, Listen and length previews use **media volume** by default. Enable
 **Use alarm sound** in Prayer alerts to use **alarm volume** instead. The selected
-recording stays the same, and the app's volume percentage applies within that
-system stream. Volume buttons and media controls follow the selected stream.
+recording stays the same. The Adhan level is a percentage of that stream's
+**maximum**, rounded to an available volume step, regardless of its previous
+level. Miqat temporarily sets it for playback and restores the previous level
+on pause or finish. A manual volume change is retained. Zero silences Miqat
+without changing system volume. Fixed-volume devices use the player level;
+Android's volume/safety restrictions still apply. After abrupt process death,
+pending restoration is recovered at the next Miqat entry. Volume buttons and media controls follow the selected stream.
 Changing the mode stops current playback; the next playback uses the new mode.
 Short-tone notifications retain Android's notification-volume/channel behavior.
 This option does not grant Android timing or Do Not Disturb access.
@@ -122,13 +127,15 @@ Settings rows show their saved values. Tap a number to edit inline; +/− and va
 typed changes apply immediately. Small choice sets stay visible and large lists
 open a searchable sheet. Prayer / Your TVs / Phone settings use
 a floating main navigation bar. Detail and setup screens use Back and their own
-actions, with Remote and TV settings inside a selected TV. Voice previews last up to 12 seconds.
-Stop is available on the Prayer screen and the playback notification. A scheduled
+actions, with Remote and TV settings inside a selected TV. Listen plays the whole recording.
+While Adhan plays, an animated band spans the prayer card's bottom edge. Tap it
+for playback controls; it becomes static when motion is reduced. The detached
+square Stop button is removed. Stop also remains in the playback notification. A scheduled
 adhan continues when the app leaves the foreground; a preview stops. Audio-focus
 loss stops playback and does not automatically restart a missed recording.
 
-Adhan level is relative to Android's alarm volume. Miqat does not change system
-volume or bypass Do Not Disturb. The length slider applies a percentage to the selected clip (up to 10 minutes);
+Adhan level targets the maximum of the selected media/alarm stream. Miqat
+restores its temporary stream change after playback and respects Do Not Disturb. The length slider applies a percentage to the selected clip (up to 10 minutes);
 the service exists only during an active adhan session, including a user pause. Short-tone alerts use a brief bundled tone on fresh notification channels;
 existing user channel sound choices remain under Android control. No idle foreground service runs.
 
@@ -151,19 +158,24 @@ reported explicitly. Physical compass accuracy still needs device testing.
 
 Adhan continues while using other apps or with the screen off. Its notification
 provides Play/Pause and Stop; pause keeps the recording position and remaining
-configured duration. Dismissing it stops playback where Android allows active
-service notifications to be dismissed. Some versions pin this notification;
-Stop remains available there.
+configured duration. The notification uses a dismissible alert layout with
+progress, rather than Android's protected media-card layout. A sideways swipe
+stops Adhan on supported Android versions. Older versions can pin foreground
+service notifications; the explicit Stop action remains available there.
 
 The playback notification shows the prayer name, its scheduled time in the selected
 clock/digit format, and the voice actually playing. Its media artwork uses the
 selected background, theme and canonical mihrab. Android controls the final
 notification panel layout and colors.
 
-**Full-screen adhan** uses that same selected scene and mihrab and is off by default. Enabling it allows Android's alarm
-screen when locked; Android 14+ may require **Allow full-screen alarms**. Tapping
-the notification opens that same session. Tapping the screen or switching apps
-does not stop audio. Pull the bottom **Swipe up to stop** handle upward and
+**Full-screen adhan** is off by default. When enabled, Miqat opens the Adhan
+screen directly while the app is active, without lock-screen permission. If Miqat
+is in the background, Android controls presentation: it can show the screen over
+the lock screen with the required access, or show a heads-up notification while
+you are using another app. **Allow adhan on the lock screen** requests only that
+Android access; it is separate from the in-app behavior. Tapping the alert opens
+the same session. Tapping the screen or switching apps does not stop audio.
+Pull the bottom **Swipe up to stop** handle upward and
 release past its threshold to stop and close. A tap, short pull, horizontal
 pull or cancelled gesture keeps playing. TalkBack and keyboard activation offer
 an explicit **Stop adhan and close** action. Back asks confirmation.
@@ -297,13 +309,13 @@ Play/Pause position; Miqat supplies localized prayer/time/voice and artwork.
 
 ## Timing and Qibla map limits
 
-Notification denial prevents scheduled prayer output. With precise alarm access,
-Miqat uses Android alarm-clock scheduling. Without it, Miqat uses approximate
-idle-aware alarms; Android can delay them, and events more than two minutes late
-are rejected rather than replayed unexpectedly. Background restrictions may
-prevent full Adhan and leave a notification fallback. Review timing access and
-app restrictions in Prayer alert permissions if delivery needs repair. This
-optional access is separate from the notification decision.
+Notification denial prevents scheduled prayer output. Core prayer alarms use
+Android's exact alarm-clock scheduling. Android 13+ automatically grants the
+alarm permission for this functionality, so no manual Alarms & reminders step is
+needed. Android 12 still uses its special timing access; without it, delivery is
+approximate and background playback may fall back to a notification. This timing
+permission is independent of the **Use alarm sound** volume toggle. Android and
+manufacturer battery restrictions still apply.
 
 Qibla has offline sensor compass and calculated true-north bearing using the
 confirmed app location. Approximate coordinates do not measure orientation;

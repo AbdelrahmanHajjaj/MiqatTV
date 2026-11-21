@@ -23,8 +23,17 @@ public final class PhonePlayback extends Service {
     private AudioManager audio;
     private AudioFocusRequest focus;
     private AudioAttributes outputAttributes;
+    private PhoneVolume volume;
     private MediaSession media;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Handler progressClock=new Handler(Looper.getMainLooper());
+    private final Runnable progressTick=new Runnable() {
+        public void run() {
+            if(active!=PhonePlayback.this || !started || paused)return;
+            try {publishPlayback();progressClock.postDelayed(this,1000);}
+            catch(Exception failure){failed();}
+        }
+    };
     private boolean preview, started, paused, defaultAudio, lengthPreview, testing;
     private String eventId = "", voiceId = "", customHash = "";
     private android.graphics.Bitmap artwork;
@@ -60,6 +69,12 @@ public final class PhonePlayback extends Service {
         return active == null ? "" : active.eventId;
     }
 
+    static void openControls(Activity activity) {
+        PhonePlayback service=active;
+        if(service!=null && service.prayerIndex>=0)
+            activity.startActivity(PhoneAdhanScreen.intent(activity,service.eventId,service.prayerIndex).putExtra("manual",true));
+    }
+
     static void stop(Context c) {
         c.stopService(new Intent(c, PhonePlayback.class));
     }
@@ -84,12 +99,8 @@ public final class PhonePlayback extends Service {
                     stop(c);
                     return;
                 }
-                if (service.player != null)
-                    service.player.setVolume(
-                            latest.audioVolume(service.defaultAudio ? -1 : service.prayerIndex)
-                                    / 100f,
-                            latest.audioVolume(service.defaultAudio ? -1 : service.prayerIndex)
-                                    / 100f);
+                if (service.player != null && service.started && !service.paused)
+                    service.volume.apply(service.player,latest.audioVolume(service.defaultAudio ? -1 : service.prayerIndex));
                 if (service.started) service.armLimit(latest);
 
             } catch (Exception invalid) {
@@ -274,6 +285,7 @@ public final class PhonePlayback extends Service {
                 screen
                         ? PhoneAdhanScreen.pending(this, eventId, prayerIndex)
                         : PhoneAlarms.open(this);
+        Bundle sessionExtras=new Bundle();sessionExtras.putParcelable(Notification.EXTRA_MEDIA_SESSION,media.getSessionToken());
         Notification.Builder notice =
                 new Notification.Builder(this, PhoneAlarms.playbackChannel(this, screen))
                         .setSmallIcon(R.drawable.companion_icon_mihrab)
@@ -309,10 +321,10 @@ public final class PhonePlayback extends Service {
                                                 PhoneAlarms.text(this, "phone_stop"),
                                                 command(STOP, 42501))
                                         .build())
-                        .setStyle(
-                                new Notification.MediaStyle()
-                                        .setMediaSession(media.getSessionToken())
-                                        .setShowActionsInCompactView(0, 1));
+                        // Active MediaStyle notifications are protected from swipe dismissal.
+                        .addExtras(sessionExtras)
+                        .setStyle(new Notification.BigTextStyle().bigText(settings.data.voiceName(voiceId,PhoneAlarms.arabic(this))));
+        if(started && player!=null)notice.setProgress((int)limit(settings),player.getCurrentPosition(),false);
         if (screen && !paused && PhoneAlarms.fullScreenAllowed(this))
             notice.setFullScreenIntent(open, true);
         return notice.build();
@@ -363,6 +375,8 @@ public final class PhonePlayback extends Service {
             paused = true;
             handler.removeCallbacksAndMessages(null);
             player.pause();
+            progressClock.removeCallbacksAndMessages(null);
+            volume.release();
             audio.abandonAudioFocusRequest(focus);
             publishPlayback();
         } catch (Exception failure) {
@@ -383,11 +397,13 @@ public final class PhonePlayback extends Service {
                 stopSelf();
                 return;
             }
+            volume.apply(player,settings.audioVolume(defaultAudio ? -1 : prayerIndex));
             player.start();
             paused = false;
             resumedAt = SystemClock.elapsedRealtime();
             armLimit(settings);
             publishPlayback();
+            progressClock.postDelayed(progressTick,1000);
         } catch (Exception failure) {
             failed();
         }
@@ -406,6 +422,7 @@ public final class PhonePlayback extends Service {
             throws Exception {
         AudioAttributes attributes = attributes(settings);
         outputAttributes = attributes;
+        volume = new PhoneVolume(this,attributes);
         media.setPlaybackToLocal(attributes);
         audio = getSystemService(AudioManager.class);
         focus =
@@ -432,8 +449,7 @@ public final class PhonePlayback extends Service {
                 player.setDataSource(
                         file.getFileDescriptor(), file.getStartOffset(), file.getLength());
             }
-        float volume = settings.audioVolume(defaultAudio ? -1 : prayer) / 100f;
-        player.setVolume(volume, volume);
+        player.setVolume(0,0);
         player.setOnCompletionListener(done -> stopSelf());
         player.setOnErrorListener((failed, what, extra) -> {
             failed();
@@ -451,9 +467,6 @@ public final class PhonePlayback extends Service {
                 stopSelf();
                 return;
             }
-            ready.setVolume(
-                    latest.audioVolume(defaultAudio ? -1 : prayer) / 100f,
-                    latest.audioVolume(defaultAudio ? -1 : prayer) / 100f);
             beginOutput(ready, latest, prayer, attributes);
         } catch (Exception invalid) {
             failed();
@@ -468,12 +481,15 @@ public final class PhonePlayback extends Service {
                 return;
             }
             handler.removeCallbacksAndMessages(null);
+            volume.apply(ready,settings.audioVolume(defaultAudio ? -1 : prayer));
+            ready.start();
             started = true;
             paused = false;
             playedMs = 0;
             resumedAt = SystemClock.elapsedRealtime();
-            ready.start();
-            updateMediaState(ready.getCurrentPosition());
+            publishPlayback();
+            progressClock.postDelayed(progressTick,1000);
+            MainActivity.showPlayingAdhan();
             PhoneStore.preferences(this).edit().remove("audio-error").apply();
             Vibrator vibrator = getSystemService(Vibrator.class);
             if (!preview && !testing && vibrator != null && vibrator.hasVibrator()
@@ -506,6 +522,7 @@ public final class PhonePlayback extends Service {
             testing = false;
         }
         handler.removeCallbacksAndMessages(null);
+        progressClock.removeCallbacksAndMessages(null);
         started = false;
         paused = false;
         playedMs = 0;
@@ -517,6 +534,11 @@ public final class PhonePlayback extends Service {
             player.setOnErrorListener(null);
             player.release();
             player = null;
+        }
+        if (volume != null) {
+            try { volume.release(); }
+            catch (Exception restricted) { PhoneStore.preferences(this).edit().putString("audio-error","phone_audio_failed").apply(); }
+            volume = null;
         }
         if (audio != null && focus != null) audio.abandonAudioFocusRequest(focus);
         focus = null;

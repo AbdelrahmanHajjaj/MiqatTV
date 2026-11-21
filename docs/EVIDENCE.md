@@ -1,5 +1,48 @@
 # Validation evidence
 
+## Adhan playback refinements — 21 November 2026
+
+Phone **0.5.11/code 27** targets the selected media/alarm stream's maximum rather
+than multiplying its previous level. The native regression failed at 1/15 instead
+of the expected 11/15 for 70%, then passed both streams, pause/resume, live edits,
+zero, manual-change preservation and private persisted recovery. Core JVM tests
+cover step rounding and invalid bounds. Volume is restored before relinquishing
+normal playback; process-death recovery waits until the next Miqat entry.
+
+Home has a full-width playing band inside the card, replacing the detached
+square Stop. Native captured pixels change with motion enabled and remain stable
+with reduced motion. The band opens playback controls through a canonical action
+and a 48dp target. Artwork/frame clipping and native Home/screen renders were
+inspected. The notification keeps progress, MediaSession and Pause/Stop in an
+ordinary alert, allowing a real sideways swipe to stop output on API 37. An
+actual swipe while another app is active also restores the prior media volume.
+
+The opted-in screen opens directly while Miqat is foreground, including with
+lock-screen intent access denied. Android still owns presentation over other
+apps and the lock screen: unlocked devices normally get heads-up alerts.
+Android 13+ core prayer alarms now use the automatically granted USE_EXACT_ALARM
+permission; SCHEDULE_EXACT_ALARM is limited to Android 12. Native package/timing
+checks and background alarm delivery pass with the old manual timing app-op
+denied. Notification permission and voluntary prayer opt-outs are preserved.
+See Android's [timing permissions](https://developer.android.com/develop/background-work/services/alarms)
+and [time-sensitive presentation](https://developer.android.com/develop/ui/views/notifications/time-sensitive).
+
+Owned muted read-only API 37: complete runtime, actual 30-second tests, media
+focus/Stop/pause/resume, native notification button interaction, lock-screen
+screen/gestures and bilingual UI pass. Motion fixtures enable/restore the owned
+emulator's original animator scale. The old missing-wave, swipe and foreground-
+screen regressions all failed before implementation. Final focused background
+swipe and UI checks pass. No Android restriction was disabled. Canonical checks,
+generator **12/12**, production/test build and lint pass: **0 errors, 41 existing
+warnings**. Exact-head CI is tracked in draft PR #9. Private logs/captures stay
+ignored. Main 26a32c7 remains merged; no TV shell policy changed.
+
+Signed export: `state/builds/companion/Miqat-latest.apk`, **35,364,670 bytes**,
+SHA256 `010F4CB796515CD711A2737A526C0178E31BF5CEF5A451A001EC286235FA5B0E`.
+All 25 exact shipped recordings and the original signing identity are verified.
+Physical/OEM behavior and older Android swipe behavior remain unverified. No
+release, PR merge or physical deployment.
+
 ## Adhan volume routing — 21 November 2026
 
 Phone **0.5.10/code 26** uses media volume by default. The optional sentence-case
