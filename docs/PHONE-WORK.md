@@ -1,7 +1,16 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: approved Home/calendar/location implementation; WORK.md owns next action.
+Latest scope: calendar dismissal, clock default and strip-widget refinement; WORK.md owns next action.
+
+## Home/calendar/strip refinement — 0.5.4/code 20
+
+Remove the extra verse-reference word. Calendar selection now stays in the popup;
+Home no longer owns a hidden browsed-date page or restores its obsolete date state.
+Done/Back/cancellation expose the complete live Home. Fresh settings default to
+12-hour time while migrations keep saved choices. The strip retains both enabled
+dates and expands prayer columns through its height. Native evidence is recorded
+in EVIDENCE.md; keep the existing PR draft for owner acceptance.
 
 ## Home, location and calendar — 0.5.3/code 19
 

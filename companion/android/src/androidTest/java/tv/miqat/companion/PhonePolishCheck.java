@@ -107,7 +107,7 @@ final class PhonePolishCheck {
             changes.put("appearance.home-background", "true");
             saved.changed(changes).save(a);
             prefs.edit().putBoolean("onboarding-complete", true).commit();
-            PhoneUiCheck.on(test, () -> { a.phoneUi.home.selectedDay = 0; a.phoneUi.home.dayOffset = 0; a.tab("prayers"); });
+            PhoneUiCheck.on(test, () -> { a.tab("prayers"); });
             PhoneUiCheck.on(test, () -> {
                 for (String prayer : PhoneStore.PRAYERS) {
                     View name = a.body.findViewWithTag("phone.prayer." + prayer + ".name");

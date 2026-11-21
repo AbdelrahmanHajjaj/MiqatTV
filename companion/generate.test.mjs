@@ -7,6 +7,7 @@ const data=generate();
 test('phone controls retain independent defaults, real canonical locations/voices and bilingual metadata',()=>{
   const phone=generatePhone();
   assert.equal(phone.contract.controls.find(c=>c.id==='reminders.enabled').default,'false');
+  assert.equal(phone.contract.controls.find(c=>c.id==='display.clock').default,'12');
   assert.ok(phone.cities.some(c=>c.id===phone.contract.defaultCity&&Number.isFinite(c.lat)&&Number.isFinite(c.lng)));
   assert.deepEqual(phone.voices,JSON.parse(readFileSync(new URL('../shared/data/voices.json',import.meta.url))));
   assert.ok(phone.contract.perPrayer.some(c=>c.suffix==='before'));

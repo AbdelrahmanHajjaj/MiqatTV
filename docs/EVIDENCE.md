@@ -1,5 +1,39 @@
 # Validation evidence
 
+## Home/calendar/strip refinement — 21 November 2026
+
+Phone review **0.5.4/code 20**, feature/companion-installation, draft PR #9.
+The verse reference omits “excerpt”. Date browsing stays inside the Hijri popup;
+Home always shows its live hero, tools and today's prayers. Fresh preferences use
+12-hour time; existing saved 24-hour choices survive migration and reopening.
+The prayer strip retains both enabled dates and fills its height with six columns.
+
+A focused native regression first failed on 0.5.3 with “Closing the Hijri calendar
+via done must return to the full live Home”. The root cause was the selection
+callback changing the page underneath the dialog. Removing that duplicate Home
+state/callback fixes Done, actual Android Back and cancellation; all three paths
+now pass. Existing month/day/event, timezone and actual-prayer-time checks remain.
+
+Owned muted read-only API 37 emulator: bilingual phone UI and hosted-widget/first-use
+journeys pass. Strip regressions exercise independent date toggles, modern/legacy
+bounds, 110/140/179dp scaled heights, text scales 1/1.5/2 and widget scales 100/120,
+with full-height bounds and no clipped/truncated text. Rendered English/Arabic
+strips show both dates and readable 12-hour times. All six native picker fallbacks
+were regenerated from their XML/generated samples and inspected. App sizing
+80–150% passes in both languages, normal portrait and font 1.3 portrait/landscape.
+
+Build/test APK/lint: **0 errors, 41 existing warnings**. Generator 11/11,
+canonical catalogs/shared checks and design handler checks pass. Media/signing
+remain unchanged. Initial min-strip clipping and new layout/font lint findings
+were fixed with a compact date line and anchored columns; assertions stayed enabled.
+Raw native captures/logs stay ignored under state/. Exact-head CI is tracked in PR #9.
+No physical launcher/device was operated; OEM resize behavior remains unverified.
+
+Latest review export: `state/builds/companion/Miqat-latest.apk`, **35,284,597 bytes**,
+SHA256 `4CB506888770C8E2A6D2D759E06B497C2CC54A2CA4574C20D07E474EFDD1FCEB`.
+Keep the PR draft; no merge, release or physical deployment.
+
+
 ## Approved Home/calendar/location implementation — 21 November 2026
 
 Phone review candidate **0.5.3/code 19**, feature/companion-installation, draft PR #9.

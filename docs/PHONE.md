@@ -16,6 +16,7 @@ Progress survives reopening; Explore first/Set up later leave a resumable entry.
 
 Miqat Signature appears first in the background and color lists.
 Style previews apply across the page, including background and control colors.
+Fresh phone settings use a 12-hour clock; existing saved clock choices are retained.
 Only large visual catalogs scroll horizontally. Short choices stay visible;
 long text choices such as high-latitude rules use a vertical selection stack.
 Ordinary Appearance has an Apply/Cancel draft for theme, background and display
@@ -147,7 +148,8 @@ The Hijri date and one city action share the card: tap the city to refresh an
 already permitted location, or open Location settings when access is absent.
 Tap the date to open the
 Hijri month calendar and browse dates. The selected day's timetable appears
-beneath the month grid and updates immediately; Done closes it.
+beneath the month grid and updates immediately. Done, Back or dismissal returns
+to the complete live Home screen; browsing does not replace Home with another date.
 Event dates have accessible markers, a selected-day label and a month event list.
 The Home card shows today's event or the nearest event within three days, with
 no empty event row on ordinary dates. The initial catalog includes Ramadan's
@@ -178,7 +180,9 @@ Back cancels. The launcher can reopen configuration. Resizing keeps saved style
 and date choices while adapting the amount of prayer detail that fits.
 
 The prayer data follows phone location, calculation, language, digits and clock.
-Compact widgets prioritize the enabled Hijri date when both dates cannot fit.
+The prayer strip keeps both Hijri and Gregorian dates when both are enabled,
+and its prayer columns fill the available height. Other compact presentations
+prioritize the enabled Hijri date when both dates cannot fit.
 Widget appearance records use the same protected local boundary as phone prayers.
 Use Android's pin flow where supported, or the launcher's Widgets menu. Settings,
 alarm, boot and time changes request updates; the periodic host refresh may be

@@ -38,8 +38,18 @@ final class PhoneCustomCheck {
                 };
         try {
             PhoneStore current = PhoneStore.read(c);
+            PhoneUiCheck.check(current.value("display.clock").equals("12"),
+                    "Fresh phone settings must default to a 12-hour clock");
+            Calendar noon = new GregorianCalendar(current.zone());
+            noon.clear(); noon.set(2026, 10, 21, 12, 5);
+            PhoneUiCheck.check(PhoneTime.formatter(current, Locale.US).format(noon.getTime())
+                            .equals("12:05 PM"), "Default clock must include its day period");
+            current.changed(Collections.singletonMap("display.clock", "24")).save(c);
+            PhoneUiCheck.check(PhoneStore.read(c).value("display.clock").equals("24"),
+                    "A saved 24-hour preference must survive reopening");
             Map<String, String> old = new LinkedHashMap<>(current.values);
             old.keySet().retainAll(current.data.idsAt(1));
+            old.put("display.clock", "24");
             old.put("reminders.voice", "alafasy");
             old.put("reminders.volume", "35");
             old.put("call.fajr.voice", "inherit");
@@ -54,7 +64,8 @@ final class PhoneCustomCheck {
                     .commit();
             PhoneStore migrated = PhoneStore.read(c);
             PhoneUiCheck.check(
-                    migrated.value("call.fajr.voice").equals("inherit")
+                    migrated.value("display.clock").equals("24")
+                            && migrated.value("call.fajr.voice").equals("inherit")
                             && migrated.volume == 35
                             && migrated.value("reminders.voice").equals("almalki")
                             && migrated.number("call.fajr.weekdays") == 127

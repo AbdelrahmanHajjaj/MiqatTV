@@ -206,9 +206,9 @@ final class PhoneJourneyCheck {
                                     resumed.body.findViewWithTag("phone.appearance.preview")
                                             != null,
                                     "Live preview missing");
-                            resumed.phoneUi.save("display.clock", "12");
+                            resumed.phoneUi.save("display.clock", "24");
                             check(
-                                    resumed.phoneUi.settings.value("display.clock").equals("24"),
+                                    resumed.phoneUi.settings.value("display.clock").equals("12"),
                                     "Display draft changed saved clock before Apply");
                             resumed.getWindow()
                                     .getDecorView()

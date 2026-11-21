@@ -954,8 +954,7 @@ public final class MainActivity extends Activity {
             return;
         }
         if (page.equals("prayers")) {
-            if (phoneUi.home.dayOffset != 0 || phoneUi.home.selectedDay != 0) phoneUi.home.today();
-            else finish();
+            finish();
             return;
         }
         if (page.equals("preferences")) {

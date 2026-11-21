@@ -73,7 +73,7 @@ final class WidgetHostCheck {
                 PhoneUiCheck.check(defaults.hijri && !defaults.date,
                         "New widgets must default to Hijri without Gregorian date");
             }
-            responsivePreviews(test, a);
+            responsivePreviews(test, a, capture);
             pickerPreviews(test, a, ids, capture);
             WidgetOptions legacy = WidgetOptions.from(a, "{\"background\":false}");
             WidgetOptions invalid = WidgetOptions.from(a, "{\"opacity\":999,\"shape\":\"unknown\",\"scene\":\"../private\"}");
@@ -281,7 +281,8 @@ final class WidgetHostCheck {
         }
     }
 
-    private static void responsivePreviews(Instrumentation test, MainActivity a) {
+    private static void responsivePreviews(Instrumentation test, MainActivity a, boolean capture) throws Exception {
+        android.graphics.Bitmap[] stripImage = {null};
         PhoneUiCheck.on(test, () -> {
             WidgetOptions style = new WidgetOptions();
             style.layout="next";style.opacity=42;style.shape="soft";style.theme="frost";
@@ -322,7 +323,7 @@ final class WidgetHostCheck {
                         && (legacy.findViewById(R.id.widget_prayers).getVisibility()==View.VISIBLE)==daily,
                         "Legacy min/max widget bounds did not select the same presentation");
             }
-            try { minimumNext(a); } catch (Exception invalid) { throw new AssertionError(invalid); }
+            try { stripImage[0] = stripDatesAndHeight(a, capture); minimumNext(a); } catch (Exception invalid) { throw new AssertionError(invalid); }
             View wide=WidgetRenderer.create(context,new WidgetOptions(),Math.round(363*font),Math.round(200*font)).apply(context,new FrameLayout(a));
             int wideWidth=a.views.dp(Math.round(363*font)),wideHeight=a.views.dp(Math.round(200*font));
             wide.measure(View.MeasureSpec.makeMeasureSpec(wideWidth,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(wideHeight,View.MeasureSpec.EXACTLY));
@@ -361,6 +362,102 @@ final class WidgetHostCheck {
                         "Modern RemoteViews ignored exact host sizes and their smallest-size fallback");
             }
         });
+        if (stripImage[0] != null) {
+            try (java.io.FileOutputStream file = new java.io.FileOutputStream(
+                    new java.io.File(a.getExternalFilesDir(null),
+                            (a.ar ? "ar" : "en") + "-strip-both-dates.png"))) {
+                stripImage[0].compress(android.graphics.Bitmap.CompressFormat.PNG, 100, file);
+            } finally { stripImage[0].recycle(); }
+        }
+    }
+
+    private static android.graphics.Bitmap stripDatesAndHeight(MainActivity a, boolean capture) throws Exception {
+        android.graphics.Bitmap image = null;
+        for (float font : new float[] {1f, 1.5f, 2f}) {
+            android.content.res.Configuration config = new android.content.res.Configuration(
+                    a.getApplicationContext().getResources().getConfiguration());
+            config.fontScale = font;
+            android.content.Context context = a.getApplicationContext().createConfigurationContext(config);
+            PhoneStore settings = PhoneStore.read(context);
+            boolean ar = PhoneAlarms.arabic(context);
+            java.util.Locale locale = new java.util.Locale(ar ? "ar" : "en");
+            java.text.SimpleDateFormat date = new java.text.SimpleDateFormat("EEE d MMM", locale);
+            date.setTimeZone(settings.zone());
+            long now = System.currentTimeMillis();
+            String hijri = a.phoneUi.digits(PhoneTime.hijri(settings, now, ar));
+            String gregorian = a.phoneUi.digits(date.format(new java.util.Date(now)));
+            for (int size : new int[] {100, 120}) for (int height : new int[] {110, 140, 179}) {
+                WidgetOptions options = new WidgetOptions();
+                options.layout = "strip";
+                options.size = size;
+                float scale = font * size / 100f;
+                int widthDp = (int) Math.ceil(360 * scale), heightDp = (int) Math.ceil(height * scale);
+                for (int dates = 0; dates < 4; dates++) {
+                    options.hijri = (dates & 1) != 0;
+                    options.date = (dates & 2) != 0;
+                    android.os.Bundle bounds = new android.os.Bundle();
+                    setBounds(bounds, widthDp, heightDp);
+                    for (boolean legacy : new boolean[] {false, true}) {
+                        if (legacy) bounds.remove(AppWidgetManager.OPTION_APPWIDGET_SIZES);
+                        View rendered = PrayerWidget.responsive(context, options, bounds)
+                                .apply(context, new FrameLayout(context));
+                        int width = a.views.dp(widthDp), allocatedHeight = a.views.dp(heightDp);
+                        rendered.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                                View.MeasureSpec.makeMeasureSpec(allocatedHeight, View.MeasureSpec.EXACTLY));
+                        rendered.layout(0, 0, width, allocatedHeight);
+                        TextView title = rendered.findViewById(R.id.widget_title);
+                        String metadata = title.getText().toString();
+                        PhoneUiCheck.check(metadata.contains(hijri) == options.hijri
+                                        && metadata.contains(gregorian) == options.date,
+                                "Strip date toggles lost independent visibility: " + metadata);
+                        String fixture = " ar=" + ar + " font=" + font + " size=" + size
+                                + " bounds=" + widthDp + "x" + heightDp + " dates=" + dates
+                                + " legacy=" + legacy;
+                        textInside(rendered, title, fixture);
+                        LinearLayout strip = rendered.findViewById(R.id.widget_strip);
+                        LinearLayout content = rendered.findViewById(R.id.widget_content);
+                        PhoneUiCheck.check(strip.getVisibility() == View.VISIBLE && strip.getChildCount() == 6
+                                        && strip.getBottom() == content.getHeight() - content.getPaddingBottom(),
+                                "Prayer strip left unused space below its columns");
+                        for (int i = 0; i < 6; i++) {
+                            View column = strip.getChildAt(i);
+                            PhoneUiCheck.check(column.getHeight() == strip.getHeight(),
+                                    "Prayer column did not fill the available strip height");
+                            textInside(rendered, column.findViewById(R.id.widget_prayer_name), fixture);
+                            textInside(rendered, column.findViewById(R.id.widget_prayer_time), fixture);
+                        }
+                        PhoneUiCheck.check(rendered.findViewById(R.id.widget_next).getVisibility() == View.GONE
+                                        && rendered.findViewById(R.id.widget_updated).getVisibility() == View.GONE,
+                                "Prayer strip gained a timer or update footer");
+                        if (capture && font == 1f && size == 100 && height == 140 && dates == 3 && !legacy) {
+                            image = android.graphics.Bitmap.createBitmap(width, allocatedHeight,
+                                    android.graphics.Bitmap.Config.ARGB_8888);
+                            rendered.draw(new android.graphics.Canvas(image));
+                        }
+                    }
+                }
+            }
+        }
+        return image;
+    }
+
+    private static void textInside(View root, TextView text, String fixture) {
+        android.graphics.Rect bounds = new android.graphics.Rect();
+        text.getDrawingRect(bounds);
+        ((ViewGroup) root).offsetDescendantRectToMyCoords(text, bounds);
+        PhoneUiCheck.check(text.getWidth() > 0 && text.getHeight() > 0
+                        && new android.graphics.Rect(0, 0, root.getWidth(), root.getHeight()).contains(bounds)
+                        && text.getLayout() != null
+                        && text.getLayout().getHeight() <= text.getHeight()
+                                - text.getCompoundPaddingTop() - text.getCompoundPaddingBottom(),
+                "Strip clips date or prayer text: " + text.getText() + fixture
+                        + " bounds=" + bounds + " textHeight=" + text.getHeight()
+                        + " layoutHeight=" + (text.getLayout() == null ? -1 : text.getLayout().getHeight()));
+        for (int line = 0; line < text.getLayout().getLineCount(); line++)
+            PhoneUiCheck.check(text.getLayout().getEllipsisCount(line) == 0
+                            && text.getLayout().getLineWidth(line) <= text.getWidth()
+                                    - text.getCompoundPaddingLeft() - text.getCompoundPaddingRight() + 1,
+                    "Strip truncates date or prayer text: " + text.getText() + fixture);
     }
 
     private static void minimumNext(MainActivity a) throws Exception {

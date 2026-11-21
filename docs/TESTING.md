@@ -272,3 +272,13 @@ A forced emulator job proves the closed-process path, not OEM timing or Doze lat
 The bilingual phone UI suite checks the exact canonical verse, in-card date/city,
 actual event calendar links, timezone/Hijri correction and ordinary dates without
 an empty event row. Migrations must keep the new background opt-in false.
+
+
+`phone-calendar-return` is the short native regression for browsing days, then
+closing by Done, actual Android Back or cancellation. Each path must expose today's
+full hero/countdown/tools and actual prayer times. The bilingual phone UI suite
+runs the same regression alongside calendar month/event/timezone tests. Calendar
+browsing stays inside the popup and no longer persists another date on Home.
+The hosted-widget journey checks strip date toggles independently, modern/legacy
+bounds and full-height unclipped columns at small sizes and enlarged text. Refresh
+native bilingual picker PNGs whenever their XML or generated sample times change.

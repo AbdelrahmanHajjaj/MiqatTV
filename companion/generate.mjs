@@ -148,7 +148,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const output = new URL('android/build/generated/companion/',import.meta.url);
   mkdirSync(output,{recursive:true});
   writeFileSync(new URL('catalog.json',output),JSON.stringify(generate()));
-  writeFileSync(new URL('phone.json',output),JSON.stringify(generatePhone()));
+  const phone=generatePhone();
+  writeFileSync(new URL('phone.json',output),JSON.stringify(phone));
   const res = new URL('android/build/generated/companion-res/',import.meta.url);
   mkdirSync(new URL('drawable/',res),{recursive:true});
   mkdirSync(new URL('values/',res),{recursive:true});
@@ -168,7 +169,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const sampleDate=new Intl.DateTimeFormat(language+'-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date('2026-11-21T12:00:00Z'));
     const cairo=read('shared/data/cities.json').find(city=>city.id==='cairo');
     entries.push(['widget_preview_metadata',sampleDate+' · '+cairo[language]],['widget_preview_remaining',catalog.text.phone_remaining[language].replace('%s',language==='ar'?'٠٠:٢٤':'00:24')]);
-    entries.push(...sampleTimes.map((time,i)=>['widget_preview_time_'+i,language==='ar'?time.replace(/[0-9]/g,n=>'٠١٢٣٤٥٦٧٨٩'[n]):time]));
+    const clock=new Intl.DateTimeFormat(language,{hour:'numeric',minute:'2-digit',hour12:phone.contract.controls.find(c=>c.id==='display.clock').default==='12',numberingSystem:language==='ar'?'arab':'latn',timeZone:'UTC'});
+    entries.push(...sampleTimes.map((time,i)=>['widget_preview_time_'+i,clock.format(new Date('2026-11-21T'+time+':00Z'))]));
     const xml=entries.map(([name,value])=>'<string name="'+name+'">'+value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll("'","\\'")+'</string>').join('');
     writeFileSync(new URL('companion_widget_preview.xml',directory),'<resources>'+xml+'</resources>');
   }

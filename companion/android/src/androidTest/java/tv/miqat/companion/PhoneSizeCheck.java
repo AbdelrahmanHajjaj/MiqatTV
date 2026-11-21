@@ -20,10 +20,10 @@ final class PhoneSizeCheck {
         try {
             for (String lang : new String[] {"en", "ar"})
                 for (int size = 80; size <= 150; size += 10) {
-                    original.changed(
-                                    Collections.singletonMap(
-                                            "display.size", Integer.toString(size)))
-                            .save(c);
+                    Map<String, String> display = new LinkedHashMap<>();
+                    display.put("display.size", Integer.toString(size));
+                    display.put("display.clock", "12");
+                    original.changed(display).save(c);
                     c.getSharedPreferences("companion", 0)
                             .edit()
                             .putString("language", lang)

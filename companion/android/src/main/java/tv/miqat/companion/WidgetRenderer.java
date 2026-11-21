@@ -135,6 +135,13 @@ final class WidgetRenderer {
             title = compact ? hijri : title + "\n" + hijri;
         }
         view.setInt(R.id.widget_title, "setMaxLines", options.hijri && !compact ? 2 : 1);
+        if (layout.equals("strip")) {
+            title = options.hijri ? PhoneTime.hijri(settings, now, ar) : "";
+            if (options.date) title += (title.isEmpty() ? "" : " · ") + date.format(new Date(now));
+            if (title.isEmpty()) title = ar ? "ميقات" : "Miqat";
+            view.setInt(R.id.widget_title, "setMaxLines", 1);
+            view.setTextViewTextSize(R.id.widget_title, android.util.TypedValue.COMPLEX_UNIT_SP, 11 * options.size / 100f);
+        }
         if (wide) {
             String metadata = options.hijri ? PhoneTime.hijri(settings, now, ar) : options.date ? date.format(new Date(now)) : "";
             title = (metadata.isEmpty() ? "" : metadata + " · ") + place();
@@ -203,13 +210,15 @@ final class WidgetRenderer {
             String remaining = text(String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60));
             view.setTextViewText(R.id.widget_next_remaining, next == null ? "" : String.format(locale, data.text("phone_remaining", ar), remaining));
         }
-        if (!nextOnly)
-            for (int i = 0; i < 6; i++)
+        if (!nextOnly) {
+            for (int i = 0; i < 6; i++) {
                 row(
                         i,
                         day,
                         next != null && next.getNextTime() < tomorrow.start && next.getNext() == i,
                         strip);
+            }
+        }
     }
 
     private void row(int index, PhoneSchedule.Day day, boolean next, boolean strip)

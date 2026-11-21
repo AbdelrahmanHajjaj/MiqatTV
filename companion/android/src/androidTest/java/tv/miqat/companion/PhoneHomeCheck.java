@@ -15,8 +15,6 @@ final class PhoneHomeCheck {
     static void run(Instrumentation test, MainActivity a) throws Exception {
         PhoneStore saved = PhoneStore.read(a);
         PhoneUiCheck.on(test, () -> {
-            a.phoneUi.home.dayOffset = 0;
-            a.phoneUi.home.selectedDay = 0;
             a.tab("prayers");
         });
         PhoneUiCheck.on(test, () -> {
@@ -61,8 +59,6 @@ final class PhoneHomeCheck {
                 try {
                     a.phoneUi.settings = fixture;
                     a.phoneUi.home.stop();
-                    a.phoneUi.home.dayOffset = 0;
-                    a.phoneUi.home.selectedDay = 0;
                     IslamicCalendar date = PhoneCalendar.calendar(fixture, System.currentTimeMillis(), a.ar);
                     date.set(android.icu.util.Calendar.MONTH, 11);
                     date.set(android.icu.util.Calendar.DATE, 9);
@@ -93,8 +89,6 @@ final class PhoneHomeCheck {
         } finally {
             PhoneUiCheck.on(test, () -> {
                 a.phoneUi.settings = saved;
-                a.phoneUi.home.dayOffset = 0;
-                a.phoneUi.home.selectedDay = 0;
                 a.render();
             });
         }
@@ -124,8 +118,6 @@ final class PhoneHomeCheck {
             PhoneUiCheck.check(prefs.edit().putBoolean("onboarding-complete", true).commit(),
                     "Cannot prepare completed-Home capture fixture");
             PhoneUiCheck.on(test, () -> {
-                a.phoneUi.home.dayOffset = 0;
-                a.phoneUi.home.selectedDay = 0;
                 a.tab("prayers");
                 a.render();
                 a.phoneUi.home.stop();
@@ -152,8 +144,6 @@ final class PhoneHomeCheck {
             else restore.remove("onboarding-complete");
             PhoneUiCheck.check(restore.commit(), "Cannot restore completed-Home capture fixture");
             PhoneUiCheck.on(test, () -> {
-                a.phoneUi.home.dayOffset = 0;
-                a.phoneUi.home.selectedDay = 0;
                 a.render();
             });
         }
@@ -165,8 +155,6 @@ final class PhoneHomeCheck {
             try {
                 a.phoneUi.settings = fixture;
                 a.phoneUi.home.stop();
-                a.phoneUi.home.dayOffset = 0;
-                a.phoneUi.home.selectedDay = 0;
                 IslamicCalendar date = PhoneCalendar.calendar(fixture, System.currentTimeMillis(), a.ar);
                 date.set(android.icu.util.Calendar.MONTH, month);
                 date.set(android.icu.util.Calendar.DATE, day);

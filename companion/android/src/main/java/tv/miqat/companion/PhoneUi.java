@@ -53,8 +53,6 @@ final class PhoneUi {
 
         sound.audioImport = b.getString("phone-audio-import", "");
         locationUi.advancedLocation = b.getBoolean("phone-location-advanced");
-        home.dayOffset = Math.max(-366, Math.min(366, b.getInt("phone-day")));
-        home.selectedDay = b.getLong("phone-selected-day", 0);
         pending = b.getString("phone-pending", "");
         draft = b.getString("phone-draft", "");
         locationUi.latitude = b.getString("phone-lat", "");
@@ -68,8 +66,6 @@ final class PhoneUi {
         b.putParcelableArrayList("phone-history", new ArrayList<>(history));
         b.putString("phone-audio-import", sound.audioImport);
         b.putBoolean("phone-location-advanced", locationUi.advancedLocation);
-        b.putInt("phone-day", home.dayOffset);
-        b.putLong("phone-selected-day", home.selectedDay);
         b.putString("phone-pending", pending);
         b.putString("phone-draft", draft);
         b.putString("phone-lat", locationUi.latitude);

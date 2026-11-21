@@ -1,6 +1,6 @@
 {
   "phone_greeting":{"en":"Assalamu alaikum","ar":"السلام عليكم"},
-  "phone_verse_reference":{"en":"Qur’an 4:103 · excerpt","ar":"القرآن ٤:١٠٣ · مقتطف"},
+  "phone_verse_reference":{"en":"Qur’an 4:103","ar":"القرآن ٤:١٠٣"},
   "phone_widgets_short":{"en":"Widgets","ar":"الأدوات"},
   "phone_event_in_days":{"en":"In %s days","ar":"بعد %s أيام"},
   "phone_calendar_events":{"en":"Events this month","ar":"مناسبات هذا الشهر"},

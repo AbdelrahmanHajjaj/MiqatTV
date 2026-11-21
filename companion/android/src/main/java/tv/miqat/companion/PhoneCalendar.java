@@ -11,24 +11,21 @@ import android.widget.*;
 
 import java.text.DateFormatSymbols;
 import java.util.*;
-import java.util.function.LongConsumer;
 
 /** Hijri selection maps back to a civil day; it never writes prayer settings or alarms. */
 final class PhoneCalendar {
     private final MainActivity a;
     private final PhoneUi ui;
     private final PhoneStore settings;
-    private final LongConsumer selected;
     private final long openedAt = System.currentTimeMillis();
     private IslamicCalendar month;
     private long selectedStamp;
     private final LinearLayout content;
 
-    private PhoneCalendar(MainActivity a, PhoneUi ui, long stamp, LongConsumer selected) {
+    private PhoneCalendar(MainActivity a, PhoneUi ui, long stamp) {
         this.a = a;
         this.ui = ui;
         this.settings = ui.settings;
-        this.selected = selected;
         selectedStamp = stamp;
         month = calendar(settings, selectedStamp, a.ar);
         month.set(android.icu.util.Calendar.DATE, 1);
@@ -69,8 +66,8 @@ final class PhoneCalendar {
         return civil.getTimeInMillis();
     }
 
-    static void show(MainActivity a, PhoneUi ui, long stamp, LongConsumer selected) {
-        new PhoneCalendar(a, ui, stamp, selected).show();
+    static void show(MainActivity a, PhoneUi ui, long stamp) {
+        new PhoneCalendar(a, ui, stamp).show();
     }
 
     private void show() {
@@ -212,7 +209,6 @@ final class PhoneCalendar {
             month = calendar(settings, selectedStamp, a.ar);
             month.set(android.icu.util.Calendar.DATE, 1);
         }
-        selected.accept(selectedStamp);
         render();
     }
 

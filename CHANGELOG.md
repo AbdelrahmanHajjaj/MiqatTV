@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.4 phone refinement
+
+- Remove “excerpt” from the verse reference.
+- Keep Hijri browsing inside the popup and return directly to the full live Home.
+- Default fresh phone settings to 12-hour time; keep saved clock choices.
+- Show both enabled dates on the prayer strip and fill its height with prayer columns.
+
 ## 0.5.3 phone Home, calendar and location
 
 - Keep both the welcome greeting and canonical Quran excerpt; move Hijri date and

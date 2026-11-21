@@ -12,9 +12,6 @@ import java.util.*;
 final class PhoneHome {
     private final MainActivity a;
     private final PhoneUi ui;
-    int dayOffset;
-    // Zero follows today; a browsed date stays fixed across midnight.
-    long selectedDay;
 
     PhoneHome(MainActivity activity, PhoneUi ui) {
         a = activity;
@@ -100,11 +97,6 @@ final class PhoneHome {
         status = null;
         playback = null;
         nextTime = 0;
-        if (selectedDay != 0) {
-            int offset = PhoneCalendar.offset(ui.settings, now, selectedDay);
-            dayOffset = Math.max(-366, Math.min(366, offset));
-            if (offset != dayOffset) selectedDay = ui.settings.day(now, dayOffset).start;
-        } else if (dayOffset != 0) selectedDay = ui.settings.day(now, dayOffset).start;
         if (a.onboarding.needed()) {
             a.views
                     .navigationRow(
@@ -119,25 +111,19 @@ final class PhoneHome {
         renderedZone = ui.settings.zone().getID();
         lastTick = now;
         verse();
-        PhoneSchedule.Day day = ui.settings.day(now, dayOffset);
+        PhoneSchedule.Day day = ui.settings.day(now, 0);
         LinearLayout hero = ui.appearance.hero(a.body, ui.settings);
         hero.setPadding(a.views.dp(12), a.views.dp(4), a.views.dp(12), a.views.dp(12));
-        hero.setTag(dayOffset == 0 ? "phone.hero" : "phone.date.card");
+        hero.setTag("phone.hero");
         cardMetadata(hero, day);
-        int next = -1;
-        boolean tomorrowNext = false;
-        if (dayOffset == 0) {
-            PhoneSchedule.Day tomorrow = ui.settings.day(now, 1);
-            tv.miqat.core.PrayerSelection selection = nextPrayer(hero, now, true);
-            next = selection == null ? -1 : selection.getNext();
-            tomorrowNext = selection != null && selection.getNextTime() >= tomorrow.start;
-            eventLine(hero, now);
-            alertStatus();
-        } else {
-            a.views.button(hero, a.t("phone_today"), this::today).setTag("calendar.today");
-        }
+        PhoneSchedule.Day tomorrow = ui.settings.day(now, 1);
+        tv.miqat.core.PrayerSelection selection = nextPrayer(hero, now, true);
+        int next = selection == null ? -1 : selection.getNext();
+        boolean tomorrowNext = selection != null && selection.getNextTime() >= tomorrow.start;
+        eventLine(hero, now);
+        alertStatus();
         renderTimes(day, next, tomorrowNext);
-        if (dayOffset == 0) destinations();
+        destinations();
     }
 
     private void verse() throws Exception {
@@ -183,12 +169,6 @@ final class PhoneHome {
         LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-1, -2);
         size.topMargin = a.views.dp(10);
         entry.setLayoutParams(size);
-    }
-
-    private void selectDay(int offset, long now) {
-        dayOffset = Math.max(-366, Math.min(366, offset));
-        selectedDay = dayOffset == 0 ? 0 : ui.settings.day(now, dayOffset).start;
-        a.render();
     }
 
     private void cardMetadata(LinearLayout hero, PhoneSchedule.Day day) throws Exception {
@@ -269,27 +249,12 @@ final class PhoneHome {
         if (!audioError.isEmpty()) a.body.addView(a.views.text(a.t(audioError), 13, a.accent));
     }
 
-    void today() {
-        dayOffset = 0;
-        selectedDay = 0;
-        a.render();
-    }
-
     private void openCalendar() {
-        long openedAt = System.currentTimeMillis();
-        long stamp = selectedDay == 0 ? ui.settings.day(openedAt, 0).start : selectedDay;
-        openCalendar(stamp);
+        openCalendar(ui.settings.day(System.currentTimeMillis(), 0).start);
     }
 
     private void openCalendar(long stamp) {
-        PhoneCalendar.show(
-                a,
-                ui,
-                stamp,
-                selected -> {
-                    long selectedAt = System.currentTimeMillis();
-                    selectDay(PhoneCalendar.offset(ui.settings, selectedAt, selected), selectedAt);
-                });
+        PhoneCalendar.show(a, ui, stamp);
     }
 
     private void renderTimes(PhoneSchedule.Day day, int next, boolean tomorrowNext)
@@ -311,7 +276,7 @@ final class PhoneHome {
             row.setMinimumHeight(a.views.dp(52));
             row.setPadding(a.views.dp(12), a.views.dp(8), a.views.dp(12), a.views.dp(8));
             row.setTag("phone.prayer." + PhoneStore.PRAYERS[i]);
-            row.setSelected(dayOffset == 0 && !tomorrowNext && i == next);
+            row.setSelected(!tomorrowNext && i == next);
             GradientDrawable shape = a.views.background(android.graphics.Color.TRANSPARENT, 18);
             if (row.isSelected()) {
                 shape.setColor((a.accent & 0xffffff) | 0x16000000);

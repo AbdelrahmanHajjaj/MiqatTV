@@ -21,6 +21,7 @@ import java.util.*;
 public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
     String backgroundSuite = "";
+    boolean calendarReturn;
     boolean mapNetwork;
     boolean journey,
             customCheck,
@@ -47,6 +48,7 @@ public final class CompanionCheck extends Instrumentation {
         captures = arguments != null && "true".equals(arguments.getString("capture", "false"));
         String suite = arguments == null ? "" : arguments.getString("suite", "");
         backgroundSuite = suite.startsWith("phone-background-") ? suite : "";
+        calendarReturn = suite.equals("phone-calendar-return");
         journey = suite.equals("phone-journey");
         customCheck = suite.equals("phone-custom");
         releaseCheck = suite.equals("public-release");
@@ -74,6 +76,12 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if (calendarReturn) {
+                PhoneCalendarCheck.returnsHome(this);
+                result.putString("stream", "PASS: calendar Done, Back and cancellation return to live Home\n");
+                finish(-1, result);
+                return;
+            }
             if (!backgroundSuite.isEmpty()) {
                 if (backgroundSuite.equals("phone-background-prepare")) PhoneBackgroundCheck.prepare(this);
                 else if (backgroundSuite.equals("phone-background-verify")) PhoneBackgroundCheck.verify(this);
