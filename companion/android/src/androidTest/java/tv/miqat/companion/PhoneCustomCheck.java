@@ -183,7 +183,7 @@ final class PhoneCustomCheck {
             PhoneUiCheck.check(fourth.eventMode(legacyVibration) == 3 && fourth.eventVibrate(legacyVibration),
                     "Legacy vibration-only mode lost haptic output after upgrade");
             fourth.save(c);
-            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 6,
+            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 7,
                     "Updated settings did not persist the new schema");
             Map<String, String> versionFour = new LinkedHashMap<>(fourth.values);
             versionFour.keySet().retainAll(fourth.data.idsAt(4));
@@ -210,6 +210,17 @@ final class PhoneCustomCheck {
             sixth.save(c);
             PhoneUiCheck.check(PhoneStore.read(c).value("prayer.background-location").equals("false"),
                     "Background location must remain off after persisting migration");
+            Map<String, String> versionSix = new LinkedHashMap<>(sixth.values);
+            versionSix.keySet().retainAll(sixth.data.idsAt(6));
+            PhoneStore.preferences(c).edit().putString("settings", new JSONObject()
+                    .put("version", 6).put("values", new JSONObject(versionSix)).toString()).commit();
+            PhoneStore seventh = PhoneStore.read(c);
+            PhoneUiCheck.check(seventh.values.entrySet().containsAll(versionSix.entrySet())
+                            && seventh.value("reminders.alarm-mode").equals("false"),
+                    "v6 upgrade must preserve all settings without opting into alarm audio");
+            seventh.changed(Collections.singletonMap("reminders.alarm-mode","true")).save(c);
+            PhoneUiCheck.check(PhoneStore.read(c).value("reminders.alarm-mode").equals("true"),
+                    "Alarm audio opt-in did not persist");
             Map<String, String> dayEdits = new LinkedHashMap<>();
             dayEdits.put("call.fajr.mode", "adhan");dayEdits.put("call.fajr.enabled", "true");
             dayEdits.put("call.fajr.weekdays", "127");dayEdits.put("quiet.enabled", "false");

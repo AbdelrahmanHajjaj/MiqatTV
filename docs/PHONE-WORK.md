@@ -1,7 +1,15 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: named audio library, preview behavior, delayed tests and stable sheets; WORK.md owns next action.
+Latest scope: media volume by default and optional alarm sound; WORK.md owns next action.
+
+## Adhan volume — 0.5.10/code 26
+
+Use media audio by default. **Use alarm sound** is an immediately saved,
+optional Prayer alerts toggle selecting alarm audio. Player/focus, media-session
+volume handling and Activity volume keys agree. Schema 7 preserves v1–v6 settings
+with alarm sound off. The actual-stream native regression failed before the fix
+and passes afterward in English and Arabic. Final checks are tracked in WORK.md.
 
 ## Audio library and testing — 0.5.9/code 25
 

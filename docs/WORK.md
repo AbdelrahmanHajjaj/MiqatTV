@@ -1,18 +1,16 @@
 # Current work
 
-Updated: 2026-11-21. Owner approved phone audio/testing/popup refinements on
-feature/companion-installation, draft PR #9. Review export is 0.5.9/code 25.
+Updated: 2026-11-21. Owner requested media volume by default for Adhan, with an
+optional **Use alarm sound** toggle using alarm volume. Branch
+feature/companion-installation, draft PR #9. Review export is 0.5.10/code 26.
 
-Named reusable private adhans, complete Listen, start-to-percentage previews and
-cancellable 30-second phone tests are implemented. The redundant phone motion
-control is hidden; existing accessibility preferences remain compatible. The
-Coming soon sheet first-frame width regression is fixed.
+Playback/focus, media-session volume controls and Activity volume keys now use
+the same selected stream. The toggle saves immediately. Schema 7 preserves v1–v6
+settings with alarm sound off. The actual-player regression failed before the
+fix and now passes, including bilingual toggle persistence and media restoration.
 
-Latest main (26a32c7) was merged normally in 4f6ca5c before pushing, as requested.
-Its cleanup for the 13 retained voices and affected-CI/artifact policy are
-preserved; the previously retired recording stays excluded.
-
-Merged storage/runtime/dialog, bilingual UI/sizing, journey, TV bindings and LAN
-checks pass. Build/lint and signed export pass; see EVIDENCE.md.
-Next: verify exact-head CI and keep PR #9 draft for owner review.
-No PR merge, release or physical deployment requested.
+Main 26a32c7 remains merged; its cleaned audio and affected-CI policy are intact.
+Storage, actual playback/tests and bilingual UI checks pass; signed export and
+canonical checks pass. Evidence is recorded. Next: verify exact-head CI before
+owner review. Keep PR #9 draft. No PR merge, release or physical
+deployment requested.

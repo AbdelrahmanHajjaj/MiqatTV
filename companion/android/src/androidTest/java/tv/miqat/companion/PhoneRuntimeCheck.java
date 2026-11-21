@@ -59,6 +59,7 @@ final class PhoneRuntimeCheck {
     }
 
     static void run(Instrumentation test) throws Exception {
+        PhoneAudioRouteCheck.run(test,false);
         Context c = test.getTargetContext();
         SharedPreferences preferences = PhoneStore.preferences(c);
         Map<String, ?> original = new HashMap<>(preferences.getAll());

@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "defaultCity": "cairo",
   "defaultFajrVoice": "chebae_fajr",
   "actions": [{"id":"tests.phone-adhan","section":"audio","label":"phone_test_adhan"},{"id":"tests.phone-notification","section":"audio","label":"phone_test_notification"},{"id":"tests.phone-cancel","section":"audio","label":"phone_test_cancel"}],
@@ -11,6 +11,7 @@
     {"id":"prayer.sunrise-offset","section":"calculation","kind":"number","label":"phone_sunrise_offset","minimum":-30,"maximum":30,"step":1,"default":"0"},
     {"id":"prayer.hijri-offset","section":"calculation","kind":"number","label":"phone_hijri_offset","minimum":-2,"maximum":2,"step":1,"default":"0"},
     {"id":"reminders.enabled","section":"audio","kind":"toggle","label":"phone_alerts","default":"false"},
+    {"id":"reminders.alarm-mode","section":"audio","kind":"toggle","label":"phone_alarm_sound","default":"false","since":7},
     {"id":"reminders.full-screen","section":"audio","kind":"toggle","label":"phone_full_screen","default":"false","since":3},
     {"id":"reminders.volume-keys","section":"audio","kind":"toggle","label":"phone_volume_keys","default":"false","since":3},
     {"id":"reminders.voice","section":"audio","kind":"choice","label":"phone_voice","choices":"voices","default":"almalki"},

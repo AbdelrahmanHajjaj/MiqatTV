@@ -83,6 +83,7 @@ final class PhoneUi {
         try {
             data = PhoneData.get(a);
             settings = PhoneStore.read(a);
+            a.setVolumeControlStream(PhonePlayback.attributes(settings).getVolumeControlStream());
             JSONObject c =
                     a.catalog
                             .data
@@ -283,6 +284,8 @@ final class PhoneUi {
         prayerRows();
         a.views.navigationRow(
                 a.body, "bell", a.t("phone_default_audio_title"), "", () -> open("default-audio"));
+        control(data.controls.get("reminders.alarm-mode"));
+        a.body.addView(a.views.text(a.t("phone_alarm_sound_hint"), 12, a.muted));
         control(data.controls.get("reminders.full-screen"));
         control(data.controls.get("reminders.volume-keys"));
         if (settings.value("reminders.full-screen").equals("true")

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.10 Adhan volume
+
+- Use media volume for Adhan by default. Add the optional **Use alarm sound** toggle in Prayer alerts to use alarm volume instead.
+- Keep the player, media session and phone volume buttons on the same selected stream. Preserve existing settings without opting users into alarm sound.
+
 ## 0.5.9 audio library and phone testing
 
 - Keep multiple custom adhans in a reusable named private library; default names come from the selected file. Preserve earlier imports.

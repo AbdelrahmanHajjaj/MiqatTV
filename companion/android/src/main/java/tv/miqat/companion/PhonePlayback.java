@@ -22,6 +22,7 @@ public final class PhonePlayback extends Service {
     private MediaPlayer player;
     private AudioManager audio;
     private AudioFocusRequest focus;
+    private AudioAttributes outputAttributes;
     private MediaSession media;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean preview, started, paused, defaultAudio, lengthPreview, testing;
@@ -74,6 +75,10 @@ public final class PhonePlayback extends Service {
             if (active != service) return;
             try {
                 PhoneStore latest = PhoneStore.read(c);
+                if (!attributes(latest).equals(service.outputAttributes)) {
+                    stop(c);
+                    return;
+                }
                 if (!service.preview
                         && (service.prayerIndex < 0 || !service.allowed(latest, service.prayerIndex))) {
                     stop(c);
@@ -388,14 +393,20 @@ public final class PhonePlayback extends Service {
         }
     }
 
+    static AudioAttributes attributes(PhoneStore settings) {
+        return new AudioAttributes.Builder()
+                .setUsage(settings.value("reminders.alarm-mode").equals("true")
+                        ? AudioAttributes.USAGE_ALARM : AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build();
+    }
+
     private void preparePlayer(
             PhoneStore settings, int prayer, String voice, boolean defaultVoice, int token)
             throws Exception {
-        AudioAttributes attributes =
-                new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .build();
+        AudioAttributes attributes = attributes(settings);
+        outputAttributes = attributes;
+        media.setPlaybackToLocal(attributes);
         audio = getSystemService(AudioManager.class);
         focus =
                 new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)

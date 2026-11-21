@@ -1,5 +1,28 @@
 # Validation evidence
 
+## Adhan volume routing — 21 November 2026
+
+Phone **0.5.10/code 26** uses media volume by default. The optional sentence-case
+**Use alarm sound** toggle selects alarm volume. Player/focus attributes, media
+session and Activity volume buttons agree. Switching mode stops existing output;
+the next session uses the new stream. Short-tone notification channels remain
+unchanged. Schema 7 preserves all v1–v6 preferences with alarm sound off.
+
+The focused native regression failed against the old live player (expected media
+usage 1, received alarm), then passed media → alarm → media in English and Arabic.
+It checks actual playback configurations, session attributes, immediate persisted
+toggle state and volume-button routing. Bilingual renders were inspected. Storage
+migration/custom-library, bilingual UI and complete actual playback/30-second tests pass on the
+owned muted read-only API 37 emulator. Canonical checks and generator **12/12**
+pass. Production/test build and lint pass: **0 errors, 41 existing warnings**.
+Exact-head CI is tracked in draft PR #9; private logs/captures stay ignored.
+
+Signed export: `state/builds/companion/Miqat-latest.apk`, **35,161,895 bytes**,
+SHA256 `D65D3B2F6FA5A3F715C0C678B4689594A7EB4384F1187540E5780C0CE8E57834`.
+All 25 exact shipped recordings and the signing identity are verified. Main
+26a32c7 remains merged. Physical/OEM volume behavior remains unverified; no
+release, PR merge or physical deployment.
+
 ## Named audio library and delayed phone tests — 21 November 2026
 
 Review **0.5.9/code 25** retains multiple named private imports, including old

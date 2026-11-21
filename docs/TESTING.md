@@ -325,3 +325,10 @@ reboot/duplicate rejection and unchanged real settings/claims/schedule. The runt
 suite includes these checks, a 20-second audition fixture (past the former 12s cap),
 and recording-metadata-driven percentage cutoff from position zero. Fixture caps
 never change the product's complete Listen or percentage previews.
+
+
+`phone-audio-route` checks the actual active player and media-session audio
+attributes: media by default, alarm only after opting in, then media again after
+opting out. It drives the real bilingual toggle and checks immediate persistence
+and Activity volume-key routing. The phone runtime suite includes it; storage
+fixtures check schema-6 migration preserves every field with alarm sound off.

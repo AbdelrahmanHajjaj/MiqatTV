@@ -55,6 +55,14 @@ the same view; turn it off to restore prayer defaults. A disabled
 prayer or excluded weekday stays off. Overrides use that prayer's local date,
 including before/after reminders that cross midnight.
 
+Adhan, Listen and length previews use **media volume** by default. Enable
+**Use alarm sound** in Prayer alerts to use **alarm volume** instead. The selected
+recording stays the same, and the app's volume percentage applies within that
+system stream. Volume buttons and media controls follow the selected stream.
+Changing the mode stops current playback; the next playback uses the new mode.
+Short-tone notifications retain Android's notification-volume/channel behavior.
+This option does not grant Android timing or Do Not Disturb access.
+
 Choose the default adhan level/length or override them for a prayer. Length is
 5–100% of the selected recording. **Preview selected length** plays from the
 beginning and stops at that percentage; moving the slider never starts sound. Existing
