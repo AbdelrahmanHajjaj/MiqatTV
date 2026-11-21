@@ -182,6 +182,8 @@ final class PhoneSound {
     void choose(String id, List<Choices.Option> options) throws Exception {
         if (ui.choiceDialog != null) ui.choiceDialog.dismiss();
         String[] candidate = {ui.settings.value(id)};
+        boolean shortWindow = a.getResources().getDisplayMetrics().heightPixels
+                < a.views.dp(320) * Math.max(1f, a.getResources().getConfiguration().fontScale);
         LinearLayout layout = a.views.column();
         layout.setPadding(a.views.dp(16), a.views.dp(8), a.views.dp(16), a.views.dp(8));
         layout.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
@@ -205,7 +207,7 @@ final class PhoneSound {
                 list,
                 new LinearLayout.LayoutParams(
                         -1,
-                        Math.min(
+                        shortWindow ? a.views.dp(52) : Math.min(
                                 a.views.dp(300),
                                 a.getResources().getDisplayMetrics().heightPixels / 3)));
         LinearLayout actions = a.views.horizontal(layout);
@@ -219,19 +221,23 @@ final class PhoneSound {
         AlertDialog dialog =
                 a.views
                         .dialog()
-                        .setTitle(a.t(ui.data.controls.get(id).getString("label")))
+                        .setTitle(shortWindow ? null : a.t(ui.data.controls.get(id).getString("label")))
                         .setView(layout)
                         .setNegativeButton(a.t("cancel"), null)
                         .setPositiveButton(a.t("apply"), (d, which) -> ui.save(id, candidate[0]))
                         .create();
         Button imported =
                 a.views.button(
-                        layout,
+                        shortWindow ? actions : layout,
                         a.t("phone_import_audio"),
                         () -> {
                             dialog.dismiss();
                             importAudio(id);
                         });
+        if (shortWindow) {
+            a.views.flex(imported);
+            search.setContentDescription(a.t(ui.data.controls.get(id).getString("label")) + ", " + a.t("phone_search"));
+        }
         imported.setTag("phone.voice.import");
         Runnable update =
                 () -> {

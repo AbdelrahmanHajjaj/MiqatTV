@@ -22,5 +22,6 @@
     <dimen name="widget_corner_soft">12dp</dimen>
     <dimen name="widget_corner_square">0dp</dimen>
     <style name="MiqatWidgetHero" parent="MiqatWidgetText"><item name="android:fontFamily">@font/marcellus_regular</item><item name="android:textSize">28sp</item></style>
+    <style name="MiqatWidgetHeroLatin" parent="MiqatWidgetHero"><item name="android:fontFamily">@font/marcellus_regular</item></style>
     <style name="MiqatWidgetHeroArabic" parent="MiqatWidgetHero"><item name="android:fontFamily">@font/amiri_bold</item></style>
 </resources>

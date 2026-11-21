@@ -248,3 +248,10 @@ real OSM tiles only after a simulated explicit Load map tap, using public Cairo
 fixture coordinates. It checks native square geometry, restricted WebView access
 and provider failures; inspect the resulting map capture for route/markers and
 attribution. Ordinary CI phone UI uses no map network request.
+
+Phone settings redraw checks retain the window container and inspect scroll on
+its first drawn frame during repeated number edits and saving. Keep weekdays
+on one row with complete targets when they fit, and preserve narrow scrolling.
+Next-widget checks measure occupied height, canonical fonts and unclipped core
+text at minimum bounds; a short landscape voice picker must keep its preview,
+recording row and Apply reachable with enlarged text.

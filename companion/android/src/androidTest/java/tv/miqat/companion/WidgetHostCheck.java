@@ -335,6 +335,11 @@ final class WidgetHostCheck {
             PhoneUiCheck.check(wide.findViewById(R.id.widget_next_wide_row)!=null
                     && nameBounds.centerY()==timeBounds.centerY()&&!android.graphics.Rect.intersects(nameBounds,timeBounds),
                     "Wide next card must put the prominent prayer name and time on one row");
+            View nextCard = wide.findViewById(R.id.widget_next);
+            PhoneUiCheck.check(wide.findViewById(R.id.widget_next_highlight).getVisibility()==View.GONE
+                    && nextCard.getHeight()>wideHeight*0.7f
+                    && wide.findViewById(R.id.widget_next_wide_row).getHeight()>a.views.dp(70),
+                    "Next-prayer card must use allocated height without an inset golden outline");
             android.graphics.Typeface heading=context.getResources().getFont(a.ar?R.font.amiri_bold:R.font.marcellus_regular);
             PhoneUiCheck.check(wideName.getTypeface().equals(heading)&&wideTime.getTypeface().equals(heading)
                     && !((TextView)wide.findViewById(R.id.widget_next_remaining)).getText().toString().isEmpty(),
@@ -377,13 +382,15 @@ final class WidgetHostCheck {
                     "Minimum widget did not give prayer name/time priority over metadata");
             for(int id : new int[]{R.id.widget_next_label,R.id.widget_next_time}) {
                 TextView text=rendered.findViewById(id);
+                PhoneUiCheck.check(text.getTypeface().equals(context.getResources().getFont(PhoneAlarms.arabic(context)?R.font.amiri_bold:R.font.marcellus_regular)),
+                        "Minimum next widget lost canonical app-language heading font at scale "+font);
                 android.graphics.Rect visible=new android.graphics.Rect();text.getDrawingRect(visible);
                 ((ViewGroup)rendered).offsetDescendantRectToMyCoords(text,visible);
                 PhoneUiCheck.check(text.getVisibility()==View.VISIBLE&&text.getWidth()>0&&text.getHeight()>0
                         && new android.graphics.Rect(0,0,width,height).contains(visible),
                         "Minimum widget core text leaves allocated bounds at font "+font+": "+visible);
                 PhoneUiCheck.check(text.getLayout()!=null&&text.getLayout().getHeight()<=text.getHeight()-text.getCompoundPaddingTop()-text.getCompoundPaddingBottom(),
-                        "Minimum widget clips core text at font "+font);
+                        "Minimum widget clips core text id="+id+" arabic="+a.ar+" font="+font+" lineHeight="+text.getLineHeight()+" layoutHeight="+(text.getLayout()==null?-1:text.getLayout().getHeight())+" height="+text.getHeight());
                 for(int line=0;line<text.getLayout().getLineCount();line++)
                     PhoneUiCheck.check(text.getLayout().getEllipsisCount(line)==0
                             && text.getLayout().getLineWidth(line)<=text.getWidth()-text.getCompoundPaddingLeft()-text.getCompoundPaddingRight()+1,

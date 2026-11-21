@@ -38,7 +38,10 @@ final class WidgetRenderer {
     }
 
     private static RemoteViews create(Context context, WidgetOptions options, int width, int height, String initialLayout) {
-        RemoteViews view = new RemoteViews(context.getPackageName(), R.layout.prayer_widget);
+        String presentation = initialLayout == null ? options.layoutFor(width, height, context.getResources().getConfiguration().fontScale) : initialLayout;
+        RemoteViews view = new RemoteViews(context.getPackageName(), presentation.equals("next")
+                ? PhoneAlarms.arabic(context) ? R.layout.widget_next_card_ar : R.layout.widget_next_card
+                : R.layout.prayer_widget);
         view.setOnClickPendingIntent(R.id.widget_root, PhoneAlarms.open(context));
         try {
             new WidgetRenderer(context, view, options, width, height, initialLayout).render();
@@ -90,7 +93,10 @@ final class WidgetRenderer {
     private void render() throws Exception {
         if (wide) {
             view.removeAllViews(R.id.widget_next);
-            view.addView(R.id.widget_next, new RemoteViews(context.getPackageName(), ar ? R.layout.widget_next_wide_ar : R.layout.widget_next_wide));
+            int content = layout.equals("next")
+                    ? ar ? R.layout.widget_next_card_wide_ar : R.layout.widget_next_card_wide
+                    : ar ? R.layout.widget_next_wide_ar : R.layout.widget_next_wide;
+            view.addView(R.id.widget_next, new RemoteViews(context.getPackageName(), content));
         }
         view.setImageViewBitmap(
                 R.id.widget_backdrop,
@@ -118,11 +124,12 @@ final class WidgetRenderer {
         boolean compact = height < 180 && !layout.equals("day");
         if (compact) view.setViewPadding(R.id.widget_content, dp(8), dp(6), dp(8), dp(6));
         if (minimal) {
-            view.setViewPadding(R.id.widget_content, dp(4), dp(4), dp(4), dp(4));
-            view.setViewPadding(R.id.widget_next_content, dp(4), dp(4), dp(4), dp(4));
+            view.setViewPadding(R.id.widget_content, dp(2), dp(2), dp(2), dp(2));
+            view.setViewPadding(R.id.widget_next_content, 0, 0, 0, 0);
             view.setViewVisibility(R.id.widget_next_icon, View.GONE);
         }
         view.setInt(R.id.widget_next_highlight, "setColorFilter", accent);
+        view.setViewVisibility(R.id.widget_next_highlight, layout.equals("next") ? View.GONE : View.VISIBLE);
         if (options.hijri) {
             String hijri = PhoneTime.hijri(settings, now, ar);
             title = compact ? hijri : title + "\n" + hijri;
@@ -145,7 +152,7 @@ final class WidgetRenderer {
                 text(data.text("widget_updated", ar) + " · " + updated.format(new Date(now))));
         view.setViewVisibility(
                 R.id.widget_updated,
-                layout.equals("strip") || compact || minimal || layout.equals("day") && height < 360 * context.getResources().getConfiguration().fontScale ? View.GONE : View.VISIBLE);
+                layout.equals("next") || layout.equals("strip") || compact || minimal || layout.equals("day") && height < 360 * context.getResources().getConfiguration().fontScale ? View.GONE : View.VISIBLE);
     }
 
     private void prayers() throws Exception {
@@ -187,7 +194,7 @@ final class WidgetRenderer {
         view.setTextViewText(
                 R.id.widget_next_time,
                 next == null ? "—" : text(time.format(new Date((long) next.getNextTime()))));
-        if (!wide) view.setTextViewTextSize(
+        if (!wide && !layout.equals("next")) view.setTextViewTextSize(
                 R.id.widget_next_label,
                 android.util.TypedValue.COMPLEX_UNIT_SP,
                 12 * options.size / 100f);

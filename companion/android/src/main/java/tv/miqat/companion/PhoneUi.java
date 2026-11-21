@@ -621,25 +621,21 @@ final class PhoneUi {
 
     private void weekdayButtons(String id, String saved, String label) {
         a.body.addView(a.views.text(label, 14, a.ink));
-        LinearLayout days = a.views.column();
-        days.setTag("phone." + id);
-        a.body.addView(days);
+        a.body.setClipChildren(false);
+        a.body.setClipToPadding(false);
+        HorizontalScrollView viewport = new HorizontalScrollView(a);
+        viewport.setHorizontalScrollBarEnabled(false);
+        LinearLayout.LayoutParams space = new LinearLayout.LayoutParams(-1, -2);
+        space.setMargins(-a.views.dp(8), 0, -a.views.dp(8), 0);
+        a.body.addView(viewport, space);
+        LinearLayout track = new LinearLayout(a);
+        track.setGravity(Gravity.CENTER_VERTICAL);
+        track.setTag("phone." + id);
+        viewport.addView(track);
         int mask = Integer.parseInt(saved);
         String[] names = new java.text.DateFormatSymbols(locale()).getWeekdays();
-        int columns =
-                a.getResources().getDisplayMetrics().widthPixels
-                                                / a.getResources().getDisplayMetrics().density
-                                        - 40
-                                >= 7 * 50
-                        ? 7
-                        : 4;
-        LinearLayout track = null;
         for (int n = 0; n < 7; n++) {
             final int day = (n + 1) % 7;
-            if (n % columns == 0) {
-                track = a.views.horizontal(days);
-                track.setGravity(Gravity.CENTER);
-            }
             boolean on = (mask & (1 << day)) != 0;
             String name = names[day + 1];
             Button button =
@@ -648,7 +644,7 @@ final class PhoneUi {
                             a.t("phone_weekday_letters").split(",")[day],
                             () -> save(id, Integer.toString(mask ^ (1 << day))));
             LinearLayout.LayoutParams cell = new LinearLayout.LayoutParams(a.views.dp(48), a.views.dp(48));
-            cell.setMargins(a.views.dp(1), a.views.dp(3), a.views.dp(1), a.views.dp(3));
+            cell.setMargins(0, a.views.dp(3), 0, a.views.dp(3));
             button.setLayoutParams(cell);
             button.setPadding(0, 0, 0, 0);
             button.setTextSize(14);

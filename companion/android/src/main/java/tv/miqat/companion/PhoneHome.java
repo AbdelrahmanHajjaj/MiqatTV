@@ -197,16 +197,6 @@ final class PhoneHome {
     private PhoneSchedule.Day dateNavigation(long now) {
         LinearLayout dateBar = a.views.horizontal(a.body);
         ((LinearLayout.LayoutParams) dateBar.getLayoutParams()).bottomMargin = a.views.dp(12);
-        Button previous =
-                a.views.iconButton(
-                        dateBar,
-                        "back",
-                        a.t("phone_previous_day"),
-                        () -> selectDay(dayOffset - 1, now));
-        previous.setEnabled(dayOffset > -366);
-        previous.setMinimumWidth(0);
-        previous.setMinWidth(0);
-        previous.setTag("calendar.previous-day");
         PhoneSchedule.Day day = ui.settings.day(now, dayOffset);
         SimpleDateFormat date = new SimpleDateFormat("EEEE", ui.locale());
         date.setTimeZone(ui.settings.zone());
@@ -222,17 +212,6 @@ final class PhoneHome {
                 ColorStateList.valueOf((a.accent & 0xffffff) | 0x22000000),
                 a.views.background(android.graphics.Color.TRANSPARENT, 20), null));
         dateLabel.setTag("phone.today");
-        Button forward =
-                a.views.iconButton(
-                        dateBar,
-                        "back",
-                        a.t("phone_next_day"),
-                        () -> selectDay(dayOffset + 1, now));
-        forward.setRotation(180);
-        forward.setEnabled(dayOffset < 366);
-        forward.setMinimumWidth(0);
-        forward.setMinWidth(0);
-        forward.setTag("calendar.next-day");
         dateLabel.append(" · " + ui.digits(date.format(new Date(day.start))));
         dateLabel.setContentDescription(a.t("phone_calendar") + ", " + dateLabel.getText());
         dateLabel.setTextSize(12);

@@ -1,5 +1,50 @@
 # Validation evidence
 
+## Recording feedback refinement — 21 November 2026
+
+Review APK **0.5.2/code 18**, `state/builds/companion/Miqat-latest.apk`,
+35,246,674 bytes; SHA-256:
+`7B4582862908E186DF6779A8C607E82CDF2E551AAC2E54E4A0EA3457A406749D`.
+Prior signing certificate retained. Export matches build. All 25 canonical MP3s,
+25 notice/license/source files and both regenerated next-widget picker PNGs
+are verified against packaged bytes. No schema, scheduling or media change.
+
+The owner's recording shows 4+3 weekdays and settings jumps. Home day arrows
+are removed; its date still opens the combined calendar/timetable. Weekdays
+stay on one row, all seven 48dp targets fit the 360dp viewport, and enlarged/narrow
+layouts can scroll. The window container is retained and scroll restored before
+first drawing. Next widgets fill their allocated card without an inset outline;
+canonical Latin/Arabic fonts follow app language independently from OS locale.
+Signature remains the default and is first in both style lists; saved choices stay.
+
+Local checks on an owned, muted API37 emulator:
+
+- Bilingual phone UI, retained container and first-frame scroll during repeated
+  +/- edits and Save pass, along with existing numeric Cancel/persistence,
+  disabled controls, atomic drafts, calendar boundaries and settings themes.
+- Full phone journey/hosted widgets pass: modern and legacy allocated sizes,
+  independent styles, canonical icons/fonts, next-card height and 140×100 minimum
+  at OS font 1/1.5/2 with real line/bounds/truncation checks. English/Arabic native
+  next-picker images were rendered, inspected and packaged.
+- Both languages pass 80–150% sizing in normal/enlarged-text portrait and enlarged
+  text 1.3 landscape. Final container/voice changes repeat landscape successfully.
+  This is viewport evidence, not physical rotation/sensor acceptance.
+- Final build/test APK/lint pass: 0 errors, 41 existing warnings. Generator10/10,
+  canonical catalog and shared validation pass. No dependency added.
+
+Two genuine sizing failures were retained in private logs: the voice picker
+clipped in a short landscape window at 150%, and the explicit Arabic widget font
+needed more height at minimum size/text 2. The fixes adapt the picker to font-scaled
+height and remove minimum-card padding; original reachability/clipping assertions
+remain. Initial local SDK selection/import errors and new nested-weight warnings
+were corrected before the final build. Draft PR #9 records final-head CI links.
+Native review/captures and the supplied recording stay ignored under state/.
+
+The narrow portrait/native host are emulator evidence. Owner-phone perceived
+fluidity, OEM launcher resize/pin behavior and physical TV/sound/sensor acceptance
+remain separate. TV artifacts and policy were unchanged in this refinement.
+No merge, release or physical deployment.
+
 ## Phone fidelity refinement — 21 November 2026
 
 Review APK **0.5.1/code 17**, `state/builds/companion/Miqat-latest.apk`,

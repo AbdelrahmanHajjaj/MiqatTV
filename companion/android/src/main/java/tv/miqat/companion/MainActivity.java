@@ -467,9 +467,11 @@ public final class MainActivity extends Activity {
         scroll.setFillViewport(true);
         scroll.addView(body);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
-        contentRoot = new FrameLayout(this);
+        boolean attachRoot = contentRoot == null;
+        if (attachRoot) contentRoot = new FrameLayout(this);
+        else contentRoot.removeAllViews();
         contentRoot.addView(shell, new FrameLayout.LayoutParams(-1, -1));
-        contentRoot.addOnLayoutChangeListener(
+        shell.addOnLayoutChangeListener(
                 (view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
                     boolean shortLandscape =
                             getResources().getConfiguration().orientation
@@ -480,9 +482,16 @@ public final class MainActivity extends Activity {
                     if (heading.getVisibility() != visibility)
                         heading.post(() -> heading.setVisibility(visibility));
                 });
-        setContentView(contentRoot);
+        if (attachRoot) setContentView(contentRoot);
         ScrollView current = scroll;
-        current.post(() -> current.scrollTo(0, previousY));
+        current.getViewTreeObserver().addOnPreDrawListener(new android.view.ViewTreeObserver.OnPreDrawListener() {
+            @Override public boolean onPreDraw() {
+                current.getViewTreeObserver().removeOnPreDrawListener(this);
+                // Restore after measurement, before any replacement frame can appear at the top.
+                current.scrollTo(0, previousY);
+                return true;
+            }
+        });
         current.addOnLayoutChangeListener(
                 (view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
                     View focused = getCurrentFocus();

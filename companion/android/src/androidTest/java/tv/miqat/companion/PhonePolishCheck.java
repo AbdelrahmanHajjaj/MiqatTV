@@ -22,6 +22,12 @@ final class PhonePolishCheck {
             PhoneUiCheck.check((dialog.getWindow().getAttributes().gravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM,
                     "Showing the sheet changed its placement");
             dialog.dismiss();
+            try {
+                for (String id : new String[]{"appearance.background", "appearance.theme"})
+                    PhoneUiCheck.check(a.phoneUi.data.options(a.phoneUi.data.controls.get(id)).get(0)
+                                    .equals(a.phoneUi.data.defaults.get(id)),
+                            "Default style must be the first carousel option: " + id);
+            } catch (Exception invalid) { throw new AssertionError(invalid); }
             a.phoneUi.open("appearance");
             boolean before = a.phoneUi.settings.value("appearance.home-background").equals("true");
             a.body.findViewWithTag("phone.appearance.home-background.edit").performClick();
@@ -37,11 +43,19 @@ final class PhonePolishCheck {
                 View cell = a.body.findViewWithTag("phone.call.fajr.weekdays." + day);
                 LinearLayout.LayoutParams size = (LinearLayout.LayoutParams)cell.getLayoutParams();
                 PhoneUiCheck.check(cell.getWidth() == cell.getHeight() && size.width == a.views.dp(48)
-                                && size.leftMargin > 0 && size.rightMargin > 0,
-                        "Weekday targets must stay square with spacing, including wrapped rows");
+                                && cell.getParent() == a.body.findViewWithTag("phone.call.fajr.weekdays"),
+                        "Weekday targets must stay square on a single scrollable row");
+                View track = (View)cell.getParent(), viewport = (View)track.getParent();
+                if (viewport.getWidth() >= 7 * a.views.dp(48)) {
+                    android.graphics.Rect visible = new android.graphics.Rect();
+                    PhoneUiCheck.check(cell.getGlobalVisibleRect(visible)
+                                    && visible.width() == cell.getWidth(),
+                            "Weekday target clipped at page inset");
+                }
             }
             if (a.toast != null) a.toast.cancel();
         });
+        stableScroll(test, a);
         PhoneUiCheck.capture(test, a, lang + "-polish-prayer", capture);
         PhoneUiCheck.on(test, () -> {
             a.phoneUi.open("days:fajr");
@@ -51,6 +65,35 @@ final class PhonePolishCheck {
         PhoneUiCheck.capture(test, a, lang + "-polish-overrides", capture);
         PhoneUiCheck.on(test, () -> a.body.findViewWithTag("phone.day.2").performClick());
         if (capture) review(test, a, lang);
+    }
+
+    private static void stableScroll(Instrumentation test, MainActivity a) {
+        for (String action : new String[]{"plus", "plus", "minus", "save"}) {
+            int[] firstFrame = {-1}, expected = {-1};
+            PhoneUiCheck.on(test, () -> {
+                a.scroll.scrollTo(0, a.views.dp(100));
+                expected[0] = a.scroll.getScrollY();
+                String tag = "phone.call.fajr.before." + action;
+                View button = action.equals("save") ? a.actionHost.findViewWithTag(tag) : a.body.findViewWithTag(tag);
+                View root = a.contentRoot;
+                button.performClick();
+                PhoneUiCheck.check(a.contentRoot == root, "Setting edit replaced the window container");
+                android.widget.ScrollView current = a.scroll;
+                current.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                    @Override public boolean onPreDraw() {
+                        current.getViewTreeObserver().removeOnPreDrawListener(this);
+                        firstFrame[0] = current.getScrollY();
+                        return true;
+                    }
+                });
+                current.invalidate();
+            });
+            android.os.SystemClock.sleep(80);
+            PhoneUiCheck.on(test, () -> PhoneUiCheck.check(firstFrame[0] == expected[0]
+                            && a.scroll.getScrollY() == expected[0],
+                    "Prayer setting jumped before/after first frame: " + action + " " + firstFrame[0] + "/" + expected[0]));
+        }
+        PhoneUiCheck.on(test, () -> a.scroll.scrollTo(0, 0));
     }
 
     private static void review(Instrumentation test, MainActivity a, String lang) throws Exception {

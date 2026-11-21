@@ -3,6 +3,17 @@
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
 Latest requirements: PHONE-PASS9.md, refining the 0.5.0 candidate against its mocks.
 
+## Recording feedback — 0.5.2/code 18
+
+Owner requested simpler Home date entry without arrows, one-row weekdays, stable
+settings updates, a full next-prayer widget card and default-first style choices.
+Local native checks pass: retained root/first-frame scroll, full weekday targets,
+calendar entry and selected-day timetable, responsive widgets with canonical
+fonts at OS text 1/1.5/2, and 80–150% portrait/enlarged-text landscape. Short-window
+voice selection also retains reachable actions. Build/lint: 0 errors, 41 existing
+warnings; two next-widget picker images regenerated. Schema/TV policy unchanged.
+PR #9 owns final-head CI. Exact 0.5.2 review artifact is recorded in EVIDENCE.md.
+
 ## Refinement candidate — 0.5.1/code17
 
 Grouped prayer/settings rows, compact numbers/language, spaced weekday circles,

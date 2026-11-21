@@ -14,6 +14,7 @@ continues setup without another prompt. Alarm timing access is not part of setup
 An existing voluntary alert opt-out remains off when repeating the guide.
 Progress survives reopening; Explore first/Set up later leave a resumable entry.
 
+Miqat Signature appears first in the background and color lists.
 Style previews apply across the page, including background and control colors.
 Only large visual catalogs scroll horizontally. Short choices stay visible;
 long text choices such as high-latitude rules use a vertical selection stack.
@@ -40,7 +41,8 @@ informational. Notification permission, Android channel settings and Do Not
 Disturb remain authoritative; per-prayer enabling cannot bypass them. The global
 alert switch remains in permissions so an existing opt-out is recoverable.
 
-Repeat weekdays are visible circular toggles with full accessible names. Minute
+Repeat weekdays are circular toggles on one row with full accessible names; the
+row scrolls when enlarged sizing needs more space. Minute
 adjustments and before/after reminders stay in their rows beside −/+. Numeric
 edits retain Done/Cancel. Day overrides belong to one prayer and weekday and
 change only sound/vibration. Enable a weekday override to expand its controls in
@@ -133,10 +135,9 @@ The screen closes when playback finishes. The optional volume-key shortcut
 stops adhan while this screen is visible, including over the lock screen.
 Android reserves the power key: locking or screen timeout does not stop audio.
 
-Prayer Home keeps location in the next-prayer card. Tap the date to open a Hijri
-month calendar, select a day, or use previous/next to browse its calculated prayer
-times. Home arrows step directly by day. The calendar shows that selected day's
-timetable beneath the month grid and updates immediately; Done closes it.
+Prayer Home shows location above its next-prayer card. Tap the date to open the
+Hijri month calendar and browse dates. The selected day's timetable appears
+beneath the month grid and updates immediately; Done closes it.
 Browsing never changes scheduled alerts. There is no duplicate tomorrow
 Fajr row. Qibla and widgets are separate actions; locked future
 features follow farther down, reachable with a short scroll. Finishing first use
@@ -148,7 +149,8 @@ and visual Theme/Background catalogs. A placed widget adapts its content to the
 allocated width and height: next prayer when narrow, a timetable strip when wide
 and short, and a daily list when tall enough. Android 12+ supports exact launcher
 size variants; older launchers use their resize bounds. Small sizes prioritize
-the prayer name/time over date/footer details. Remaining time is a snapshot at
+the prayer name/time over date/footer details. The next-prayer card uses the
+allocated height for its serif prayer name and time, without an inset outline. Remaining time is a snapshot at
 the existing widget refresh, rather than a separate background ticker.
 Each has a launcher entry with a suitable default
 size. Customize each placed widget independently: initial presentation, app/fixed theme,
@@ -211,7 +213,7 @@ It is a portability check, without launching an iOS simulator or building an app
 
 ## Combined owner review
 
-Use the fixed `state/builds/companion/Miqat-latest.apk` (0.5.1, version code 17) on the Android
+Use the fixed `state/builds/companion/Miqat-latest.apk` (0.5.2, version code 18) on the Android
 phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 

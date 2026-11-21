@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2 phone refinement
+
+- Simplified the Home date entry and retained calendar/timetable browsing.
+- Kept weekdays on one row and restored settings scroll before drawing.
+- Filled next-prayer widgets with the prayer hero instead of an inset outline.
+- Put the default Miqat Signature background and color theme first.
+
 ## Unreleased
 
 - Refine phone 0.5.1/code17 towards the approved mockups: grouped prayer/settings

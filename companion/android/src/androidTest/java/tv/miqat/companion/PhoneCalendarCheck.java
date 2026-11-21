@@ -153,10 +153,10 @@ final class PhoneCalendarCheck {
                             !sunrise.isClickable() && !sunrise.isFocusable(),
                             "Sunrise must remain informational in the prayer list");
                 });
-        tapDayArrow(test, a, "calendar.previous-day", -1);
-        tapDayArrow(test, a, "calendar.next-day", 0);
-        tapDayArrow(test, a, "calendar.next-day", 1);
-        PhoneUiCheck.on(test, () -> a.phoneUi.home.today());
+        PhoneUiCheck.on(test, () -> PhoneUiCheck.check(
+                a.body.findViewWithTag("calendar.previous-day") == null
+                        && a.body.findViewWithTag("calendar.next-day") == null,
+                "Home must keep date browsing inside the calendar"));
         String[] month = new String[1];
         PhoneUiCheck.on(
                 test,
@@ -340,7 +340,9 @@ final class PhoneCalendarCheck {
                                     && a.body.findViewWithTag("phone.hero") != null
                                     && a.body.findViewWithTag("phone.tomorrow") == null,
                             "Return to today failed or duplicate tomorrow Fajr remained");
-                    a.body.findViewWithTag("calendar.previous-day").performClick();
+                    a.phoneUi.home.dayOffset = -1;
+                    a.phoneUi.home.selectedDay = a.phoneUi.settings.day(System.currentTimeMillis(), -1).start;
+                    a.render();
                     a.back();
                     PhoneUiCheck.check(
                             a.phoneUi.home.dayOffset == 0
@@ -378,72 +380,4 @@ final class PhoneCalendarCheck {
         }
     }
 
-    private static void tapDayArrow(
-            Instrumentation test, MainActivity a, String tag, int expectedOffset) {
-        android.graphics.Rect bounds = new android.graphics.Rect();
-        PhoneUiCheck.on(
-                test,
-                () -> {
-                    android.view.View arrow = a.body.findViewWithTag(tag);
-                    arrow.requestRectangleOnScreen(
-                            new android.graphics.Rect(0, 0, arrow.getWidth(), arrow.getHeight()),
-                            true);
-                });
-        PhoneUiCheck.on(
-                test,
-                () -> {
-                    android.view.View arrow = a.body.findViewWithTag(tag);
-                    PhoneUiCheck.check(
-                            arrow.getGlobalVisibleRect(bounds)
-                                    && bounds.width() == arrow.getWidth()
-                                    && bounds.height() == arrow.getHeight(),
-                            "Home day arrow has no complete touch target");
-                });
-        long downAt = android.os.SystemClock.uptimeMillis();
-        android.view.MotionEvent down =
-                android.view.MotionEvent.obtain(
-                        downAt,
-                        downAt,
-                        android.view.MotionEvent.ACTION_DOWN,
-                        bounds.centerX(),
-                        bounds.centerY(),
-                        0);
-        android.view.MotionEvent up =
-                android.view.MotionEvent.obtain(
-                        downAt,
-                        downAt + 40,
-                        android.view.MotionEvent.ACTION_UP,
-                        bounds.centerX(),
-                        bounds.centerY(),
-                        0);
-        try {
-            test.sendPointerSync(down);
-            test.sendPointerSync(up);
-        } finally {
-            down.recycle();
-            up.recycle();
-        }
-        test.waitForIdleSync();
-        PhoneUiCheck.on(
-                test,
-                () -> {
-                    PhoneUiCheck.check(
-                            a.phoneUi.home.dayOffset == expectedOffset
-                                    && a.phoneUi.choiceDialog == null,
-                            "Touching Home's day arrow opened a calendar instead of changing day");
-                    PhoneSchedule.Day day =
-                            a.phoneUi.settings.day(System.currentTimeMillis(), expectedOffset);
-                    for (int prayer = 0; prayer < PhoneStore.PRAYERS.length; prayer++) {
-                        TextView time =
-                                a.body.findViewWithTag(
-                                        "phone.prayer." + PhoneStore.PRAYERS[prayer] + ".time");
-                        PhoneUiCheck.check(
-                                time != null
-                                        && time.getText()
-                                                .toString()
-                                                .equals(a.phoneUi.time(day.times[prayer])),
-                                "Home day arrow did not update prayer times");
-                    }
-                });
-    }
 }

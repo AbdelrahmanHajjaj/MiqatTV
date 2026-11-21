@@ -159,6 +159,9 @@ final class PhoneData {
             default:
                 throw new IllegalArgumentException("Unknown phone choices");
         }
+        String preferred = c.optString("default");
+        if ((kind.equals("themes") || kind.equals("backgrounds")) && values.remove(preferred))
+            values.add(0, preferred);
         return values;
     }
 

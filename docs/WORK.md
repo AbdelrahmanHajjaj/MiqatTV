@@ -1,13 +1,14 @@
 # Current work
 
-Updated: 2026-11-21. Owner requested fidelity refinement and bug fixes after
-0.5.0. Continue on feature/companion-installation and draft PR #9. Scope:
-[PHONE-PASS9.md](PHONE-PASS9.md). Approved references remain the revision-2 gallery.
+Updated: 2026-11-21. Owner feedback on 0.5.1 approves a focused 0.5.2 refinement
+on feature/companion-installation, draft PR #9. Remove Home day arrows while
+keeping its calendar entry and combined timetable; keep weekdays on one row;
+prevent settings redraw jumps; fill next-prayer widgets like the Home hero; put
+Miqat Signature first in theme/background choices without changing saved choices.
 
-Refinement implementation/local validation complete: grouped rows, spaced circles,
-compact controls/language, inline overrides, stable sheets, combined calendar,
-responsive widgets and optional dimmed artwork. Candidate0.5.1/code17 uses additive
-schema5. LG0.2.29 carries the Today styling backport. Identities and checks are in
-[EVIDENCE.md](EVIDENCE.md); draft PR9 owns final-head CI receipts. Handoff requires
-green final checks. Next: owner device review, then refine against actual feedback.
-No public release, merge or physical deployment in this review pass.
+Implementation/local validation complete: native bilingual UI retains its window
+container and scroll before drawing; all weekday targets fit at 360dp. Widget
+bounds/fonts and 80–150% portrait/large-text landscape checks pass. Native picker
+images are regenerated. Exact artifact/evidence: EVIDENCE.md. Draft PR #9 owns
+final-head CI receipts; green checks are required before owner handoff.
+No merge, public release or physical deployment in this review pass.
