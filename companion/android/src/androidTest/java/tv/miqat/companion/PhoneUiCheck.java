@@ -107,6 +107,7 @@ final class PhoneUiCheck {
                 on(test,()->a.tab("phone-settings"));
                 capture(test,a,lang+"-phone-settings",capture);
                 on(test,()->a.phoneUi.open("audio"));capture(test,a,lang+"-phone-audio",capture);
+                testControls(test,a,lang,capture);
                 on(test,()->{a.phoneUi.open("default-audio");a.body.findViewWithTag("phone.reminders.voice.edit").performClick();});capture(test,a,lang+"-phone-voice-sheet",capture);
                 on(test, () -> check(a.phoneUi.choiceDialog.getWindow().getDecorView()
                                 .findViewWithTag("phone.voice.import").getVisibility() == View.VISIBLE,
@@ -150,6 +151,36 @@ final class PhoneUiCheck {
             for(Map.Entry<String,?> e:original.entrySet()){Object value=e.getValue();if(value instanceof String)restore.putString(e.getKey(),(String)value);else if(value instanceof Boolean)restore.putBoolean(e.getKey(),(Boolean)value);else if(value instanceof Integer)restore.putInt(e.getKey(),(Integer)value);else if(value instanceof Long)restore.putLong(e.getKey(),(Long)value);}
             check(restore.commit(),"Cannot restore phone fixture");context.getSharedPreferences("companion",0).edit().putString("language",language).commit();PhoneAlarms.rebuild(context);
         }
+    }
+    private static void testControls(Instrumentation test, MainActivity a, String lang, boolean capture) throws Exception {
+        check(!PhoneAlertTest.pending(a), "Finish an earlier test before this UI fixture");
+        String saved = PhoneStore.preferences(a).getString("settings", null);
+        try {
+            on(test, () -> {
+                View action = a.body.findViewWithTag("phone.test.adhan");
+                check(action != null && a.body.findViewWithTag("phone.test.notification") != null,
+                        "Phone alert tests are missing");
+                check(action.getTag(R.id.companion_action).equals("tests.phone-adhan"),
+                        "Phone test is not bound to its canonical action");
+                action.requestRectangleOnScreen(new android.graphics.Rect(0,0,action.getWidth(),action.getHeight()),true);
+                action.performClick();
+                check(!PhonePlayback.playing(), "Phone test skipped its grace period");
+                if (PhoneAlertTest.pending(a)) check(a.body.findViewWithTag("phone.test.cancel") != null
+                                && a.body.findViewWithTag("phone.test.adhan") == null
+                                && a.body.findViewWithTag("phone.test.notification") == null,
+                        "Pending test must replace duplicate actions with countdown and Cancel");
+            });
+            if (PhoneAlertTest.pending(a)) capture(test,a,lang+"-phone-test-pending",capture);
+        } finally {
+            on(test, () -> {
+                View cancel = a.body.findViewWithTag("phone.test.cancel");
+                if (cancel != null) cancel.performClick(); else PhoneAlertTest.cancel(a);
+                a.render();
+            });
+        }
+        check(!PhoneAlertTest.pending(a) && !PhonePlayback.playing()
+                        && java.util.Objects.equals(saved,PhoneStore.preferences(a).getString("settings",null)),
+                "Phone test controls changed settings or retained a cancelled test");
     }
     private static void advancedLocationDraft(MainActivity a) {
         Map<String,String> original = new LinkedHashMap<>(a.phoneUi.settings.values);

@@ -1,5 +1,38 @@
 # Validation evidence
 
+## Named audio library and delayed phone tests — 21 November 2026
+
+Review **0.5.9/code 25** retains multiple named private imports, including old
+recordings and independent prayer selections. Full Listen starts at zero;
+percentage preview starts at zero and stops at its selected fraction. Adhan and
+notification tests wait 30 seconds, support cancellation and leave real settings
+and schedules untouched. The redundant motion control is hidden. Native frame
+capture reproduced the sheet's 27px first-frame inset; initializing the dialog
+before sizing fixes it, with all 16 captured frames stable.
+
+Latest main **26a32c7** was merged normally in **4f6ca5c** before the PR push.
+All 13 retained Adhan files exactly match its approved cleaned bytes; the retired
+voice remains excluded. All 25 shipped media hashes pass, totaling 16,464,111
+bytes for Adhan. Main's reusable affected-CI and artifact policy are preserved.
+
+Owned muted read-only API 37: private library/migration, actual alarm/media/Stop/
+focus, full audition beyond 12 seconds, metadata-based percentage cutoff, actual
+30-second notification/Adhan tests, early/stale/duplicate/reboot/cancel rejection,
+bilingual UI and dialog regressions pass. First-use/widget journey, native TV
+bindings and pinned-TLS LAN pass. English/Arabic sizing at 80–150% passes normal
+portrait and font 1.3 portrait/landscape. Library and test UI renders inspected.
+No physical device was operated.
+
+Production/test build and lint pass: **0 errors, 41 existing warnings**.
+Canonical generator **12/12**, shared/design checks, media preparation regressions,
+CI selection tests and actionlint pass. Local Node is 26.13.1; CI uses Node 24.
+Exact-head CI is tracked by draft PR #9. Private logs/captures remain ignored.
+
+Signed export: `state/builds/companion/Miqat-latest.apk`, **35,369,692 bytes**,
+SHA256 `06FA767B9AD5E62DB75FBBB9D76450C8CC3BF8EAB821D1F21D7FC8508EE6D0FE`.
+Signing identity is unchanged. Physical provider selection and OEM background/
+notification reliability remain unverified. No release or physical deployment.
+
 ## Direct device adhan selection — 21 November 2026
 
 Phone review **0.5.8/code 24** exposes **Choose audio from device** in every

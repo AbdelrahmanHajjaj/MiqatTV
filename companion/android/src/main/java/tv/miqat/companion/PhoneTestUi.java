@@ -7,7 +7,7 @@ import android.widget.*;
 final class PhoneTestUi {
     static void render(MainActivity a, LinearLayout parent) {
         boolean pending = PhoneAlertTest.pending(a), running = PhonePlayback.currentId().startsWith("phone:test:");
-        for (boolean adhan : new boolean[] {true, false}) {
+        if (!pending && !running) for (boolean adhan : new boolean[] {true, false}) {
             View action = a.views.navigationRow(parent, adhan ? "mihrab" : "bell",
                     label(a, adhan ? "tests.phone-adhan" : "tests.phone-notification"), a.t("phone_test_delay"), () -> {
                         String result = PhoneAlertTest.schedule(a, adhan);
@@ -16,7 +16,6 @@ final class PhoneTestUi {
                     });
             action.setTag(adhan ? "phone.test.adhan" : "phone.test.notification");
             action.setTag(R.id.companion_action, adhan ? "tests.phone-adhan" : "tests.phone-notification");
-            action.setEnabled(!pending && !running);
         }
         if (pending || running) {
             TextView status = a.views.text("", 13, a.accent);parent.addView(status);

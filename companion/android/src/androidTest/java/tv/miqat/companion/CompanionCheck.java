@@ -21,7 +21,7 @@ import java.util.*;
 public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
     String backgroundSuite = "";
-    boolean calendarReturn, phoneControls, phoneDialog, phoneTests;
+    boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary;
     boolean mapNetwork;
     boolean journey,
             customCheck,
@@ -51,6 +51,7 @@ public final class CompanionCheck extends Instrumentation {
         phoneControls = suite.equals("phone-controls");
         phoneDialog = suite.equals("phone-dialog");
         phoneTests = suite.equals("phone-tests");
+        phoneLibrary = suite.equals("phone-library");
         calendarReturn = suite.equals("phone-calendar-return");
         journey = suite.equals("phone-journey");
         customCheck = suite.equals("phone-custom");
@@ -79,6 +80,12 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if (phoneLibrary) {
+                PhoneLibraryCheck.run(this,captures);
+                result.putString("stream", "PASS: bilingual named adhan library choices and reuse\n");
+                finish(-1,result);
+                return;
+            }
             if (phoneTests) {
                 PhoneTestCheck.run(this);
                 result.putString("stream", "PASS: thirty-second phone tests preserve real settings and schedule\n");

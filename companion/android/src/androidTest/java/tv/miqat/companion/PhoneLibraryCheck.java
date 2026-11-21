@@ -11,6 +11,20 @@ import java.util.*;
 
 /** Actual searchable library choices, with exact preservation of pre-existing private imports. */
 final class PhoneLibraryCheck {
+    static void run(Instrumentation test, boolean capture) throws Exception {
+        android.content.Context c = test.getTargetContext();
+        SharedPreferences prefs = c.getSharedPreferences("companion",0);
+        String language = prefs.getString("language","system");
+        try {
+            for (String lang : new String[]{"en","ar"}) {
+                prefs.edit().putString("language",lang).commit();
+                MainActivity a = LiveUiCheck.launch(test);
+                try { check(test,a,lang,capture); }
+                finally { PhoneUiCheck.on(test,a::finish); }
+            }
+        } finally { prefs.edit().putString("language",language).commit(); }
+    }
+
     static void check(Instrumentation test, MainActivity a, String lang, boolean capture) throws Exception {
         PhoneStore saved = PhoneStore.read(a);
         SharedPreferences prefs = PhoneStore.preferences(a);
@@ -45,6 +59,18 @@ final class PhoneLibraryCheck {
             search(test, a, secondName, 1);
             visibleLabel(test, a, secondName);
             search(test, a, prefix, 2);
+            PhoneUiCheck.on(test, () -> {
+                android.graphics.Rect available = new android.graphics.Rect();
+                a.getWindow().getDecorView().getWindowVisibleDisplayFrame(available);
+                for (View button : new View[]{a.phoneUi.choiceDialog.getButton(-1),
+                        a.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.voice.import")}) {
+                    int[] position = new int[2];button.getLocationOnScreen(position);
+                    android.graphics.Rect bounds = new android.graphics.Rect(position[0],position[1],
+                            position[0]+button.getWidth(),position[1]+button.getHeight());
+                    PhoneUiCheck.check(available.contains(bounds),
+                            "Voice picker control is outside visible screen: " + bounds + " available=" + available);
+                }
+            });
             PhoneUiCheck.capture(test, a, lang + "-audio-library-choices", capture);
             PhoneUiCheck.on(test, () -> {
                 ListView list = list(a);

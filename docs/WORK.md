@@ -1,20 +1,18 @@
 # Current work
 
 Updated: 2026-11-21. Owner approved phone audio/testing/popup refinements on
-feature/companion-installation, draft PR #9. Current export is 0.5.8/code 24;
-0.5.9/code 25 is in progress.
+feature/companion-installation, draft PR #9. Review export is 0.5.9/code 25.
 
-Build a named reusable private adhan library, preserving existing imports and
-independent prayer selections. Listen plays the full recording from the start;
-length preview plays from the start to the selected percentage. Add explicit
-Adhan and notification phone tests with a cancellable 30-second grace period.
-Remove the redundant phone Reduce motion setting and follow Android animation
-accessibility. Reproduce/fix the Coming soon sheet's horizontal entrance shift.
+Named reusable private adhans, complete Listen, start-to-percentage previews and
+cancellable 30-second phone tests are implemented. The redundant phone motion
+control is hidden; existing accessibility preferences remain compatible. The
+Coming soon sheet first-frame width regression is fixed.
 
-Latest main (26a32c7) is being integrated before the PR push, as requested. Preserve
-its approved cleanup for the 13 retained voices and its affected-CI/artifact policy
-([CI](CI.md)); keep the previously retired recording excluded.
+Latest main (26a32c7) was merged normally in 4f6ca5c before pushing, as requested.
+Its cleanup for the 13 retained voices and affected-CI/artifact policy are
+preserved; the previously retired recording stays excluded.
 
-Next: finish the merge, run focused storage/runtime/dialog and bilingual UI/sizing,
-export the review APK and verify exact-head CI. Keep PR #9 draft for owner review.
+Merged storage/runtime/dialog, bilingual UI/sizing, journey, TV bindings and LAN
+checks pass. Build/lint and signed export pass; see EVIDENCE.md.
+Next: verify exact-head CI and keep PR #9 draft for owner review.
 No PR merge, release or physical deployment requested.

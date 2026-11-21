@@ -9,8 +9,9 @@ Owner requested named reusable imports, complete auditions, start-to-percentage
 length previews, cancellable 30-second phone tests, no redundant motion toggle
 and a stable Coming soon sheet. The focused popup test reproduced its first-frame
 27px inset, then passed after initializing the dialog before sizing. Private
-library storage regressions pass. Integrate latest main before pushing; final
-merged runtime/UI/sizing, artifact and CI checks remain pending.
+library storage regressions pass. Latest main is merged normally, preserving its
+cleaned retained audio and affected-CI policy. Merged runtime/UI/sizing, journey,
+TV bindings, LAN and signed export checks pass. Exact-head CI is tracked in PR #9.
 
 ## Device adhan selection — 0.5.8/code 24
 
