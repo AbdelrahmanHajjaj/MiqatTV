@@ -4,6 +4,7 @@ const path = require('node:path');
 const http = require('node:http');
 const { chromium } = require('playwright');
 const base = path.join(__dirname, 'build/app');
+const voices = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/data/voices.json')));
 const sacred = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/data/sacred-text.json')));
 const uiGaps = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-gaps.json')));
 const uiChoiceGaps = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-choice-gaps.json')));
@@ -138,9 +139,23 @@ const server = http.createServer((req, res) => {
       });
     }
     const errors = []; page.on('pageerror', e => errors.push(e.message));
-    await page.goto('http://127.0.0.1:' + server.address().port, {waitUntil: 'domcontentloaded'});
+    // Observe startup before app initialization, independent of the runner's speed.
+    let resumeStartup;
+    const startupGate=new Promise(resolve=>{resumeStartup=resolve;});
+    const holdStartup=async route=>{await startupGate;await route.continue();};
+    await page.route('**/app.js',holdStartup);
+    await page.goto('http://127.0.0.1:' + server.address().port, {waitUntil: 'commit'});
+    await page.locator('#splash').waitFor({state:'visible'});
     assert.equal(await page.locator('#splash').isVisible(), true, 'startup artwork is visible before the first screen');
+    assert.equal(await page.locator('#screen').evaluate(screen=>screen.childElementCount),0,'startup precedes the first screen');
+    assert.equal(await page.locator('#splash').evaluate(async element=>{
+      const image=new Image();image.src=getComputedStyle(element).backgroundImage.match(/url\(["']?(.*?)["']?\)/)[1];
+      await image.decode();return image.naturalWidth>0&&image.naturalHeight>0;
+    }),true,'startup artwork decodes');
+    resumeStartup();await page.waitForLoadState('domcontentloaded');
+    await page.unroute('**/app.js',holdStartup);
     await page.locator('#splash').waitFor({state:'hidden'});
+    assert.notEqual(await page.locator('#stage').getAttribute('data-layout'),null,'startup hands off to the initialized layout');
     assert.match(await page.title(), /^Miqat/);
     await page.evaluate(() => document.fonts.ready);
     await inputRestored();
@@ -827,8 +842,9 @@ const server = http.createServer((req, res) => {
     await page.locator('[data-action=tests]').click();
     await page.locator('[data-action=section][data-value=reminders]').click();
     await page.locator('[data-action=voice]').click();
-    assert.equal(await page.locator('.voice-name').count(), 14, 'every Android adhan voice is in one scrollable list');
-    assert.equal(await page.locator('.voice-preview').count(), 14, 'each voice has a preview control');
+    assert.equal(await page.locator('.voice-name').count(), voices.length, 'every available adhan voice is in one scrollable list');
+    assert.equal(await page.locator('.voice-preview').count(), voices.length, 'each voice has a preview control');
+    assert.equal(await page.locator('[data-value=alafasy]').count(), 0, 'retired recording is not selectable');
     await page.locator('[data-action=preview-voice][data-value=makkah]').click();
     await page.waitForFunction(() => document.querySelector('audio') && document.querySelector('audio').getAttribute('src'));
     assert.match(await page.locator('audio').getAttribute('src'), /makkah\.mp3$/);
@@ -1509,6 +1525,29 @@ const server = http.createServer((req, res) => {
       await page.locator('[data-action=prayer-day]').click();
       const paths=await page.locator('.day-row .prayer-icon path').evaluateAll(nodes=>nodes.map(el=>el.getAttribute('d')));
       assert.deepEqual(paths,await page.evaluate(()=>window.MiqatData.prayerIcons.prayers.map(p=>p.path)),'all six actual prayer labels use canonical Miqat geometry');
+      const dayRows = await page.evaluate(() => {
+        const now = new Date(), prefs = window.Miqat.prefs(JSON.parse(localStorage.getItem('fixture')).prefs);
+        const day = window.Miqat.day(now, prefs), selection = window.Miqat.select(day, now);
+        return [...document.querySelectorAll('.day-row')].map((row, i) => {
+          const expected = i === selection.next && day.times[i] === selection.nextTime
+            ? 'next' : i === selection.current ? 'current' : day.times[i] < +now ? 'past' : 'up';
+          const style = getComputedStyle(row);
+          return {expected, actual:[...row.classList].filter(c => c !== 'day-row'),
+            fill:style.backgroundColor, text:style.color, border:style.borderTopColor,
+            outlined:parseFloat(style.borderTopWidth) > 0 && style.borderTopStyle !== 'none'};
+        });
+      });
+      assert.equal(dayRows.length, 6, 'Today keeps all six civil-day times');
+      for (const row of dayRows) {
+        assert.deepEqual(row.actual, [row.expected], 'Today row follows the existing prayer selection/date');
+        if (row.expected === 'next') assert.ok(row.outlined && row.border !== row.fill,
+          'Today next prayer has a visible outline: ' + JSON.stringify(row));
+      }
+      const currentRow = dayRows.find(row => row.expected === 'current');
+      const otherRow = dayRows.find(row => row.expected === 'up' || row.expected === 'past');
+      if (currentRow && otherRow) assert.notEqual(currentRow.fill, otherRow.fill,
+        'Today current prayer is visibly distinct from other times');
+
     }
     assert.deepEqual(errors, []);
     console.log('PASS: Arabic/English controls, grouped settings, offsets and cancel, prayer bells, overlays preserving HDMI, audio stop/end/error recovery, radio, theme/layout, persistence and global sizing. Decoder and Luna boundaries are mocked; actual LG tests remain separate.');

@@ -1,5 +1,61 @@
 # Changelog
 
+## 0.5.10 Adhan volume
+
+- Use media volume for Adhan by default. Add the optional **Use alarm sound** toggle in Prayer alerts to use alarm volume instead.
+- Keep the player, media session and phone volume buttons on the same selected stream. Preserve existing settings without opting users into alarm sound.
+
+## 0.5.9 audio library and phone testing
+
+- Keep multiple custom adhans in a reusable named private library; default names come from the selected file. Preserve earlier imports.
+- Listen plays the full recording from the beginning. Length preview starts at the beginning and stops at the selected percentage.
+- Add cancellable Adhan and notification tests with a 30-second grace period, independent of the real prayer schedule.
+- Remove the redundant phone Reduce motion setting and fix the Coming soon sheet expanding sideways after appearing.
+
+## 0.5.8 device adhan selection
+
+- Keep **Choose audio from device** visible in every phone adhan voice picker, without first selecting Custom audio from the list. Reuse the validated private import for default and individual prayer voices.
+
+## 0.5.7 immediate appearance and widgets
+
+- Save phone appearance, display and widget changes immediately, including existing placed widgets. Back retains changes; page-level Apply/Cancel is removed.
+- Save TV appearance selections through the existing confirmed, conflict-aware path. Keep validated custom-color dialogs and Android widget Add completion.
+
+## 0.5.6 immediate controls and quieter Home
+
+- Save numeric +/− changes immediately across phone settings and TV controls, preserving earlier adjustments when switching fields. Valid phone numeric typing saves without replacing the field; invalid values stay rejected.
+- Keep full-page preview Apply/Cancel while removing extra per-number confirmation steps.
+- Remove the welcome ad/account label, the verse reference line and Home location success/confirmation copy. Keep location setup and meaningful errors accessible.
+
+## 0.5.5 strip highlight
+
+- Outline the strip’s next prayer with a theme-colored rectangular border.
+- After Isha, highlight Fajr with tomorrow’s actual time instead of leaving every column plain.
+
+## 0.5.4 phone refinement
+
+- Remove “excerpt” from the verse reference.
+- Keep Hijri browsing inside the popup and return directly to the full live Home.
+- Default fresh phone settings to 12-hour time; keep saved clock choices.
+- Show both enabled dates on the prayer strip and fill its height with prayer columns.
+
+## 0.5.3 phone Home, calendar and location
+
+- Keep both the welcome greeting and canonical Quran excerpt; move Hijri date and
+  one city action into the prayer card with compact Location settings.
+- Mark five recurring Hijri events in the calendar, show selected-day event details
+  with prayer times, and add one relevant current/upcoming event on Home.
+- Add optional location refresh while the app is closed, with explicit Android
+  background permission, manual fallback and protection from stale fixes.
+- Preserve existing settings and foreground-only travel consent during upgrades.
+
+## 0.5.2 phone refinement
+
+- Simplified the Home date entry and retained calendar/timetable browsing.
+- Kept weekdays on one row and restored settings scroll before drawing.
+- Filled next-prayer widgets with the prayer hero instead of an inset outline.
+- Put the default Miqat Signature background and color theme first.
+
 ## Unreleased
 
 - Run PR checks for affected platforms, cancel superseded CI runs, and include
@@ -9,6 +65,131 @@
 - Gently reduce rumble and background noise in all 14 adhan voices, preserving
   existing wording, duration and bitrate. The recordings are slightly smaller;
   spoken reminders are unchanged.
+
+- Refine phone 0.5.1/code17 towards the approved mockups: grouped prayer/settings
+  rows, spaced circular weekdays, compact numeric editors and a language picker.
+  Place sheets before their first frame; fix Home date-arrow touch targets and
+  show the selected timetable directly beneath the Hijri calendar.
+- Expand weekday overrides in place. Add a dimmed Home artwork toggle and adapt
+  landscape-only scenes to portrait without changing the canonical TV artwork.
+- Make placed widgets adapt among next-prayer, horizontal and daily layouts on
+  resize, including older launchers. Add canonical icons, serif prayer heroes,
+  next-prayer highlights and matching native English/Arabic picker images.
+- Carry choice spacing to the TV preview and current/next/past prayer styling to
+  LG's Today page in 0.2.29. Keep scheduling and media policy unchanged.
+
+- Implement the approved phone design in 0.5.0/code16: welcome-first setup,
+  labeled country/city and compact detection, a single notification decision,
+  full-page style previews, visible short choices/weekdays and inline numbers.
+- Add Hijri month/day prayer browsing and an explicit online Qibla map with
+  attribution, alongside the offline compass. Use the transparent Miqat mark.
+- Unify per-prayer enable, Adhan/Short tone/Silent, independent vibration and
+  weekday overrides. Add recording-relative length and ending preview; preserve
+  legacy quiet windows, saved modes and seconds caps until deliberately edited.
+- Keep alarm access out of onboarding, with a disclosed approximate scheduling
+  fallback. Add Widgets in settings, default new widgets to Hijri, and refine
+  supported-only TV setup, prayer icons and spaced media/action rows.
+
+- Refine phone 0.4.6/code15: two-page first use, single live appearance/widget
+  previews with direct carousels, compact inline choices and searchable voices.
+  Show numbered TV preparation together with release selection and LG credentials;
+  remove single-instruction pages and nested visual-choice dialogs. Keep a coherent
+  appearance Apply/Cancel draft and expose language directly in Phone settings.
+
+- Add purpose-generated portrait Miqat signature artwork in phone-only packaging
+  for 0.4.5/code 14. Reduce first use to three pages, combining theme/background
+  choices with one live preview and contextual alert permissions. Add populated
+  Android widget-picker previews, per-widget scene/opacity/corner controls and an
+  optional Hijri date, using the app’s fonts, palettes and date formatter.
+
+- Replace the optional phone adhan Stop button with a deliberate bottom swipe-up
+  handle in 0.4.4/code13. Unify bottom primary/secondary action footers and dialog
+  surfaces, preserving accessibility, large text and keyboard clearance. Remove
+  redundant instructional copy and simplify first-use permission actions. Center
+  the swipe label and use contextual actions without duplicate navigation. Use
+  the signature portrait background across first use, with readable controls and
+  a smooth sky/artwork transition.
+
+- Add selected background/theme and canonical mihrab artwork to the optional
+  phone adhan screen and notification in 0.4.3/code 12. Show the scheduled prayer
+  time and effective playing voice in notification/media metadata, using shared
+  native scene composition and clock formatting.
+- Restore balanced, theme-highlighted prayer-card text in phone 0.4.2/code 11.
+  Add notification Play/Pause/Stop and dismissal cancellation where Android
+  supports it, with pause preserving position and remaining playback duration.
+  Offer a default-off adhan screen with explicit closing/Back confirmation and
+  an optional volume-key stop while visible over the lock screen. Preserve
+  background/screen-off playback; migrate prior phone settings safely.
+- Give phone Home (0.4.1/code 10) more breathing room and allow short scrolling.
+  Integrate location in the prayer card, show tomorrow Fajr before tools, and
+  move locked features below separately spaced actions. Verify completed setup
+  hides its resume prompt.
+- Refine the Android phone review build to 0.4.0 (code 9), with compact settings,
+  floating main navigation, fewer Home rows and responsive prayer columns.
+- Simplify first use to one decision per screen with Skip; add real theme and
+  portrait scene carousels. Explain reduced-motion effects and improve Qibla's
+  Kaaba marker. Preserve sensor/calculation behavior.
+- Add next-prayer, timetable and strip widget entries with independent layout,
+  theme, background, date and text customization, draft Cancel and resize handling.
+- Keep TV setup full screen with one preparation step at a time and separate LG
+  address/passphrase screens. Fit the complete scan artwork; shared installer
+  changes also ship in standalone installer 1.1.4 (code 7).
+- Remove Al Afasy from adhan choices and migrate local saved selections. Read
+  older TVs without rewriting their settings or offering the retired choice.
+
+
+- Complete the Android phone review build 0.3.0 (code 8); shared installer changes
+  also ship in standalone installer 1.1.3 (code 6). Physical acceptance remains
+  open for the combined owner review.
+
+- Audition a draft adhan voice before Apply, with Stop/Cancel and private audio
+  reuse/import. Keep global and per-prayer custom previews independent of saved
+  inheritance. Match widget text to the app and preview its actual system scale.
+
+- Add resumable first-use location, alert and personalization setup, real phone
+  appearance previews, a Qibla compass and native prayer timetable widgets.
+  Keep broader worship modules visibly locked as Coming soon.
+- Unify TV setup/pairing through supported-platform preparation and default latest,
+  stable or preview releases; keep local APK/IPK selection in Advanced. Android
+  setup follows the selected phone theme. Unsupported TVs show Coming soon.
+- Preserve valid local packages when a replacement fails validation or is
+  interrupted; cancel downloads without publishing late results. Keep Back and
+  cancelled file selection within the common setup journey.
+
+- Extend phone adhan settings (0.2.1) with per-prayer level/duration, weekday
+  schedules, quiet hours, silent/vibration modes and private custom audio imports.
+  Preserve existing settings and add opt-in foreground travel-location refresh.
+  Shared installer download changes ship as standalone installer 1.1.2.
+
+- Compact phone settings into saved-value rows, focused number editors and
+  choice sheets. Keep the three root tabs stable while using nested TV controls.
+
+- Download public Android TV/LG packages from phone setup with size/SHA-256
+  verification, labelled previews and local files under Advanced. Protect newer
+  Android installs using the APK version code rather than the release tag.
+
+- Add one-shot phone location detection with approximate access, confirmation,
+  city fallback and manual coordinates under Advanced.
+
+- Expand the phone app into standalone Miqat prayer (0.2.0): independent offline daily
+  times in a compact daily overview, tomorrow's Fajr, city/custom location and
+  timezone, Hijri display,
+  per-prayer voices/modes/adjustments/reminders, native scheduled alerts and
+  foreground adhan with Stop. Add permission/battery help and local recovery/duplicate
+  protection, shared phone themes/artwork and phone display preferences.
+  Preserve Android/LG installation and authenticated TV controls.
+
+- Add LG Developer Mode installation/update from the phone, with explicit SSH
+  identity approval, local Miqat IPK checks, downgrade protection and installed
+  version verification. Keep setup credentials in memory for the session.
+- Match Android setup to the companion's canonical palette, Alexandria headings,
+  filled cards and compact hero; avoid idle decorative animation. Respect OS
+  reduced motion and the embedded phone preference (standalone installer 1.1.1).
+
+- Add Set up Android TV inside the Miqat phone companion (0.1.4), reusing the
+  standalone installer's guarded installation, cleanup and recovery. Follow the
+  phone language and offer normal pairing after successful setup. Correct the
+  installer download/catalogue repository URL.
 
 - Load TV settings sections as sidebar focus moves Up/Down, with no OK press.
   Keep focus in the sidebar until moving toward the content, in both languages

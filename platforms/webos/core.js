@@ -8,7 +8,7 @@
   var appearanceKeys = ['theme', 'background', 'mihrabOpacity', 'homeLayout', 'archSide', 'homeBar', 'prayerMode'];
   var defaults = {lang: 'ar', city: 'cairo', method: null, hanafi: false, utcOffset: null,
     automatic: false, adhan: true, remind: 15, remindVoice: false, announce: true, callClose: 0,
-    voice: 'alafasy', fajrVoice: 'chebae_fajr', volume: 60, bells: [true, false, true, true, true, true],
+    voice: 'almalki', fajrVoice: 'chebae_fajr', volume: 60, bells: [true, false, true, true, true, true],
     offsets: [0, 0, 0, 0, 0, 0], hijriOffset: 0, digits: 'auto', clock: '24', uiScale: portable.tv.miqat.core.UiScale.DEFAULT_PERCENT,
     dockPosition: 'top', dockAutoHide: 20, theme: 'mihrab', mihrabOpacity: portable.tv.miqat.core.UiContract.MIHRAB_OPACITY_DEFAULT, background: data.defaultBackground,
     homeLayout: 'mihrab', archSide: 'auto', homeBar: 'top', prayerMode: 'all', quickLabels: false,
@@ -44,6 +44,8 @@
     for (var i = 0; i < 6; i++) { invalid(!integer(result.offsets[i], -2147483648, 2147483647)); }
     try { rules.validateOffsets(new Int32Array(result.offsets)); }
     catch (error) { throw new Error('Invalid preferences'); }
+    if (result.voice === 'alafasy') { result.voice = defaults.voice; }
+    if (result.fajrVoice === 'alafasy') { result.fajrVoice = defaults.fajrVoice; }
     invalid(!voice(result.voice) || !voice(result.fajrVoice) || !station(result.station));
     invalid(['auto', 'western', 'eastern'].indexOf(result.digits) < 0 || ['12', '24'].indexOf(result.clock) < 0);
     invalid(['top', 'bottom'].indexOf(result.dockPosition) < 0 || [0, 10, 20, 30].indexOf(result.dockAutoHide) < 0);

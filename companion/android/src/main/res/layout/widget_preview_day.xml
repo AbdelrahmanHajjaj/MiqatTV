@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:layoutDirection="locale" android:padding="12dp" android:background="@drawable/widget_background">
+<TextView android:id="@+id/widget_title" style="@style/MiqatWidgetMuted" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_metadata" android:maxLines="1"/>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="8dp" android:layout_marginTop="4dp" android:layout_marginBottom="4dp" android:background="@drawable/widget_highlight" android:backgroundTint="@color/companion_gold_400">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+<ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_marginEnd="8dp" android:src="@drawable/companion_icon_fajr" android:tint="@color/companion_gold_400" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<TextView android:id="@+id/widget_next_label" style="@style/MiqatWidgetHero" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:gravity="start|center_vertical" android:includeFontPadding="false" android:text="@string/widget_preview_prayer_0" android:maxLines="1" android:textColor="@color/companion_gold_400" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="16sp" android:autoSizeMaxTextSize="28sp" android:autoSizeStepGranularity="1sp"/>
+<TextView android:id="@+id/widget_next_time" style="@style/MiqatWidgetHero" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1.2" android:gravity="end|center_vertical" android:includeFontPadding="false" android:text="@string/widget_preview_time_0" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="16sp" android:autoSizeMaxTextSize="32sp" android:autoSizeStepGranularity="1sp"/>
+</LinearLayout>
+<TextView android:id="@+id/widget_next_remaining" style="@style/MiqatWidgetMuted" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/widget_preview_remaining" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+</LinearLayout>
+
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="3dp">
+<ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_marginEnd="8dp" android:src="@drawable/companion_icon_fajr" android:tint="@color/companion_plaster_100" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<TextView android:id="@+id/widget_prayer_name" style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="start" android:text="@string/widget_preview_prayer_0" android:textSize="12sp" android:maxLines="2"/>
+<TextView android:id="@+id/widget_prayer_time" style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="@string/widget_preview_time_0" android:textSize="12sp" android:maxLines="2"/>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="3dp">
+<ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_marginEnd="8dp" android:src="@drawable/companion_icon_sunrise" android:tint="@color/companion_plaster_100" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="start" android:text="@string/widget_preview_prayer_1" android:textSize="12sp" android:maxLines="2"/>
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="@string/widget_preview_time_1" android:textSize="12sp" android:maxLines="2"/>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="3dp">
+<ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_marginEnd="8dp" android:src="@drawable/companion_icon_dhuhr" android:tint="@color/companion_plaster_100" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="start" android:text="@string/widget_preview_prayer_2" android:textSize="12sp" android:maxLines="2"/>
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="@string/widget_preview_time_2" android:textSize="12sp" android:maxLines="2"/>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="3dp">
+<ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_marginEnd="8dp" android:src="@drawable/companion_icon_asr" android:tint="@color/companion_plaster_100" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="start" android:text="@string/widget_preview_prayer_3" android:textSize="12sp" android:maxLines="2"/>
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="@string/widget_preview_time_3" android:textSize="12sp" android:maxLines="2"/>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="3dp">
+<ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_marginEnd="8dp" android:src="@drawable/companion_icon_maghrib" android:tint="@color/companion_plaster_100" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="start" android:text="@string/widget_preview_prayer_4" android:textSize="12sp" android:maxLines="2"/>
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="@string/widget_preview_time_4" android:textSize="12sp" android:maxLines="2"/>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="3dp">
+<ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_marginEnd="8dp" android:src="@drawable/companion_icon_isha" android:tint="@color/companion_plaster_100" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<TextView style="@style/MiqatWidgetText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="start" android:text="@string/widget_preview_prayer_5" android:textSize="12sp" android:maxLines="2"/>
+<TextView style="@style/MiqatWidgetValue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="@string/widget_preview_time_5" android:textSize="12sp" android:maxLines="2"/>
+</LinearLayout>
+</LinearLayout>

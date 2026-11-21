@@ -127,7 +127,7 @@ const jsonLd = {
 
   <footer class="foot">
     <p class="sacred" lang="ar" dir="rtl">{sacred.prayerVerse.join(' ')}</p>
-    <div class="foot-details"><p>{L.foot}</p><p><a href={INSTALL}>{L.install}</a> · <a href={REPO}>{L.source}</a></p></div>
+    <div class="foot-details"><p>{L.foot}</p><p><a href={`${REPO}/releases`}>{ar ? 'الإصدارات العامة' : 'Public builds'}</a> · <a href={INSTALL}>{L.install}</a> · <a href={REPO}>{L.source}</a></p></div>
   </footer>
 </body>
 </html>

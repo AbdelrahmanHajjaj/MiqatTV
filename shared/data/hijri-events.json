@@ -1,0 +1,7 @@
+[
+  {"id":"ashura","month":1,"day":10,"en":"Ashura","ar":"عاشوراء"},
+  {"id":"ramadan","month":9,"day":1,"en":"Ramadan begins","ar":"بداية رمضان"},
+  {"id":"eid-fitr","month":10,"day":1,"en":"Eid al-Fitr","ar":"عيد الفطر"},
+  {"id":"arafah","month":12,"day":9,"en":"Day of Arafah","ar":"يوم عرفة"},
+  {"id":"eid-adha","month":12,"day":10,"en":"Eid al-Adha","ar":"عيد الأضحى"}
+]

@@ -1,10 +1,17 @@
 # Local audio audit
 
+Current distribution removes Al Afasy at the owner's request on 19 November 2026.
+The review below preserves the original collection's provenance; it does not
+mean every reviewed recording remains distributed. Current shipped bytes are in
+shared/media/SHA256SUMS.
+
+
 ## Approved mild cleanup — 21 November 2026
 
 The maintainer reviewed before/after excerpts spanning the beginning, middle and
 ending of all 14 voices, then approved applying the mild cleaned candidates.
-All 14 tracked adhan files now contain those exact reviewed candidate bytes.
+The original main review applied those exact candidate bytes to all 14 files.
+This merged distribution retains 13 cleaned voices; Al Afasy remains retired.
 The 12 synthesized reminder clips remain byte-identical.
 
 FFmpeg 9.0.2 applied `highpass=f=50,afftdn=nr=4:nf=-50:tn=1:gs=8` to the previously
@@ -14,7 +21,9 @@ libmp3lame at the existing bitrate, rate and channel count, with encoder quality
 0. Static attenuation only where needed leaves sample-peak headroom; there is no
 upward normalization, dynamic compression, new cut, or synthesized wording.
 
-The 14 adhan files total **18,335,775 bytes**, down from 18,345,232 (9,457 bytes).
+The historical 14-file review totaled **18,335,775 bytes**, down from 18,345,232
+(9,457 bytes). The 13 retained cleaned files total **16,464,111 bytes**, down
+9,422 bytes from the retained pre-cleanup set.
 All candidates fully decoded, retained exact decoded sample counts and source
 formats, and had no decoded sample clipping. Quiet-window measurements are a
 proxy, not an SNR or perceived-quality certification; the effect is intentionally

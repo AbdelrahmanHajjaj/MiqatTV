@@ -96,18 +96,18 @@ final class Personalise {
         a.frame(MainActivity.PERSONAL, Hero.Mode.CITY, a.getString(R.string.prayer_title),
                 a.getString(R.string.prayer_lead));
         LinearLayout where = Ui.row(a);
-        GradientDrawable bg = Ui.round(Ui.LAPIS_800, 18, a);
-        bg.setStroke(Ui.dp(a, 1), 0x66EBC678);
-        Ui.pressable(where, bg, 0x33EBC678);
+        GradientDrawable bg = Ui.round(Ui.palette(a).surface, 18, a);
+        bg.setStroke(Ui.dp(a, 1), Ui.alpha(Ui.palette(a).accent, 0x66));
+        Ui.pressable(where, bg, Ui.alpha(Ui.palette(a).accent, 0x33));
         int p = Ui.dp(a, 16);
         where.setPadding(p, p, p, p);
         LinearLayout words = Ui.column(a);
         words.addView(Ui.small(a, a.getString(R.string.city_label)));
         JSONObject c = cityById(city);
-        words.addView(Ui.text(a, c == null ? city : name(c) + "  ·  " + country(c), Ui.PLASTER, 18, Ui.semibold()),
+        words.addView(Ui.text(a, c == null ? city : name(c) + "  ·  " + country(c), Ui.palette(a).ink, 18, Ui.semibold()),
                 Ui.wide(a, 4));
         where.addView(words, Ui.fill(a));
-        where.addView(Ui.text(a, "›", Ui.GOLD_400, 26, Ui.medium()));
+        where.addView(Ui.text(a, "›", Ui.palette(a).accent, 26, Ui.medium()));
         where.setOnClickListener(v -> a.go(this::cityPicker));
         a.add(where, 20);
 
@@ -131,13 +131,13 @@ final class Personalise {
         a.frame(MainActivity.PERSONAL, Hero.Mode.CITY, a.getString(R.string.city_title), a.getString(R.string.city_lead));
         EditText search = new EditText(a);
         search.setHint(R.string.city_search);
-        search.setHintTextColor(0x80AAC4C7);
-        search.setTextColor(Ui.PLASTER);
+        search.setHintTextColor(Ui.alpha(Ui.palette(a).muted, 0x80));
+        search.setTextColor(Ui.palette(a).ink);
         search.setTextSize(16);
         search.setTypeface(Ui.medium());
         search.setSingleLine();
         search.setInputType(InputType.TYPE_CLASS_TEXT);
-        search.setBackground(Ui.round(Ui.LAPIS_800, 14, a));
+        search.setBackground(Ui.round(Ui.palette(a).surface, 14, a));
         search.setPadding(Ui.dp(a, 16), Ui.dp(a, 14), Ui.dp(a, 16), Ui.dp(a, 14));
         a.add(search, 20);
         LinearLayout list = Ui.column(a);
@@ -165,19 +165,19 @@ final class Personalise {
             if (!q.isEmpty() && !hay.contains(q)) continue;
             String country = country(c);
             if (!country.equals(lastCountry)) {
-                TextView h = Ui.text(a, country, Ui.MIST, 13, Ui.medium());
+                TextView h = Ui.text(a, country, Ui.palette(a).muted, 13, Ui.medium());
                 h.setPadding(Ui.dp(a, 4), Ui.dp(a, lastCountry == null ? 4 : 18), 0, Ui.dp(a, 6));
                 list.addView(h);
                 lastCountry = country;
             }
             boolean chosen = c.optString("id").equals(city);
             LinearLayout row = Ui.row(a);
-            GradientDrawable bg = Ui.round(chosen ? Ui.GOLD_SOFT : Ui.LAPIS_800, 12, a);
-            if (chosen) bg.setStroke(Ui.dp(a, 1), Ui.GOLD_400);
-            Ui.pressable(row, bg, 0x33EBC678);
+            GradientDrawable bg = Ui.round(chosen ? Ui.palette(a).accentSoft : Ui.palette(a).surface, 12, a);
+            if (chosen) bg.setStroke(Ui.dp(a, 1), Ui.palette(a).accent);
+            Ui.pressable(row, bg, Ui.alpha(Ui.palette(a).accent, 0x33));
             row.setPadding(Ui.dp(a, 16), Ui.dp(a, 14), Ui.dp(a, 16), Ui.dp(a, 14));
-            row.addView(Ui.text(a, name(c), chosen ? Ui.GOLD_400 : Ui.PLASTER, 16, Ui.medium()), Ui.fill(a));
-            if (chosen) row.addView(Ui.text(a, "✓", Ui.GOLD_400, 16, Ui.semibold()));
+            row.addView(Ui.text(a, name(c), chosen ? Ui.palette(a).accent : Ui.palette(a).ink, 16, Ui.medium()), Ui.fill(a));
+            if (chosen) row.addView(Ui.text(a, "✓", Ui.palette(a).accent, 16, Ui.semibold()));
             String id = c.optString("id");
             row.setOnClickListener(v -> {
                 city = id;
@@ -246,7 +246,7 @@ final class Personalise {
         android.widget.FrameLayout iconBox = new android.widget.FrameLayout(a);
         ImageView icon = new ImageView(a);
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        icon.setBackground(Ui.round(Ui.LAPIS_700, 14, a));
+        icon.setBackground(Ui.round(Ui.palette(a).raised, 14, a));
         int s = Ui.dp(a, 52);
         iconBox.addView(icon, new android.widget.FrameLayout.LayoutParams(s, s));
         TextView badge = Ui.badge(a, "");
@@ -256,7 +256,7 @@ final class Personalise {
         iconBox.addView(badge, bp);
         LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(Ui.dp(a, 60), Ui.dp(a, 58));
         t.addView(iconBox, ip);
-        TextView name = Ui.text(a, ar ? app.optString("ar") : app.optString("en"), Ui.PLASTER, 12, Ui.medium());
+        TextView name = Ui.text(a, ar ? app.optString("ar") : app.optString("en"), Ui.palette(a).ink, 12, Ui.medium());
         name.setGravity(Gravity.CENTER);
         name.setMaxLines(2);
         name.setEllipsize(android.text.TextUtils.TruncateAt.END);
@@ -272,9 +272,9 @@ final class Personalise {
     private void paintTile(View t) {
         if (!(t.getTag() instanceof String)) return;
         int slot = favourites.indexOf((String) t.getTag());
-        GradientDrawable bg = Ui.round(slot >= 0 ? Ui.GOLD_SOFT : Ui.LAPIS_800, 16, a);
-        bg.setStroke(Ui.dp(a, slot >= 0 ? 2 : 1), slot >= 0 ? Ui.GOLD_400 : Ui.LINE_SOFT);
-        Ui.pressable(t, bg, 0x33EBC678);
+        GradientDrawable bg = Ui.round(slot >= 0 ? Ui.palette(a).accentSoft : Ui.palette(a).surface, 16, a);
+        bg.setStroke(Ui.dp(a, slot >= 0 ? 2 : 1), slot >= 0 ? Ui.palette(a).accent : Ui.palette(a).lineSoft);
+        Ui.pressable(t, bg, Ui.alpha(Ui.palette(a).accent, 0x33));
         TextView badge = (TextView) ((ViewGroup) ((ViewGroup) t).getChildAt(0)).getChildAt(1);
         badge.setVisibility(slot >= 0 ? View.VISIBLE : View.INVISIBLE);
         badge.setText(String.format(Locale.US, "%d", slot + 1));
@@ -404,7 +404,7 @@ final class Personalise {
         }
         if (group.size() > shown) {
             TextView more = Ui.text(a, a.getString(R.string.clean_more, String.format(Locale.US, "%d", group.size() - shown)),
-                    Ui.GOLD_400, 14, Ui.medium());
+                    Ui.palette(a).accent, 14, Ui.medium());
             more.setPadding(0, Ui.dp(a, 10), 0, 0);
             more.setOnClickListener(v -> {
                 for (int i = 0; i < rows.getChildCount(); i++) rows.getChildAt(i).setVisibility(View.VISIBLE);
@@ -419,7 +419,7 @@ final class Personalise {
         LinearLayout row = Ui.row(a);
         row.setGravity(Gravity.TOP);
         row.setPadding(0, Ui.dp(a, 8), 0, Ui.dp(a, 4));
-        TextView box = Ui.text(a, "", Ui.LAPIS_900, 13, Ui.semibold());
+        TextView box = Ui.text(a, "", Ui.palette(a).ground, 13, Ui.semibold());
         box.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(Ui.dp(a, 22), Ui.dp(a, 22));
         bp.setMarginEnd(Ui.dp(a, 12));
@@ -427,7 +427,7 @@ final class Personalise {
         row.addView(box, bp);
         LinearLayout words = Ui.column(a);
         String label = appName(b.pkg);
-        words.addView(Ui.text(a, label, Ui.PLASTER, 14, Ui.medium()));
+        words.addView(Ui.text(a, label, Ui.palette(a).ink, 14, Ui.medium()));
         StringBuilder sub = new StringBuilder();
         if (!label.equals(b.pkg)) sub.append(b.pkg);
         if (!b.note.isEmpty()) sub.append(sub.length() > 0 ? " · " : "").append(b.note);
@@ -440,14 +440,14 @@ final class Personalise {
         if (backOn) {
             TextView s = Ui.small(a, a.getString(R.string.clean_back_on));
             s.setTextSize(12);
-            s.setTextColor(Ui.GOLD_200);
+            s.setTextColor(Ui.palette(a).accentLight);
             words.addView(s, Ui.wide(a, 2));
         }
         row.addView(words, Ui.fill(a));
         Runnable paint = () -> {
             boolean on = chosen.contains(b.pkg);
-            GradientDrawable g = Ui.round(on ? Ui.GOLD_400 : 0, 6, a);
-            g.setStroke(Ui.dp(a, 2), on ? Ui.GOLD_400 : 0x99AAC4C7);
+            GradientDrawable g = Ui.round(on ? Ui.palette(a).accent : 0, 6, a);
+            g.setStroke(Ui.dp(a, 2), on ? Ui.palette(a).accent : Ui.alpha(Ui.palette(a).muted, 0x99));
             box.setBackground(g);
             box.setText(on ? "✓" : "");
         };
@@ -714,19 +714,19 @@ final class Personalise {
 
     private View segmented(String[] values, int[] labels, String current, Choice choice) {
         LinearLayout row = Ui.row(a);
-        row.setBackground(Ui.round(Ui.LAPIS_900, 14, a));
+        row.setBackground(Ui.round(Ui.palette(a).ground, 14, a));
         row.setPadding(Ui.dp(a, 4), Ui.dp(a, 4), Ui.dp(a, 4), Ui.dp(a, 4));
         List<TextView> parts = new ArrayList<>();
         String[] now = {current};
         Runnable paint = () -> {
             for (int i = 0; i < parts.size(); i++) {
                 boolean on = values[i].equals(now[0]);
-                parts.get(i).setBackground(on ? Ui.round(Ui.GOLD_400, 10, a) : null);
-                parts.get(i).setTextColor(on ? Ui.LAPIS_900 : Ui.PLASTER);
+                parts.get(i).setBackground(on ? Ui.round(Ui.palette(a).accent, 10, a) : null);
+                parts.get(i).setTextColor(on ? Ui.palette(a).ground : Ui.palette(a).ink);
             }
         };
         for (int i = 0; i < values.length; i++) {
-            TextView t = Ui.text(a, a.getString(labels[i]), Ui.PLASTER, 14, Ui.medium());
+            TextView t = Ui.text(a, a.getString(labels[i]), Ui.palette(a).ink, 14, Ui.medium());
             t.setGravity(Gravity.CENTER);
             t.setPadding(0, Ui.dp(a, 10), 0, Ui.dp(a, 10));
             String v = values[i];
@@ -744,7 +744,7 @@ final class Personalise {
 
     private View toggle(int label, boolean on, Flip flip) {
         LinearLayout row = Ui.row(a);
-        row.addView(Ui.text(a, a.getString(label), Ui.PLASTER, 15, Ui.medium()), Ui.fill(a));
+        row.addView(Ui.text(a, a.getString(label), Ui.palette(a).ink, 15, Ui.medium()), Ui.fill(a));
         Toggle t = new Toggle(a, on);
         row.addView(t, new LinearLayout.LayoutParams(Ui.dp(a, 48), Ui.dp(a, 28)));
         row.setClickable(true);
@@ -772,11 +772,11 @@ final class Personalise {
         @Override protected void onDraw(android.graphics.Canvas c) {
             float w = getWidth(), h = getHeight();
             r.set(0, h * 0.14f, w, h * 0.86f);
-            p.setColor(on ? 0x80EBC678 : Ui.LAPIS_700);
+            p.setColor(on ? Ui.alpha(Ui.palette(getContext()).accent, 0x80) : Ui.palette(getContext()).raised);
             c.drawRoundRect(r, h, h, p);
             boolean end = on != (getLayoutDirection() == LAYOUT_DIRECTION_RTL);
             float rad = h * 0.42f;
-            p.setColor(on ? Ui.GOLD_400 : Ui.MIST);
+            p.setColor(on ? Ui.palette(getContext()).accent : Ui.palette(getContext()).muted);
             c.drawCircle(end ? w - rad - h * 0.04f : rad + h * 0.04f, h / 2f, rad, p);
         }
     }

@@ -235,7 +235,7 @@ onScreen('settings', (stage, signal) => {
     }, openStationGroups);
   };
   const openVoices = (fajr: boolean) => {
-    const key = fajr ? 'voiceFajr' : 'voice', cur = (ctx.prefs as SPrefs)[key] ?? (fajr ? 'chebae_fajr' : 'alafasy');
+    const key = fajr ? 'voiceFajr' : 'voice', cur = (ctx.prefs as SPrefs)[key] ?? (fajr ? 'chebae_fajr' : 'almalki');
     open(ctx.t.s(fajr ? 'fajrVoiceRow' : 'voiceRow'), VOICES.map((v) => ({ label: ctx.t.ar ? v.ar : v.en, chosen: v.id === cur })),
       (i) => save({ ...p(), [key]: VOICES[i].id }));
   };

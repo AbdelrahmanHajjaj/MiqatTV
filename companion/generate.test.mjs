@@ -1,9 +1,19 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import {test} from 'node:test';
-import {generate} from './generate.mjs';
+import {generate,generatePhone,shortTone} from './generate.mjs';
 import {vectorIcon} from './icons.mjs';
 const data=generate();
+test('phone controls retain independent defaults, real canonical locations/voices and bilingual metadata',()=>{
+  const phone=generatePhone();
+  assert.equal(phone.contract.controls.find(c=>c.id==='reminders.enabled').default,'false');
+  assert.equal(phone.contract.controls.find(c=>c.id==='display.clock').default,'12');
+  assert.ok(phone.cities.some(c=>c.id===phone.contract.defaultCity&&Number.isFinite(c.lat)&&Number.isFinite(c.lng)));
+  assert.deepEqual(phone.voices,JSON.parse(readFileSync(new URL('../shared/data/voices.json',import.meta.url))));
+  assert.ok(phone.contract.perPrayer.some(c=>c.suffix==='before'));
+  assert.ok(phone.contract.perPrayer.some(c=>c.suffix==='after'));
+  assert.ok(phone.backgrounds.includes(phone.contract.controls.find(c=>c.id==='appearance.background').default));
+});
 test('native icons reuse canonical geometry, preserve filled dots and reject active SVG',()=>{
   const icons=JSON.parse(readFileSync(new URL('../shared/design/icons.json',import.meta.url)));
   for(const svg of Object.values(icons)){const vector=vectorIcon(svg);assert.match(vector,/viewportWidth="24"/);assert.match(vector,/android:pathData=/);}
@@ -53,7 +63,7 @@ test('companion copy is bilingual and compact/mihrab positions remain independen
     assert.deepEqual(controls.find(x=>x.id==='appearance.compact-position').options.map(x=>x.value),['top','bottom']);
   }
   const manifest=readFileSync(new URL('android/src/main/AndroidManifest.xml',import.meta.url),'utf8');
-  assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['android.permission.INTERNET','android.permission.CAMERA']);
+  assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','ACCESS_BACKGROUND_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','USE_FULL_SCREEN_INTENT','VIBRATE'].map(x=>'android.permission.'+x));
 });
 
 test('new branding settings reach both profiles with canonical scenes and opacity drafts',()=>{
@@ -64,3 +74,44 @@ test('new branding settings reach both profiles with canonical scenes and opacit
     assert.ok(choices.includes('miqat_signature')&&choices.includes('miqat_quiet'));
   }
 });
+
+test('phone alert metadata keeps independent enable, weekday overrides and relative audio bounds',()=>{
+ const {contract}=generatePhone();
+ assert.equal(contract.version,7);
+ assert.deepEqual(contract.controls.find(c=>c.id==='reminders.alarm-mode'),{id:'reminders.alarm-mode',section:'audio',kind:'toggle',label:'phone_alarm_sound',default:'false',since:7});
+ assert.equal(contract.perPrayer.find(c=>c.suffix==='enabled').default,'true');
+ for(let day=0;day<7;day++) {
+  assert.deepEqual(contract.perPrayer.find(c=>c.suffix===`day-${day}-sound`).choices,['inherit','adhan','notification','silent']);
+  assert.equal(contract.perPrayer.find(c=>c.suffix===`day-${day}-vibrate`).default,'false');
+ }
+ for(const c of [contract.controls.find(c=>c.id==='reminders.length-percent'),contract.perPrayer.find(c=>c.suffix==='length-percent')])
+  assert.deepEqual([c.minimum,c.maximum,c.step,c.default],[5,100,5,'100']);
+ const tone=shortTone();
+ assert.equal(tone.toString('ascii',0,4),'RIFF');assert.equal(tone.toString('ascii',8,12),'WAVE');
+ assert.equal(tone.readUInt32LE(4),tone.length-8);assert.equal(tone.readUInt32LE(40),tone.length-44);
+ assert.ok(Math.abs((tone.length-44)/2/tone.readUInt32LE(24)-0.18)<0.0001);
+ for(const prayer of JSON.parse(readFileSync(new URL('../shared/design/prayer-icons.json',import.meta.url))).prayers)
+  assert.ok(vectorIcon(`<path d="${prayer.path}"/>`).includes(prayer.path));
+});
+
+test('native literal copy references resolve to bilingual canonical text',()=>{
+  const directory=new URL('./android/src/main/java/tv/miqat/companion/',import.meta.url);
+  for(const name of readdirSync(directory).filter(name=>name.endsWith('.java'))){
+    const source=readFileSync(new URL(name,directory),'utf8');
+    for(const [,key] of source.matchAll(/\bt\("([^"\n]+)"\)/g))
+      assert.ok(data.text[key]?.en&&data.text[key]?.ar,`${name}: unknown text ${key}`);
+  }
+});
+
+test('phone event dates and prayer verse preserve their canonical sources',()=>{
+  const phone=generatePhone();
+  assert.deepEqual(phone.hijriEvents,JSON.parse(readFileSync(new URL('../shared/data/hijri-events.json',import.meta.url))));
+  assert.deepEqual(phone.prayerVerse,JSON.parse(readFileSync(new URL('../shared/data/sacred-text.json',import.meta.url))).prayerVerse);
+  assert.equal(phone.hijriEvents.find(e=>e.month===9&&e.day===27),undefined);
+});
+
+test('phone test actions are canonical and obsolete motion has no ordinary settings section',()=>{
+ const {contract}=generatePhone();
+ assert.deepEqual(contract.actions.map(a=>a.id),['tests.phone-adhan','tests.phone-notification','tests.phone-cancel']);
+ assert.equal(contract.controls.find(c=>c.id==='display.reduce-motion').section,'legacy-display');
+ });

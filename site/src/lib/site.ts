@@ -78,8 +78,8 @@ export const PAGES: Page[] = [
     nav: { ar: 'الأذان', en: 'The call' },
     title: { ar: 'الأذان على التلفاز في وقته · ميقات', en: 'The adhan on your TV, on time · Miqat' },
     description: {
-      ar: 'في وقت الصلاة تظهر شاشة الأذان فوق أي شيء يُعرض ويُرفع الأذان وحده، بـ 14 صوتًا وأذان خاص للفجر.',
-      en: 'At prayer time the call comes up over whatever is playing and the adhan plays by itself, with 14 voices and a separate Fajr adhan.',
+      ar: 'في وقت الصلاة تظهر شاشة الأذان فوق أي شيء يُعرض ويُرفع الأذان وحده، بـ 13 صوتًا وأذان خاص للفجر.',
+      en: 'At prayer time the call comes up over whatever is playing and the adhan plays by itself, with 13 voices and a separate Fajr adhan.',
     },
     body: {
       ar: ['إذا كان التلفاز صامتًا أو صوته صفرًا يرتفع الصوت للأذان ثم يعود كما كان. وتُغلق الشاشة بزر الرجوع أو وحدها بعد عشر دقائق. (المعاينة على الويب لا تشغّل صوت الأذان.)'],

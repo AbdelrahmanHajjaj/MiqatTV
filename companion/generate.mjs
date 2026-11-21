@@ -6,6 +6,54 @@ import {vectorIcon} from './icons.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
+// A short local alert tone; no recording, network or extra media dependency.
+export function shortTone() {
+  const rate=22050, samples=Math.round(rate*0.18), buffer=Buffer.alloc(44+samples*2);
+  buffer.write('RIFF');buffer.writeUInt32LE(buffer.length-8,4);buffer.write('WAVEfmt ',8);
+  buffer.writeUInt32LE(16,16);buffer.writeUInt16LE(1,20);buffer.writeUInt16LE(1,22);
+  buffer.writeUInt32LE(rate,24);buffer.writeUInt32LE(rate*2,28);buffer.writeUInt16LE(2,32);buffer.writeUInt16LE(16,34);
+  buffer.write('data',36);buffer.writeUInt32LE(samples*2,40);
+  for(let i=0;i<samples;i++) {
+    const envelope=Math.min(1,i/(rate*0.01),(samples-1-i)/(rate*0.03));
+    buffer.writeInt16LE(Math.round(Math.sin(2*Math.PI*880*i/rate)*6500*envelope),44+i*2);
+  }
+  return buffer;
+}
+export function generatePhone() {
+  const contract=read('shared/data/phone-ui-contract.json'),cities=read('shared/data/cities.json'),voices=read('shared/data/voices.json');
+  const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
+  const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
+    prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
+  if(contract.version!==7||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
+  const ids=new Set();
+  for(const control of [...contract.controls,...contract.perPrayer]) {
+    const id=control.id??control.suffix;
+    if(typeof id!=='string'||ids.has(id)||!text[control.label]?.en||!text[control.label]?.ar||typeof control.default!=='string')throw Error('Invalid phone control: '+id);
+    ids.add(id);
+    if(!Number.isInteger(control.since??1)||(control.since??1)<1||(control.since??1)>contract.version)throw Error('Invalid phone control version: '+id);
+    if(control.kind==='number') {
+      if(![control.minimum,control.maximum,control.step].every(Number.isInteger)||control.step<1||control.minimum>control.maximum||
+         !/^-?\d+$/.test(control.default)||+control.default<control.minimum||+control.default>control.maximum||(+control.default-control.minimum)%control.step)throw Error('Invalid phone numeric control: '+id);
+    } else if(control.kind==='choice') {
+      const options=Array.isArray(control.choices)?control.choices:choices[control.choices];
+      if(!options||!options.includes(control.default)||new Set(options).size!==options.length)throw Error('Invalid phone choices: '+id);
+    } else if(control.kind!=='toggle'||!['true','false'].includes(control.default))throw Error('Invalid phone control kind: '+id);
+  }
+  for(const action of contract.actions??[]) {
+    if(typeof action.id!=='string'||ids.has(action.id)||action.section!=='audio'||!text[action.label]?.en||!text[action.label]?.ar)throw Error('Invalid phone action: '+action.id);
+    ids.add(action.id);
+  }
+  const hijriEvents=read('shared/data/hijri-events.json'),eventIds=new Set(),eventDates=new Set();
+  if(!Array.isArray(hijriEvents)||hijriEvents.length>64)throw Error('Invalid Hijri event catalog');
+  for(const event of hijriEvents) {
+    const date=event.month+':'+event.day;
+    if(!/^[a-z][a-z0-9-]*$/.test(event.id)||eventIds.has(event.id)||eventDates.has(date)||
+      !Number.isInteger(event.month)||event.month<1||event.month>12||!Number.isInteger(event.day)||event.day<1||event.day>30||
+      typeof event.en!=='string'||!event.en.trim()||typeof event.ar!=='string'||!event.ar.trim())throw Error('Invalid Hijri event: '+event.id);
+    eventIds.add(event.id);eventDates.add(date);
+  }
+  return {contract,cities,voices,backgrounds,hijriEvents,prayerVerse:read('shared/data/sacred-text.json').prayerVerse};
+}
 export function generate(platforms = ['android','lg']) {
   const controls = read('shared/data/ui-contract.json'), strings = read('shared/data/strings.json');
   const contract = read('companion/contract.json');
@@ -49,7 +97,7 @@ export function generate(platforms = ['android','lg']) {
   }
   const all = controls.map(c => ({...c, title:label(c.label), options:uiChoices(c).map((value,i) => ({value,...option(c,value,i)})), route:contract.actionRoutes[c.id] || ''}));
   const defaults = {'prayer.location':'cairo','prayer.method':'EGYPTIAN','prayer.asr':'shafi','prayer.zone':'system',
-    'reminders.before':'15','reminders.close':'0','reminders.voice':'alafasy','reminders.fajr-voice':'chebae_fajr','reminders.volume':'60',
+    'reminders.before':'15','reminders.close':'0','reminders.voice':'almalki','reminders.fajr-voice':'chebae_fajr','reminders.volume':'60',
     'radio.station':'cairo','radio.screen-off':'0','display.language':'system','display.digits':'western','display.clock':'24',
     'display.size':'100','display.bar-mode':'hidden','display.bar-position':'top','display.bar-timeout':'20',
     'appearance.countdown':'mihrab','appearance.position':'auto','appearance.prayers':'all','appearance.favourites':'two_rows',
@@ -89,7 +137,7 @@ export function generate(platforms = ['android','lg']) {
     favourites:pair('التطبيقات المفضلة','Favourite apps'),apps:pair('التطبيقات','Apps'),remote:pair('أزرار الريموت','Remote buttons'),pairing:label('companionPhones')};
   const commands=read('companion/protocol/lan.json').commands;
   for(const id of commands)if(!all.some(c=>c.id===id&&c.kind==='action'))throw Error('Unknown canonical command: '+id);
-  return {version:1,commands,profiles,demoSystemLanguage:'ar',sections,colors,themeKeys:read('shared/design/appearance.json').colors,themeSurfaces:read('shared/design/appearance.json').surfaces,themes:themeData,appOptions,prayerNames:strings.prayerNames,text:read('companion/strings.json'), cities:cities.map(c=>({id:c.id,method:c.method,asr:c.hanafi?'hanafi':'shafi'}))};
+  return {version:1,setupPlatforms:read('shared/data/tv-platforms.json'),commands,profiles,demoSystemLanguage:'ar',sections,colors,themeKeys:read('shared/design/appearance.json').colors,themeSurfaces:read('shared/design/appearance.json').surfaces,themes:themeData,appOptions,prayerNames:strings.prayerNames,text:read('companion/strings.json'), cities:cities.map(c=>({id:c.id,method:c.method,asr:c.hanafi?'hanafi':'shafi'}))};
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -104,13 +152,31 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const output = new URL('android/build/generated/companion/',import.meta.url);
   mkdirSync(output,{recursive:true});
   writeFileSync(new URL('catalog.json',output),JSON.stringify(generate()));
+  const phone=generatePhone();
+  writeFileSync(new URL('phone.json',output),JSON.stringify(phone));
   const res = new URL('android/build/generated/companion-res/',import.meta.url);
   mkdirSync(new URL('drawable/',res),{recursive:true});
   mkdirSync(new URL('values/',res),{recursive:true});
   mkdirSync(new URL('drawable-nodpi/',res),{recursive:true});
   writeFileSync(new URL('drawable-nodpi/miqat_icon.png',res),readFileSync(new URL('shared/design/artwork/icon.png',root)));
-  for(const [id,svg] of Object.entries(read('shared/design/icons.json')))writeFileSync(new URL('drawable/companion_icon_'+id+'.xml',res),vectorIcon(svg,id==='back'));
-  const colors=generate().colors;
-  writeFileSync(new URL('values/companion_colors.xml',res),'<resources>'+['lapis-900','gold-400'].map(id=>'<color name="companion_'+id.replaceAll('-','_')+'">'+colors[id]+'</color>').join('')+'</resources>');
+  writeFileSync(new URL('drawable-nodpi/miqat_mark.png',res),readFileSync(new URL('shared/design/assets/qr-mark.png',root)));
+  mkdirSync(new URL('raw/',res),{recursive:true});
+  writeFileSync(new URL('raw/miqat_short_tone.wav',res),shortTone());
+  for(const [id,svg] of Object.entries({...read('shared/design/icons.json'),...Object.fromEntries(read('shared/design/prayer-icons.json').prayers.map(p=>[p.id,`<path d="${p.path}"/>`]))}))writeFileSync(new URL('drawable/companion_icon_'+id+'.xml',res),vectorIcon(svg,id==='back'));
+  const catalog=generate(), colors=catalog.colors;
+  writeFileSync(new URL('values/companion_colors.xml',res),'<resources>'+['lapis-900','lapis-800','gold-400','plaster-100','mist-400'].map(id=>'<color name="companion_'+id.replaceAll('-','_')+'">'+colors[id]+'</color>').join('')+'</resources>');
+  const sampleTimes=['05:10','06:30','12:00','15:15','17:30','19:00'];
+  for(const language of ['en','ar']) {
+    const directory=new URL(language==='ar'?'values-ar/':'values/',res);
+    mkdirSync(directory,{recursive:true});
+    const entries=catalog.prayerNames[language].map((name,i)=>['widget_preview_prayer_'+i,name]);
+    const sampleDate=new Intl.DateTimeFormat(language+'-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date('2026-11-21T12:00:00Z'));
+    const cairo=read('shared/data/cities.json').find(city=>city.id==='cairo');
+    entries.push(['widget_preview_metadata',sampleDate+' · '+cairo[language]],['widget_preview_remaining',catalog.text.phone_remaining[language].replace('%s',language==='ar'?'٠٠:٢٤':'00:24')]);
+    const clock=new Intl.DateTimeFormat(language,{hour:'numeric',minute:'2-digit',hour12:phone.contract.controls.find(c=>c.id==='display.clock').default==='12',numberingSystem:language==='ar'?'arab':'latn',timeZone:'UTC'});
+    entries.push(...sampleTimes.map((time,i)=>['widget_preview_time_'+i,clock.format(new Date('2026-11-21T'+time+':00Z'))]));
+    const xml=entries.map(([name,value])=>'<string name="'+name+'">'+value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll("'","\\'")+'</string>').join('');
+    writeFileSync(new URL('companion_widget_preview.xml',directory),'<resources>'+xml+'</resources>');
+  }
   console.log('Generated companion catalog from canonical product sources');
 }

@@ -100,7 +100,7 @@ export function rowsFor(c: Ctx, section: number, radioOn = false, offsetsPage = 
     case REMINDERS: return [
       { id: 'remind', kind: 'value', label: t.s('remind'), help: t.s('remindHelp'), value: t.d(t.list('remindChoices')[remindIndex(p)]), selected: remindIndex(p) },
       { id: 'adhan', kind: 'toggle', label: t.s('adhanRow'), help: t.s('adhanHelp'), on: p.adhan },
-      { id: 'voice', kind: 'value', label: t.s('voiceRow'), help: t.s('voiceHelp'), value: voiceName(t, p.voice, 'alafasy') },
+      { id: 'voice', kind: 'value', label: t.s('voiceRow'), help: t.s('voiceHelp'), value: voiceName(t, p.voice, 'almalki') },
       { id: 'voiceFajr', kind: 'value', label: t.s('fajrVoiceRow'), help: t.s('fajrVoiceHelp'), value: voiceName(t, p.voiceFajr, 'chebae_fajr') },
     ];
     case RADIO: return [

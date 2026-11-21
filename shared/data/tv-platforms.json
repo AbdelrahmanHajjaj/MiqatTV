@@ -1,0 +1,7 @@
+[
+  {"id":"android","en":"Android / Google TV","ar":"أندرويد / جوجل تي في","setup":"adb"},
+  {"id":"lg","en":"LG webOS","ar":"إل جي webOS","setup":"ssh"},
+  {"id":"tizen","en":"Samsung Tizen","ar":"سامسونج تايزن","setup":null},
+  {"id":"roku","en":"Roku TV","ar":"روكو تي في","setup":null},
+  {"id":"other","en":"Other TV systems","ar":"أنظمة تلفاز أخرى","setup":null}
+]

@@ -1,0 +1,10 @@
+<!-- Generated from shared/design/mihrab/tokens.json by tools/catalogs.mjs. -->
+<resources>
+    <color name="installer_lapis_900">#0A2D33</color>
+    <color name="installer_lapis_800">#123C42</color>
+    <color name="installer_lapis_700">#1B4B51</color>
+    <color name="installer_gold_400">#E3C07D</color>
+    <color name="installer_gold_200">#F6DEAB</color>
+    <color name="installer_plaster_100">#F7F0DF</color>
+    <color name="installer_mist_400">#ADC8C6</color>
+</resources>

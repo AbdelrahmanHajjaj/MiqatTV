@@ -42,9 +42,8 @@ final class HomePreview extends View {
     private int color(String key){return Color.parseColor(colors.optString(key));}
     private void rect(Canvas c,float x,float y,float w,float h,String color){paint.setColor(color(color));paint.setStyle(Paint.Style.FILL);c.drawRoundRect(x,y,x+w,y+h,8,8,paint);}
     private void text(Canvas c,String text,float x,float y,int size,String color){
-        if("eastern".equals(values.get("display.digits"))||"auto".equals(values.get("display.digits"))&&ar) {
-            StringBuilder localized=new StringBuilder(text);for(int i=0;i<localized.length();i++){char n=localized.charAt(i);if(n>='0'&&n<='9')localized.setCharAt(i,(char)('٠'+n-'0'));}text=localized.toString();
-        }
+        boolean eastern="eastern".equals(values.get("display.digits"))||"auto".equals(values.get("display.digits"))&&ar;
+        text=tv.miqat.core.DisplayText.INSTANCE.digits(text,eastern);
         paint.setColor(color(color));paint.setTextSize(size);paint.setTypeface(Typeface.DEFAULT);paint.setTextAlign(Paint.Align.CENTER);c.drawText(text,x,y,paint);
     }
     @Override protected void onMeasure(int widthSpec,int heightSpec){int width=MeasureSpec.getSize(widthSpec);setMeasuredDimension(width,resolveSize(Math.round(width*9f/16f),heightSpec));}

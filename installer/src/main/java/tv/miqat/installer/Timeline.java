@@ -26,8 +26,8 @@ final class Timeline extends LinearLayout {
     Timeline(Context c, String... steps) {
         super(c);
         setOrientation(VERTICAL);
-        android.graphics.drawable.GradientDrawable bg = Ui.round(Ui.LAPIS_800, 18, c);
-        bg.setStroke(Ui.dp(c, 1), Ui.LINE_SOFT);
+        android.graphics.drawable.GradientDrawable bg = Ui.round(Ui.palette(getContext()).surface, 18, c);
+        bg.setStroke(Ui.dp(c, 1), Ui.palette(getContext()).lineSoft);
         setBackground(bg);
         int pad = Ui.dp(c, 18);
         setPadding(pad, pad, pad, pad);
@@ -44,7 +44,7 @@ final class Timeline extends LinearLayout {
             mp.setMarginEnd(Ui.dp(c, 14));
             row.addView(marks[i], mp);
             LinearLayout words = Ui.column(c);
-            labels[i] = Ui.text(c, steps[i], Ui.MIST, 15, Ui.medium());
+            labels[i] = Ui.text(c, steps[i], Ui.palette(getContext()).muted, 15, Ui.medium());
             labels[i].setPadding(0, Ui.dp(c, 2), 0, 0);
             words.addView(labels[i]);
             notes[i] = Ui.small(c, "");
@@ -57,7 +57,7 @@ final class Timeline extends LinearLayout {
 
     void set(int i, State s) {
         marks[i].set(s);
-        labels[i].setTextColor(s == State.WAITING || s == State.SKIPPED ? Ui.MIST : s == State.FAILED ? Ui.CORAL : Ui.PLASTER);
+        labels[i].setTextColor(s == State.WAITING || s == State.SKIPPED ? Ui.palette(getContext()).muted : s == State.FAILED ? Ui.CORAL : Ui.palette(getContext()).ink);
         if (s != State.WORKING) note(i, null);
     }
 
@@ -88,7 +88,7 @@ final class Timeline extends LinearLayout {
             mp.setMarginStart(Ui.dp(c, i == 0 ? 0 : 14));
             mp.setMarginEnd(Ui.dp(c, 6));
             row.addView(mark(c, states[i]), mp);
-            row.addView(Ui.text(c, c.getString(names[i]), Ui.MIST, 12, Ui.medium()));
+            row.addView(Ui.text(c, c.getString(names[i]), Ui.palette(c).muted, 12, Ui.medium()));
         }
         return row;
     }
@@ -124,7 +124,7 @@ final class Timeline extends LinearLayout {
 
         void set(State s) {
             state = s;
-            if (s == State.WORKING) {
+            if (s == State.WORKING && Ui.motion(getContext())) {
                 if (!spin.isStarted()) spin.start();
             } else {
                 spin.cancel();
@@ -144,30 +144,30 @@ final class Timeline extends LinearLayout {
             switch (state) {
                 case WAITING:
                     p.setStyle(Paint.Style.STROKE);
-                    p.setColor(0x66AAC4C7);
+                    p.setColor(Ui.alpha(Ui.palette(getContext()).muted, 0x66));
                     c.drawOval(r, p);
                     break;
                 case WORKING:
                     p.setStyle(Paint.Style.STROKE);
-                    p.setColor(Ui.LAPIS_700);
+                    p.setColor(Ui.palette(getContext()).raised);
                     c.drawOval(r, p);
-                    p.setColor(Ui.GOLD_400);
+                    p.setColor(Ui.palette(getContext()).accent);
                     c.drawArc(r, angle - 90, 100, false, p);
                     break;
                 case DONE:
                     // Set, not yet confirmed: a gold ring with a dot.
                     p.setStyle(Paint.Style.STROKE);
-                    p.setColor(Ui.GOLD_400);
+                    p.setColor(Ui.palette(getContext()).accent);
                     c.drawOval(r, p);
                     p.setStyle(Paint.Style.FILL);
                     c.drawCircle(w / 2f, h / 2f, w * 0.17f, p);
                     break;
                 case CHECKED:
                     p.setStyle(Paint.Style.FILL);
-                    p.setColor(Ui.GOLD_400);
+                    p.setColor(Ui.palette(getContext()).accent);
                     c.drawOval(r, p);
                     p.setStyle(Paint.Style.STROKE);
-                    p.setColor(Ui.LAPIS_900);
+                    p.setColor(Ui.palette(getContext()).ground);
                     p.setStrokeWidth(w * 0.12f);
                     Path tick = new Path();
                     tick.moveTo(w * 0.3f, h * 0.52f);
@@ -180,14 +180,14 @@ final class Timeline extends LinearLayout {
                     p.setColor(Ui.CORAL);
                     c.drawOval(r, p);
                     p.setStyle(Paint.Style.STROKE);
-                    p.setColor(Ui.LAPIS_900);
+                    p.setColor(Ui.palette(getContext()).ground);
                     p.setStrokeWidth(w * 0.12f);
                     c.drawLine(w * 0.36f, h * 0.36f, w * 0.64f, h * 0.64f, p);
                     c.drawLine(w * 0.64f, h * 0.36f, w * 0.36f, h * 0.64f, p);
                     break;
                 case SKIPPED:
                     p.setStyle(Paint.Style.STROKE);
-                    p.setColor(Ui.MIST);
+                    p.setColor(Ui.palette(getContext()).muted);
                     c.drawOval(r, p);
                     c.drawLine(w * 0.34f, h * 0.5f, w * 0.66f, h * 0.5f, p);
                     break;

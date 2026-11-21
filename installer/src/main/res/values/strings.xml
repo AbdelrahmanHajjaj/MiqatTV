@@ -4,7 +4,8 @@
      as a second language, since an exact match on a later language beats the default.) -->
 <resources>
     <string name="lang" translatable="false">en</string>
-    <string name="app_name">Miqat Installer</string>
+    <string name="installer_app_name">Miqat Installer</string>
+    <string name="pair_tv">Pair TV</string>
 
     <string name="stage_prepare">Prepare</string>
     <string name="stage_connect">Connect</string>
@@ -159,4 +160,12 @@
     <string name="restore_backup_help">Restore the recorded Home, disabled apps and settings? Miqat stays installed.</string>
     <string name="backup_restored">Original TV setup restored</string>
     <string name="choose_local_apk">Install a local launcher APK</string>
+    <string name="advanced_setup">Advanced</string>
+    <string name="public_download_help">Miqat downloads and verifies the published TV build from GitHub automatically. Local APKs are in Advanced.</string>
+    <string name="use_public_download">Use public download (default)</string>
+    <string name="public_unavailable">No published Miqat TV package is available yet. Try again later, or choose a local APK in Advanced.</string>
+    <string name="public_preview">Published preview build</string>
+    <string name="downgrade_kept">The installed copy is newer, or its version could not be verified. It and its settings have been kept.</string>
+    <string name="install_preview_version">Miqat %1$s · published preview. Keep this screen open.</string>
+    <string name="local_package_selected">A local APK is selected. Advanced → Use public download restores automatic downloads.</string>
 </resources>

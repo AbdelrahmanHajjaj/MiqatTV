@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Miqat · Home, location & Hijri events</title>
+<link rel="stylesheet" href="mockups.css">
+<link rel="stylesheet" href="home-calendar.css">
+<body>
+<a class="skip" href="#proposal">Skip to mockups</a>
+<header class="proposal-head"><p class="eyebrow">MIQAT / ENGLISH DESIGN PROPOSAL / 21 NOVEMBER 2026</p><h1>One card. A clearer day.</h1><p>The date and city move into the prayer card. Calendar events stay brief, and location has one clear action.</p></header>
+<nav class="proposal-controls" aria-label="Prototype controls">
+<label>Try the Home header<select id="header-choice"><option value="both">Greeting + TV verse</option><option value="greeting">Assalamu alaikum</option><option value="verse">TV Qur’an verse</option><option value="none">No header</option></select></label>
+<label>Day example<select id="day-example"><option value="event">Event today</option><option value="upcoming">Upcoming event</option><option value="ordinary">Ordinary day</option></select></label>
+<label>Location access<select id="location-access"><option value="allowed">Allowed</option><option value="denied">Not allowed</option><option value="unavailable">Fix unavailable</option></select></label>
+<label>Phone width<select id="phone-width"><option value="360">360 px</option><option value="390">390 px</option></select></label>
+<button class="review-button" id="background-travel" disabled>Simulate background travel</button>
+<button class="review-button" id="reset-demo">Reset demo</button>
+</nav>
+<p class="prototype-note">Interactive mockup, not an APK. Permissions and movement are simulated; prayer times are illustrative. Try the date, city, calendar days and automatic-location toggle.</p>
+<main id="proposal" class="proposal-grid">
+<article id="board-home"><div class="board-caption"><span>01</span><div><h2>Prayer Home</h2><p>No separate date or location blocks.</p></div></div><section class="phone compact-home" id="home-phone" aria-label="Prayer Home mockup"></section></article>
+<article id="board-calendar"><div class="board-caption"><span>02</span><div><h2>Hijri calendar</h2><p>Events and selected-day times together.</p></div></div><section class="phone" id="calendar-phone" aria-label="Hijri calendar mockup"></section></article>
+<article id="board-location"><div class="board-caption"><span>03</span><div><h2>Location</h2><p>Compact fields. Background updates by choice.</p></div></div><section class="phone" id="location-phone" aria-label="Location mockup"></section></article>
+</main>
+<section class="design-decisions"><h2>What this proposal changes</h2><div class="decision-grid"><p><b>Home</b>The date opens the calendar. One city button refreshes location; without permission it opens the full Location page. Manual selection remains available through Settings.</p><p><b>Automatic location</b>Off by default. Enabling it explains background access before the Android permission flow. A denied permission leaves the toggle off and preserves the last location.</p><p><b>Hijri events</b>Small calendar markers, a selected-day event label, and one relevant Home line. No empty event row on ordinary days and no automatic event notifications.</p><p><b>Header choice</b>Greeting and the existing TV verse together, either on its own, or neither. No rotating text. The verse uses Miqat’s exact canonical sacred text.</p></div><p class="source-note">Event examples use Arafah (9 Dhul-Hijjah), Eid al-Adha (10 Dhul-Hijjah), Ramadan, Eid al-Fitr and Ashura. Dates follow the app’s selected Hijri calendar and adjustment; local month announcements can differ. No fixed date is assigned to Laylat al-Qadr.</p><p class="source-note">References: <a href="https://quran.com/an-nisa/103">Qur’an 4:103</a> · <a href="https://sunnah.com/muslim:1162b">Arafah & Ashura</a> · <a href="https://developer.android.com/develop/sensors-and-location/location/permissions/background">Android background-location access</a>. This prototype requests no real permissions.</p></section>
+<script src="home-calendar.js"></script>
+</body>
+</html>

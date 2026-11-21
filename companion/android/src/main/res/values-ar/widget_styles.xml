@@ -1,0 +1,1 @@
+<resources><style name="MiqatWidgetHero" parent="MiqatWidgetText"><item name="android:fontFamily">@font/amiri_bold</item><item name="android:textSize">28sp</item></style></resources>

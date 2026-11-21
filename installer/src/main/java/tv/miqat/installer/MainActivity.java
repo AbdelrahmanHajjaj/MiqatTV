@@ -41,7 +41,11 @@ import io.github.muntashirakon.adb.AdbPairingRequiredException;
  * tools/install.sh). Every screen is the same frame: stage bar, arch, title, lead, content, and the actions pinned
  * to the bottom.
  */
-public final class MainActivity extends Activity {
+public class MainActivity extends Activity {
+    InstallerPalette palette = InstallerPalette.DEFAULT;
+
+    protected InstallerPalette createPalette() { return InstallerPalette.DEFAULT; }
+
     static final int PREPARE = 0, CONNECT = 1, INSTALL = 2, PERSONAL = 3;
 
     final ExecutorService work = Executors.newSingleThreadExecutor();
@@ -65,16 +69,20 @@ public final class MainActivity extends Activity {
     private LinearLayout tvList;
     private View help;
 
+    /** Embedded hosts may also honor their own reduced-motion preference. */
+    public boolean motionEnabled(){return android.animation.ValueAnimator.areAnimatorsEnabled();}
+
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        palette = createPalette();
         Ui.init(this);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        getWindow().setStatusBarColor(Ui.LAPIS_900);
-        getWindow().setNavigationBarColor(Ui.LAPIS_900);
+        getWindow().setStatusBarColor(Ui.palette(this).ground);
+        getWindow().setNavigationBarColor(Ui.palette(this).ground);
 
         LinearLayout root = Ui.column(this);
-        root.setBackgroundColor(Ui.LAPIS_900);
+        root.setBackgroundColor(Ui.palette(this).ground);
         stages = Ui.row(this);
         stages.setPadding(dp(20), dp(18), dp(20), dp(6));
         root.addView(stages, Ui.wide(this, 0));
@@ -96,6 +104,8 @@ public final class MainActivity extends Activity {
         String demo = getIntent().getStringExtra("screen");
         boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         if (demo != null && debuggable) showDemo(demo);
+        else if(getIntent().getBooleanExtra("choose-local",false)){showGuide();chooseLocal();}
+        else if(getIntent().getBooleanExtra("prepared",false))showFind();
         else showGuide();
     }
 
@@ -133,12 +143,24 @@ public final class MainActivity extends Activity {
                 Ui.small(this, getString(R.string.g3_wireless)),
                 Ui.tvText(this, R.string.tv_wireless_en, R.string.tv_wireless_ar)), 10);
         add(step(4, R.string.g4_title, R.string.g4_body), 10);
-        foot(Ui.secondary(this, getString(R.string.choose_local_apk), v -> startActivityForResult(
-            new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT)
-                .setType("application/vnd.android.package-archive").addCategory(android.content.Intent.CATEGORY_OPENABLE), 81)));
+        add(Ui.small(this,getString(localApk==null?R.string.public_download_help:R.string.local_package_selected)),12);
+        foot(Ui.secondary(this, getString(R.string.advanced_setup), v -> new AlertDialog.Builder(this)
+            .setTitle(R.string.advanced_setup).setItems(new String[]{getString(R.string.choose_local_apk),getString(R.string.use_public_download)}, (d,which) -> {
+                if(which==1){localApk=null;showGuide();}
+                else chooseLocal();
+            }).show()));
         foot(Ui.primary(this, getString(R.string.guide_ready), v -> go(this::showFind)));
         recoveryActions();
         back = this::finish;
+    }
+
+    private void chooseLocal(){
+        startActivityForResult(new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT)
+            .setType("application/vnd.android.package-archive").addCategory(android.content.Intent.CATEGORY_OPENABLE),81);
+    }
+
+    private void leavePreparation(){
+        if(getIntent().getBooleanExtra("prepared",false))finish();else go(this::showGuide);
     }
 
     /** A numbered card: its title, then what to find on the TV (in both languages), with the detail after the first. */
@@ -167,12 +189,13 @@ public final class MainActivity extends Activity {
     }
 
     private void showFind(boolean search) {
+        if(getIntent().getBooleanExtra("choose-local",false)&&localApk==null){chooseLocal();return;}
         stopFinders();
-        back = () -> go(this::showGuide);
+        back = this::leavePreparation;
         if (Finder.phoneAddress(this) == null) {
             frame(CONNECT, Hero.Mode.PROBLEM, getString(R.string.not_wifi_title), getString(R.string.not_wifi));
             foot(Ui.primary(this, getString(R.string.try_again), v -> go(this::showFind)));
-            foot(Ui.secondary(this, getString(R.string.back), v -> go(this::showGuide)));
+            foot(Ui.secondary(this, getString(R.string.back), v -> back.run()));
             return;
         }
         frame(CONNECT, Hero.Mode.SEARCH, getString(R.string.find_title), getString(R.string.find_lead));
@@ -180,7 +203,7 @@ public final class MainActivity extends Activity {
         LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(dp(14), dp(14));
         sp.setMarginEnd(dp(8));
         heading.addView(Timeline.spinner(this), sp);
-        heading.addView(Ui.text(this, getString(R.string.found_heading), Ui.MIST, 13, Ui.medium()));
+        heading.addView(Ui.text(this, getString(R.string.found_heading), Ui.palette(this).muted, 13, Ui.medium()));
         add(heading, 22);
         tvList = Ui.column(this);
         add(tvList, 0);
@@ -195,9 +218,9 @@ public final class MainActivity extends Activity {
         // Help only once a search has had time to turn something up.
         main.postDelayed(() -> {
             if (g == gen && help != null && tvList != null && tvList.getChildCount() == 0) {
-                help.setAlpha(0f);
+                help.setAlpha(motionEnabled()?0f:1f);
                 help.setVisibility(View.VISIBLE);
-                help.animate().alpha(1f).setDuration(300).start();
+                if(motionEnabled())help.animate().alpha(1f).setDuration(300).start();
             }
         }, 8000);
         if (search) finder.start();
@@ -215,16 +238,16 @@ public final class MainActivity extends Activity {
 
     private View tvCard(Finder.Tv t) {
         LinearLayout card = Ui.row(this);
-        GradientDrawable bg = Ui.round(Ui.LAPIS_800, 18, this);
-        bg.setStroke(dp(1), 0x66EBC678);
-        Ui.pressable(card, bg, 0x33EBC678);
+        GradientDrawable bg = Ui.round(Ui.palette(this).surface, 18, this);
+        bg.setStroke(dp(1), Ui.alpha(Ui.palette(this).accent, 0x66));
+        Ui.pressable(card, bg, Ui.alpha(Ui.palette(this).accent, 0x33));
         card.setPadding(dp(14), dp(14), dp(14), dp(14));
         card.addView(new TvGlyph(this), new LinearLayout.LayoutParams(dp(48), dp(48)));
 
         LinearLayout words = Ui.column(this);
         words.setPaddingRelative(dp(14), 0, dp(8), 0);
         words.addView(Ui.small(this, getString(R.string.tv_found)));
-        TextView host = Ui.latin(Ui.text(this, t.host, Ui.PLASTER, 18, Ui.semibold()));
+        TextView host = Ui.latin(Ui.text(this, t.host, Ui.palette(this).ink, 18, Ui.semibold()));
         host.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         words.addView(host, Ui.wide(this, 2));
         if (t.tls > 0) words.addView(door(R.string.badge_wireless, t.tls, true), Ui.wide(this, 6));
@@ -232,7 +255,7 @@ public final class MainActivity extends Activity {
         if (t.pairing > 0) words.addView(door(R.string.badge_pair, t.pairing, true), Ui.wide(this, 4));
         card.addView(words, Ui.fill(this));
 
-        TextView chevron = Ui.text(this, "›", Ui.GOLD_400, 26, Ui.medium());
+        TextView chevron = Ui.text(this, "›", Ui.palette(this).accent, 26, Ui.medium());
         card.addView(chevron);
         card.setOnClickListener(v -> go(() -> connect(t.host, t.tls, t.classic)));
         return card;
@@ -244,13 +267,13 @@ public final class MainActivity extends Activity {
         View dot = new View(this);
         GradientDrawable d = new GradientDrawable();
         d.setShape(GradientDrawable.OVAL);
-        d.setColor(accent ? Ui.GOLD_400 : Ui.MIST);
+        d.setColor(accent ? Ui.palette(this).accent : Ui.palette(this).muted);
         dot.setBackground(d);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(6), dp(6));
         lp.setMarginEnd(dp(8));
         row.addView(dot, lp);
-        row.addView(Ui.text(this, getString(name), accent ? Ui.GOLD_200 : Ui.MIST, 13, Ui.medium()));
-        TextView p = Ui.latin(Ui.text(this, "·  " + number(port), Ui.MIST, 13, Ui.medium()));
+        row.addView(Ui.text(this, getString(name), accent ? Ui.palette(this).accentLight : Ui.palette(this).muted, 13, Ui.medium()));
+        TextView p = Ui.latin(Ui.text(this, "·  " + number(port), Ui.palette(this).muted, 13, Ui.medium()));
         LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         pp.setMarginStart(dp(8));
@@ -269,14 +292,14 @@ public final class MainActivity extends Activity {
         LinearLayout row = Ui.row(this);
         EditText field = new EditText(this);
         field.setHint(R.string.manual_hint);
-        field.setHintTextColor(0x80AAC4C7);
-        field.setTextColor(Ui.PLASTER);
+        field.setHintTextColor(Ui.alpha(Ui.palette(this).muted, 0x80));
+        field.setTextColor(Ui.palette(this).ink);
         field.setTextSize(16);
         field.setTypeface(Ui.medium());
         field.setSingleLine();
         field.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         field.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_GO);
-        field.setBackground(Ui.round(Ui.LAPIS_900, 12, this));
+        field.setBackground(Ui.round(Ui.palette(this).ground, 12, this));
         field.setPadding(dp(14), dp(12), dp(14), dp(12));
         Ui.latin(field);
         field.setText(getPreferences(MODE_PRIVATE).getString("last_tv", ""));
@@ -455,12 +478,12 @@ public final class MainActivity extends Activity {
         add(wait, 14);
         port.setHint(R.string.pair_port_hint);
         port.setInputType(InputType.TYPE_CLASS_NUMBER);
-        port.setTextColor(Ui.PLASTER);
-        port.setHintTextColor(Ui.MIST);
+        port.setTextColor(Ui.palette(this).ink);
+        port.setHintTextColor(Ui.palette(this).muted);
         port.setTextSize(15);
         port.setTypeface(Ui.medium());
         port.setGravity(Gravity.CENTER);
-        port.setBackground(Ui.round(Ui.LAPIS_800, 12, this));
+        port.setBackground(Ui.round(Ui.palette(this).surface, 12, this));
         port.setPadding(dp(12), dp(12), dp(12), dp(12));
         Ui.latin(port);
         add(port, 10);
@@ -551,22 +574,21 @@ public final class MainActivity extends Activity {
                     return;
                 }
                 tv.recovery = new Recovery(a, getFilesDir(), host, tv);
-                String tag = localApk == null ? Setup.latestTag() : null;
-                version = tag == null ? "" : tag.replaceFirst("^v", "");
-                steps = Setup.steps(tag);
-                if (localApk != null) {
-                    android.content.pm.PackageInfo archive = getPackageManager().getPackageArchiveInfo(localApk.getPath(), 0);
-                    if (archive == null || !Setup.PACKAGE.equals(archive.packageName)) throw new IOException("Choose a Miqat APK");
-                    version = archive.versionName;
-                }
-                String onTv = tv.miqatVersion();
-                // Already the latest: nothing to download, but the setup runs again (it is safe to repeat).
-                boolean current = localApk == null && onTv != null && onTv.equals(version);
+                steps = Setup.steps(null);
+                post(g, () -> {timeline=timeline();add(timeline,20);add(Timeline.legend(this),12);timeline.set(0,Timeline.State.WORKING);});
+                PublicRelease.Asset release=localApk==null?PublicRelease.latest(false,getIntent().getStringExtra("release-channel")==null?"latest":getIntent().getStringExtra("release-channel")):null;
+                File apk=localApk!=null?localApk:release.download(getCacheDir(),(done,total)->post(g,()->{
+                    hero.progress(0.45f*done/total);timeline.note(0,getString(R.string.mb_of,mb(done),mb(total)));
+                }));
+                android.content.pm.PackageInfo archive=getPackageManager().getPackageArchiveInfo(apk.getPath(),0);
+                if(archive==null||!Setup.PACKAGE.equals(archive.packageName)||archive.versionName==null)throw new IOException("Choose a Miqat APK");
+                version=archive.versionName;
+                long code=android.os.Build.VERSION.SDK_INT>=28?archive.getLongVersionCode():archive.versionCode;
+                String onTv=tv.miqatVersion();long installedCode=onTv==null?-1:tv.miqatVersionCode();
+                if(onTv!=null&&(installedCode<0||code<installedCode))throw new IOException(getString(R.string.downgrade_kept));
+                boolean current=onTv!=null&&onTv.equals(version)&&code==installedCode;
                 post(g, () -> {
-                    if (!version.isEmpty()) leadView.setText(getString(R.string.install_lead_version, version));
-                    timeline = timeline();
-                    add(timeline, 20);
-                    add(Timeline.legend(this), 12);
+                    leadView.setText(release!=null&&release.preview?getString(R.string.install_preview_version,version):getString(R.string.install_lead_version,version));
                     if (current) {
                         timeline.set(0, Timeline.State.CHECKED);
                         timeline.set(1, Timeline.State.CHECKED);
@@ -579,15 +601,9 @@ public final class MainActivity extends Activity {
                     runSteps(g, a);
                     return;
                 }
-                if (localApk != null) { send(g, a, localApk); return; }
-                File apk = Setup.download(getCacheDir(), (done, total) -> post(g, () -> {
-                    if (total <= 0) return;
-                    hero.progress(0.45f * done / total);
-                    timeline.note(0, getString(R.string.mb_of, mb(done), mb(total)));
-                }));
                 send(g, a, apk);
             } catch (Exception e) {
-                fail(g, getString(R.string.error_install, message(e)));
+                fail(g, e instanceof PublicRelease.Unavailable?getString(R.string.public_unavailable):getString(R.string.error_install,message(e)));
             }
         });
     }
@@ -700,10 +716,10 @@ public final class MainActivity extends Activity {
             for (int i = 0; i < summary.size(); i++) {
                 LinearLayout row = Ui.row(this);
                 row.setGravity(Gravity.TOP);
-                TextView tick = Ui.text(this, "✓", Ui.GOLD_400, 15, Ui.semibold());
+                TextView tick = Ui.text(this, "✓", Ui.palette(this).accent, 15, Ui.semibold());
                 tick.setPadding(0, 0, dp(10), 0);
                 row.addView(tick);
-                row.addView(Ui.text(this, summary.get(i), Ui.PLASTER, 15, Ui.medium()), Ui.fill(this));
+                row.addView(Ui.text(this, summary.get(i), Ui.palette(this).ink, 15, Ui.medium()), Ui.fill(this));
                 card.addView(row, Ui.wide(this, i == 0 ? 0 : 10));
             }
             add(card, 20);
@@ -717,7 +733,11 @@ public final class MainActivity extends Activity {
         tip.addView(Ui.label(this, getString(R.string.tip_title)));
         tip.addView(Ui.small(this, getString(R.string.tip_body)), Ui.wide(this, 8));
         add(tip, 12);
-        foot(Ui.primary(this, getString(R.string.finish), v -> finish()));
+        boolean embedded = getCallingActivity() != null && getPackageName().equals(getCallingActivity().getPackageName());
+        foot(Ui.primary(this, getString(ok && embedded ? R.string.pair_tv : R.string.finish), v -> {
+            if (ok && embedded) setResult(RESULT_OK);
+            finish();
+        }));
         foot(Ui.secondary(this, getString(R.string.another), v -> go(this::showGuide)));
         recoveryActions();
         back = this::finish;
@@ -744,26 +764,18 @@ public final class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int request, int result, android.content.Intent data) {
         super.onActivityResult(request, result, data);
+        if(request==81&&(result!=RESULT_OK||data==null||data.getData()==null)&&getIntent().getBooleanExtra("choose-local",false)){finish();return;}
         if (request == 81 && result == RESULT_OK && data != null && data.getData() != null) {
             android.net.Uri uri = data.getData();
+            final int generation=gen;
             work.execute(() -> {
                 try {
-                    File selected = new File(getCacheDir(), "local-miqat.apk");
-                    try (java.io.InputStream in = getContentResolver().openInputStream(uri);
-                         java.io.OutputStream out = new java.io.FileOutputStream(selected)) {
-                        if (in == null) throw new IOException("Cannot open APK");
-                        byte[] bytes = new byte[65536]; int n; long size = 0;
-                        while ((n = in.read(bytes)) != -1) {
-                            size += n;
-                            if (size > 200L * 1024 * 1024) throw new IOException("APK is too large");
-                            out.write(bytes, 0, n);
-                        }
-                    }
-                    android.content.pm.PackageInfo archive = getPackageManager().getPackageArchiveInfo(selected.getPath(), 0);
-                    if (archive == null || !Setup.PACKAGE.equals(archive.packageName)) throw new IOException("Choose a Miqat APK");
-                    localApk = selected;
-                    post(gen, () -> go(this::showFind));
-                } catch (Exception e) { fail(gen, message(e)); }
+                    File selected=PackageImport.copy(getContentResolver().openInputStream(uri),new File(getCacheDir(),"local-miqat.apk"),200L*1024*1024,file->{
+                        android.content.pm.PackageInfo archive=getPackageManager().getPackageArchiveInfo(file.getPath(),0);
+                        if(archive==null||!Setup.PACKAGE.equals(archive.packageName))throw new IOException("Choose a Miqat APK");
+                    });
+                    post(generation,()->{localApk=selected;go(this::showFind);});
+                } catch (Exception e) { fail(generation, message(e)); }
             });
             return;
         }
@@ -797,9 +809,9 @@ public final class MainActivity extends Activity {
             card.addView(Ui.small(this, getString(R.string.check_body)), Ui.wide(this, 8));
             add(card, 20);
             foot(Ui.primary(this, getString(R.string.try_again), v -> go(this::showFind)));
-            foot(Ui.secondary(this, getString(R.string.back), v -> go(this::showGuide)));
+            foot(Ui.secondary(this, getString(R.string.back), v -> leavePreparation()));
             recoveryActions();
-            back = () -> go(this::showGuide);
+            back = this::leavePreparation;
         });
     }
 
@@ -907,9 +919,8 @@ public final class MainActivity extends Activity {
         leadView = Ui.lead(this, lead);
         content.addView(leadView, Ui.wide(this, 10));
         scroll.scrollTo(0, 0);
-        content.setAlpha(0f);
-        content.setTranslationY(dp(8));
-        content.animate().alpha(1f).translationY(0).setDuration(220).start();
+        content.animate().cancel();content.setAlpha(1f);content.setTranslationY(0);
+        if(motionEnabled()){content.setAlpha(0f);content.setTranslationY(dp(8));content.animate().alpha(1f).translationY(0).setDuration(220).start();}
     }
 
     void add(View v, int topDp) {
@@ -928,10 +939,10 @@ public final class MainActivity extends Activity {
         for (int i = 0; i < names.length; i++) {
             LinearLayout s = Ui.column(this);
             View bar = new View(this);
-            bar.setBackground(Ui.round(i < now ? Ui.PLASTER : i == now ? Ui.GOLD_400 : Ui.LAPIS_700, 2, this));
+            bar.setBackground(Ui.round(i < now ? Ui.palette(this).ink : i == now ? Ui.palette(this).accent : Ui.palette(this).raised, 2, this));
             s.addView(bar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(4)));
             TextView t = Ui.text(this, number(i + 1) + "  " + getString(names[i]),
-                    i < now ? Ui.PLASTER : i == now ? Ui.GOLD_400 : Ui.MIST, 12, i == now ? Ui.semibold() : Ui.medium());
+                    i < now ? Ui.palette(this).ink : i == now ? Ui.palette(this).accent : Ui.palette(this).muted, 12, i == now ? Ui.semibold() : Ui.medium());
             s.addView(t, Ui.wide(this, 8));
             LinearLayout.LayoutParams lp = Ui.fill(this);
             if (i > 0) lp.setMarginStart(dp(8));
@@ -947,7 +958,7 @@ public final class MainActivity extends Activity {
         row.addView(b);
         LinearLayout words = Ui.column(this);
         words.setPaddingRelative(dp(12), dp(4), 0, 0);
-        words.addView(Ui.text(this, text, Ui.PLASTER, 15, Ui.medium()));
+        words.addView(Ui.text(this, text, Ui.palette(this).ink, 15, Ui.medium()));
         if (tv != null) words.addView(tv, Ui.wide(this, 8));
         row.addView(words, Ui.fill(this));
         return row;
@@ -995,7 +1006,7 @@ public final class MainActivity extends Activity {
 
         TvGlyph(Context c) {
             super(c);
-            setBackground(Ui.round(Ui.LAPIS_700, 12, c));
+            setBackground(Ui.round(Ui.palette(getContext()).raised, 12, c));
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeCap(Paint.Cap.ROUND);
         }
@@ -1003,11 +1014,11 @@ public final class MainActivity extends Activity {
         @Override protected void onDraw(Canvas c) {
             float w = getWidth(), h = getHeight();
             p.setStrokeWidth(w * 0.05f);
-            p.setColor(Ui.PLASTER);
+            p.setColor(Ui.palette(getContext()).ink);
             r.set(w * 0.2f, h * 0.24f, w * 0.8f, h * 0.66f);
             c.drawRoundRect(r, w * 0.05f, w * 0.05f, p);
             c.drawLine(w * 0.38f, h * 0.78f, w * 0.62f, h * 0.78f, p);
-            p.setColor(Ui.GOLD_400);
+            p.setColor(Ui.palette(getContext()).accent);
             android.graphics.Path a = new android.graphics.Path();
             MiqatShape.set(a, w * .18f, h * .3f, false);
             a.offset(w * .41f, h * .29f);

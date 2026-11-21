@@ -40,6 +40,11 @@ final class Tv {
         return m.find() ? m.group(1) : null;
     }
 
+    long miqatVersionCode() throws IOException, InterruptedException {
+        Matcher m=Pattern.compile("versionCode=([0-9]+)").matcher(adb.shell("dumpsys package "+Setup.PACKAGE+" | grep -m1 versionCode").out);
+        try{return m.find()?Long.parseLong(m.group(1)):-1;}catch(NumberFormatException invalid){return -1;}
+    }
+
     /** A query on Miqat’s setup provider (its JSON), or null when this Miqat has none (0.5 and older). */
     String query(String path) throws IOException, InterruptedException {
         Adb.Result r = adb.shell("content query --uri " + SETUP + path);

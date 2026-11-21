@@ -1,6 +1,10 @@
 const assert = require('node:assert/strict');
 
 module.exports = function checkPreferences(core) {
+  const retired = core.prefs({voice: 'alafasy', fajrVoice: 'alafasy', volume: 25});
+  assert.equal(retired.voice, 'almalki');
+  assert.equal(retired.fajrVoice, 'chebae_fajr');
+  assert.equal(retired.volume, 25, 'retired voice migration preserves other settings');
   const baseline = core.prefs(), current = core.prefs(baseline), edit = core.prefs(baseline);
   current.volume = 25; edit.clock = '12';
   const merged = core.mergePrefs(current, baseline, edit);

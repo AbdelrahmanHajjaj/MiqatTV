@@ -29,6 +29,28 @@ Android, LG and the preview consume those rules. `ReminderRules` owns native
 eligibility/rounding, LG future-event selection and inclusive delivery classification.
 The shells retain their different windows, stored keys, claims and lifecycle.
 
+Phone and future TV adapters can also reuse these SDK-free rules:
+
+- `LocationRules.usableLocation` accepts finite geographic coordinates, accuracy
+  from 0–10,000 metres and a fix age from 0–120,000 ms. `distanceKm` validates
+  both coordinate pairs and computes great-circle distance, including the dateline.
+  Permission/provider selection, monotonic timestamps and confirmation stay native.
+- `QiblaRules.bearing` returns clockwise degrees from true north using the same
+  Kaaba coordinates as the pinned Adhan adapter. Invalid coordinates are rejected;
+  poles and near-destination/antipodal origins return null. Magnetic declination,
+  display rotation, sensor quality and calibration belong to the shell.
+- `DisplayText.digits` converts Western, Arabic-Indic and Persian decimal digits
+  to Western or Arabic-Indic output while preserving other text and separators.
+- `ReminderRules.alertMode` combines prayer mode, Sunday-based weekday mask and
+  quiet-hour intervals. Start is inclusive, end exclusive; equal endpoints cover
+  the full day. Inputs must be finite integers even when called from raw JS.
+  Shells supply the prayer's weekday and the event's minute in the selected zone,
+  then own scheduling, claims, persistence and output.
+
+These contracts do not automatically expose phone-only controls on a TV or imply
+an iOS sensor/widget adapter. Native phone UI metadata remains canonical in
+`shared/data/phone-ui-contract.json`; shared TV controls keep their own catalog.
+
 `HomeNavigation` defines semantic Home focus slots, initial content focus and
 logical cardinal transitions. Android binds its existing views; LG binds actual
 Home buttons, including its optional Watch input action. Each shell translates

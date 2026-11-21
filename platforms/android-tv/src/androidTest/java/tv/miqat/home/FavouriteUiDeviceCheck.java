@@ -173,16 +173,20 @@ final class FavouriteUiDeviceCheck {
     private static List<String> packages(AllAppsActivity apps) { return (List<String>) field(apps, "apps"); }
 
     private static String focusedPackage(AllAppsActivity apps) {
-        int index = ((List<?>) field(apps, "tiles")).indexOf(apps.getCurrentFocus());
+        View focus = apps.getCurrentFocus();
+        int index = focus == null ? -1 : ((List<?>) field(apps, "tiles")).indexOf(focus);
         return index < 0 ? null : packages(apps).get(index);
     }
 
     private static Set<String> open(Instrumentation test, AllAppsActivity apps, String pkg, Set<String> bound) {
         until(test, () -> packages(apps).contains(pkg), "Requested app is loaded");
-        for (int guard = 0; guard < packages(apps).size() + 5; guard++) {
+        int limit = packages(apps).size() + 5;
+        for (int guard = 0; guard < limit; guard++) {
+            until(test, () -> packages(apps).contains(pkg), "Catalog ready before remote input");
             int[] position = new int[2];
             onMain(test, () -> {
-                position[0] = ((List<?>) field(apps, "tiles")).indexOf(apps.getCurrentFocus());
+                View focus = apps.getCurrentFocus();
+                position[0] = focus == null ? -1 : ((List<?>) field(apps, "tiles")).indexOf(focus);
                 position[1] = packages(apps).indexOf(pkg);
             });
             if (position[0] == position[1]) break;
@@ -232,16 +236,18 @@ final class FavouriteUiDeviceCheck {
 
     private static void verifyOrder(Instrumentation test, List<String> expected, AllAppsActivity apps, String focused) {
         check(Apps.favourites(apps).equals(expected), "Exact stored favourite order");
-        until(test, () -> {
+        BooleanSupplier restored = () -> {
             if (field(apps, "menu") != null || !expected.equals(field(apps, "favs")) || !focused.equals(focusedPackage(apps))) return false;
             FocusTile tile = (FocusTile) apps.getCurrentFocus();
             boolean star = false;
             for (int i = 0; i < tile.getChildCount(); i++) star |= apps.t.favourite().equals(tile.getChildAt(i).getContentDescription());
             check(star == expected.contains(focused), "Actual tile's favourite marker matches saved state: " + focused);
-            // A queued catalog refresh must not split the matching snapshot from its assertions.
-            apps.root.post(apps::build);
             return true;
-        }, "Rebuild restores app focus and favourite markers");
+        };
+        until(test, restored, "Rebuild restores app focus and favourite markers");
+        // Complete this fixture's extra catalog refresh before the next remote navigation.
+        onMain(test, apps::build);
+        until(test, restored, "Catalog refresh preserves app focus and favourite markers");
     }
 
     private static MainActivity replace(Instrumentation test, AllAppsActivity apps, String pkg, Set<String> bound) {
