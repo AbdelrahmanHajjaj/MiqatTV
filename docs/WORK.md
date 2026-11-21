@@ -1,14 +1,15 @@
 # Current work
 
-Updated: 2026-11-21. Owner feedback on 0.5.1 approves a focused 0.5.2 refinement
-on feature/companion-installation, draft PR #9. Remove Home day arrows while
-keeping its calendar entry and combined timetable; keep weekdays on one row;
-prevent settings redraw jumps; fill next-prayer widgets like the Home hero; put
-Miqat Signature first in theme/background choices without changing saved choices.
+Updated: 2026-11-21. Owner requested a mock-first Home/calendar/location revision
+on feature/companion-installation, draft PR #9. Proposal:
+[Home, location & Hijri events](design/phone-polish/home-calendar.html).
 
-Implementation/local validation complete: native bilingual UI retains its window
-container and scroll before drawing; all weekday targets fit at 360dp. Widget
-bounds/fonts and 80–150% portrait/large-text landscape checks pass. Native picker
-images are regenerated. Exact artifact/evidence: EVIDENCE.md. Draft PR #9 owns
-final-head CI receipts; green checks are required before owner handoff.
-No merge, public release or physical deployment in this review pass.
+The date and single city action share the prayer card. Compare greeting, exact TV
+verse and no header. Calendar events have markers, selected-day labels and a brief
+Home line. User explicitly chose optional location updates while the app is closed;
+the proposal includes background permission opt-in, denial and manual fallback.
+
+Design checks and browser review are complete; see EVIDENCE.md. Review this proposal
+before native implementation. The current review APK remains 0.5.2/code 18;
+background location and calendar events are not implemented in that APK.
+No merge, release or physical deployment requested.

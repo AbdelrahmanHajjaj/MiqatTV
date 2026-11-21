@@ -1,7 +1,25 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest requirements: PHONE-PASS9.md, refining the 0.5.0 candidate against its mocks.
+Latest scope: mock-first Home/calendar/location proposal; WORK.md owns next action.
+
+## Home, location and calendar proposal
+
+English interactive proposal: design/phone-polish/home-calendar.html. Date/city
+share the prayer hero, greeting fits the existing toolbar, and the exact canonical
+TV verse is an alternative. A single city action refreshes location or opens the
+full Location page when permission is absent. Country/city fields are compact.
+
+Owner explicitly requested optional automatic updates while Miqat is closed.
+Prototype opt-in/denial/revocation and simulated travel are functional, with manual
+selection drafts and retained-permission reuse. This is approved feature intent,
+not background runtime support in the current 0.5.2 APK. Calendar events, month
+markers and one relevant Home line are also design-only pending review.
+
+Browser checks at 360/390px, date/event selection, six immediate prayer rows,
+header variants and background/manual state transitions pass. Existing gallery
+and new handler self-checks pass. Raw screenshots remain ignored under state/.
+Review the proposal before native work; no new APK or hardware checks in this pass.
 
 ## Recording feedback — 0.5.2/code 18
 

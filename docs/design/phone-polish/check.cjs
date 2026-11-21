@@ -76,3 +76,38 @@ assert.equal(vm.runInContext('durationAtPercent(200,110)',context),200);
 const research=fs.readFileSync(path.join(__dirname,'research.html'),'utf8');
 for(const [,id] of research.matchAll(/href="index.html#([^" ]+)"/g))assert.ok(ids.has(id),`Stale research link ${id}`);
 console.log('PASS: calendar boundaries, length clamping and research anchors.');
+
+// Exercise the new design's actual event handlers, including declined permissions and drafts.
+const listeners={}, elements=new Map();
+const proposal=vm.createContext({document:{
+ addEventListener(type,fn){listeners[type]=fn;},
+ getElementById(id){if(!elements.has(id))elements.set(id,{innerHTML:'',value:'allowed',addEventListener(type,fn){this[type]=fn;},scrollIntoView(){}});return elements.get(id);},
+ querySelector(){return null;}
+},fetch:()=>new Promise(()=>{}),setTimeout(fn){fn();}});
+vm.runInContext(fs.readFileSync(path.join(__dirname,'home-calendar.js'),'utf8'),proposal);
+vm.runInContext('sample=dateForExample();selected=new Date(sample);anchor=new Date(sample);render();',proposal);
+const read=code=>vm.runInContext(code,proposal);
+const tap=action=>listeners.click({target:{closest:selector=>selector==='[data-action]'?{dataset:{action}}:null}});
+const change=(id,value)=>listeners.change({target:{id,value}});
+assert.equal(read('state.auto'),false);
+elements.get('background-travel').click();
+assert.equal(read('state.city'),'Cairo','Travel must not update a saved location before opt-in');
+tap('toggle-auto');tap('system-background');tap('deny-background');
+assert.equal(read('state.auto'),false);
+assert.equal(read('state.city'),'Cairo');
+tap('toggle-auto');tap('system-background');tap('grant-background');
+elements.get('background-travel').click();
+assert.equal(read('state.city'),'Madinah');
+assert.equal(read('state.auto'),true);
+change('country-field','United Kingdom');change('city-field','London');
+assert.equal(read('state.city'),'Madinah','Location draft leaked to Home before Done');
+tap('save-location');assert.equal(read('state.city'),'London');assert.equal(read('state.auto'),false);
+tap('toggle-auto');assert.equal(read('state.auto'),true);assert.equal(read('state.overlay'),null,'Retained background permission should not be requested again');
+change('location-access','denied');assert.equal(read('state.auto'),false);assert.equal(read('state.city'),'London');
+assert.equal(read('eventAt(findDate(1448,12,9))'),'Day of Arafah');
+assert.equal(read('eventAt(findDate(1448,12,10))'),'Eid al-Adha');
+assert.equal(read('eventAt(findDate(1448,9,27))'),'','Do not assign a fixed Laylat al-Qadr event');
+change('day-example','ordinary');assert.equal(read('homeEvent()'),null);
+change('day-example','upcoming');assert.equal(read('homeEvent().when'),'Tomorrow');
+const beforeMonth=read('parts(anchor).year');tap('next-month');assert.equal(+read('parts(anchor).year'),+beforeMonth+1);
+console.log('PASS: compact Home/event calendar, background opt-in/denial/revocation, saved-location drafts and Hijri year boundary.');

@@ -1,5 +1,10 @@
 # Changelog
 
+## Design review — Home, calendar and location
+
+- Added an English interactive proposal for a compact prayer card, Hijri event
+  markers and optional background-location setup. Android runtime is unchanged.
+
 ## 0.5.2 phone refinement
 
 - Simplified the Home date entry and retained calendar/timetable browsing.

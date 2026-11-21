@@ -1,5 +1,41 @@
 # Validation evidence
 
+## Home/calendar/location design proposal — 21 November 2026
+
+`docs/design/phone-polish/home-calendar.html` is a new English interactive proposal,
+separate from the approved revision-2 gallery. It reuses canonical artwork, icons,
+fonts and the exact three TV verse lines. No Android/LG/runtime files changed.
+The owner explicitly selected optional updates while the app is closed; the mock
+shows the background-access decision, rather than claiming support in 0.5.2.
+
+Browser evidence: Home date opens a combined calendar/event/timetable sheet;
+selecting Eid al-Adha updates its label and illustrative times together. All six
+rows fit beneath the calendar at the demonstrated 360px size. Both 360/390px
+artboards have no horizontal content overflow. Ordinary days remove the Home
+event row. Greeting shares the toolbar; verse/none variants are selectable.
+
+Background denial leaves automatic updates off and the saved city unchanged.
+Granting access enables simulated travel to Madinah; a manual London selection
+stays a draft until Done, then stops automatic following. Revocation leaves manual
+selection usable. The actual prototype event handlers are checked by the existing
+`node docs/design/phone-polish/check.cjs`; all prior 125-state checks still pass.
+Country/city, permission fallback, selected-day events/times and header variants
+were also exercised in the in-app browser. Accepted full-view captures are under
+ignored `state/pass11-design/*-overview.jpg`; incorrect clipped exports were rejected.
+
+Research: Android's current background-access guide confirms the separate Android
+11+ settings grant, an explicit decline route and inherited approximate accuracy.
+Event examples are date labels, not religious rulings or push reminders. Arafah/
+Ashura reference Sahih Muslim 1162b; the existing TV excerpt is Qur'an 4:103. Links
+are in the proposal. Dates follow the existing Hijri calendar/adjustment, with local
+month-announcement differences retained as an implementation consideration.
+
+Limits: browser design evidence only. Prayer times and travel are fixtures; no
+real GPS, permissions, background jobs, alarms or event notifications run here.
+No emulator/device tests are needed for these design-only sources. Native battery,
+permission, approximate-location and date-boundary behavior remain for implementation
+following design review. The existing 0.5.2 review APK and its prior green CI remain.
+
 ## Recording feedback refinement — 21 November 2026
 
 Review APK **0.5.2/code 18**, `state/builds/companion/Miqat-latest.apk`,
