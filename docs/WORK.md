@@ -4,15 +4,15 @@ Updated: 2026-11-21.
 
 ## Approved scope and next action
 
-Apply the maintainer-reviewed mild cleanup to all 14 shared adhan recordings.
-Keep the 12 reminders unchanged, preserve existing cuts and decoded duration,
-update approved hashes and prevent preparation from accepting stale outputs.
+Apply the approved CI policy: affected checks on PRs, full validation/build
+artifacts on main, manual branch review builds, and cancellation of superseded
+runs. Keep compilation/package checks and affected native/browser regressions;
+include Companion in the applicable required gate. Work is on
+`feature/affected-ci-checks`. Validate selection, workflow syntax and release
+source regressions, then use gh for a normal-merge PR and sync main after required
+checks pass. No release or physical-device deployment is requested.
 
-Work is on `feature/adhan-mild-cleanup`, based on main 3c5b38e. Media and affected
-Android/LG package checks pass; see [evidence](EVIDENCE.md). The owner requested
-merging into latest main and stopping, with no additional local builds. Use gh
-for the normal-merge PR and sync main. The PR owns CI/delivery receipts.
-No TV operation or release is requested.
+The approved adhan cleanup was normally merged as PR #10 (2aaadb3).
 
 ## Delivered and remaining limits
 
