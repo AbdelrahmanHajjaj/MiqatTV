@@ -8,10 +8,30 @@ commits; squash and rebase merging are disabled. Force
 pushes and deletion are blocked. There is no bypass list or required approving
 reviewer, so a solo maintainer can merge their own passing PR.
 
-Required checks is an always-running aggregate. A failed, cancelled or skipped
-required job fails it. The workflow runs on every PR to main and every main push,
-including documentation changes. Actions are pinned to immutable commits, checkout
-does not persist credentials, and validation has read-only repository access.
+Required checks is an always-running aggregate. Select checks runs on every PR
+and verifies workflow syntax, selection/gate regressions and PR whitespace. It
+selects affected consumers from the complete merge-base diff, including deleted
+and renamed paths. Required checks rejects failures, cancellation, missing
+selection and unexpected skips; only deliberately unselected jobs may skip.
+Companion is included in this gate when affected.
+All code changes also check canonical projections and media before downstream
+generators can repair stale files.
+
+PR selection is conservative:
+
+- Ordinary documentation and the PR template run only Select checks and Required
+  checks. Packaged licences/notices and generated docs/UI-GAPS.md run all jobs.
+- Site changes select Preview; Android TV or installer changes select Android
+  build and emulator; LG changes select LG build and tests.
+- Companion changes select Companion, Android, LG and Preview because the shells
+  consume its contract, generated bindings, QR and LAN sources.
+- Shared sources, tooling, workflow/build configuration and unrecognized paths
+  select all jobs. Changes spanning areas select their union.
+
+Main pushes and manual Validate runs always select the full suite. Validate and
+Companion cancel superseded runs for the same PR or branch. Actions are pinned to
+immutable commits, checkout does not persist credentials, and validation has
+read-only repository access.
 
 ## Checks and artifacts
 
@@ -22,11 +42,22 @@ does not persist credentials, and validation has read-only repository access.
 | Android emulator | Native prayer/ICU linkage and Arabic/English UI bindings on API 34 |
 | LG build and tests | Complete app/service, ES5, volume/scheduling/HTTPS mocks, browser suite and full-audio IPK |
 | Preview | Data/token freshness, regressions and 18-route static build |
+| Companion | Portable settings checks, native bilingual UI and pinned-TLS LAN regressions |
 
-Download android-builds, webos-build or browser-preview from a successful Validate
-run. Artifacts and failure reports expire after seven days. The test APK is for
-instrumentation, not household installation. Browser/emulator output is not TV
-picture, sound or physical-remote acceptance.
+PRs still compile and validate packages; they do not publish review-build
+artifacts. The Android jobs retain an android-test-inputs artifact containing
+only the TV app and test APK for the emulator. Failure reports and native logs
+remain available. All artifacts expire after seven days.
+
+Download android-builds, webos-build, browser-preview or companion-debug from a
+successful main Validate run. For an installable branch review build, choose
+Actions > Validate > Run workflow and select the branch; this runs the full suite
+and uploads the same artifacts without deploying the website. The workflow must
+already exist on main before GitHub offers manual dispatch. Companion is reusable
+by Validate and also supports a standalone manual run.
+
+The test APK is for instrumentation, not household installation. Browser/emulator
+output is not TV picture, sound or physical-remote acceptance.
 
 The approved recordings are checked in under shared/media/; no private originals,
 stamps or device state are uploaded. Actions verify approved checksums and packaged

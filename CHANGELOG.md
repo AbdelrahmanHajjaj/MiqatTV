@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Run PR checks for affected platforms, cancel superseded CI runs, and include
+  affected Companion checks in the merge gate. Downloadable review builds come
+  from main or manual branch runs; PR compilation and package checks remain.
+
 - Gently reduce rumble and background noise in all 14 adhan voices, preserving
   existing wording, duration and bitrate. The recordings are slightly smaller;
   spoken reminders are unchanged.

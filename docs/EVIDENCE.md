@@ -1,5 +1,27 @@
 # Validation evidence
 
+## Affected CI checks — 21 November 2026
+
+The owner approved affected PR validation, full main/manual builds and automatic
+cancellation of superseded runs. PR selection remains conservative for shared,
+tooling and unknown paths; packaged notices and generated UI-gap documentation
+are not treated as prose. Companion is part of the applicable required gate.
+
+- actionlint 1.7.12 passes for all three workflows.
+- Three focused CI regressions pass: affected-consumer unions, fail-closed gate
+  outcomes, and real Git rename/deletion selection plus full push/manual runs.
+- Both delivery regressions pass, including rejection of untrusted/stale release
+  sources. The publisher and trusted-main artifact names are unchanged.
+- Canonical catalog checks/tests and isolated shared validation pass;
+  `git diff --check` passes. Workflow documentation was checked against its
+  owning scripts. No application/runtime sources changed or local platform
+  builds were needed. The PR owns hosted CI and normal-merge delivery receipts.
+- The superseded Companion run 44934495042 was canceled and its final Cancelled
+  status verified. Current runs were preserved.
+- Base main run [44936708883](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44936708883)
+  failed the existing LG browser startup-artwork assertion before this change;
+  the PR retains that check without relaxing it.
+
 ## Approved adhan cleanup — 21 November 2026
 
 On `feature/adhan-mild-cleanup`, based on `3c5b38e`, the maintainer approved the
