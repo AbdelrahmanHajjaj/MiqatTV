@@ -282,3 +282,8 @@ browsing stays inside the popup and no longer persists another date on Home.
 The hosted-widget journey checks strip date toggles independently, modern/legacy
 bounds and full-height unclipped columns at small sizes and enlarged text. Refresh
 native bilingual picker PNGs whenever their XML or generated sample times change.
+
+Strip border regressions supply the renderer's clock explicitly and inspect
+actual selected-column visibility, upcoming time and stroke pixels before/at
+Fajr, after Dhuhr/Isha and after midnight on plain/artwork backgrounds. Overnight
+Fajr must remain outlined with tomorrow's timestamp; sunrise cannot be next.

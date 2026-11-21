@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.5 strip highlight
+
+- Outline the strip’s next prayer with a theme-colored rectangular border.
+- After Isha, highlight Fajr with tomorrow’s actual time instead of leaving every column plain.
+
 ## 0.5.4 phone refinement
 
 - Remove “excerpt” from the verse reference.

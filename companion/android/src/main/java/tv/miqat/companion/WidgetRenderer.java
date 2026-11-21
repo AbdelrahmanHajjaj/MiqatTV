@@ -25,26 +25,30 @@ final class WidgetRenderer {
     private final PhoneData data;
     private final boolean ar, eastern;
     private final Locale locale;
-    private final long now = System.currentTimeMillis();
+    private final long now;
     private final SimpleDateFormat time;
     private final JSONObject colors;
 
     static RemoteViews create(Context context, WidgetOptions options, int width, int height) {
-        return create(context, options, width, height, null);
+        return create(context, options, width, height, null, System.currentTimeMillis());
     }
 
     static RemoteViews initial(Context context, WidgetOptions options, int width, int height) {
-        return create(context, options, width, height, options.layout);
+        return create(context, options, width, height, options.layout, System.currentTimeMillis());
     }
 
-    private static RemoteViews create(Context context, WidgetOptions options, int width, int height, String initialLayout) {
+    static RemoteViews create(Context context, WidgetOptions options, int width, int height, long now) {
+        return create(context, options, width, height, null, now);
+    }
+
+    private static RemoteViews create(Context context, WidgetOptions options, int width, int height, String initialLayout, long now) {
         String presentation = initialLayout == null ? options.layoutFor(width, height, context.getResources().getConfiguration().fontScale) : initialLayout;
         RemoteViews view = new RemoteViews(context.getPackageName(), presentation.equals("next")
                 ? PhoneAlarms.arabic(context) ? R.layout.widget_next_card_ar : R.layout.widget_next_card
                 : R.layout.prayer_widget);
         view.setOnClickPendingIntent(R.id.widget_root, PhoneAlarms.open(context));
         try {
-            new WidgetRenderer(context, view, options, width, height, initialLayout).render();
+            new WidgetRenderer(context, view, options, width, height, initialLayout, now).render();
         } catch (Exception unavailable) {
             view.setInt(
                     R.id.widget_backdrop,
@@ -64,9 +68,10 @@ final class WidgetRenderer {
     }
 
     private WidgetRenderer(
-            Context context, RemoteViews view, WidgetOptions options, int width, int height, String initialLayout)
+            Context context, RemoteViews view, WidgetOptions options, int width, int height, String initialLayout, long now)
             throws Exception {
         this.context = context;
+        this.now = now;
         this.view = view;
         this.options = options;
         layout = initialLayout == null ? options.layoutFor(width, height, context.getResources().getConfiguration().fontScale) : initialLayout;
@@ -214,8 +219,8 @@ final class WidgetRenderer {
             for (int i = 0; i < 6; i++) {
                 row(
                         i,
-                        day,
-                        next != null && next.getNextTime() < tomorrow.start && next.getNext() == i,
+                        strip && i == 0 && next != null && next.getNextTime() >= tomorrow.start ? tomorrow : day,
+                        next != null && (strip || next.getNextTime() < tomorrow.start) && next.getNext() == i,
                         strip);
             }
         }
@@ -232,7 +237,11 @@ final class WidgetRenderer {
                 R.id.widget_prayer_time, text(time.format(new Date((long) day.times[index]))));
         prayer.setImageViewResource(R.id.widget_prayer_icon, prayerIcon(index));
         prayer.setInt(R.id.widget_prayer_icon, "setColorFilter", next ? accent : ink);
+        if (strip) prayer.setImageViewResource(R.id.widget_prayer_highlight, R.drawable.widget_strip_highlight);
         prayer.setViewVisibility(R.id.widget_prayer_highlight, next ? View.VISIBLE : View.GONE);
+        if (strip && next) prayer.setContentDescription(R.id.widget_prayer_name,
+                data.prayerName(index, ar) + ", " + data.text("phone_next", ar)
+                        + (day.start > now ? ", " + data.text("phone_tomorrow", ar) : ""));
         prayer.setInt(R.id.widget_prayer_highlight, "setColorFilter", accent);
         prayer.setTextColor(R.id.widget_prayer_name, next ? accent : ink);
         prayer.setTextColor(R.id.widget_prayer_time, next ? accent : ink);

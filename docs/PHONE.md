@@ -181,7 +181,8 @@ and date choices while adapting the amount of prayer detail that fits.
 
 The prayer data follows phone location, calculation, language, digits and clock.
 The prayer strip keeps both Hijri and Gregorian dates when both are enabled,
-and its prayer columns fill the available height. Other compact presentations
+and its prayer columns fill the available height. Its next prayer has a themed
+rectangular border, matching Home; after Isha the Fajr slot uses tomorrow’s time. Other compact presentations
 prioritize the enabled Hijri date when both dates cannot fit.
 Widget appearance records use the same protected local boundary as phone prayers.
 Use Android's pin flow where supported, or the launcher's Widgets menu. Settings,

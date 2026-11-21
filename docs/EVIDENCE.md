@@ -1,5 +1,30 @@
 # Validation evidence
 
+## Strip next-prayer border — 21 November 2026
+
+Phone review **0.5.5/code 21** includes the completed 0.5.4 refinements and the
+owner's follow-up: the border marks the **next prayer, matching Home**. A visible
+2dp theme-colored rounded rectangular border fills that prayer column. After
+Isha, the strip highlights Fajr and uses tomorrow's actual Fajr time; sunrise
+remains informational. Other widget presentations retain their existing policy.
+
+Owned API 37 bilingual hosted-widget/first-use checks pass. A renderer clock input
+lets regressions cover before/at Fajr, after Dhuhr, after Isha and after midnight.
+They assert exactly one selected column, its actual upcoming timestamp, and opaque
+border pixels on plain/artwork variants. Existing small-size/text/date/legacy
+checks stay enabled. English/Arabic renders and refreshed strip picker fallbacks
+were inspected. The 0.5.4 head **198f365** passed all three CI workflows; final
+0.5.5 head checks are tracked in draft PR #9.
+
+Production/test build and lint pass with **0 errors, 41 existing warnings**.
+Recordings, notices and signing identity remain unchanged. Private captures/logs
+stay ignored under state/. No physical launcher/device acceptance is claimed.
+
+Latest review export: `state/builds/companion/Miqat-latest.apk`, **35,170,920 bytes**,
+SHA256 `C5AD68050424760E2E1B2B4CD155A85A3C7B519145A70DABCC9993BE1A9FDDB3`.
+No merge, release or physical deployment.
+
+
 ## Home/calendar/strip refinement — 21 November 2026
 
 Phone review **0.5.4/code 20**, feature/companion-installation, draft PR #9.

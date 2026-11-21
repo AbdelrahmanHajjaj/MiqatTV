@@ -1,7 +1,14 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: calendar dismissal, clock default and strip-widget refinement; WORK.md owns next action.
+Latest scope: calendar dismissal, clock default and next-prayer strip border; WORK.md owns next action.
+
+## Strip highlight — 0.5.5/code 21
+
+Owner clarified that the border follows the next prayer, matching Home. A visible
+rectangular outline fills its column. Overnight Fajr uses tomorrow's actual time;
+other widget layouts keep their existing behavior. Native transition/border-pixel
+regressions and bilingual previews pass; exact-head CI is tracked by PR #9.
 
 ## Home/calendar/strip refinement — 0.5.4/code 20
 

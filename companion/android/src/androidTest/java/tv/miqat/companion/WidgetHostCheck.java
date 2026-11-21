@@ -323,7 +323,7 @@ final class WidgetHostCheck {
                         && (legacy.findViewById(R.id.widget_prayers).getVisibility()==View.VISIBLE)==daily,
                         "Legacy min/max widget bounds did not select the same presentation");
             }
-            try { stripImage[0] = stripDatesAndHeight(a, capture); minimumNext(a); } catch (Exception invalid) { throw new AssertionError(invalid); }
+            try { stripNextPrayer(a); stripImage[0] = stripDatesAndHeight(a, capture); minimumNext(a); } catch (Exception invalid) { throw new AssertionError(invalid); }
             View wide=WidgetRenderer.create(context,new WidgetOptions(),Math.round(363*font),Math.round(200*font)).apply(context,new FrameLayout(a));
             int wideWidth=a.views.dp(Math.round(363*font)),wideHeight=a.views.dp(Math.round(200*font));
             wide.measure(View.MeasureSpec.makeMeasureSpec(wideWidth,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(wideHeight,View.MeasureSpec.EXACTLY));
@@ -368,6 +368,49 @@ final class WidgetHostCheck {
                             (a.ar ? "ar" : "en") + "-strip-both-dates.png"))) {
                 stripImage[0].compress(android.graphics.Bitmap.CompressFormat.PNG, 100, file);
             } finally { stripImage[0].recycle(); }
+        }
+    }
+
+    private static void stripNextPrayer(MainActivity a) throws Exception {
+        PhoneStore settings = PhoneStore.read(a);
+        PhoneSchedule.Day today = settings.day(System.currentTimeMillis(), 0);
+        long[] stamps = {(long) today.times[0] - 1000, (long) today.times[0],
+                (long) today.times[2] + 1000, (long) today.times[5] + 1000,
+                settings.day(System.currentTimeMillis(), 1).start + 60000};
+        int[] expected = {0, 2, 3, 0, 0};
+        WidgetOptions options = new WidgetOptions();
+        options.layout = "strip";
+        for (String scene : new String[]{"plain", "miqat_signature"}) {
+            options.scene = scene;
+            for (int n = 0; n < stamps.length; n++) {
+                View root = WidgetRenderer.create(a, options, 360, 140, stamps[n])
+                        .apply(a, new FrameLayout(a));
+                root.measure(View.MeasureSpec.makeMeasureSpec(a.views.dp(360), View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(a.views.dp(140), View.MeasureSpec.EXACTLY));
+                root.layout(0, 0, a.views.dp(360), a.views.dp(140));
+                LinearLayout strip = root.findViewById(R.id.widget_strip);
+                for (int i = 0; i < 6; i++) {
+                    View column = strip.getChildAt(i);
+                    ImageView border = column.findViewById(R.id.widget_prayer_highlight);
+                    PhoneUiCheck.check((border.getVisibility() == View.VISIBLE) == (i == expected[n]),
+                            "Strip must outline exactly its next prayer, including overnight Fajr");
+                    if (i != expected[n]) continue;
+                    PhoneSchedule.Day day = settings.day(stamps[n], 0);
+                    double at = i == 0 && stamps[n] >= day.times[5]
+                            ? settings.day(stamps[n], 1).times[0] : day.times[i];
+                    PhoneUiCheck.check(((TextView) column.findViewById(R.id.widget_prayer_time))
+                                    .getText().toString().equals(PhoneTime.at(settings, at, a.ar)),
+                            "Highlighted Fajr must use its actual upcoming day's time");
+                    android.graphics.Bitmap pixels = android.graphics.Bitmap.createBitmap(
+                            border.getWidth(), border.getHeight(), android.graphics.Bitmap.Config.ARGB_8888);
+                    try {
+                        border.draw(new android.graphics.Canvas(pixels));
+                        PhoneUiCheck.check(android.graphics.Color.alpha(pixels.getPixel(
+                                        a.views.dp(1), pixels.getHeight() / 2)) > 200,
+                                "Next-prayer rectangular border is not visibly drawn");
+                    } finally { pixels.recycle(); }
+                }
+            }
         }
     }
 
