@@ -2,6 +2,12 @@
 
 ## Home/calendar/location design proposal — 21 November 2026
 
+Owner follow-up: the demo now defaults to greeting plus the TV verse. Browser
+inspection at 360px confirms both headers, all six prayer rows, Qibla/Widgets and
+bottom navigation fit the phone frame. The handler self-check verifies the exact
+canonical verse alongside the greeting and prayer card. Capture:
+`state/pass11-design/home-both-headers.jpg`. This remains design-only.
+
 `docs/design/phone-polish/home-calendar.html` is a new English interactive proposal,
 separate from the approved revision-2 gallery. It reuses canonical artwork, icons,
 fonts and the exact three TV verse lines. No Android/LG/runtime files changed.

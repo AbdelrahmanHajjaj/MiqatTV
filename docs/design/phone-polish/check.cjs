@@ -111,3 +111,11 @@ change('day-example','ordinary');assert.equal(read('homeEvent()'),null);
 change('day-example','upcoming');assert.equal(read('homeEvent().when'),'Tomorrow');
 const beforeMonth=read('parts(anchor).year');tap('next-month');assert.equal(+read('parts(anchor).year'),+beforeMonth+1);
 console.log('PASS: compact Home/event calendar, background opt-in/denial/revocation, saved-location drafts and Hijri year boundary.');
+
+const canonicalVerse=JSON.parse(fs.readFileSync(path.join(__dirname,'../../../shared/data/sacred-text.json'),'utf8')).prayerVerse;
+proposal.verseFixture=canonicalVerse;
+read('sacred=verseFixture;state.header="both";render();');
+assert.ok(elements.get('home-phone').innerHTML.includes('Assalamu alaikum'));
+assert.ok(elements.get('home-phone').innerHTML.includes(canonicalVerse.join(' ')));
+assert.ok(elements.get('home-phone').innerHTML.includes('Next prayer'));
+console.log('PASS: combined greeting/TV-verse header preserves canonical sacred text and prayer card.');

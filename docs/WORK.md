@@ -4,8 +4,8 @@ Updated: 2026-11-21. Owner requested a mock-first Home/calendar/location revisio
 on feature/companion-installation, draft PR #9. Proposal:
 [Home, location & Hijri events](design/phone-polish/home-calendar.html).
 
-The date and single city action share the prayer card. Compare greeting, exact TV
-verse and no header. Calendar events have markers, selected-day labels and a brief
+The date and single city action share the prayer card. Compare combined greeting/TV verse, either alone, and no header.
+The owner liked the proposal and requested the combined-header preview first. Calendar events have markers, selected-day labels and a brief
 Home line. User explicitly chose optional location updates while the app is closed;
 the proposal includes background permission opt-in, denial and manual fallback.
 
