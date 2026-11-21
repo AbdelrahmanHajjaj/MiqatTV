@@ -16,8 +16,13 @@ swipe with original-volume restoration, complete alarm/playback/30-second tests,
 notification Stop and lock-screen gestures pass. The TV shell prayer/ICU and full
 UI contract pass at CI's landscape bounds, with explicit instrumentation code -1
 and no preference-restoration warning. An initial standalone fresh TV UI run
-materialized ui_scale; it was not counted as a clean pass. Prayer then UI matches
-the documented CI sequence. These are phone-image emulator checks, not physical
+materialized ui_scale; it was not counted as a clean pass. The same warning was
+confirmed in CI despite its success marker. Pairing checks now restore the
+original value or absence, and the preference guard removes the success marker
+on failure. Two fresh-state native UI runs pass the preference guard; local
+wrappers requesting a raw result code without `am instrument -r` failed their
+post-check because Android's pretty output omits it, not because the UI failed.
+These are phone-image emulator checks, not physical
 TV acceptance. Runtime restrictions remain enabled; fixtures restore animator
 settings. Raw logs and SDK/device details stay ignored under state/.
 

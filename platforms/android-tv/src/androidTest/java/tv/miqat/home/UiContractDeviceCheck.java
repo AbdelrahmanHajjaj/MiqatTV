@@ -152,7 +152,7 @@ final class UiContractDeviceCheck {
                 code = Activity.RESULT_CANCELED;
                 Set<String> changed = new LinkedHashSet<>(prefs.getAll().keySet());changed.addAll(saved.keySet());
                 changed.removeIf(key -> java.util.Objects.equals(prefs.getAll().get(key), saved.get(key)));
-                result.putString("stream", result.getString("stream", "") + "UI check did not preserve preferences: " + changed + "\n");
+                result.putString("stream", "UI check did not preserve preferences: " + changed + "\n");
             }
         }
         test.finish(code, result);

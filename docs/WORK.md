@@ -18,6 +18,8 @@ build/lint and the signed review export pass; see EVIDENCE.md. Android still
 controls presentation over other apps/lock screens.
 
 CI exposed test synchronization/expansion issues; the follow-up fixtures now pass
-complete API 34 phone runtime and strict TV prayer/UI checks as well. App bytes
+complete API 34 phone runtime and strict TV prayer/UI checks as well. A fresh TV
+fixture also restores the original size preference and cannot report success if
+its preference guard fails. App bytes
 are unchanged. Next: exact-head CI and owner review in draft PR #9. Main must remain merged
 before pushing. No PR merge, release or physical deployment requested.
