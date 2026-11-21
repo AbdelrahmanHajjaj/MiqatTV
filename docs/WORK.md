@@ -1,6 +1,6 @@
 # Current work
 
-Updated: 2026-11-21. Owner requested Adhan level against the selected stream's
+Updated: 2026-11-22. Owner requested Adhan level against the selected stream's
 maximum, independent of current media/alarm volume, then requested an in-card
 playing wave, swipe-to-stop notifications, no manual timing step and dependable
 foreground full screen. Branch
@@ -17,5 +17,7 @@ screen, motion/reduced-motion pixels and bilingual UI. Core/generator/canonical,
 build/lint and the signed review export pass; see EVIDENCE.md. Android still
 controls presentation over other apps/lock screens.
 
-Next: exact-head CI and owner review in draft PR #9. Main must remain merged
+CI exposed test synchronization/expansion issues; the follow-up fixtures now pass
+complete API 34 phone runtime and strict TV prayer/UI checks as well. App bytes
+are unchanged. Next: exact-head CI and owner review in draft PR #9. Main must remain merged
 before pushing. No PR merge, release or physical deployment requested.

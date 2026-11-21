@@ -131,11 +131,12 @@ final class FavouriteUiDeviceCheck {
     }
 
     private static void headerNavigation(Instrumentation test, AllAppsActivity apps) {
-        onMain(test, () -> {
+        until(test, () -> {
+            List<?> tiles = (List<?>) field(apps, "tiles");
+            if (tiles.isEmpty()) return false;
             View back = (View) field(apps, "backButton");
             View prayer = (View) field(apps, "chip");
             View settings = (View) field(apps, "settingsButton");
-            List<?> tiles = (List<?>) field(apps, "tiles");
             // Keep these view references and key assertions in one snapshot despite a queued refresh.
             apps.root.post(apps::build);
             java.util.function.IntConsumer press = code -> {
@@ -166,7 +167,8 @@ final class FavouriteUiDeviceCheck {
                 press.accept(KeyEvent.KEYCODE_DPAD_UP);
                 check(apps.getCurrentFocus() == tiles.get(0), "Lower-row Up stays in app content");
             }
-        });
+            return true;
+        }, "Loaded app catalog supports header navigation");
     }
 
     @SuppressWarnings("unchecked")

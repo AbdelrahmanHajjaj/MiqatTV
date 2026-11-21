@@ -78,6 +78,7 @@ final class PhoneAdhanCheck {
         PhoneRuntimeCheck.shell(test, "cmd statusbar expand-notifications");
         try {
             PhonePresentationCheck.expandNotification(test,settings.data.prayerName(event.getPrayer(),ar));
+            PhoneUiCheck.capture(test,c,"adhan-notification-actions",true);
             LiveUiCheck.until(() -> {
                 android.view.accessibility.AccessibilityNodeInfo control = stopControl(test, c);
                 if (control == null) return false;

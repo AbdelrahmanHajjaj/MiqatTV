@@ -343,12 +343,23 @@ activity because Android 17 restricts background volume APIs, including shell
 media-session commands. The normal runtime suite includes this regression.
 
 
-`phone-presentation` (`-e case home|swipe|screen`, default all) drives actual
+`phone-presentation` (`-e case home|swipe|screen|actions`, default all) drives actual
 scheduled playback. It checks the full-width card band, accessible canonical
 control, changing native pixels with motion enabled and stable pixels with
 reduced motion. The fixture temporarily enables/restores the owned emulator's
 animator scale. It targets the SystemUI notification row through the accessibility
-tree, sends a real horizontal swipe and requires audio to stop. It also requires
+tree, waits for a distinct prayer's stable bounds, sends a real horizontal swipe
+and requires audio to stop and the original media volume to return. It also requires
 the opted-in foreground screen, even when lock-screen access is denied. On
 Android 13+ it verifies automatically granted core-alarm permission. Full runtime
 includes these checks; no system restriction is disabled.
+
+
+Native TV header navigation must wait for loaded tiles and take its readiness
+check and key assertions in one UI-thread snapshot; a queued catalog refresh can
+otherwise clear the list between checks. Run the prayer/UI sequence used by CI
+when validating a fresh installation, and require instrumentation code -1 with
+no preference-restoration warning. Native notification checks expand only a
+collapsed header: Android 14's row expansion action can toggle an already-
+expanded alert closed. The focused `phone-presentation -e case actions` check
+exercises the actual visible notification Stop button.

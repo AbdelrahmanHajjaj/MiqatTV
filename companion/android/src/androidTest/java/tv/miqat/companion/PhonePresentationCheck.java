@@ -12,8 +12,10 @@ import static tv.miqat.companion.PhoneRuntimeCheck.await;
 
 final class PhonePresentationCheck {
     private static AccessibilityNodeInfo find(AccessibilityNodeInfo node,String value,boolean id) {
-        CharSequence text=node.getText();
-        if(node.isVisibleToUser() && (id?value.equals(node.getViewIdResourceName()):text!=null && text.toString().startsWith(value)))
+        CharSequence text=node.getText(),description=node.getContentDescription();
+        boolean words=text!=null && text.toString().regionMatches(true,0,value,0,value.length())
+                || description!=null && description.toString().regionMatches(true,0,value,0,value.length());
+        if(node.isVisibleToUser() && (id?value.equals(node.getViewIdResourceName()):words))
             return AccessibilityNodeInfo.obtain(node);
         for(int i=0;i<node.getChildCount();i++) {
             AccessibilityNodeInfo child=node.getChild(i);if(child==null)continue;
@@ -44,12 +46,13 @@ final class PhonePresentationCheck {
                 AccessibilityNodeInfo parent=row.getParent();row.recycle();row=parent;
             }
             check(row!=null,"Notification row is missing");
-            if(!row.performAction(AccessibilityNodeInfo.ACTION_EXPAND)) {
-                AccessibilityNodeInfo button=find(row,"android:id/expand_button",true);
-                if(button!=null)try {
-                    if("Expand".contentEquals(button.getContentDescription()))check(button.performAction(AccessibilityNodeInfo.ACTION_CLICK),"Notification cannot expand");
-                } finally {button.recycle();}
-            }
+            AccessibilityNodeInfo button=find(row,"android:id/expand_button",true);
+            check(button!=null,"Notification expansion control is missing");
+            try {
+                CharSequence state=button.getContentDescription();
+                if(state!=null && "Expand".contentEquals(state))check(button.performAction(AccessibilityNodeInfo.ACTION_CLICK),"Notification cannot expand");
+                else check(state!=null && "Collapse".contentEquals(state),"Unknown notification expansion state: "+state);
+            } finally {button.recycle();}
         } finally {if(row!=null)row.recycle();}
     }
     private static android.graphics.Bitmap wave(Instrumentation test,MainActivity a) throws Exception {
@@ -61,6 +64,7 @@ final class PhonePresentationCheck {
         finally{screen.recycle();}
     }
     static void run(Instrumentation test,String selected,boolean capture) throws Exception {
+        check(Arrays.asList("all","home","swipe","screen","actions").contains(selected),"Unknown presentation case");
         Context c=test.getTargetContext();
         PhoneStore original=PhoneStore.read(c);
         android.media.AudioManager audio=c.getSystemService(android.media.AudioManager.class);
@@ -76,14 +80,18 @@ final class PhonePresentationCheck {
             if(android.os.Build.VERSION.SDK_INT>=33)
                 check(c.checkSelfPermission(android.Manifest.permission.USE_EXACT_ALARM)==android.content.pm.PackageManager.PERMISSION_GRANTED
                         && PhoneAlarms.exact(c),"Prayer timing should be granted without a manual alarm-access step");
-            for (String phase:new String[]{"home","swipe","screen"}) {
+            for (String phase:selected.equals("actions")?new String[]{"actions"}:new String[]{"home","swipe","screen"}) {
                 if (!selected.equals("all") && !selected.equals(phase)) continue;
+                int prayer=phase.equals("swipe")?2:phase.equals("actions")?3:0;
+                String prayerKey=PhoneStore.PRAYERS[prayer];
+                String prayerName=PhoneData.get(c).prayerName(prayer,false);
                 Map<String,String> edits=new HashMap<>();
                 edits.put("reminders.enabled","true");edits.put("prayer.location-ready","true");
                 edits.put("quiet.enabled","false");edits.put("reminders.volume",phase.equals("swipe")?"70":"0");
                 edits.put("reminders.alarm-mode","false");
-                edits.put("call.fajr.default-audio","true");edits.put("call.fajr.enabled","true");
-                edits.put("call.fajr.mode","adhan");edits.put("call.fajr.weekdays","127");
+                edits.put("call."+prayerKey+".default-audio","true");edits.put("call."+prayerKey+".enabled","true");
+                edits.put("call."+prayerKey+".voice","almalki");
+                edits.put("call."+prayerKey+".mode","adhan");edits.put("call."+prayerKey+".weekdays","127");
                 edits.put("reminders.full-screen",Boolean.toString(phase.equals("screen")));
                 edits.put("reminders.duration","60");edits.put("display.reduce-motion","false");
                 original.changed(edits).save(c);
@@ -94,10 +102,12 @@ final class PhonePresentationCheck {
                 try {
                     on(test,()->a.tab("prayers"));
                     if(phase.equals("swipe"))audio.setStreamVolume(android.media.AudioManager.STREAM_MUSIC,1,0);
-                    String id="phone:presentation:"+UUID.randomUUID();
-                    on(test,()->c.startForegroundService(PhonePlayback.intent(c,0,"almalki",false,id)));
+                    String id="phone:presentation:"+UUID.randomUUID();long at=System.currentTimeMillis();
+                    on(test,()->c.startForegroundService(PhonePlayback.intent(c,prayer,"almalki",false,id).putExtra("prayerTime",(double)at)));
                     await(test,PhonePlayback::outputStarted,10000,"Presentation audio did not start");
-                    if (phase.equals("screen")) {
+                    if (phase.equals("actions")) {
+                        PhoneAdhanCheck.stop(test,c,new tv.miqat.core.ReminderEvent(id,"call",prayer,at,at));
+                    } else if (phase.equals("screen")) {
                         shown=test.waitForMonitorWithTimeout(monitor,5000);
                         check(shown instanceof PhoneAdhanScreen,"Foreground Miqat did not open the opted-in Adhan screen");
                         PhoneUiCheck.capture(test,c,"adhan-foreground-screen",capture);
@@ -140,17 +150,22 @@ final class PhonePresentationCheck {
                         PhoneUiCheck.capture(test,c,"adhan-notification-shade",capture);
                         Notification notification=Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
                                 .map(n->n.getNotification()).filter(n->(n.flags&Notification.FLAG_FOREGROUND_SERVICE)!=0).findFirst().get();
-                        Rect title=new Rect();
+                        Rect title=new Rect(),previous=new Rect();int[] stable={0};
                         LiveUiCheck.until(()-> {
-                            AccessibilityNodeInfo node=notificationText(test,"Fajr");
-                            if(node==null)return false;
-                            try{node.getBoundsInScreen(title);return !title.isEmpty();}finally{node.recycle();}
+                            AccessibilityNodeInfo node=notificationText(test,prayerName);
+                            if(node==null){stable[0]=0;return false;}
+                            try {
+                                node.getBoundsInScreen(title);
+                                stable[0]=!title.isEmpty() && title.equals(previous)?stable[0]+1:0;
+                                previous.set(title);return stable[0]>=2;
+                            } finally {node.recycle();}
                         });
                         check(!title.isEmpty(),"Cannot locate the playing notification");
                         PhoneUiCheck.capture(test,c,"adhan-before-notification-swipe",capture);
                         int width=c.getResources().getDisplayMetrics().widthPixels;
                         PhoneRuntimeCheck.shell(test,"input swipe "+width/4+" "+title.centerY()+" "+(width-4)+" "+title.centerY()+" 300");
-                        await(test,()->!PhonePlayback.playing(),5000,"Swiping the notification did not stop Adhan");
+                        PhoneUiCheck.capture(test,c,"adhan-after-notification-swipe",capture);
+                        await(test,()->!PhonePlayback.playing(),5000,"Swiping the notification did not stop Adhan; SDK="+android.os.Build.VERSION.SDK_INT+" bounds="+title+" width="+width+" flags="+notification.flags+" style="+notification.extras.getString("android.template"));
                         check(audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==1,"Background swipe did not restore prior media volume");
                     }
                 } finally {

@@ -1,5 +1,30 @@
 # Validation evidence
 
+## Cross-version native validation — 22 November 2026
+
+Initial CI for d250feb found an empty TV catalog snapshot and a phone swipe
+expectation failure on API 34. The TV fixture now waits for loaded tiles and runs
+its navigation assertions in the same UI-thread snapshot. The swipe fixture uses
+a distinct prayer and waits for stable notification bounds. Repeated isolated
+Android 14 swipes passed with unchanged app bytes. The full Android 14 sequence
+also exposed the fixture toggling an already-expanded notification closed; it
+now checks the header's expansion state and supports content-description labels.
+All navigation and actual notification-action assertions remain enabled.
+
+Owned isolated API 34: bilingual phone UI, 80–150% portrait sizing, real background
+swipe with original-volume restoration, complete alarm/playback/30-second tests,
+notification Stop and lock-screen gestures pass. The TV shell prayer/ICU and full
+UI contract pass at CI's landscape bounds, with explicit instrumentation code -1
+and no preference-restoration warning. An initial standalone fresh TV UI run
+materialized ui_scale; it was not counted as a clean pass. Prayer then UI matches
+the documented CI sequence. These are phone-image emulator checks, not physical
+TV acceptance. Runtime restrictions remain enabled; fixtures restore animator
+settings. Raw logs and SDK/device details stay ignored under state/.
+
+Follow-up changes are tests/docs only. The 0.5.11/code 27 APK and its recorded
+SHA256 remain unchanged. Exact-head CI is tracked in draft PR #9; no release,
+merge or physical deployment.
+
 ## Adhan playback refinements — 21 November 2026
 
 Phone **0.5.11/code 27** targets the selected media/alarm stream's maximum rather
