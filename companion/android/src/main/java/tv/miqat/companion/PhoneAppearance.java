@@ -61,8 +61,6 @@ final class PhoneAppearance {
 
     void background(LinearLayout shell, PhoneStore settings) {
         try {
-            if (a.page.equals("phone-settings") && a.section.equals("appearance"))
-                settings = candidate(settings);
             String id = settings.value("appearance.background");
             if (id.equals("plain")) {
                 shell.setBackgroundColor(a.ground);
@@ -113,51 +111,14 @@ final class PhoneAppearance {
         }
     }
 
-    private final java.util.Map<String, String> draft = new java.util.LinkedHashMap<>();
     private String tab = "appearance.theme";
 
     void save(android.os.Bundle state) {
-        android.os.Bundle values = new android.os.Bundle();
-        for (java.util.Map.Entry<String, String> entry : draft.entrySet())
-            values.putString(entry.getKey(), entry.getValue());
-        state.putBundle("style-draft", values);
         state.putString("style-tab", tab);
     }
 
     void restore(android.os.Bundle state) {
-        android.os.Bundle values = state.getBundle("style-draft");
-        if (values != null)
-            for (String id : values.keySet())
-                if (id.startsWith("appearance.") || id.startsWith("display."))
-                    draft.put(id, values.getString(id));
         tab = state.getString("style-tab", "appearance.theme");
-    }
-
-    PhoneStore candidate(PhoneStore saved) throws Exception {
-        return saved.changed(draft);
-    }
-
-    void stage(String id, String value) {
-        stage(id, value, true);
-    }
-
-    void stage(String id, String value, boolean redraw) {
-        java.util.Map<String, String> changed = new java.util.LinkedHashMap<>(draft);
-        changed.put(id, value);
-        try {
-            a.phoneUi.settings.changed(changed);
-            draft.put(id, value);
-            if (redraw) {
-                a.phoneUi.pending = "";
-                a.render();
-            }
-        } catch (Exception invalid) {
-            a.notice("invalid");
-        }
-    }
-
-    void cancel() {
-        draft.clear();
     }
 
     void editor(LinearLayout parent, boolean guided) throws Exception {
@@ -179,29 +140,8 @@ final class PhoneAppearance {
                 tab,
                 candidate.value(tab),
                 false,
-                selected -> {
-                    if (guided) a.phoneUi.save(tab, selected);
-                    else stage(tab, selected);
-                });
+                selected -> a.phoneUi.save(tab, selected));
         if (!guided) a.phoneUi.control(a.phoneUi.data.controls.get("appearance.home-background"));
-        if (!guided) {
-            LinearLayout actions = a.views.actionBar(a.actionHost);
-            a.views
-                    .secondaryAction(a.views.secondaryActions(actions), a.t("cancel"), a::back)
-                    .setTag("appearance.cancel");
-            a.views
-                    .primaryAction(
-                            actions,
-                            a.t("apply"),
-                            () -> {
-                                boolean resize = draft.containsKey("display.size");
-                                if (a.phoneUi.save(new java.util.LinkedHashMap<>(draft), false)) {
-                                    a.back();
-                                    if (resize) a.recreate();
-                                }
-                            })
-                    .setTag("appearance.apply");
-        }
     }
 
     void rail(

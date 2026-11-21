@@ -77,20 +77,16 @@ final class PhoneControlCheck {
                 PhoneUiCheck.check(a.getWindow().getDecorView().findViewWithTag("phone.prayer.sunrise-offset.save") == null,
                         "Step controls still require Done");
                 a.phoneUi.open("appearance");
-                a.body.findViewWithTag("phone.display.size.edit").performClick();
-                ((EditText) a.body.findViewWithTag("phone.display.size.input")).setText("120");
                 a.phoneUi.save("display.clock", "24");
-                PhoneUiCheck.check(((EditText) a.body.findViewWithTag("phone.display.size.input"))
-                                .getText().toString().equals("120"), "Switching preview controls lost numeric changes");
-                a.getWindow().getDecorView().findViewWithTag("appearance.cancel").performClick();
-                verify(a, "display.size", original.number("display.size"));
-                a.phoneUi.open("appearance");
-                a.body.findViewWithTag("phone.display.size.edit").performClick();
-                ((EditText) a.body.findViewWithTag("phone.display.size.input")).setText("130");
-                a.getWindow().getDecorView().findViewWithTag("appearance.cancel").performClick();
-                PhoneUiCheck.check(!a.section.equals("appearance"),
-                        "Full-page Cancel must not require a second numeric confirmation");
-                verify(a, "display.size", original.number("display.size"));
+                a.phoneUi.save("appearance.theme", "dusk");
+                PhoneUiCheck.check(a.getWindow().getDecorView().findViewWithTag("appearance.apply") == null
+                                && a.getWindow().getDecorView().findViewWithTag("appearance.cancel") == null,
+                        "Appearance still requires page confirmation");
+                a.back();
+                PhoneUiCheck.check(!a.section.equals("appearance"), "Back did not leave Appearance");
+                PhoneUiCheck.check(a.phoneUi.settings.value("display.clock").equals("24")
+                                && a.phoneUi.settings.value("appearance.theme").equals("dusk"),
+                        "Leaving Appearance discarded immediate changes");
             });
         } finally {
             original.save(a);

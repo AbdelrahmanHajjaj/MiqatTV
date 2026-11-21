@@ -231,7 +231,6 @@ final class PairingUi {
                 if (a.lanTvs.get(i).phone.pin.equals(phone.pin)) a.selected = i + 2;
             a.real().online = true;
             a.settingsUi.snapshot = null;
-            a.settingsUi.appearance = null;
             a.settingsUi.clearPending();
             cancelPairing();
             a.page = "overview";

@@ -1,5 +1,33 @@
 # Validation evidence
 
+## Immediate appearance and widgets — 21 November 2026
+
+Phone review **0.5.7/code 23** follows the owner's clarification that full-page
+settings must save immediately too. Phone appearance/display and widget controls
+persist valid changes directly; Back retains them. Placed widgets update on each
+change; opacity commits when dragging ends. TV appearance selections use the
+existing confirmed save, offline, conflict and uncertain-write protections. Page
+Apply/Cancel and obsolete appearance draft state are removed. Android widget Add
+completion and validated complete-value dialogs retain their actions.
+
+Owned muted read-only API 37: bilingual phone UI and first-use/hosted-widget
+journeys pass, including persisted values before Add and after Back. TV native
+bindings and pinned-TLS LAN checks pass. Both languages pass app sizing 80–150%,
+normal portrait and font 1.3 portrait/landscape. Appearance/widget renders were
+inspected in English and Arabic. The binding check now explicitly asserts removed
+companion Apply/Cancel actions are absent; the shared TV contract remains intact.
+Landscape checks scroll the appearance rail into view before measuring it.
+
+Final production/test build and lint pass: **0 errors, 41 existing warnings**.
+Generator 11/11 and all design handlers pass. All 25 exact approved recordings,
+notices and signing identity are preserved. Exact-head CI is tracked in draft
+PR #9. Private logs/captures stay ignored under state/. No physical phone/TV
+acceptance, merge, release or physical deployment is claimed.
+
+Latest review export: `state/builds/companion/Miqat-latest.apk`, **35,343,067 bytes**,
+SHA256 `EB9CE8316BB571EE3CAA025A9EB83AF2DEF0F7AD5AFF7D933271B70C071B6761`.
+
+
 ## Immediate controls and Home cleanup — 21 November 2026
 
 Phone review **0.5.6/code 22**, feature/companion-installation, draft PR #9.

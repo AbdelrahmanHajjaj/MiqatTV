@@ -63,7 +63,7 @@ final class PhoneUiCheck {
                     a.body.findViewWithTag("phone.call.fajr.mode.choices.notification").performClick();check(a.phoneUi.settings.modes[0]==1,"Per-prayer mode not independent/saved");
                     a.phoneUi.open("calculation");a.phoneUi.save("prayer.zone","Asia/Tokyo");check(!a.phoneUi.settings.locationReady,"Changed timezone must need confirmation");
                     a.phoneUi.save("prayer.zone","system");a.getWindow().getDecorView().findViewWithTag("phone.location.confirm").performClick();
-                    a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");a.getWindow().getDecorView().findViewWithTag("appearance.apply").performClick();check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
+                    a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
                     boundControls(a);
                     a.tab("prayers");
                     try {

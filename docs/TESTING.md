@@ -291,9 +291,13 @@ Fajr must remain outlined with tomorrow's timestamp; sunrise cannot be next.
 
 `phone-controls` is the focused native regression for immediate offset/before/after
 steps, valid Arabic typing without replacing the input, invalid-value rejection,
-retained restored text, cross-page persistence and full-page preview Cancel.
+retained restored text, cross-page and appearance persistence after Back.
 The bilingual phone UI suite also runs it. Keyboard/sizing checks assert the
 inline field and step buttons remain reachable without a per-control footer.
 TV mock/native-LAN checks assert direct +/− saves (including the bearing dialog),
-confirmed values, no lingering per-control draft and retained page-level preview
-Apply/Cancel. No physical TV is used by those fixtures.
+confirmed values, no lingering per-control/page appearance draft and immediate
+appearance persistence after section changes. No physical TV is used by those fixtures.
+
+Widget journeys check persistence before Android Add completion and after Back,
+with selected placed widgets updating independently. Appearance has no page-level
+Apply/Cancel; custom-palette dialogs still validate the complete value before saving.

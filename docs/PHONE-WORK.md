@@ -1,7 +1,14 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: immediate numeric controls and quieter welcome/Home; WORK.md owns next action.
+Latest scope: immediate page settings after the numeric/Home cleanup; WORK.md owns next action.
+
+## Immediate appearance and widgets — 0.5.7/code 23
+
+The owner confirmed that full-page settings should save immediately too. Phone
+appearance/display, widget preferences and TV appearance now persist each valid
+change; Back retains it. Placed widgets update directly. Page-level Apply/Cancel
+is removed; Android Add completion and validated custom-color dialogs remain.
 
 ## Immediate controls and Home cleanup — 0.5.6/code 22
 

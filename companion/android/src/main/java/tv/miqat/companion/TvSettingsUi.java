@@ -13,11 +13,10 @@ import tv.miqat.companion.core.*;
 
 import java.util.*;
 
-/** TV setting snapshots and drafts; never edits the independent phone preference store. */
+/** TV setting snapshots and validated edits; never edits the independent phone preference store. */
 final class TvSettingsUi {
     private final MainActivity a;
     SettingsSnapshot snapshot;
-    SettingsDraft appearance;
     private String pendingId = "", pendingValue = "";
     private Map<String, String> pendingBase;
     AlertDialog editor;
@@ -39,15 +38,6 @@ final class TvSettingsUi {
     void restore(Bundle state) {
         if (state.containsKey("snapshot"))
             snapshot = new SettingsSnapshot(MainActivity.decode(state.getString("snapshot")));
-        if (state.containsKey("draft-base")) {
-            appearance =
-                    new SettingsDraft(
-                            new SettingsSnapshot(
-                                    MainActivity.decode(state.getString("draft-base"))));
-            for (Map.Entry<String, String> e :
-                    MainActivity.decode(state.getString("draft-edits")).entrySet())
-                appearance.set(spec(e.getKey()), e.getValue());
-        }
         pendingId = state.getString("pending-id", "");
         pendingValue = state.getString("pending-value", "");
         if (state.containsKey("pending-base"))
@@ -57,10 +47,6 @@ final class TvSettingsUi {
     void saveState(Bundle state) {
         if (snapshot != null)
             state.putString("snapshot", MainActivity.encode(snapshot.getValues()));
-        if (appearance != null) {
-            state.putString("draft-base", MainActivity.encode(appearance.getBase().getValues()));
-            state.putString("draft-edits", MainActivity.encode(appearance.getChanges()));
-        }
         if (!pendingId.isEmpty()) {
             state.putString("pending-id", pendingId);
             state.putString("pending-value", pendingValue);
@@ -102,16 +88,6 @@ final class TvSettingsUi {
                         if (a.real() == tv) {
                             snapshot = actual.getValues().isEmpty() ? null : actual;
                             if (snapshot != null && !tv.needsRefresh) {
-                                if (appearance != null
-                                        && appearance.getChanges().entrySet().stream()
-                                                .allMatch(edit ->
-                                                        edit.getValue()
-                                                                .equals(
-                                                                        snapshot.getValues()
-                                                                                .get(
-                                                                                        edit
-                                                                                                .getKey()))))
-                                    appearance = null;
                                 if (!pendingId.isEmpty()
                                         && pendingValue.equals(snapshot.getValues().get(pendingId)))
                                     clearPending();
@@ -139,7 +115,6 @@ final class TvSettingsUi {
             String cache = a.prefs().getString("cache-" + a.selected, null);
             snapshot = cache == null ? null : new SettingsSnapshot(MainActivity.decode(cache));
         }
-        if (appearance != null && appearance.getChanges().isEmpty()) appearance = null;
     }
 
     void renderSettings() {
@@ -165,21 +140,18 @@ final class TvSettingsUi {
         }
         if (snapshot == null) return;
         if (a.section.equals("appearance")) {
-            if (appearance == null) appearance = new SettingsDraft(snapshot);
             a.body.addView(a.views.text(a.t("preview"), 13, a.muted));
             HomePreview preview =
                     new HomePreview(
                             a,
                             a.catalog,
-                            appearance.getValues(),
+                            snapshot.getValues(),
                             a.ar,
                             a.real() == null
                                     ? a.catalog.data.optString("demoSystemLanguage")
                                     : a.real().systemLanguage);
             preview.setTag("appearance-preview");
             a.body.addView(preview, new LinearLayout.LayoutParams(-1, -2));
-            if (!appearance.getChanges().isEmpty())
-                a.body.addView(a.views.text(a.t("unsaved"), 13, a.accent));
         }
         EditText search = new EditText(a);
         search.setImeOptions(
@@ -306,15 +278,7 @@ final class TvSettingsUi {
                 toggle.setOnClickListener(v -> {
                     String next = String.valueOf(toggle.isChecked());
                     toggle.setChecked(value.equals("true"));
-                    if (c.optString("save").equals("appearance")) {
-                        if (appearance == null) {
-                            openSection("appearance");
-                            return;
-                        }
-                        appearance.set(spec(id), next);
-                        a.render();
-                    } else
-                        save(snapshot.getValues(), Collections.singletonMap(id, next), false);
+                    save(snapshot.getValues(), Collections.singletonMap(id, next), false);
                 });
                 continue;
             }
@@ -334,11 +298,6 @@ final class TvSettingsUi {
                             "edit",
                             a.t("edit"),
                             () -> {
-                                if (c.optString("save").equals("appearance")
-                                        && !a.section.equals("appearance")) {
-                                    openSection("appearance");
-                                    return;
-                                }
                                 edit(id);
                             });
             b.setContentDescription(a.title(c) + ", " + display(id, value));
@@ -351,26 +310,13 @@ final class TvSettingsUi {
     void openSection(String target) {
         a.stopAudio();
         clearPending();
-        if (appearance != null
-                && !appearance.getChanges().isEmpty()
-                && !target.equals("appearance")) {
-            a.confirmDiscard(() -> {
-                appearance = null;
-                a.section = target;
-                a.render();
-            });
-            return;
-        }
-        if (!target.equals("appearance")) appearance = null;
         a.section = target;
         a.query = "";
         a.render();
     }
 
     Map<String, String> values() {
-        return appearance != null && a.section.equals("appearance")
-                ? appearance.getValues()
-                : snapshot.getValues();
+        return snapshot.getValues();
     }
 
     String display(String id, String value) {
@@ -409,11 +355,7 @@ final class TvSettingsUi {
         if (!restoring) {
             pendingId = id;
             pendingValue = values().get(id);
-            pendingBase =
-                    new LinkedHashMap<>(
-                            appearance != null && s.getGroup().equals("appearance")
-                                    ? appearance.getBase().getValues()
-                                    : snapshot.getValues());
+            pendingBase = new LinkedHashMap<>(snapshot.getValues());
             if (id.equals("prayer.facing") && pendingValue.equals("-1")) pendingValue = "0";
         }
         if (s.getKind().equals("number")
@@ -500,18 +442,16 @@ final class TvSettingsUi {
         SettingSpec s = spec(id);
         s.validate(value);
         a.stopAudio();
-        if (s.getGroup().equals("appearance") && !a.section.equals("appearance")) {
-            openSection("appearance");
+        if (id.equals("appearance.theme") && value.equals("custom")
+                && snapshot.getValues().get("appearance.custom-theme").isEmpty()) {
+            clearPending();
+            edit("appearance.custom-theme");
             return;
         }
         if (!isPending(id)) {
             clearPending();
             pendingId = id;
-            pendingBase =
-                    new LinkedHashMap<>(
-                            s.getGroup().equals("appearance")
-                                    ? appearance.getBase().getValues()
-                                    : snapshot.getValues());
+            pendingBase = new LinkedHashMap<>(snapshot.getValues());
         }
         pendingValue = value;
         if (id.equals("reminders.voice") || id.equals("reminders.fajr-voice")) {
@@ -534,20 +474,13 @@ final class TvSettingsUi {
         }
         if (s.getKind().equals("number"))
             pendingValue = String.valueOf(Integer.parseInt(pendingValue));
-        if (s.getGroup().equals("appearance")) {
-            appearance.set(s, pendingValue);
-            if (id.equals("appearance.custom-theme") && !pendingValue.isEmpty())
-                appearance.set(spec("appearance.theme"), "custom");
-            if (editor != null) editor.dismiss();
-            clearPending();
-            a.render();
-        } else {
-            Map<String, String> changes = new LinkedHashMap<>();
-            changes.put(id, pendingValue);
-            Map<String, String> base = new LinkedHashMap<>(pendingBase);
-            if (editor != null) editor.dismiss();
-            save(base, changes, false);
-        }
+        Map<String, String> changes = new LinkedHashMap<>();
+        changes.put(id, pendingValue);
+        if (id.equals("appearance.custom-theme") && !pendingValue.isEmpty())
+            changes.put("appearance.theme", "custom");
+        Map<String, String> base = new LinkedHashMap<>(pendingBase);
+        if (editor != null) editor.dismiss();
+        save(base, changes, false);
     }
 
     EditText input(LinearLayout parent, String label, String value, int type) {
@@ -572,8 +505,7 @@ final class TvSettingsUi {
         try {
             String next = s.adjust(input.getText().toString(), direction);
             input.setText(next);
-            if (s.getGroup().equals("appearance")) commitPending();
-            else save(new LinkedHashMap<>(pendingBase), Collections.singletonMap(s.getId(), next), false);
+            save(new LinkedHashMap<>(pendingBase), Collections.singletonMap(s.getId(), next), false);
         } catch (IllegalArgumentException e) {
             input.setError(a.t("invalid"));
         }
@@ -645,15 +577,8 @@ final class TvSettingsUi {
                                         return;
                                     }
                                     String next = String.valueOf(Integer.parseInt(pendingValue));
-                                    if (spec.getGroup().equals("appearance")) {
-                                        appearance.set(spec, next);
-                                        clearPending();
-                                        a.render();
-                                    } else
-                                        save(
-                                                new LinkedHashMap<>(pendingBase),
-                                                Collections.singletonMap(id, next),
-                                                false);
+                                    save(new LinkedHashMap<>(pendingBase),
+                                            Collections.singletonMap(id, next), false);
                                 }),
                         "save-edit");
         done.setTag(id + ".save");
@@ -684,17 +609,8 @@ final class TvSettingsUi {
     void stepNumber(String id, int direction) {
         if (!editable()) return;
         SettingSpec s = spec(id);
-        if (s.getGroup().equals("appearance")) {
-            if (appearance == null) {
-                openSection("appearance");
-                return;
-            }
-            appearance.set(s, s.adjust(values().get(id), direction));
-            a.render();
-        } else {
-            String next = s.adjust(values().get(id), direction);
-            save(new LinkedHashMap<>(snapshot.getValues()), Collections.singletonMap(id, next), false);
-        }
+        String next = s.adjust(values().get(id), direction);
+        save(new LinkedHashMap<>(snapshot.getValues()), Collections.singletonMap(id, next), false);
     }
 
     void listEditor(LinearLayout parent, SettingSpec spec) {
@@ -1055,7 +971,6 @@ final class TvSettingsUi {
                         .putString(cacheKey(), MainActivity.encode(snapshot.getValues()))
                         .apply();
             }
-            if (isAppearance) appearance = null;
             if (editor != null && hasPending() && spec(pendingId).getKind().equals("number"))
                 editor.dismiss();
             clearPending();
@@ -1112,7 +1027,6 @@ final class TvSettingsUi {
                                                     cacheKey(),
                                                     MainActivity.encode(snapshot.getValues()))
                                             .apply();
-                                if (isAppearance) appearance = null;
                                 clearPending();
                                 a.render();
                             })
@@ -1130,16 +1044,6 @@ final class TvSettingsUi {
                 .apply();
     }
 
-    void applyAppearance() {
-        if (appearance == null || appearance.getChanges().isEmpty() || !editable()) return;
-        if ("custom".equals(appearance.getValues().get("appearance.theme"))
-                && appearance.getValues().get("appearance.custom-theme").isEmpty()) {
-            edit("appearance.custom-theme");
-            return;
-        }
-        save(appearance.getBase().getValues(), appearance.getChanges(), true);
-    }
-
     void action(JSONObject c) {
         String route = c.optString("route"), id = c.optString("id");
         if (a.remoteUi.commandOffered(id)) {
@@ -1151,19 +1055,17 @@ final class TvSettingsUi {
             return;
         }
         switch (route) {
-            case "reset-appearance":
-                {
-                    if (appearance == null) appearance = new SettingsDraft(snapshot);
-                    a.section = "appearance";
-                    a.query = "";
-                    Map<String, String> defaults = a.catalog.defaults(a.profile());
-                    for (SettingSpec s : a.backend().getSpecs())
-                        if (CompanionContract.INSTANCE
-                                .getAppearanceLayoutControls()
-                                .contains(s.getId())) appearance.set(s, defaults.get(s.getId()));
-                    a.render();
-                    break;
-                }
+            case "reset-appearance": {
+                a.section = "appearance";
+                a.query = "";
+                Map<String, String> defaults = a.catalog.defaults(a.profile());
+                Map<String, String> changes = new LinkedHashMap<>();
+                for (SettingSpec s : a.backend().getSpecs())
+                    if (CompanionContract.INSTANCE.getAppearanceLayoutControls().contains(s.getId()))
+                        changes.put(s.getId(), defaults.get(s.getId()));
+                save(snapshot.getValues(), changes, false);
+                break;
+            }
             case "reset-offsets":
                 {
                     Map<String, String> changes = new LinkedHashMap<>();
@@ -1207,14 +1109,6 @@ final class TvSettingsUi {
                 break;
             case "overview":
                 a.navigate("overview");
-                break;
-            case "apply-appearance":
-                applyAppearance();
-                break;
-            case "cancel-appearance":
-                appearance = null;
-                a.section = "";
-                a.render();
                 break;
             default:
                 if (route.equals("settings")) {

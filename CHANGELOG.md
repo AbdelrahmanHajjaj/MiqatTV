@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.7 immediate appearance and widgets
+
+- Save phone appearance, display and widget changes immediately, including existing placed widgets. Back retains changes; page-level Apply/Cancel is removed.
+- Save TV appearance selections through the existing confirmed, conflict-aware path. Keep validated custom-color dialogs and Android widget Add completion.
+
 ## 0.5.6 immediate controls and quieter Home
 
 - Save numeric +/− changes immediately across phone settings and TV controls, preserving earlier adjustments when switching fields. Valid phone numeric typing saves without replacing the field; invalid values stay rejected.

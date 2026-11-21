@@ -32,10 +32,10 @@ final class PhonePolishCheck {
             boolean before = a.phoneUi.settings.value("appearance.home-background").equals("true");
             a.body.findViewWithTag("phone.appearance.home-background.edit").performClick();
             try {
-                PhoneUiCheck.check(PhoneStore.read(a).value("appearance.home-background").equals(Boolean.toString(before)),
-                        "Home background toggle saved before Apply");
+                PhoneUiCheck.check(PhoneStore.read(a).value("appearance.home-background").equals(Boolean.toString(!before)),
+                        "Home background toggle did not save immediately");
             } catch (Exception invalid) { throw new AssertionError(invalid); }
-            a.getWindow().getDecorView().findViewWithTag("appearance.cancel").performClick();
+            a.back();
             a.phoneUi.open("fajr");
         });
         PhoneUiCheck.on(test, () -> {
@@ -134,7 +134,7 @@ final class PhonePolishCheck {
                 PhoneUiCheck.on(test, () -> a.phoneUi.save("appearance.background", scene));
                 PhoneUiCheck.capture(test, a, lang + "-polish-scene-" + scene, true);
             }
-            PhoneUiCheck.on(test, () -> a.getWindow().getDecorView().findViewWithTag("appearance.cancel").performClick());
+            PhoneUiCheck.on(test, () -> a.back());
         } finally {
             saved.save(a);
             android.content.SharedPreferences.Editor restore = prefs.edit();

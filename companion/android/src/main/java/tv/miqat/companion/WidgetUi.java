@@ -62,7 +62,7 @@ final class WidgetUi {
     }
 
     void render() {
-        if (draft == null) draft = new WidgetOptions();
+        if (draft == null) draft = defaults();
         layouts();
         android.view.View preview = preview();
         appearance(preview);
@@ -76,7 +76,7 @@ final class WidgetUi {
                             checked -> {
                                 if (key.equals("widget_date")) draft.date = checked;
                                 else draft.hijri = checked;
-                                a.render();
+                                changed();
                             });
             date.setTag("widget." + key);
             date.setTextSize(13);
@@ -92,7 +92,7 @@ final class WidgetUi {
                 Integer.toString(draft.size),
                 value -> {
                     draft.size = Integer.parseInt(value);
-                    a.render();
+                    changed();
                 });
         if (!configuring) placed();
     }
@@ -112,7 +112,7 @@ final class WidgetUi {
                 draft.layout,
                 selected -> {
                     draft.layout = selected;
-                    a.render();
+                    changed();
                 });
     }
 
@@ -171,7 +171,7 @@ final class WidgetUi {
                         draft.shape,
                         value -> {
                             draft.shape = value;
-                            a.render();
+                            changed();
                         });
             } else
                 a.phoneUi.appearance.rail(
@@ -182,7 +182,7 @@ final class WidgetUi {
                         selected -> {
                             if (style.equals("appearance.theme")) draft.theme = selected;
                             else draft.scene = selected;
-                            a.render();
+                            changed();
                         });
         } catch (Exception unavailable) {
             a.notice("phone_settings_failed");
@@ -212,9 +212,14 @@ final class WidgetUi {
         a.body.addView(slider, new LinearLayout.LayoutParams(-1, a.views.dp(48)));
         slider.setOnSeekBarChangeListener(
                 new SeekBar.OnSeekBarChangeListener() {
-                    public void onStartTrackingTouch(SeekBar bar) {}
+                    private boolean tracking;
 
-                    public void onStopTrackingTouch(SeekBar bar) {}
+                    public void onStartTrackingTouch(SeekBar bar) { tracking = true; }
+
+                    public void onStopTrackingTouch(SeekBar bar) {
+                        tracking = false;
+                        if (!persist()) a.render();
+                    }
 
                     public void onProgressChanged(SeekBar bar, int value, boolean user) {
                         draft.opacity = value;
@@ -225,6 +230,7 @@ final class WidgetUi {
                                         a.phoneUi.digits(Integer.toString(value))));
                         ((ImageView) preview.findViewById(R.id.widget_backdrop))
                                 .setImageAlpha(value * 255 / 100);
+                        if (!tracking && !persist()) a.render();
                     }
                 });
     }
@@ -253,37 +259,46 @@ final class WidgetUi {
                 });
     }
 
-    void footer(LinearLayout shell) {
-        LinearLayout actions = a.views.actionBar(shell);
-        a.views
-                .secondaryAction(
-                        a.views.secondaryActions(actions),
-                        a.t("cancel"),
-                        () -> {
-                            if (!cancel()) a.tab("prayers");
-                        })
-                .setTag("widget.cancel");
-        a.views
-                .primaryAction(
-                        actions,
-                        a.t(id == AppWidgetManager.INVALID_APPWIDGET_ID ? "widget_add" : "apply"),
-                        this::apply)
-                .setTag("widget.apply");
+    private WidgetOptions defaults() {
+        return WidgetOptions.from(a, PhoneStore.preferences(a).getString("widget-default", "{}"));
     }
 
-    private void apply() {
-        if (id != AppWidgetManager.INVALID_APPWIDGET_ID) {
-            if (!PrayerWidget.owns(a, id) || !draft.save(a, id)) {
-                a.notice("phone_save_failed");
-                return;
-            }
-            PrayerWidget.update(a, id);
-            if (configuring) {
-                a.setResult(
-                        android.app.Activity.RESULT_OK,
-                        new Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id));
-                a.finish();
-            } else a.notice("widget_saved");
+    // Confirm storage before updating a widget or completing Android Add.
+    @android.annotation.SuppressLint("ApplySharedPref")
+    private boolean persist() {
+        boolean placed = id != AppWidgetManager.INVALID_APPWIDGET_ID;
+        if (placed && !PrayerWidget.owns(a, id)) {
+            a.notice("phone_save_failed");
+            return false;
+        }
+        boolean saved = placed ? draft.save(a, id)
+                : PhoneStore.preferences(a).edit().putString("widget-default", draft.encode()).commit();
+        if (!saved) {
+            draft = placed ? WidgetOptions.read(a, id) : defaults();
+            a.notice("phone_save_failed");
+            return false;
+        }
+        if (placed) PrayerWidget.update(a, id);
+        return true;
+    }
+
+    private void changed() {
+        persist();
+        a.render();
+    }
+
+    void footer(LinearLayout shell) {
+        if (id != AppWidgetManager.INVALID_APPWIDGET_ID && !configuring) return;
+        LinearLayout actions = a.views.actionBar(shell);
+        a.views.primaryAction(actions, a.t("widget_add"), this::add).setTag("widget.add");
+    }
+
+    private void add() {
+        if (!persist()) return;
+        if (configuring) {
+            a.setResult(android.app.Activity.RESULT_OK,
+                    new Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id));
+            a.finish();
             return;
         }
         AppWidgetManager manager = AppWidgetManager.getInstance(a);

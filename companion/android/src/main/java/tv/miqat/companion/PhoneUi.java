@@ -83,10 +83,6 @@ final class PhoneUi {
         try {
             data = PhoneData.get(a);
             settings = PhoneStore.read(a);
-            PhoneStore paletteSettings =
-                    a.page.equals("phone-settings") && a.section.equals("appearance")
-                            ? appearance.candidate(settings)
-                            : settings;
             JSONObject c =
                     a.catalog
                             .data
@@ -96,7 +92,7 @@ final class PhoneUi {
                                                     && (a.onboarding == null
                                                             || !a.onboarding.style())
                                             ? "mihrab"
-                                            : paletteSettings.value("appearance.theme"))
+                                            : settings.value("appearance.theme"))
                             .getJSONObject("colors");
             a.ground = Color.parseColor(c.getString("lapis-900"));
             a.surface = Color.parseColor(c.getString("lapis-800"));
@@ -153,7 +149,6 @@ final class PhoneUi {
     }
 
     void resetNavigation() {
-        appearance.cancel();
         pending = "";
         history.clear();
         locationUi.cancelLocation();
@@ -182,7 +177,6 @@ final class PhoneUi {
 
     boolean back() {
         pending = "";
-        appearance.cancel();
         if (history.isEmpty()) return false;
         Bundle place = history.remove(history.size() - 1);
         locationUi.cancelLocation();
@@ -247,21 +241,13 @@ final class PhoneUi {
             return;
         }
         if (a.section.equals("calculation")) locationUi.locationEditor();
-        PhoneStore saved = settings;
-        try {
-            if (a.section.equals("appearance")) {
-                settings = appearance.candidate(saved);
-                appearance.editor(a.body, false);
-            }
-            for (JSONObject c : data.controls.values())
-                if (c.getString("section").equals(a.section)
-                        && !c.getString("id").startsWith("appearance.")
-                        && !c.getString("id").equals("prayer.travel-refresh")
-                        && !c.getString("id").equals("prayer.zone")
-                        && !c.getString("id").equals("prayer.background-location")) control(c);
-        } finally {
-            settings = saved;
-        }
+        if (a.section.equals("appearance")) appearance.editor(a.body, false);
+        for (JSONObject c : data.controls.values())
+            if (c.getString("section").equals(a.section)
+                    && !c.getString("id").startsWith("appearance.")
+                    && !c.getString("id").equals("prayer.travel-refresh")
+                    && !c.getString("id").equals("prayer.zone")
+                    && !c.getString("id").equals("prayer.background-location")) control(c);
         if (a.section.equals("calculation")) {
             locationUi.advancedRow();
             locationUi.confirmLocation();
@@ -770,12 +756,8 @@ final class PhoneUi {
     }
 
     private boolean saveTypedNumber(String id, String next) {
-        if (a.page.equals("phone-settings") && a.section.equals("appearance")) {
-            appearance.stage(id, next, false);
-            return true;
-        }
         return settings.value(id).equals(next)
-                || save(Collections.singletonMap(id, next), false, false);
+                || save(Collections.singletonMap(id, next), id.equals("display.size"), id.equals("display.size"));
     }
 
     private static String numberValue(SettingSpec spec, String text) {
@@ -880,12 +862,6 @@ final class PhoneUi {
     }
 
     void save(String id, String value) {
-        if (a.page.equals("phone-settings")
-                && a.section.equals("appearance")
-                && (id.startsWith("appearance.") || id.startsWith("display."))) {
-            appearance.stage(id, value);
-            return;
-        }
         Map<String, String> changes = new LinkedHashMap<>();
         changes.put(id, value);
         if (id.endsWith(".length-percent"))

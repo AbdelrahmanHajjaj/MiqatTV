@@ -103,8 +103,8 @@ final class WidgetHostCheck {
             LiveUiCheck.untilUi(test, cancelled::isDestroyed);
             editor[0] = null;
             PhoneUiCheck.check(
-                    WidgetOptions.read(a, ids[0]).layout.equals("day"),
-                    "Cancelled widget draft persisted");
+                    WidgetOptions.read(a, ids[0]).layout.equals("next"),
+                    "Back discarded an immediately saved widget setting");
             MainActivity config =
                     (MainActivity)
                             test.startActivitySync(
@@ -128,7 +128,13 @@ final class WidgetHostCheck {
                         config.body.findViewWithTag("widget.shape.soft").performClick();
                         config.body.findViewWithTag("widget.style.appearance.background").performClick();
                         config.body.findViewWithTag("phone.appearance.background.option.app").performClick();
-                        config.getWindow().getDecorView().findViewWithTag("widget.apply").performClick();
+                        WidgetOptions immediate = WidgetOptions.read(config, ids[0]);
+                        PhoneUiCheck.check(immediate.layout.equals("next") && immediate.size==120
+                                        && immediate.opacity==42 && immediate.shape.equals("soft")
+                                        && immediate.scene.equals("app")
+                                        && config.getWindow().getDecorView().findViewWithTag("widget.cancel")==null,
+                                "Widget edits must save before Android Add completion without a Cancel footer");
+                        config.getWindow().getDecorView().findViewWithTag("widget.add").performClick();
                     });
             LiveUiCheck.untilUi(test, config::isDestroyed);
             editor[0] = null;
@@ -222,7 +228,7 @@ final class WidgetHostCheck {
                     test,
                     () -> {
                         strip.body.findViewWithTag("widget.layout.strip").performClick();
-                        strip.getWindow().getDecorView().findViewWithTag("widget.apply").performClick();
+                        strip.getWindow().getDecorView().findViewWithTag("widget.add").performClick();
                     });
             LiveUiCheck.untilUi(test, strip::isDestroyed);
             editor[0] = null;

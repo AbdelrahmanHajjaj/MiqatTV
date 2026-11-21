@@ -284,7 +284,10 @@ final class PhoneSizeCheck {
         PhoneUiCheck.capture(test, a, (a.ar ? "ar" : "en") + "-journey-voice-" + size, capture);
         PhoneUiCheck.on(test, () -> a.phoneUi.choiceDialog.dismiss());
         PhoneStore beforeWidget = PhoneStore.read(a);
+        String widgetDefault = PhoneStore.preferences(a).getString("widget-default", null);
         try {
+            PhoneUiCheck.check(PhoneStore.preferences(a).edit().remove("widget-default").commit(),
+                    "Cannot prepare widget sizing defaults");
             beforeWidget.changed(Collections.singletonMap("prayer.location-ready", "true")).save(a);
             PhoneUiCheck.on(
                     test,
@@ -332,6 +335,10 @@ final class PhoneSizeCheck {
             }
         } finally {
             beforeWidget.save(a);
+            android.content.SharedPreferences.Editor restoreWidget = PhoneStore.preferences(a).edit();
+            if (widgetDefault == null) restoreWidget.remove("widget-default");
+            else restoreWidget.putString("widget-default", widgetDefault);
+            PhoneUiCheck.check(restoreWidget.commit(), "Cannot restore widget sizing defaults");
         }
         android.content.SharedPreferences prefs = PhoneStore.preferences(a);
         boolean hadStep = prefs.contains("onboarding-step");
@@ -362,23 +369,22 @@ final class PhoneSizeCheck {
                         a.body.findViewWithTag("appearance.tab.appearance.background")
                                 .performClick();
                     });
-            PhoneUiCheck.on(
-                    test,
-                    () ->
-                            visible(
-                                    a.getWindow()
-                                            .getDecorView()
-                                            .findViewWithTag("appearance.apply"),
-                                    "Appearance Apply clipped at " + size));
+            PhoneUiCheck.on(test, () -> {
+                View rail = a.body.findViewWithTag("phone.appearance.background");
+                rail.requestRectangleOnScreen(new Rect(0, 0, rail.getWidth(), rail.getHeight()), true);
+            });
+            PhoneUiCheck.on(test, () -> {
+                visible(a.body.findViewWithTag("phone.appearance.background"),
+                        "Appearance choices clipped at " + size);
+                PhoneUiCheck.check(a.getWindow().getDecorView().findViewWithTag("appearance.apply") == null,
+                        "Appearance still has a page Apply");
+            });
             PhoneUiCheck.capture(
                     test, a, (a.ar ? "ar" : "en") + "-journey-background-" + size, capture);
             PhoneUiCheck.on(
                     test,
                     () -> {
-                        a.getWindow()
-                                .getDecorView()
-                                .findViewWithTag("appearance.cancel")
-                                .performClick();
+                        a.back();
                         a.tab("tvs");
                         a.body.findViewWithTag("pair.open").performClick();
                         a.body.findViewWithTag("setup.platform.lg").performClick();

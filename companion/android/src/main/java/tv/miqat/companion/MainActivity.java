@@ -334,7 +334,6 @@ public final class MainActivity extends Activity {
                     if (lgSetup != null) lgSetup.close();
                     pairingUi.cancelPairing();
                     settingsUi.clearPending();
-                    settingsUi.appearance = null;
                     section = "";
                     query = "";
                     page = target;
@@ -342,9 +341,7 @@ public final class MainActivity extends Activity {
                     else if (target.equals("overview")) remoteUi.readRemote();
                     render();
                 };
-        if (settingsUi.appearance != null && !settingsUi.appearance.getChanges().isEmpty())
-            confirmDiscard(change);
-        else change.run();
+        change.run();
     }
 
     void bottomNavigation() {
@@ -688,33 +685,6 @@ public final class MainActivity extends Activity {
 
     private void renderActions(LinearLayout shell) {
         boolean editorActions = shell.getChildCount() > 0;
-        if (!editorActions
-                && page.equals("settings")
-                && section.equals("appearance")
-                && settingsUi.appearance != null) {
-            LinearLayout actions = views.actionBar(shell);
-            Button cancel =
-                    views.bindAction(
-                            views.secondaryAction(
-                                    views.secondaryActions(actions),
-                                    t("cancel"),
-                                    () -> {
-                                        settingsUi.appearance = null;
-                                        section = "";
-                                        render();
-                                    }),
-                            "cancel-appearance");
-            cancel.setTag("appearance.cancel");
-            cancel.setEnabled(!networkBusy);
-            Button apply =
-                    views.bindAction(
-                            views.primaryAction(actions, t("apply"), settingsUi::applyAppearance),
-                            "apply-appearance");
-            apply.setTag("appearance.apply");
-            apply.setEnabled(
-                    settingsUi.editable() && !settingsUi.appearance.getChanges().isEmpty());
-            apply.setAlpha(apply.isEnabled() ? 1f : 0.4f);
-        }
         if (networkBusy && !page.equals("pair")) {
             views.disableContent(body);
             if (editorActions) views.disableContent(shell);
@@ -971,18 +941,7 @@ public final class MainActivity extends Activity {
             render();
             return;
         }
-        if (page.equals("settings")
-                && settingsUi.appearance != null
-                && !settingsUi.appearance.getChanges().isEmpty()) {
-            confirmDiscard(() -> {
-                settingsUi.appearance = null;
-                section = "";
-                render();
-            });
-            return;
-        }
         if (page.equals("settings") && !section.isEmpty()) {
-            settingsUi.appearance = null;
             section = "";
             query = "";
             render();

@@ -102,7 +102,7 @@ public final class CompanionCheck extends Instrumentation {
                 PhoneJourneyCheck.run(this, captures);
                 result.putString(
                         "stream",
-                        "PASS: bilingual fresh-use, resumable setup, draft preview, widget and TV"
+                        "PASS: bilingual fresh-use, resumable setup, immediate appearance, widget and TV"
                                 + " platform/source journeys\n");
                 finish(-1, result);
                 return;
@@ -278,13 +278,11 @@ public final class CompanionCheck extends Instrumentation {
                     activity.settingsUi.readSettings();
                     activity.page = "settings";
                     activity.section = "appearance";
-                    activity.settingsUi.appearance = null;
                     activity.render();
                 });
                 waitForIdleSync();
                 capture(activity, lang + "-appearance.png");
                 runOnMainSync(() -> {
-                    activity.settingsUi.appearance = null;
                     activity.page = "overview";
                     activity.render();
                 });
@@ -436,7 +434,6 @@ public final class CompanionCheck extends Instrumentation {
             a.selected = selected;
             a.tv().setOnline(true);
             a.settingsUi.snapshot = null;
-            a.settingsUi.appearance = null;
             a.section = "";
             a.query = "";
             int writes = a.tv().getWriteCount();
@@ -449,10 +446,14 @@ public final class CompanionCheck extends Instrumentation {
                 String id = c.optString("id");
                 a.page = "settings";
                 a.section = c.optString("section");
-                a.settingsUi.appearance = null;
                 a.query = "";
                 a.render();
                 if (id.equals("appearance.home")) continue; // Native Back supplies this navigation.
+                if (id.equals("appearance.apply") || id.equals("appearance.cancel")) {
+                    check(a.getWindow().getDecorView().findViewWithTag(id) == null,
+                            "Immediate companion settings exposed a TV-shell draft action: " + id);
+                    continue;
+                }
                 View bound = a.getWindow().getDecorView().findViewWithTag(id);
                 check(bound != null, "Missing native binding " + a.profile() + ":" + id);
                 if (!c.optBoolean("available"))
@@ -462,100 +463,76 @@ public final class CompanionCheck extends Instrumentation {
             }
             a.page = "settings";
             a.section = "appearance";
-            a.settingsUi.appearance = null;
             a.render();
             check(
                     a.body.getLayoutDirection()
                             == (a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR),
                     "Incorrect native layout direction");
-            check(
-                    "apply-appearance"
-                            .equals(
-                                    a.getWindow()
-                                            .getDecorView()
-                                            .findViewWithTag("appearance.apply")
-                                            .getTag(tv.miqat.companion.R.id.companion_action)),
-                    "Appearance action not bound to core contract");
+            check(a.getWindow().getDecorView().findViewWithTag("appearance.apply") == null
+                            && a.getWindow().getDecorView().findViewWithTag("appearance.cancel") == null,
+                    "TV Appearance retained page-level Apply or Cancel");
             Map<String, String> before = new LinkedHashMap<>(a.tv().read().getValues());
-            View nextTheme = a.getWindow().getDecorView().findViewWithTag("appearance.theme.next");
+            View nextTheme = a.body.findViewWithTag("appearance.theme.next");
             check(nextTheme != null, "Theme carousel missing");
             if (nextTheme.isEnabled()) nextTheme.performClick();
-            else
-                a.getWindow()
-                        .getDecorView()
-                        .findViewWithTag("appearance.theme.previous")
-                        .performClick();
-            String stagedTheme = a.settingsUi.appearance.getValues().get("appearance.theme");
-            a.getWindow()
-                    .getDecorView()
-                    .findViewWithTag("appearance.countdown.next")
-                    .performClick();
-            a.getWindow()
-                    .getDecorView()
-                    .findViewWithTag("appearance.reset.activate")
-                    .performClick();
-            check(
-                    a.settingsUi.appearance.getValues().get("appearance.theme").equals(stagedTheme),
-                    "Layout reset discarded the selected theme");
-            check(
-                    a.settingsUi
-                            .appearance
-                            .getValues()
-                            .get("appearance.countdown")
+            else a.body.findViewWithTag("appearance.theme.previous").performClick();
+            String savedTheme = a.settingsUi.snapshot.getValues().get("appearance.theme");
+            check(!savedTheme.equals(before.get("appearance.theme"))
+                            && a.tv().read().getValues().get("appearance.theme").equals(savedTheme),
+                    "Theme selection did not save immediately");
+            if (a.settingsUi.snapshot.getValues().containsKey("appearance.mihrab-opacity")) {
+                SettingSpec opacity = a.settingsUi.spec("appearance.mihrab-opacity");
+                String current = a.settingsUi.snapshot.getValues().get(opacity.getId());
+                int direction = current.equals(String.valueOf(opacity.getMaximum())) ? -1 : 1;
+                a.settingsUi.stepNumber(opacity.getId(), direction);
+                check(a.tv().read().getValues().get(opacity.getId()).equals(opacity.adjust(current, direction)),
+                        "Appearance numeric step did not save immediately");
+            }
+            a.body.findViewWithTag("appearance.countdown.next").performClick();
+            a.body.findViewWithTag("appearance.reset.activate").performClick();
+            check(a.tv().read().getValues().get("appearance.theme").equals(savedTheme),
+                    "Layout reset discarded the saved theme");
+            check(a.tv().read().getValues().get("appearance.countdown")
                             .equals(a.catalog.defaults(a.profile()).get("appearance.countdown")),
-                    "Layout reset did not reset layout");
-            check(a.tv().read().getValues().equals(before), "Preview wrote values");
-            a.getWindow().getDecorView().findViewWithTag("appearance.cancel").performClick();
-            check(
-                    a.settingsUi.appearance == null && a.tv().read().getValues().equals(before),
-                    "Cancel changed saved appearance");
+                    "Layout reset was not saved immediately");
+            a.settingsUi.openSection("display");
+            a.settingsUi.openSection("appearance");
+            check(a.settingsUi.snapshot.getValues().get("appearance.theme").equals(savedTheme),
+                    "Leaving Appearance lost an applied setting");
             if (selected == 0) {
-                a.settingsUi.openSection("appearance");
-                a.settingsUi.appearance.set(a.settingsUi.spec("appearance.custom-theme"), "");
-                a.settingsUi.appearance.set(a.settingsUi.spec("appearance.theme"), "custom");
-                a.settingsUi.appearance.set(
-                        a.settingsUi.spec("appearance.lighting"),
-                        a.settingsUi.appearance.getValues().get("appearance.lighting").equals("0")
-                                ? "5"
-                                : "0");
-                a.settingsUi.applyAppearance();
-                check(
-                        a.settingsUi.editor != null && a.tv().read().getValues().equals(before),
-                        "New custom theme opens colours before applying");
+                a.settingsUi.save(a.settingsUi.snapshot.getValues(),
+                        Collections.singletonMap("appearance.custom-theme", ""), false);
+                Map<String,String> beforeCustom = new LinkedHashMap<>(a.tv().read().getValues());
+                a.settingsUi.selectChoice("appearance.theme", "custom");
+                check(a.settingsUi.editor != null && a.settingsUi.editor.isShowing()
+                                && a.tv().read().getValues().equals(beforeCustom),
+                        "New custom theme must collect valid colours before saving");
+                EditText colour = findInput(a.settingsUi.editor.getWindow().getDecorView());
+                colour.setText("#");
+                check(a.tv().read().getValues().equals(beforeCustom),
+                        "Partial custom colour input wrote settings");
                 a.settingsUi.editor.getButton(-1).performClick();
-                check(
-                        !a.settingsUi
-                                .appearance
-                                .getValues()
-                                .get("appearance.custom-theme")
-                                .isEmpty(),
-                        "Unedited default colours form a valid custom theme");
-                a.settingsUi.appearance.set(
-                        a.settingsUi.spec("appearance.custom-theme"),
-                        "{\"version\":1,\"colors\":{},\"surface\":\"outline\",\"background\":\"solid\",\"lighting\":45}");
+                check(a.settingsUi.editor.isShowing() && a.tv().read().getValues().equals(beforeCustom),
+                        "Invalid custom colour was accepted");
+                colour.setText("#112233");
+                a.settingsUi.editor.getButton(-1).performClick();
+                check(!a.tv().read().getValues().get("appearance.custom-theme").isEmpty()
+                                && a.tv().read().getValues().get("appearance.theme").equals("custom"),
+                        "Completing custom colours did not save the custom theme");
+                a.settingsUi.save(a.settingsUi.snapshot.getValues(),
+                        Collections.singletonMap("appearance.custom-theme",
+                                "{\"version\":1,\"colors\":{},\"surface\":\"outline\",\"background\":\"solid\",\"lighting\":45}"), false);
                 a.settingsUi.edit("appearance.custom-theme");
                 a.settingsUi.editor.getButton(-1).performClick();
                 try {
-                    JSONObject custom =
-                            new JSONObject(
-                                    a.settingsUi
-                                            .appearance
-                                            .getValues()
-                                            .get("appearance.custom-theme"));
-                    check(
-                            custom.getString("surface").equals("outline")
+                    JSONObject custom = new JSONObject(a.tv().read().getValues().get("appearance.custom-theme"));
+                    check(custom.getString("surface").equals("outline")
                                     && custom.getString("background").equals("solid")
                                     && custom.getInt("lighting") == 45,
                             "Colour editing preserves other custom-theme fields");
-                } catch (Exception error) {
-                    throw new AssertionError(error);
-                }
-                a.getWindow().getDecorView().findViewWithTag("appearance.cancel").performClick();
-                check(
-                        a.tv().read().getValues().equals(before),
-                        "Custom colour editing remained a local draft");
+                } catch (Exception error) { throw new AssertionError(error); }
             }
-            a.settingsUi.appearance = null;
+            before = new LinkedHashMap<>(a.tv().read().getValues());
             a.section = "display";
             a.render();
             SettingSpec setting = a.settingsUi.spec("display.size");

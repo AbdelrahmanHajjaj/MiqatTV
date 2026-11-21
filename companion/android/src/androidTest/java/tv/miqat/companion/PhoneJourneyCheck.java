@@ -7,7 +7,7 @@ import android.widget.*;
 
 import java.util.*;
 
-/** Fresh use, draft previews and unified setup boundaries; no physical TV or network. */
+/** Fresh use, immediate appearance and unified setup boundaries; no physical TV or network. */
 final class PhoneJourneyCheck {
     static void run(Instrumentation test, boolean captures) throws Exception {
         Context context = test.getTargetContext();
@@ -205,56 +205,28 @@ final class PhoneJourneyCheck {
                             resumed.body
                                     .findViewWithTag("phone.appearance.theme.option.dusk")
                                     .performClick();
-                            check(
-                                    resumed.phoneUi
-                                            .settings
-                                            .value("appearance.theme")
-                                            .equals("frost"),
-                                    "Preview saved before Apply");
-                            check(
-                                    resumed.body.findViewWithTag("phone.appearance.preview")
-                                            != null,
-                                    "Live preview missing");
+                            check(resumed.phoneUi.settings.value("appearance.theme").equals("dusk"),
+                                    "Theme selection did not save immediately");
+                            check(resumed.body.findViewWithTag("phone.appearance.preview") != null,
+                                    "Live appearance preview missing");
                             resumed.phoneUi.save("display.clock", "24");
-                            check(
-                                    resumed.phoneUi.settings.value("display.clock").equals("12"),
-                                    "Display draft changed saved clock before Apply");
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("appearance.cancel")
-                                    .performClick();
+                            check(resumed.phoneUi.settings.value("display.clock").equals("24"),
+                                    "Clock selection did not save immediately");
+                            check(resumed.getWindow().getDecorView().findViewWithTag("appearance.apply") == null,
+                                    "Appearance still requires Apply");
+                            resumed.back();
                         });
-                check(
-                        PhoneStore.read(context).value("appearance.theme").equals("frost"),
-                        "Cancel saved appearance draft");
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            resumed.phoneUi.open("appearance");
-                            resumed.body
-                                    .findViewWithTag("appearance.tab.appearance.theme")
-                                    .performClick();
-                            resumed.body
-                                    .findViewWithTag("phone.appearance.theme.option.dusk")
-                                    .performClick();
-                        });
+                check(PhoneStore.read(context).value("appearance.theme").equals("dusk")
+                                && PhoneStore.read(context).value("display.clock").equals("24"),
+                        "Back discarded immediate appearance settings");
+                PhoneUiCheck.on(test, () -> resumed.phoneUi.open("appearance"));
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-frost-preview", captures);
-                PhoneUiCheck.on(
-                        test,
-                        () -> {
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("appearance.apply")
-                                    .performClick();
-                            check(
-                                    resumed.phoneUi
-                                            .settings
-                                            .value("appearance.theme")
-                                            .equals("dusk"),
-                                    "Apply lost appearance draft");
-                            resumed.phoneUi.save("appearance.theme", before);
-                            resumed.tab("prayers");
-                        });
+                PhoneUiCheck.on(test, () -> {
+                    check(resumed.phoneUi.settings.value("appearance.theme").equals("dusk"),
+                            "Reopening Appearance lost the saved theme");
+                    resumed.phoneUi.save("appearance.theme", before);
+                    resumed.tab("prayers");
+                });
                 PhoneUiCheck.capture(test, resumed, lang + "-home-theme-complete", captures);
                 PhoneUiCheck.on(
                         test,
@@ -263,7 +235,7 @@ final class PhoneJourneyCheck {
                             android.widget.Button add =
                                     resumed.getWindow()
                                             .getDecorView()
-                                            .findViewWithTag("widget.apply");
+                                            .findViewWithTag("widget.add");
                             check(
                                     add.getText().toString().equals(resumed.t("widget_add")),
                                     "A new widget must enter Add, not update an invalid widget ID");
@@ -279,20 +251,17 @@ final class PhoneJourneyCheck {
                         test,
                         () -> {
                             resumed.body.findViewWithTag("widget.layout.strip").performClick();
-                            resumed.getWindow()
-                                    .getDecorView()
-                                    .findViewWithTag("widget.cancel")
-                                    .performClick();
+                            resumed.back();
                             check(
                                     resumed.page.equals("prayers"),
-                                    "Widget Cancel did not leave the editor");
+                                    "Widget Back did not leave the editor");
                             resumed.body.findViewWithTag("widgets.open").performClick();
                             check(
                                     ((android.view.View)
                                                     resumed.body.findViewWithTag(
-                                                            "widget.layout.day"))
+                                                            "widget.layout.strip"))
                                             .isSelected(),
-                                    "Widget Cancel retained an unsaved layout draft");
+                                    "Widget Back discarded the saved layout");
                         });
                 WidgetHostCheck.run(test, resumed, captures);
                 PhoneUiCheck.on(
@@ -426,10 +395,9 @@ final class PhoneJourneyCheck {
                 a.phoneUi.open("appearance");
                 a.body.findViewWithTag("appearance.tab.appearance.theme").performClick();
                 a.body.findViewWithTag("phone.appearance.theme.option.dusk").performClick();
-                a.getWindow().getDecorView().findViewWithTag("appearance.apply").performClick();
                 check(prefs.contains("settings") && !a.phoneUi.settings.enabled
                                 && a.phoneUi.settings.value("appearance.theme").equals("dusk"),
-                        "Ordinary theme Apply did not create the expected disabled-alert settings");
+                        "Immediate theme selection did not create the expected disabled-alert settings");
                 check(prefs.getBoolean("onboarding-enable-with-permission", false),
                         "An unrelated settings save changed the first-use notification choice");
                 a.onboarding.open();

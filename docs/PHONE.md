@@ -19,8 +19,8 @@ Style previews apply across the page, including background and control colors.
 Fresh phone settings use a 12-hour clock; existing saved clock choices are retained.
 Only large visual catalogs scroll horizontally. Short choices stay visible;
 long text choices such as high-latitude rules use a vertical selection stack.
-Ordinary Appearance has an Apply/Cancel draft for theme, background and display
-settings. Language and widgets are available directly in Phone settings.
+Appearance saves theme, background and display changes immediately. Back keeps
+your changes. Language and widgets are available directly in Phone settings.
 Home uses a dimmed version of the selected scene. Turn **Background on Prayer
 home** off in Appearance for plain surfaces. Existing landscape-only scenes are
 composed for tall screens; the dedicated portrait Signature remains unchanged.
@@ -179,8 +179,9 @@ size. Customize each placed widget independently: initial presentation, app/fixe
 color/app/selected background, 0–100% background opacity, rounded/soft/square
 corners, Hijri date by default and optional Gregorian date, and label size. Text uses the app’s
 Alexandria fonts and canonical theme colors. Android’s picker has populated native
-previews with bilingual image fallbacks for older launchers. Apply saves only that widget;
-Back cancels. The launcher can reopen configuration. Resizing keeps saved style
+previews with bilingual image fallbacks for older launchers. Changes save and update
+only that widget immediately; Back keeps them. Add completes new widget placement.
+The launcher can reopen configuration. Resizing keeps saved style
 and date choices while adapting the amount of prayer detail that fits.
 
 The prayer data follows phone location, calculation, language, digits and clock.
@@ -243,9 +244,9 @@ phone and the existing `state/builds/webos/Miqat-latest.ipk` (0.2.28) for LG.
 The phone build includes both standalone prayers and TV setup/control.
 
 - On a fresh install, complete or skip/resume the guided setup. Check theme and
-  background previews before applying them.
+  background changes across the whole page.
 - Open Prayer without a TV; detect/confirm location and timezone, browse dates in the Hijri calendar and inspect their calculated
-  times, change each prayer and test numeric Done/Cancel plus voice preview/Stop.
+  times, change each prayer and test immediate numeric changes plus voice preview/Stop.
 - Try per-prayer level/length, weekday overrides, preserved quiet rules, sound/vibration and a
   private custom recording. Enable travel refresh only if you want foreground
   updates, and verify that your calculation calibration stays intact.

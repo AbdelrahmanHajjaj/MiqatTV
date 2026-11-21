@@ -38,7 +38,6 @@ final class TvListUi {
                             () -> {
                                 a.selected = index;
                                 a.settingsUi.snapshot = null;
-                                a.settingsUi.appearance = null;
                                 a.section = "";
                                 a.settingsUi.clearPending();
                                 a.page = "overview";
@@ -93,7 +92,6 @@ final class TvListUi {
                     () -> {
                         a.selected = index;
                         a.settingsUi.snapshot = null;
-                        a.settingsUi.appearance = null;
                         a.section = "";
                         a.navigate("overview");
                     });
@@ -124,7 +122,6 @@ final class TvListUi {
                     if (selectedTv == removed) {
                         a.pairingUi.cancelPairing();
                         a.settingsUi.snapshot = null;
-                        a.settingsUi.appearance = null;
                         a.settingsUi.clearPending();
                         a.section = "";
                         a.selected = 0;

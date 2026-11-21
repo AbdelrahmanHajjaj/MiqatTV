@@ -115,21 +115,20 @@ final class LiveUiCheck {
             untilUi(test,()->!a.networkBusy&&a.settingsUi.snapshot.getValues().get("display.size").equals("110"));
             check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("display.size").equals("110"),"Phone saved to real TV preference adapter");
             test.runOnMainSync(()->a.settingsUi.openSection("appearance"));click(test,a,"appearance.theme.next");
-            check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("appearance.theme").equals("mihrab"),"Phone preview does not write");
-            click(test,a,"appearance.cancel");test.runOnMainSync(()->a.settingsUi.openSection("appearance"));click(test,a,"appearance.theme.next");click(test,a,"appearance.apply");
-            untilUi(test,()->!a.networkBusy&&a.settingsUi.appearance!=null&&a.settingsUi.appearance.getChanges().isEmpty()&&a.settingsUi.snapshot.getValues().get("appearance.theme").equals("aurora"));check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("appearance.theme").equals("aurora"),"Appearance Apply confirmed by actual TV");
-            test.runOnMainSync(()->a.settingsUi.openSection("appearance"));click(test,a,"appearance.theme.next");String delivered=a.settingsUi.appearance.getValues().get("appearance.theme");
-            JSONObject expected=verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values");
-            check(verifier.call("POST","/v1/settings",new JSONObject().put("expected",expected).put("changes",Json.object("appearance.theme",delivered)),phone.credential()).body.getString("status").equals("saved"),"Fixture models a delivered save whose UI confirmation was lost");
-            test.runOnMainSync(a.settingsUi::readSettings);untilUi(test,()->!a.networkBusy&&a.settingsUi.appearance.getChanges().isEmpty());
-            check(a.settingsUi.snapshot.getValues().get("appearance.theme").equals(delivered),"Refresh clears a draft already confirmed in actual TV values");
-            click(test,a,"appearance.theme.next");String draft=a.settingsUi.appearance.getValues().get("appearance.theme");
+            untilUi(test,()->!a.networkBusy&&a.settingsUi.snapshot.getValues().get("appearance.theme").equals("aurora"));
+            check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("appearance.theme").equals("aurora"),"Appearance selection confirmed immediately by actual TV");
+            test.runOnMainSync(()->check(a.getWindow().getDecorView().findViewWithTag("appearance.apply")==null
+                    &&a.getWindow().getDecorView().findViewWithTag("appearance.cancel")==null,"Immediate TV appearance has no Apply/Cancel footer"));
+            String savedTheme=a.settingsUi.snapshot.getValues().get("appearance.theme");
+            JSONObject confirmed=verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values");
+            test.runOnMainSync(a.settingsUi::readSettings);untilUi(test,()->!a.networkBusy);
+            check(a.settingsUi.snapshot.getValues().get("appearance.theme").equals(savedTheme),"Refresh retained confirmed appearance");
+            check(MainActivity.decode(confirmed.toString()).equals(MainActivity.decode(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").toString())),"Refresh never rewrites appearance");
             Instrumentation.ActivityMonitor monitor=test.addMonitor(MainActivity.class.getName(),null,false);
             try {
                 test.runOnMainSync(a::recreate);until(()->monitor.getLastActivity()!=null);MainActivity recreated=(MainActivity)monitor.getLastActivity();current[0]=recreated;
-                untilUi(test,()->recreated.body!=null&&recreated.settingsUi.appearance!=null);
-                check(recreated.settingsUi.appearance.getValues().get("appearance.theme").equals(draft)&&!recreated.settingsUi.editable(),"Recreation preserves draft and requires refreshed settings");
-                click(test,recreated,"appearance.cancel");
+                untilUi(test,()->recreated.body!=null&&recreated.settingsUi.snapshot!=null);
+                check(recreated.settingsUi.snapshot.getValues().get("appearance.theme").equals(savedTheme)&&!recreated.settingsUi.editable(),"Recreation preserves confirmed appearance and requires refreshed settings");
             }finally{test.removeMonitor(monitor);}
             Map<String,String> before=MainActivity.decode(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").toString());
             check(current[0].real().connect(),"Known phone reconnects");
