@@ -807,6 +807,60 @@ setup completion is simulated; no TV was connected or changed. Physical Android
 installation/cleanup/recovery, LG phone installation and iOS remain pending.
 Private logs/captures stay in ignored state/; [WORK.md](WORK.md) owns the sequence.
 
+## Affected CI checks — 21 November 2026
+
+The owner approved affected PR validation, full main/manual builds and automatic
+cancellation of superseded runs. PR selection remains conservative for shared,
+tooling and unknown paths; packaged notices and generated UI-gap documentation
+are not treated as prose. Companion is part of the applicable required gate.
+
+- actionlint 1.7.12 passes for all three workflows.
+- Three focused CI regressions pass: affected-consumer unions, fail-closed gate
+  outcomes, and real Git rename/deletion selection plus full push/manual runs.
+- Both delivery regressions pass, including rejection of untrusted/stale release
+  sources. The publisher and trusted-main artifact names are unchanged.
+- Canonical catalog checks/tests and isolated shared validation pass;
+  `git diff --check` passes. Workflow documentation was checked against its
+  owning scripts. No application/runtime sources changed or local platform
+  builds were needed. The PR owns hosted CI and normal-merge delivery receipts.
+- The superseded Companion run 44934495042 was canceled and its final Cancelled
+  status verified. Current runs were preserved.
+- Base main run [44936708883](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44936708883)
+  failed the existing LG browser startup-artwork assertion before this change;
+  the PR retains that check without relaxing it.
+
+## Approved adhan cleanup — 21 November 2026
+
+On `feature/adhan-mild-cleanup`, based on `3c5b38e`, the maintainer approved the
+mild cleaned candidates after reviewing the 14-voice before/after set. Shipped
+files match those exact candidates; all 12 reminder hashes are unchanged.
+The adhan set is 18,335,775 bytes, down 9,457 bytes. Each complete cleaned file
+decodes without errors, preserves its decoded sample count/rate/channels/bitrate,
+and has sample peaks below full scale. This does not certify intersample peaks
+or physical-TV sound. Existing wording and cut points are unchanged.
+
+- Node 24.14.0: preparation regression and read-only check pass, including
+  rejection of stale stamps and unapproved regenerated output, input/backup
+  preservation on failure, and successful exact approved-trim reproduction.
+- Canonical catalog checks/tests and isolated shared validation pass.
+- JDK 17 / SDK 34: Android `verifyApkSize lintDebug assembleDebugAndroidTest`
+  passes; APK **22,770,463 bytes**, below 25,000,000. All 26 packaged MP3s match
+  shared/media byte-for-byte. Lint reports 0 errors and 59 untouched-area warnings.
+- All **43** Python/Java regressions pass.
+- LG `npm test` passes, including ES5/build, service, media/volume and LAN
+  regressions. IPK **21,297,060 bytes** contains all 26 exact shared recordings.
+  CLI notices about requiredACG and target Node versions remain; no service/API
+  or runtime-code change is included. The complete Arabic/English mocked browser
+  suite also passes at all supported sizes.
+
+Runtime checks are automated/local; human acceptance here covers the supplied
+listening excerpts, not physical speakers or every word of a complete playback.
+No TV deployment, release publication or physical-TV operation was performed.
+The preview does not package these MP3s; its runtime is unchanged. Original audio,
+comparison files, measurements and raw validation logs remain ignored under state/.
+
+## Foundation checks — 17 November 2026
+
 Checked on 17 November 2026 in the new Miqat checkout, using JDK 17, Node 24.14.0
 and SDK 34. Source versions: Android TV 0.7.0, installer 1.1.0, LG 0.2.23.
 

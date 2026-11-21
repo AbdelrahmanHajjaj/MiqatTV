@@ -4,7 +4,7 @@
 set -euo pipefail
 . "$(dirname "$0")/env.sh"
 if ! compgen -G "$ROOT/shared/media/adhan/*.mp3" >/dev/null; then
-  echo 'Adhan recordings are missing. Run tools/fetch-adhans.sh before building for audible calls.' >&2
+  echo 'Adhan recordings are missing. Restore the reviewed shared/media/adhan files from Git before building.' >&2
 fi
 (cd "$ROOT" && ./gradlew :app:assembleDebug --console=plain)
 exec "${PYTHON:-python3}" "$ROOT/tools/device.py" --tv "$TV" --adb "$ADB_BIN" install "$@"

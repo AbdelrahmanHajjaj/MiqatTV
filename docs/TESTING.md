@@ -50,7 +50,7 @@ files, and inspect `git diff` afterwards.
 | Android phone installer / PC recovery | `./gradlew :app:assembleDebug :installer:assembleDebug :installer:lintDebug --no-daemon`, then root Python regressions. Exercise changed setup/recovery paths on an explicitly selected test device. |
 | Media preparation | `node tools/prepare-adhans.test.mjs` (FFmpeg/ffprobe required); `node tools/prepare-adhans.mjs --check`; check the affected platform packages and audition any changed religious wording/cut. |
 
-Android and LG builds use the 14 adhan and 12 announcement clips in shared/media/.
+Android and LG builds use the 13 adhan and 12 announcement clips in shared/media/.
 Check the complete set with sha256sum --check shared/media/SHA256SUMS and run
 node tools/prepare-adhans.mjs --check. Original/review audio remains private under
 state/. FFmpeg/ffprobe preparation and decoding tests run locally when media or
@@ -117,11 +117,17 @@ what the owner saw or heard. A result for one TV/firmware does not certify a bra
 
 ## Review
 
-The Validate workflow runs core JVM/JS/Java and canonical checks, Android/installer
-builds and lint, Python/Java regressions, native prayer/UI checks on an API 34
-emulator, complete LG ES5/service/browser tests and packaging, and the preview
-suite/build. Required checks fails if any of those jobs fails or is skipped.
-There are no path filters that could leave the required status pending.
+The Validate workflow selects affected PR consumers using tools/ci.py; shared,
+workflow/tooling and unknown paths select all consumers. Ordinary documentation
+changes run workflow/selection/whitespace checks. Packaged notices and generated
+docs/UI-GAPS.md still select all consumers. Main and manual Validate runs execute
+the full suite: core JVM/JS/Java and canonical checks, Android/installer builds and
+lint, Python/Java regressions, native prayer/UI checks on an API 34 emulator,
+complete LG ES5/service/browser tests and packaging, preview suite/build, and
+Companion native settings/LAN checks. Required checks verifies every selected job
+succeeded and every unselected job skipped. Failures, cancellation, missing
+selection or unexpected skips fail the gate. No workflow-level PR path filter
+can leave the required status pending.
 
 GitHub jobs use separate workspaces; generators stay sequential within each job.
 CI artifacts contain the reviewed audio and expire after seven days. CI does not

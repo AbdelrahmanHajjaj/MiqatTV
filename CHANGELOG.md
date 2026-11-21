@@ -53,6 +53,14 @@
 
 ## Unreleased
 
+- Run PR checks for affected platforms, cancel superseded CI runs, and include
+  affected Companion checks in the merge gate. Downloadable review builds come
+  from main or manual branch runs; PR compilation and package checks remain.
+
+- Gently reduce rumble and background noise in all 14 adhan voices, preserving
+  existing wording, duration and bitrate. The recordings are slightly smaller;
+  spoken reminders are unchanged.
+
 - Refine phone 0.5.1/code17 towards the approved mockups: grouped prayer/settings
   rows, spaced circular weekdays, compact numeric editors and a language picker.
   Place sheets before their first frame; fix Home date-arrow touch targets and

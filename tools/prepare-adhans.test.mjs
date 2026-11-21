@@ -45,6 +45,16 @@ try {
   prepareAdhans(root, true);
   prepareAdhans(root);
   assert.deepEqual([input, backup, stamp].map(p => statSync(p).mtimeMs), before, 'idempotent preparation and read-only build check');
+  writeJson(manifest, {test: {...edit, outputSha256: 'f'.repeat(64)}});
+  assert.throws(() => prepareAdhans(root, true), /Unprepared adhan/, 'old local stamps cannot override approved bytes');
+  writeFileSync(input, original);
+  assert.throws(() => prepareAdhans(root), /differs from approved/, 'a trim cannot replace a reviewed cleanup');
+  assert.deepEqual(readFileSync(input), original, 'failed preparation preserves its input');
+  assert.deepEqual(readFileSync(backup), original, 'failed preparation preserves its backup');
+  assert.ok(!existsSync(join(root, 'state/media-originals/adhan/test.prepared.mp3')));
+  writeJson(manifest, {test: {...edit, outputSha256: hash(cleaned)}});
+  prepareAdhans(root);
+  assert.deepEqual(readFileSync(input), cleaned, 'preparation can reproduce the exact approved trim');
   rmSync(stamp); rmSync(backup);
   writeJson(manifest, {test: {...edit, outputSha256: hash(cleaned)}});
   prepareAdhans(root, true); prepareAdhans(root);

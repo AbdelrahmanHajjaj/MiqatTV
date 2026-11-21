@@ -11,6 +11,10 @@ Adhan and notification phone tests with a cancellable 30-second grace period.
 Remove the redundant phone Reduce motion setting and follow Android animation
 accessibility. Reproduce/fix the Coming soon sheet's horizontal entrance shift.
 
-Next: focused storage/runtime/dialog regressions, bilingual native UI/sizing,
+Latest main (26a32c7) is being integrated before the PR push, as requested. Preserve
+its approved cleanup for the 13 retained voices and its affected-CI/artifact policy
+([CI](CI.md)); keep the previously retired recording excluded.
+
+Next: finish the merge, run focused storage/runtime/dialog and bilingual UI/sizing,
 export the review APK and verify exact-head CI. Keep PR #9 draft for owner review.
-No merge, release or physical deployment requested.
+No PR merge, release or physical deployment requested.
