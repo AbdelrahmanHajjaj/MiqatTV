@@ -75,7 +75,8 @@ final class PhonePresentationCheck {
         }
     }
     static void run(Instrumentation test,String selected,boolean capture) throws Exception {
-        check(Arrays.asList("all","home","swipe","screen","actions").contains(selected),"Unknown presentation case");
+        check(Arrays.asList("all","home","swipe","screen","actions","actions-ar").contains(selected),"Unknown presentation case");
+        boolean actions=selected.equals("actions") || selected.equals("actions-ar");
         Context c=test.getTargetContext();
         PhoneStore original=PhoneStore.read(c);
         android.media.AudioManager audio=c.getSystemService(android.media.AudioManager.class);
@@ -83,16 +84,20 @@ final class PhonePresentationCheck {
         SharedPreferences language=c.getSharedPreferences("companion",0);
         String lang=language.getString("language","system");
         String animation=android.provider.Settings.Global.getString(c.getContentResolver(),"animator_duration_scale");
+        java.io.File libraryIndex=new java.io.File(PhoneAudio.directory(c),"library.json");
+        boolean hadIndex=libraryIndex.exists();
+        Map<String,String> names=actions?new LinkedHashMap<>(PhoneAudioLibrary.read(c)):null;
+        Set<String> files=new HashSet<>(Arrays.asList(PhoneAudio.directory(c).list()));
         check(animation==null || animation.matches("[0-9]+(?:[.][0-9]+)?"),"Unexpected animator scale");
         try {
             PhoneRuntimeCheck.shell(test,"settings put global animator_duration_scale 1");
             await(test,android.animation.ValueAnimator::areAnimatorsEnabled,5000,"Animator setting did not become enabled");
-            language.edit().putString("language","en").commit();
+            language.edit().putString("language",selected.equals("actions-ar")?"ar":"en").commit();
             if(android.os.Build.VERSION.SDK_INT>=33)
                 check(c.checkSelfPermission(android.Manifest.permission.USE_EXACT_ALARM)==android.content.pm.PackageManager.PERMISSION_GRANTED
                         && PhoneAlarms.exact(c),"Prayer timing should be granted without a manual alarm-access step");
-            for (String phase:selected.equals("actions")?new String[]{"actions"}:new String[]{"home","swipe","screen"}) {
-                if (!selected.equals("all") && !selected.equals(phase)) continue;
+            for (String phase:actions?new String[]{"actions"}:new String[]{"home","swipe","screen"}) {
+                if (!selected.equals("all") && !actions && !selected.equals(phase)) continue;
                 int prayer=phase.equals("swipe")?2:phase.equals("actions")?3:0;
                 String prayerKey=PhoneStore.PRAYERS[prayer];
                 String prayerName=PhoneData.get(c).prayerName(prayer,false);
@@ -105,6 +110,16 @@ final class PhonePresentationCheck {
                 edits.put("call."+prayerKey+".mode","adhan");edits.put("call."+prayerKey+".weekdays","127");
                 edits.put("reminders.full-screen",Boolean.toString(phase.equals("screen")));
                 edits.put("reminders.duration","60");edits.put("display.reduce-motion","false");
+                if(phase.equals("actions")) {
+                    PhoneAudio.importFile(c,c.getAssets().open("adhan/almalki.mp3"),"call.asr.voice",
+                            selected.equals("actions-ar")?"أذاني المفضل · تسجيل شخصي":"My Adhan · Personal recording");
+                    edits.put("call.asr.voice","custom");
+                    edits.put("audio.custom.asr",PhoneStore.read(c).value("audio.custom.asr"));
+                    edits.put("call.asr.default-audio","false");
+                    edits.put("call.asr.volume","0");
+                    edits.put("call.asr.duration","60");
+                    edits.put("call.asr.length-percent","100");
+                }
                 original.changed(edits).save(c);
                 MainActivity a=LiveUiCheck.launch(test);
                 Instrumentation.ActivityMonitor monitor=new Instrumentation.ActivityMonitor(PhoneAdhanScreen.class.getName(),null,false);
@@ -114,7 +129,7 @@ final class PhonePresentationCheck {
                     on(test,()->a.tab("prayers"));
                     if(phase.equals("swipe"))audio.setStreamVolume(android.media.AudioManager.STREAM_MUSIC,1,0);
                     String id="phone:presentation:"+UUID.randomUUID();long at=System.currentTimeMillis();
-                    on(test,()->c.startForegroundService(PhonePlayback.intent(c,prayer,"almalki",false,id).putExtra("prayerTime",(double)at)));
+                    on(test,()->c.startForegroundService(PhonePlayback.intent(c,prayer,phase.equals("actions")?"custom":"almalki",false,id).putExtra("prayerTime",(double)at)));
                     await(test,PhonePlayback::outputStarted,10000,"Presentation audio did not start");
                     if (phase.equals("actions")) {
                         PhoneAdhanCheck.stop(test,c,new tv.miqat.core.ReminderEvent(id,"call",prayer,at,at));
@@ -208,6 +223,13 @@ final class PhonePresentationCheck {
         } finally {
             PhoneRuntimeCheck.shell(test,animation==null?"settings delete global animator_duration_scale":"settings put global animator_duration_scale "+animation);
             original.save(c);language.edit().putString("language",lang).commit();PhoneAlarms.rebuild(c);
+            if(names!=null) {
+                synchronized(PhoneStore.LOCK) {
+                    if(hadIndex)PhoneAudioLibrary.write(c,names);else java.nio.file.Files.deleteIfExists(libraryIndex.toPath());
+                    for(java.io.File file:PhoneAudio.directory(c).listFiles())
+                        if(!files.contains(file.getName()) && file.getName().matches("[a-f0-9]{64}[.]audio"))java.nio.file.Files.delete(file.toPath());
+                }
+            }
         }
     }
 }

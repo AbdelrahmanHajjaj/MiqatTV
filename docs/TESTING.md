@@ -363,3 +363,10 @@ no preference-restoration warning. Native notification checks expand only a
 collapsed header: Android 14's row expansion action can toggle an already-
 expanded alert closed. The focused `phone-presentation -e case actions` check
 exercises the actual visible notification Stop button.
+
+Notification polish: `phone-presentation -e case actions` imports a named private
+recording, verifies that name in notification/session metadata and the visible
+expanded view, then clicks the actual Pause, Play and Stop icons. `actions-ar`
+exercises Arabic direction and labels. Existing private settings, names and files
+are restored. Inspect native light/dark renders for contrast, wrapping and a
+single progress bar. The compact view remains Android's system template.

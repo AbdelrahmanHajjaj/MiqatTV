@@ -1,5 +1,37 @@
 # Validation evidence
 
+## Notification polish — 22 November 2026
+
+Owner reports that swiping 0.5.11 on physical hardware dismisses the notification
+and stops Adhan. The previous CI-only swipe failure remains separate evidence;
+the owner requested hardware handoff instead of more emulator investigation.
+
+Phone 0.5.12/code 28 removes notification artwork, displays the playing recording's
+saved library name and retains the prayer/time heading. Compare the former large
+thumbnail/text-action layout with the decorated expanded icon layout: one native
+progress bar, wrapping recording label and accessible Pause/Play/Stop controls.
+The compact template, MediaSession, delete intent and audio routing remain.
+
+Owned muted API 34: real custom recording playback and visible library name;
+actual SystemUI Pause, Play and Stop; English/light and Arabic/dark native renders
+pass. Inspection caught duplicate progress and dark icon contrast/RTL alignment;
+these were corrected and the affected render/control check repeated. A focused
+real swipe still stops output and restores volume. The private fixture restores
+settings, file names/content identities, library metadata and system theme.
+Raw logs/captures remain under ignored state/.
+
+Build/test compilation and lint pass (0 errors, 40 existing warnings).
+Canonical catalog/source checks, catalog tests, companion generator 12/12 and
+shared validation checks pass. The additive canonical Pause icon is consumed by
+the phone notification; existing TV/LG/preview controls are unchanged. No broad
+device suites or physical deployment were repeated for this presentation change.
+
+Review APK: 35,366,169 bytes, SHA256
+`EE9BC8542264A7BB22E8D0E87452DAD2D51035F3D3B06165FA4CA30CB959889B`.
+All 25 exact approved recordings and the unchanged signer are verified. Native
+emulator rendering does not establish manufacturer notification layouts or the
+new version's physical-phone acceptance. Keep draft PR #9 for owner review.
+
 ## Cross-version native validation — 22 November 2026
 
 Initial CI for d250feb found an empty TV catalog snapshot and a phone swipe

@@ -132,7 +132,11 @@ playback-controls action. It captures no audio and respects Android and retained
 motion preferences. The resumed MainActivity can open the opted-in Adhan screen
 without relying on lock-screen intents. Background presentation remains owned by
 Android. Playback notifications retain their MediaSession token and standard
-Pause/Stop actions in a non-MediaStyle alert, enabling supported system swipes.
+playback controls in a non-MediaStyle alert, enabling supported system swipes.
+The compact notification uses the system template. Its decorated expanded view
+uses localized icon controls and a wrapping recording label; one native progress
+bar remains. The recording name is resolved from the actual playing file's
+library identity once per session, including unsaved custom auditions.
 Core prayer alarms declare USE_EXACT_ALARM on Android 13+, with the legacy
 SCHEDULE_EXACT_ALARM declaration limited to Android 12. Notification permission
 and user prayer opt-outs still gate delivery; the audio stream toggle is separate.

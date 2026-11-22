@@ -27,17 +27,18 @@ final class PhoneAdhanCheck {
     static long pause(Instrumentation test, Context c) throws Exception {
         Notification playing = notice(c);
         check(
-                playing.actions.length == 2
+                (playing.actions == null || playing.actions.length == 0)
+                        && playing.bigContentView != null
                         && playing.deleteIntent != null
                         && (playing.flags & Notification.FLAG_ONGOING_EVENT) == 0,
-                "Playback must offer pause/stop and dismissal where Android supports it");
+                "Playback must offer custom icon controls and dismissal where Android supports it");
         MediaSession.Token token = playing.extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
         MediaController controller = new MediaController(c, token);
         check(
                 controller.getPlaybackState().getCustomActions().stream()
                         .anyMatch(action -> action.getAction().equals(PhonePlayback.STOP)),
                 "Modern Android media controls hide Stop");
-        playing.actions[0].actionIntent.send();
+        controller.getTransportControls().pause();
         await(test, PhonePlayback::paused, 5000, "Notification pause did not pause output");
         long pausedAt = SystemClock.elapsedRealtime();
         long position = controller.getPlaybackState().getPosition();
@@ -48,7 +49,7 @@ final class PhoneAdhanCheck {
                         && controller.getPlaybackState().getState() == PlaybackState.STATE_PAUSED
                         && controller.getPlaybackState().getPosition() == position,
                 "Pause lost the scheduled session or advanced its position");
-        notice(c).actions[0].actionIntent.send();
+        controller.getTransportControls().play();
         await(test, PhonePlayback::outputStarted, 5000, "Notification Play did not resume output");
         check(
                 !PhonePlayback.paused() && controller.getPlaybackState().getPosition() >= position,
@@ -67,18 +68,31 @@ final class PhoneAdhanCheck {
                 title.contains(settings.data.prayerName(event.getPrayer(), ar))
                         && title.contains(PhoneTime.at(settings, event.getPrayerTime(), ar)),
                 "Notification does not show the actual prayer and scheduled time");
-        check(
-                metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                        .equals(settings.data.voiceName(settings.voice(event.getPrayer()), ar)),
+        String voice=settings.voice(event.getPrayer());
+        String expected=voice.equals("custom") ? PhoneAudio.name(c,settings,
+                settings.value("call."+PhoneStore.PRAYERS[event.getPrayer()]+".voice").equals("inherit")
+                        ? "reminders.voice" : "call."+PhoneStore.PRAYERS[event.getPrayer()]+".voice") : settings.data.voiceName(voice,ar);
+        check(metadata.getString(MediaMetadata.METADATA_KEY_ARTIST).equals(expected)
+                        && expected.contentEquals(notice(c).extras.getCharSequence(Notification.EXTRA_TEXT)),
                 "Notification does not name the playing voice");
-        check(
-                metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART) != null
-                        && notice(c).getLargeIcon() != null,
-                "Selected notification artwork missing");
+        check(notice(c).getLargeIcon()==null && notice(c).bigContentView!=null,
+                "Notification must use text and icon controls without decorative artwork");
         PhoneRuntimeCheck.shell(test, "cmd statusbar expand-notifications");
         try {
             PhonePresentationCheck.expandNotification(test,settings.data.prayerName(event.getPrayer(),ar));
             PhoneUiCheck.capture(test,c,"adhan-notification-actions",true);
+            android.view.accessibility.AccessibilityNodeInfo label=PhonePresentationCheck.notificationText(test,expected);
+            check(label!=null,"Playing recording label is not visible");label.recycle();
+            android.view.accessibility.AccessibilityNodeInfo pause=PhonePresentationCheck.notificationText(test,PhoneAlarms.text(c,"phone_pause"));
+            check(pause!=null,"Notification Pause icon is missing");
+            try {check(pause.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK),"Notification Pause icon is not clickable");}
+            finally {pause.recycle();}
+            await(test,PhonePlayback::paused,5000,"Notification Pause icon did not pause");
+            LiveUiCheck.until(()->{android.view.accessibility.AccessibilityNodeInfo play=PhonePresentationCheck.notificationText(test,PhoneAlarms.text(c,"phone_resume"));if(play==null)return false;play.recycle();return true;});
+            android.view.accessibility.AccessibilityNodeInfo play=PhonePresentationCheck.notificationText(test,PhoneAlarms.text(c,"phone_resume"));
+            try {check(play.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK),"Notification Play icon is not clickable");}
+            finally {play.recycle();}
+            await(test,PhonePlayback::outputStarted,5000,"Notification Play icon did not resume");
             LiveUiCheck.until(() -> {
                 android.view.accessibility.AccessibilityNodeInfo control = stopControl(test, c);
                 if (control == null) return false;

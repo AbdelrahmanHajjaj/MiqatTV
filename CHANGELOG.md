@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.12 clearer Adhan notifications
+
+- Remove decorative artwork from the notification. Keep the prayer and scheduled time prominent and show the actual saved custom recording name.
+- Replace text action buttons with accessible Pause/Play and Stop icons in the expanded notification. Keep the compact system layout, one progress bar and swipe-to-stop behavior.
+
 ## 0.5.11 Adhan playback refinements
 
 - Set the Adhan level against the selected media/alarm stream's maximum, independent of its previous volume. Apply default and per-prayer levels to playback, Listen and length previews.

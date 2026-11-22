@@ -35,7 +35,7 @@ public final class PhonePlayback extends Service {
         }
     };
     private boolean preview, started, paused, defaultAudio, lengthPreview, testing;
-    private String eventId = "", voiceId = "", customHash = "";
+    private String eventId = "", customHash = "", recordingName = "";
     private android.graphics.Bitmap artwork;
     private int generation, prayerIndex = -1, previewPercent = 100, previewCapSeconds;
     private double prayerTime;
@@ -206,9 +206,20 @@ public final class PhonePlayback extends Service {
             if (preview || testing)
                 defaultVoice =
                         intent.getBooleanExtra("default-voice", defaultAudio || defaultVoice);
-            voiceId = voice;
+            recordingName = settings.data.voiceName(voice, PhoneAlarms.arabic(this));
+            if ("custom".equals(voice)) {
+                if (customHash.isEmpty())
+                    customHash = settings.value("audio.custom." + (defaultVoice ? "default" : PhoneStore.PRAYERS[prayer]));
+                try {
+                    synchronized (PhoneStore.LOCK) {
+                        recordingName = PhoneAudioLibrary.read(this).getOrDefault(customHash, recordingName);
+                    }
+                } catch (Exception unavailable) {
+                    android.util.Log.w("Miqat", "Recording label unavailable", unavailable);
+                }
+            }
             startSession(settings);
-            preparePlayer(settings, prayer, voice, defaultVoice, token);
+            preparePlayer(settings, prayer, voice, token);
         } catch (Exception error) {
             failed();
         }
@@ -247,7 +258,7 @@ public final class PhonePlayback extends Service {
                         .putString(MediaMetadata.METADATA_KEY_TITLE, title(settings))
                         .putString(
                                 MediaMetadata.METADATA_KEY_ARTIST,
-                                settings.data.voiceName(voiceId, PhoneAlarms.arabic(this)))
+                                recordingName)
                         .putString(MediaMetadata.METADATA_KEY_ALBUM, "Miqat")
                         .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, artwork)
                         .build());
@@ -286,12 +297,22 @@ public final class PhonePlayback extends Service {
                         ? PhoneAdhanScreen.pending(this, eventId, prayerIndex)
                         : PhoneAlarms.open(this);
         Bundle sessionExtras=new Bundle();sessionExtras.putParcelable(Notification.EXTRA_MEDIA_SESSION,media.getSessionToken());
+        android.widget.RemoteViews expanded = new android.widget.RemoteViews(getPackageName(), R.layout.adhan_notification);
+        expanded.setInt(R.id.adhan_notice_content, "setLayoutDirection",
+                PhoneAlarms.arabic(this) ? android.view.View.LAYOUT_DIRECTION_RTL : android.view.View.LAYOUT_DIRECTION_LTR);
+        expanded.setTextViewText(R.id.adhan_notice_title, title(settings));
+        expanded.setTextViewText(R.id.adhan_notice_recording, recordingName);
+        expanded.setImageViewResource(R.id.adhan_notice_pause,
+                paused ? R.drawable.companion_icon_play : R.drawable.companion_icon_pause);
+        expanded.setContentDescription(R.id.adhan_notice_pause, PhoneAlarms.text(this, paused ? "phone_resume" : "phone_pause"));
+        expanded.setContentDescription(R.id.adhan_notice_stop, PhoneAlarms.text(this, "phone_stop"));
+        expanded.setOnClickPendingIntent(R.id.adhan_notice_pause, command(paused ? RESUME : PAUSE, 42502));
+        expanded.setOnClickPendingIntent(R.id.adhan_notice_stop, command(STOP, 42501));
         Notification.Builder notice =
                 new Notification.Builder(this, PhoneAlarms.playbackChannel(this, screen))
                         .setSmallIcon(R.drawable.companion_icon_mihrab)
                         .setContentTitle(title(settings))
-                        .setContentText(settings.data.voiceName(voiceId, PhoneAlarms.arabic(this)))
-                        .setLargeIcon(artwork)
+                        .setContentText(recordingName)
                         .setColor(
                                 android.graphics.Color.parseColor(
                                         settings.data
@@ -305,25 +326,10 @@ public final class PhonePlayback extends Service {
                                 screen
                                         ? Notification.CATEGORY_ALARM
                                         : Notification.CATEGORY_TRANSPORT)
-                        .addAction(
-                                new Notification.Action.Builder(
-                                                paused
-                                                        ? android.R.drawable.ic_media_play
-                                                        : android.R.drawable.ic_media_pause,
-                                                PhoneAlarms.text(
-                                                        this,
-                                                        paused ? "phone_resume" : "phone_pause"),
-                                                command(paused ? RESUME : PAUSE, 42502))
-                                        .build())
-                        .addAction(
-                                new Notification.Action.Builder(
-                                                R.drawable.companion_icon_close,
-                                                PhoneAlarms.text(this, "phone_stop"),
-                                                command(STOP, 42501))
-                                        .build())
                         // Active MediaStyle notifications are protected from swipe dismissal.
                         .addExtras(sessionExtras)
-                        .setStyle(new Notification.BigTextStyle().bigText(settings.data.voiceName(voiceId,PhoneAlarms.arabic(this))));
+                        .setCustomBigContentView(expanded)
+                        .setStyle(new Notification.DecoratedCustomViewStyle());
         if(started && player!=null)notice.setProgress((int)limit(settings),player.getCurrentPosition(),false);
         if (screen && !paused && PhoneAlarms.fullScreenAllowed(this))
             notice.setFullScreenIntent(open, true);
@@ -418,7 +424,7 @@ public final class PhonePlayback extends Service {
     }
 
     private void preparePlayer(
-            PhoneStore settings, int prayer, String voice, boolean defaultVoice, int token)
+            PhoneStore settings, int prayer, String voice, int token)
             throws Exception {
         AudioAttributes attributes = attributes(settings);
         outputAttributes = attributes;
@@ -441,9 +447,7 @@ public final class PhonePlayback extends Service {
         player.setAudioAttributes(attributes);
         player.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
         if ("custom".equals(voice))
-            player.setDataSource((preview && !customHash.isEmpty()
-                    ? PhoneAudio.file(this, customHash)
-                    : PhoneAudio.file(this, settings, prayer, defaultVoice)).getPath());
+            player.setDataSource(PhoneAudio.file(this, customHash).getPath());
         else
             try (AssetFileDescriptor file = getAssets().openFd("adhan/" + voice + ".mp3")) {
                 player.setDataSource(
@@ -527,7 +531,7 @@ public final class PhonePlayback extends Service {
         paused = false;
         playedMs = 0;
         artwork = null;
-        voiceId = "";
+        recordingName = "";
         if (player != null) {
             player.setOnPreparedListener(null);
             player.setOnCompletionListener(null);

@@ -66,6 +66,13 @@ Android's volume/safety restrictions still apply. After abrupt process death,
 pending restoration is recovered at the next Miqat entry. Volume buttons and media controls follow the selected stream.
 Changing the mode stops current playback; the next playback uses the new mode.
 Short-tone notifications retain Android's notification-volume/channel behavior.
+
+Playback notifications show the prayer and scheduled time, plus the selected
+recording's name, including names assigned to imported audio. Decorative artwork
+is omitted. Expand the notification for accessible Pause/Play and Stop icons;
+Android supplies the compact layout and a single progress bar. Swipe dismissal
+still stops playback on supported versions. Notification colors and outer styling
+remain controlled by Android and the phone manufacturer.
 This option does not grant Android timing or Do Not Disturb access.
 
 Choose the default adhan level/length or override them for a prayer. Length is

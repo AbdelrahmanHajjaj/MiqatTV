@@ -8,6 +8,7 @@
   "bell": "<path d=\"M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z\"/><path d=\"M10 20.5a2 2 0 0 0 4 0\"/>",
   "back": "<path d=\"M15 5l-7 7 7 7\"/>",
   "play": "<path d=\"M8 5l11 7-11 7z\" fill=\"currentColor\"/>",
+  "pause": "<path d=\"M7 5h3v14H7zM14 5h3v14h-3z\" fill=\"currentColor\"/>",
   "stop": "<rect x=\"6.5\" y=\"6.5\" width=\"11\" height=\"11\" rx=\"1.5\" fill=\"currentColor\"/>",
   "moon": "<path d=\"M19 15.5A8 8 0 1 1 10.5 4a6.5 6.5 0 0 0 8.5 11.5z\" fill=\"currentColor\" stroke=\"none\"/>",
   "speaker": "<path d=\"M4 9v6h4l5 4V5L8 9z\"/><path d=\"M16.5 8.5a5 5 0 0 1 0 7\"/>",

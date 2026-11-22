@@ -1,7 +1,15 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-21. Branch feature/companion-installation, draft PR #9.
-Latest scope: maximum-based level, in-card playback, swipe dismissal and presentation; WORK.md owns next action.
+Updated: 2026-11-22. Branch feature/companion-installation, draft PR #9.
+Latest scope: clearer Adhan notification content and icon controls; WORK.md owns next action.
+
+## Notification polish — 0.5.12/code 28
+
+Owner confirms 0.5.11 swipe dismissal stops Adhan on physical hardware. Keep the
+ordinary notification, remove its decorative large icon, and resolve the actual
+custom recording name from its playing hash. Keep native compact content and
+progress; the expanded decorated layout wraps the recording label and provides
+accessible Pause/Play and Stop icons. Focused native checks cover these controls.
 
 ## Adhan playback refinements — 0.5.11/code 27
 
