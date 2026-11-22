@@ -382,3 +382,11 @@ selects a city manually and confirms. No background job may exist before
 confirmation. Returning to the location step cannot repeat detection/permission.
 Preferences, language and the test provider are restored. Ordinary journey tests
 also resolve the new automatic permission request before continuing manual setup.
+
+`widget-small` binds every provider through AppWidgetService and checks its
+40dp resize minimum and Next prayer's 1×1 cell target. It renders 40/56/80dp tiles
+in English/Arabic at system text scales 1×/2× and widget scales 100%/120%, using
+modern size maps and legacy bounds. Require full, unclipped prayer/time text,
+accessible full time, a readable missing-location state and restored detail after
+growing the widget. Native `*-picker-next-small.png` captures are the source for
+the Next prayer fallback preview PNGs. Physical launcher grid behavior is separate.

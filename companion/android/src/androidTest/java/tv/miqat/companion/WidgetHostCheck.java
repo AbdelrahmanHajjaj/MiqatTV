@@ -559,8 +559,8 @@ final class WidgetHostCheck {
                         "Android picker preview is empty for " + layout);
                 if (!capture) return;
                 preview.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
-                int width = a.views.dp(layout.equals("strip") ? 400 : 280);
-                int height = a.views.dp(layout.equals("day") ? 300 : layout.equals("next") ? 160 : 140);
+                int width = a.views.dp(layout.equals("strip") ? 400 : layout.equals("next") ? 80 : 280);
+                int height = a.views.dp(layout.equals("day") ? 300 : layout.equals("next") ? 80 : 140);
                 preview.measure(android.view.View.MeasureSpec.makeMeasureSpec(width, android.view.View.MeasureSpec.EXACTLY),
                         android.view.View.MeasureSpec.makeMeasureSpec(height, android.view.View.MeasureSpec.EXACTLY));
                 preview.layout(0, 0, width, height);

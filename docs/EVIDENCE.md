@@ -1,5 +1,28 @@
 # Validation evidence
 
+## One-cell widgets — 22 November 2026
+
+Phone 0.5.15/code 31 declares 40dp resize minima on all three providers and a 1×1
+default for Next prayer. Small bounds hide metadata/decorative icons and fit the
+next prayer/time; narrow clocks omit AM/PM visually while retaining full accessible
+time. Larger bounds restore detail without changing stored preferences. Picker
+and app previews now represent the one-cell starting layout.
+
+Owned API 34: bind every provider through the native AppWidget service; verify
+reported minima and 1×1 target. Render 40/56/80dp bounds in English/Arabic at
+system font scales 1/2 and widget scales 100/120, through exact size maps and the
+legacy min/max path. Unclipped text, full accessible time, missing location,
+style preservation and larger-size recovery pass. Inspect actual native captures;
+English/Arabic Next picker PNGs were refreshed from those native XML renders.
+These are emulator/content-bounds checks, not physical OEM launcher acceptance.
+
+Build/test compilation and lint pass (0 errors, 40 existing warnings), generator
+tests pass 12/12 and canonical checks pass. The signer and all 25 recordings remain
+verified. APK: 35,368,113 bytes; SHA256
+`43589D63BDDCC40D8B96AD4D52B2CAC065945EDB19F1607BE9131DD57A6B22D5`.
+Full CI remains deferred during feedback. Launcher cell sizes/cached provider
+metadata may require removing/re-adding existing widgets; owner testing remains.
+
 ## Status-bar identity — 22 November 2026
 
 Owner reports the remaining 0.5.13 changes working and continues daily driving.

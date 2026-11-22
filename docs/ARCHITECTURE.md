@@ -103,7 +103,10 @@ month selection back to civil dates for the real prayer engine. WidgetUi owns im
 presentation, WidgetRenderer native RemoteViews, and PrayerWidget the existing
 schedule/launcher update lifecycle plus exact-size maps/legacy resize bounds.
 Allocated dimensions determine compact/next/daily detail; stored presets remain
-initial presentations and styles are independent. PhoneDayOverrides renders each
+initial presentations and styles are independent. The one-cell minimum shows a
+next-prayer tile with adaptive text; larger bounds restore the existing detail.
+Next prayer's initial presentation is one cell.
+PhoneDayOverrides renders each
 weekday's controls in place. Native receiver variants share that provider.
 `PhoneHijriEvents` adapts the canonical recurring event catalog to corrected ICU
 calendar dates; `companion/core` selects current/upcoming events from explicit

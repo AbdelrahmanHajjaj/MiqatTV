@@ -114,9 +114,11 @@ final class WidgetUi {
                     draft.layout = selected;
                     changed();
                 });
+        a.body.addView(a.views.text(a.t("widget_resize_hint"), 12, a.muted));
     }
 
     private int width() {
+        if (draft != null && draft.layout.equals("next")) return 80;
         return Math.max(
                 140,
                 Math.round(
@@ -129,7 +131,8 @@ final class WidgetUi {
         LinearLayout preview = a.views.column();
         preview.setTag("widget.preview");
         preview.setPadding(a.views.dp(4), a.views.dp(8), a.views.dp(4), a.views.dp(8));
-        int height =
+        preview.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        int height = draft.layout.equals("next") ? 80 :
                 Math.round(
                         draft.height() * draft.size / 100f
                                 * Math.max(
@@ -141,7 +144,7 @@ final class WidgetUi {
         android.view.View rendered =
                 WidgetRenderer.initial(a.getApplicationContext(), draft, width(), height)
                         .apply(a.getApplicationContext(), preview);
-        preview.addView(rendered, new LinearLayout.LayoutParams(-1, a.views.dp(height)));
+        preview.addView(rendered, new LinearLayout.LayoutParams(draft.layout.equals("next") ? a.views.dp(width()) : -1, a.views.dp(height)));
         a.body.addView(preview);
         return rendered;
     }

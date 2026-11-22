@@ -54,7 +54,7 @@ final class WidgetOptions {
     }
 
     int height() {
-        return layout.equals("day") ? 300 : layout.equals("next") ? 160 : 140;
+        return layout.equals("day") ? 300 : layout.equals("next") ? 80 : 140;
     }
 
     String layoutFor(int width, int height, float fontScale) {

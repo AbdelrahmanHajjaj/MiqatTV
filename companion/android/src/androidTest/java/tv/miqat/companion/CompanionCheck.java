@@ -22,7 +22,7 @@ public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
     String presentation = "";
     String backgroundSuite = "";
-    boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary, phoneAudioRoute, setupLocation;
+    boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary, phoneAudioRoute, setupLocation, widgetSmall;
     boolean mapNetwork;
     boolean journey,
             customCheck,
@@ -55,6 +55,7 @@ public final class CompanionCheck extends Instrumentation {
         phoneLibrary = suite.equals("phone-library");
         phoneAudioRoute = suite.equals("phone-audio-route");
         setupLocation = suite.equals("phone-setup-location");
+        widgetSmall = suite.equals("widget-small");
         if (suite.equals("phone-presentation")) presentation = arguments.getString("case","all");
         calendarReturn = suite.equals("phone-calendar-return");
         journey = suite.equals("phone-journey");
@@ -84,6 +85,11 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if(widgetSmall) {
+                WidgetSmallCheck.run(this,captures);
+                result.putString("stream","PASS: one-cell widget bounds, text and resize recovery\n");
+                finish(-1,result);return;
+            }
             if(setupLocation) {
                 PhoneJourneyCheck.location(this,captures);
                 result.putString("stream","PASS: guided location request, optional automatic updates and confirmation gating\n");

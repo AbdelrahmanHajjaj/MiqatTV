@@ -18,8 +18,8 @@ final class WidgetBackground {
             int width,
             int height)
             throws Exception {
-        width = Math.max(80, Math.min(1200, width));
-        height = Math.max(60, Math.min(1200, height));
+        width = Math.max(1, Math.min(1200, width));
+        height = Math.max(1, Math.min(1200, height));
         float scale = Math.min(2f, 384f / Math.max(width, height));
         Bitmap image =
                 Bitmap.createBitmap(
@@ -37,6 +37,7 @@ final class WidgetBackground {
         float radius =
                 context.getResources().getDimension(dimension)
                         / context.getResources().getDisplayMetrics().density;
+        radius = Math.min(radius, Math.min(width, height) / 4f);
         Path outline = new Path();
         outline.addRoundRect(0, 0, width, height, radius, radius, Path.Direction.CW);
         canvas.clipPath(outline);

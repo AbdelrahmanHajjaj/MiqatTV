@@ -1,7 +1,15 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-22. Branch feature/companion-installation, draft PR #9.
-Latest scope: restore the Miqat status-bar identity; WORK.md owns next action.
+Latest scope: widgets starting at one cell; WORK.md owns next action.
+
+## One-cell widgets — 0.5.15/code 31
+
+All providers allow 40dp resize bounds; Next prayer starts at 1×1. Compact
+allocated space prioritizes prayer/time, preserving full time for accessibility
+and all preferences for larger sizes. Refresh the native English/Arabic picker
+previews. Focused provider/modern/legacy size, enlarged text, missing-location
+and resize-recovery checks pass. OEM launcher acceptance remains with the owner.
 
 ## Notification identity — 0.5.14/code 30
 

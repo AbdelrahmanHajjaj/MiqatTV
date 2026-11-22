@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.15 one-cell widgets
+
+- Start Next prayer at 1×1 and allow every widget to resize down to one cell on supported launchers.
+- Fit the next prayer and time into compact bounds, hiding dates/icons until space permits. Retain the full time for accessibility and restore details when enlarged.
+- Refresh native English/Arabic picker previews and keep widget settings intact through resizing.
+
 ## 0.5.14 notification identity
 
 - Restore the Miqat mihrab in the status bar and notification header. Keep the matching prayer icon beside the expanded prayer heading.

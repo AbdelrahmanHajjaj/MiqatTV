@@ -218,7 +218,13 @@ removes its Home resume prompt, including after reopening the app.
 
 **Home-screen widgets** offers next-prayer, daily timetable and compact strip
 presentations with one live preview and visible initial-presentation/shape choices
-and visual Theme/Background catalogs. A placed widget adapts its content to the
+and visual Theme/Background catalogs. Next prayer starts at **1×1**; every provider
+allows resizing down to one cell on compatible launchers. At the smallest sizes,
+only the next prayer and time remain visible. Very narrow tiles omit the visible
+AM/PM marker while accessibility retains the full time. Date/icon preferences
+are kept and details return as space permits. Long-press a placed widget to resize
+it; some launchers need an existing widget removed/re-added to refresh its limits.
+A placed widget adapts its content to the
 allocated width and height: next prayer when narrow, a timetable strip when wide
 and short, and a daily list when tall enough. Android 12+ supports exact launcher
 size variants; older launchers use their resize bounds. Small sizes prioritize

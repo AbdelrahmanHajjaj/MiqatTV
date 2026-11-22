@@ -75,9 +75,10 @@ final class WidgetRenderer {
         this.view = view;
         this.options = options;
         layout = initialLayout == null ? options.layoutFor(width, height, context.getResources().getConfiguration().fontScale) : initialLayout;
-        this.width = width > 0 ? width : options.layout.equals("strip") ? 400 : 280;
+        this.width = width > 0 ? width : options.layout.equals("strip") ? 400 : options.layout.equals("next") ? 80 : 280;
         this.height = height > 0 ? height : options.height();
-        minimal = layout.equals("next") && this.height < 140 * Math.max(1f, context.getResources().getConfiguration().fontScale) * options.size / 100f;
+        float scale = Math.max(1f, context.getResources().getConfiguration().fontScale) * options.size / 100f;
+        minimal = layout.equals("next") && (this.width < 140 * scale || this.height < 140 * scale);
         wide = !layout.equals("strip") && !minimal && this.width >= 260 * Math.max(1f, context.getResources().getConfiguration().fontScale) * options.size / 100f;
         settings = PhoneStore.read(context);
         data = PhoneData.get(context);
@@ -132,6 +133,10 @@ final class WidgetRenderer {
             view.setViewPadding(R.id.widget_content, dp(2), dp(2), dp(2), dp(2));
             view.setViewPadding(R.id.widget_next_content, 0, 0, 0, 0);
             view.setViewVisibility(R.id.widget_next_icon, View.GONE);
+            if (width < 120 && height < 120) {
+                view.setInt(R.id.widget_next_label, "setGravity", android.view.Gravity.CENTER);
+                view.setInt(R.id.widget_next_time, "setGravity", android.view.Gravity.CENTER);
+            }
         }
         view.setInt(R.id.widget_next_highlight, "setColorFilter", accent);
         view.setViewVisibility(R.id.widget_next_highlight, layout.equals("next") ? View.GONE : View.VISIBLE);
@@ -179,7 +184,7 @@ final class WidgetRenderer {
                 ready
                         ? ""
                         : data.text(
-                                !settings.locationReady
+                                minimal && !settings.locationReady ? "phone_location" : !settings.locationReady
                                         ? "phone_location_needed"
                                         : "phone_unavailable",
                                 ar));
@@ -190,7 +195,11 @@ final class WidgetRenderer {
         view.setViewVisibility(
                 R.id.widget_prayers, ready && !nextOnly && !strip ? View.VISIBLE : View.GONE);
         view.setViewVisibility(R.id.widget_strip, ready && strip ? View.VISIBLE : View.GONE);
-        if (!ready) return;
+        if (!ready) {
+            if (minimal) view.setContentDescription(R.id.widget_root,
+                    data.text(!settings.locationReady ? "phone_location_needed" : "phone_unavailable", ar));
+            return;
+        }
         PrayerSelection next =
                 tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(
                         day.times, tomorrow.times, now);
@@ -203,6 +212,12 @@ final class WidgetRenderer {
             view.setImageViewResource(R.id.widget_next_icon, prayerIcon(next.getNext()));
             view.setInt(R.id.widget_next_icon, "setColorFilter", accent);
         }
+        String fullTime=next == null ? "—" : text(time.format(new Date((long) next.getNextTime())));
+        if (minimal) view.setContentDescription(R.id.widget_root,
+                data.text("phone_next", ar) + ", " + (next == null ? data.text("phone_unavailable", ar)
+                        : data.prayerName(next.getNext(), ar) + ", " + fullTime));
+        if (minimal && width < 72 * Math.max(1f, context.getResources().getConfiguration().fontScale))
+            time.applyPattern(settings.value("display.clock").equals("12") ? "h:mm" : "HH:mm");
         view.setTextViewText(
                 R.id.widget_next_time,
                 next == null ? "—" : text(time.format(new Date((long) next.getNextTime()))));
