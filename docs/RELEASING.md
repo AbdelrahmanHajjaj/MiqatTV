@@ -27,6 +27,16 @@ and lints the Android release variants, then the publisher signs those unsigned
 APKs. Instrumentation/debug APKs are excluded. The publisher refuses stale,
 failed, PR/fork or other-workflow runs. It creates an unpublished draft prerelease.
 
+## Promote a verified preview to stable
+
+With owner approval, create a clean stable tag at the preview's source commit and
+copy its four verified packages and SHA256SUMS to a new draft. Compare every
+uploaded asset's size and SHA-256 digest with the published preview before
+publishing without prerelease status and marking it Latest. Preserve the preview
+tag and assets. Promotion reuses the signed bytes; no rebuild, new version code
+or signing-key access is needed. Update website download links and current guides.
+An installed copy of the same signed preview needs no reinstall.
+
 ## Persistent Android signing
 
 Phone, Android TV and installer have separate RSA release keys in one encrypted

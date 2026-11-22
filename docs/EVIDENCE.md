@@ -1,5 +1,18 @@
 # Validation evidence
 
+## Stable promotion — 23 November 2026
+
+The owner approved stable promotion of the verified signed preview. Stable
+v0.7.3 uses its source commit 8ab2de139e54e183d00f4190ca0baa8b8533cd3c and
+the same phone 0.5.19, Android TV 0.7.3, installer 1.1.5 and LG 0.2.30 packages.
+Each upload's size and SHA-256 matches the published preview. GitHub's Latest
+endpoint returns v0.7.3 with draft/prerelease both false; its TV download returns
+HTTP 200 and the public checksum manifest matches the preview. No app rebuild,
+re-signing or version-code change was involved. Existing preview tags/assets
+remain intact. The same signed preview needs no reinstall. Website build,
+39 changed-guide links/images and whitespace checks pass.
+PR and release records own final promotion, download checks and Pages outcomes.
+
 ## Signed preview publication — 23 November 2026
 
 The owner approved publishing v0.7.3-preview.1. It contains phone 0.5.19/code 35,

@@ -1,13 +1,15 @@
 # Current work
 
-Updated: 2026-11-23. Approved scope: persistent Android release signing and
-publication of the verified preview, including current website download links.
+Updated: 2026-11-23. Approved scope: promote the verified signed preview to stable,
+preserving its packages and updating current website download links and guides.
 
-v0.7.3-preview.1 is published: TV 0.7.3/code 14, phone 0.5.19/code 35,
+Stable v0.7.3 contains TV 0.7.3/code 14, phone 0.5.19/code 35,
 installer 1.1.5/code 8 and LG 0.2.30. Release builds/lint, focused rejection
 checks, final-main validation and hosted signing pass. Downloaded APKs match
 their pinned certificates, package IDs, release manifests and package checksums.
-The previous public release's assets are unchanged. See EVIDENCE.md and the
+Stable promotion reuses v0.7.3-preview.1's exact signed bytes and source commit;
+existing installations of that preview need no reinstall. Prior release tags and
+assets are preserved. See EVIDENCE.md and the
 release/PR records for validation and website deployment outcomes.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
