@@ -312,7 +312,7 @@ public final class PhonePlayback extends Service {
         expanded.setOnClickPendingIntent(R.id.adhan_notice_stop, command(STOP, 42501));
         Notification.Builder notice =
                 new Notification.Builder(this, PhoneAlarms.playbackChannel(this, screen))
-                        .setSmallIcon(prayerIcon)
+                        .setSmallIcon(R.drawable.companion_icon_mihrab)
                         .setContentTitle(title(settings))
                         .setContentText(recordingName)
                         .setColor(

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.14 notification identity
+
+- Restore the Miqat mihrab in the status bar and notification header. Keep the matching prayer icon beside the expanded prayer heading.
+
 ## 0.5.13 guided location and prayer icons
 
 - Show the matching prayer icon beside the expanded notification heading and in its compact system header.

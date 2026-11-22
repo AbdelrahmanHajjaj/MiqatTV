@@ -1,10 +1,9 @@
 # Current work
 
-Updated: 2026-11-22. Owner reports most physical-device tests working and will
-daily-drive the next candidate before merge/release preparation. Current scope:
-prayer notification icons, automatic foreground location request after Welcome,
-and optional background update consent on the guided location screen.
-Branch feature/companion-installation, draft PR #9. Version: 0.5.13/code 29.
+Updated: 2026-11-22. Owner reports the other 0.5.13 changes working and continues
+daily driving. Current correction: restore the Miqat mihrab in the status bar
+and system notification header, retaining the prayer glyph beside the expanded
+heading. Branch feature/companion-installation, draft PR #9. Version: 0.5.14/code 30.
 
 The location request is once per guide history, with manual fallback. Background
 updates remain off without explicit consent and cannot schedule before location

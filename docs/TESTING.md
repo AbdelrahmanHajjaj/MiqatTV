@@ -370,6 +370,8 @@ expanded view, then clicks the actual Pause, Play and Stop icons. `actions-ar`
 exercises Arabic direction and labels. Existing private settings, names and files
 are restored. Inspect native light/dark renders for contrast, wrapping and a
 single progress bar. The compact view remains Android's system template.
+The notification small-icon regression requires the Miqat mihrab; inspect the
+separate prayer glyph in the expanded heading so app identity stays consistent.
 
 `phone-setup-location` is the focused guided-location fixture. With foreground
 access denied it handles the actual automatic permission request, checks manual

@@ -1,5 +1,22 @@
 # Validation evidence
 
+## Status-bar identity — 22 November 2026
+
+Owner reports the remaining 0.5.13 changes working and continues daily driving.
+Phone 0.5.14/code 30 restores the Miqat mihrab as the playback notification's
+small status-bar/header icon; the canonical prayer glyph stays beside the
+expanded heading. No location/setup or playback behavior changed.
+
+Owned muted API 34: focused native small-icon assertion, actual notification
+Pause/Play/Stop and rendered mihrab/prayer-heading separation pass. Build/test
+compilation and lint pass (0 errors, 40 existing warnings). APK entry comparison
+with 0.5.13 changes only the manifest/version and playback dex; no entries are
+added or removed. All 25 recordings and the unchanged signer are verified.
+Review APK: 35,114,828 bytes; SHA256
+`77C5C14316EEB213E017504A3B7DC006C3F12CD4C5F711438F1EE9138DBEFBAE`.
+Full CI remains deferred during feedback; new-version OEM/daily acceptance stays
+with the owner. Private captures/logs remain ignored under state/.
+
 ## Guided location and prayer icons — 22 November 2026
 
 Phone 0.5.13/code 29 reuses the canonical prayer glyph in the compact notification

@@ -72,7 +72,8 @@ pending restoration is recovered at the next Miqat entry. Volume buttons and med
 Changing the mode stops current playback; the next playback uses the new mode.
 Short-tone notifications retain Android's notification-volume/channel behavior.
 
-Playback notifications show the matching prayer icon, prayer and scheduled time, plus the selected
+The status bar and notification header use the Miqat mihrab. The expanded
+notification shows the matching prayer icon, prayer and scheduled time, plus the selected
 recording's name, including names assigned to imported audio. Decorative artwork
 is omitted. Expand the notification for accessible Pause/Play and Stop icons;
 Android supplies the compact layout and a single progress bar. Swipe dismissal

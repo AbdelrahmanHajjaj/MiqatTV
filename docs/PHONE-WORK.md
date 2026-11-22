@@ -1,7 +1,13 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-22. Branch feature/companion-installation, draft PR #9.
-Latest scope: guided location permission/update choice and prayer notification icons; WORK.md owns next action.
+Latest scope: restore the Miqat status-bar identity; WORK.md owns next action.
+
+## Notification identity — 0.5.14/code 30
+
+Owner reports the other 0.5.13 changes working and continues daily driving.
+Restore the Miqat mihrab as the small status-bar/header icon; retain the canonical
+prayer glyph beside the expanded heading. No setup or playback behavior change.
 
 ## Daily-drive candidate — 0.5.13/code 29
 
