@@ -1,5 +1,26 @@
 # Validation evidence
 
+## Signed preview publication — 23 November 2026
+
+The owner approved publishing v0.7.3-preview.1. It contains phone 0.5.19/code 35,
+Android TV 0.7.3/code 14, installer 1.1.5/code 8 and LG 0.2.30. Android APKs are
+release mode and retain the pinned persistent certificates. Existing public
+v0.7.2-preview.2 assets were preserved.
+
+[Final-main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45074710103)
+and [hosted signing](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45075335895)
+passed. Downloaded all five candidate assets before publication: sizes, GitHub
+digests and the four package checksums match. SDK verification confirms each
+Android package ID, release manifest and pinned certificate; phone/TV contain all
+25 exact approved recordings. Temporary runner keys were removed successfully.
+Publication retains those asset digests and prerelease status. Routine CI has no
+phone/TV emulator jobs. Private signing recovery still needs an off-device backup.
+
+README, phone setup and both website languages now link to the signed preview.
+Website build and existing product browser checks pass in Arabic/English at
+390/900/1440 px; changed-guide links and whitespace pass. No app behavior changed.
+PR and Pages records own the download-reference validation and deployment status.
+
 ## Signing runner tools — 22 November 2026
 
 The first hosted signing attempt stopped before decoding the key because

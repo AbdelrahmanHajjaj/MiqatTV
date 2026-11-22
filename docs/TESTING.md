@@ -186,8 +186,9 @@ denial must prevent scheduling/playback; exact-only denial registers a disclosed
 approximate alarm without starting playback. `phone-runtime` requires both permissions granted on an owned
 muted emulator; it exercises actual AlarmManager delivery, foreground output,
 Stop/focus loss, disabled cleanup, recovery and early/expired/duplicate rejection.
-The fixture saves/restores phone settings; it does not operate a TV. Companion CI
-runs UI, portrait sizing, denial and actual-delivery suites in addition to existing TV UI/LAN checks.
+The fixture saves/restores phone settings; it does not operate a TV. UI, portrait
+sizing, denial and actual-delivery suites are targeted manual checks, alongside
+the native TV UI/LAN suites. Routine CI does not run them.
 
 Phone feedback suites: `phone-location-denied` requires foreground location denied;
 `phone-location-approx` uses a framework network-provider fixture with coarse-only
@@ -196,8 +197,9 @@ precise access plus injected London GPS and checks calibrated travel refresh.
 `phone-custom` isolates preferences/files to verify migration, weekday/quiet
 policy and bounded private imports. `public-release` tests release metadata,
 checksums and interrupted/atomic file preservation without a network or TV.
-Phone CI runs these before the existing suites. Public binary end-to-end download
-still needs an actually published release; draft assets are not public downloads.
+Run these manually when their affected behavior needs checking. Public binary
+end-to-end download still needs an actually published release; draft assets are
+not public downloads.
 
 ## Apple portability boundary
 

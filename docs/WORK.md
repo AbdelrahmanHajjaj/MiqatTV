@@ -1,26 +1,22 @@
 # Current work
 
-Updated: 2026-11-22. Approved scope: configure persistent Android release signing
-for the phone, Android TV and standalone installer. Keep keys out of Git and PR
-jobs; restrict encrypted CI signing secrets to the main-only android-release
-environment. Compile release variants in validation and sign only artifacts from
-successful current-main validation. Verify package identity, release mode and
-the pinned public signing certificate before publication.
+Updated: 2026-11-23. Approved scope: persistent Android release signing and
+publication of the verified preview, including current website download links.
 
-Build and verify the three release APKs locally and through the release workflow.
-Exercise rejection of debug APKs, wrong packages and unexpected signers. Deliver
-through required checks and a normal merge. Preserve existing published binaries.
-Local release builds/signatures, release lint and focused checks pass. PR #18 and
-main validation pass with no emulator runs. The first hosted signing attempt
-found a missing sdkmanager PATH entry; use preinstalled Build Tools 35.0.0 directly
-and rerun the signed-candidate workflow after the runner fix is merged.
-The owner explicitly removed automatic phone/TV emulator jobs from routine CI.
-Keep build/lint, portable/JVM/browser and package/signature gates; native device
-suites remain available for targeted manual checks. No further emulator runs.
+v0.7.3-preview.1 is published: TV 0.7.3/code 14, phone 0.5.19/code 35,
+installer 1.1.5/code 8 and LG 0.2.30. Release builds/lint, focused rejection
+checks, final-main validation and hosted signing pass. Downloaded APKs match
+their pinned certificates, package IDs, release manifests and package checksums.
+The previous public release's assets are unchanged. See EVIDENCE.md and the
+release/PR records for validation and website deployment outcomes.
 
-Next Android versions: TV 0.7.3/code 14, phone 0.5.19/code 35, installer 1.1.5/code 8.
-LG remains 0.2.30. v0.7.2-preview.2 stays public and unchanged. Transition from
-debug signing requires a fresh install; later signed releases preserve identity.
+Keys stay outside Git and PR jobs, in private recovery and the main-only
+android-release environment. Routine CI has no phone/TV emulator jobs; retain
+build/lint, portable/JVM/browser and package/signature gates. Native device suites
+remain targeted manual checks. No further product changes are in scope.
+
+Transition from debug signing requires one fresh install and removes local data;
+later signed releases preserve identity. Keep an off-device signing recovery copy.
 
 Overwrite only the existing Miqat-latest review exports under state/builds/.
 Keep the existing debug review signer. Release keys and recovery material are in
