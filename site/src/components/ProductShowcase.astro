@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import type { Lang } from '../lib/text';
-import { REPO } from '../lib/site';
+import { REPO, RELEASE_TAG } from '../lib/site';
 import widgetStrip from '../../../companion/android/src/main/res/drawable-nodpi/widget_preview_strip.png';
 import widgetStripAr from '../../../companion/android/src/main/res/drawable-ar-nodpi/widget_preview_strip.png';
 
@@ -17,69 +17,75 @@ const shot = (name: string) => {
   return source;
 };
 const L = ar ? {
-  eyebrow: 'MIQAT · ميقات', title: ['مواقيت الصلاة.', 'على الهاتف والتلفاز.'],
-  intro: 'مواقيت الصلاة والأذان على أندرويد، مع التقويم الهجري والقبلة والويدجت. واستخدم التطبيق نفسه لإعداد ميقات على تلفاز البيت والتحكم فيه.',
-  phoneCta: 'اكتشف تطبيق الهاتف', tvCta: 'جرّب معاينة التلفاز',
-  phone: 'تطبيق أندرويد', companion: 'رفيق التلفاز', android: 'أندرويد TV', lg: 'LG webOS',
-  phoneTitle: 'مواقيت وأذان على أندرويد', phoneIntro: 'احسب المواقيت دون إنترنت، واضبط الأذان والتذكير لكل صلاة. إعدادات الهاتف مستقلة عن التلفاز.',
+  eyebrow: 'MIQAT · ميقات', title: ['مواقيت الصلاة', 'على هاتفك وتلفازك'],
+  intro: 'تابع مواقيت صلاتك واستمع إلى الأذان على هاتف أندرويد وتلفاز البيت، حتى دون إنترنت.',
+  getCta: 'نزّل ميقات', phoneCta: 'اكتشف المزايا', tvCta: 'جرّب ميقات للتلفاز',
+  phone: 'الهاتف', companion: 'التحكم بالتلفاز', android: 'أندرويد TV', lg: 'LG webOS',
+  phoneTitle: 'صلواتك اليومية على هاتفك', phoneIntro: 'مواقيت اليوم والتقويم الهجري والقبلة، مع الأذان والتذكيرات التي تناسب يومك.',
   phoneGuide: 'دليل الهاتف',
   screens: [
-    ['phone-home', 'مواقيت اليوم', 'التاريخ الهجري والمدينة داخل بطاقة الصلاة، مع جدول اليوم وإطار للصلاة القادمة.'],
-    ['phone-calendar', 'التقويم الهجري', 'تصفّح الشهر وأيام المناسبات، وشاهد مواقيت اليوم المحدد تحت التقويم مباشرة.'],
-    ['phone-prayer', 'تنبيهات الصلاة', 'أذان أو نغمة قصيرة أو صامت، مع اهتزاز مستقل وأيام الأسبوع والتذكير والتعديلات لكل صلاة.'],
-    ['phone-voices', 'مكتبة الأذان', 'أصوات مدمجة وتسجيلات من جهازك. اختر الاسم ومستوى الصوت ونسبة مدة الأذان.'],
-    ['phone-qibla', 'اتجاه القبلة', 'بوصلة واتجاه محسوب من موقعك دون إنترنت، مع خريطة اختيارية.'],
-    ['phone-widgets', 'ويدجت الصلاة', 'تبدأ من ١×١ وتتكيّف عند تغيير حجمها، مع تخصيص مستقل وإبراز الصلاة القادمة.'],
-    ['phone-style', 'الثيمات والخلفيات', 'ميقات وخلفيته المميزة أولًا، مع معاينة كاملة وحفظ مباشر.'],
-    ['phone-location', 'الموقع', 'اختر المدينة أو اكتشف الموقع، وفعّل التحديث التلقائي أثناء إغلاق التطبيق إن أردت.'],
+    ['phone-home', 'الصلاة القادمة ومواقيت يومك', 'اعرف موعد الصلاة القادمة والوقت المتبقي لها، وشاهد مواقيت بقية اليوم.'],
+    ['phone-calendar', 'التقويم الهجري والمناسبات', 'تصفّح مواقيت الأيام، وتابع رمضان والعيدين والمناسبات الإسلامية على التقويم.'],
+    ['phone-prayer', 'تنبيهات تناسب يومك', 'استمع إلى الأذان، أو اختر نغمة قصيرة أو تنبيهًا صامتًا لكل صلاة، مع تذكيرات في الأيام التي تختارها.'],
+    ['phone-voices', 'استمع إلى أذانك المفضّل', 'اختر من ١٣ صوتًا للأذان أو أضف تسجيلًا تحبّه من جهازك.'],
+    ['phone-qibla', 'اعرف اتجاه القبلة', 'حدّد اتجاه مكة بالبوصلة والخريطة، في البيت وأثناء السفر.'],
+    ['phone-widgets', 'المواقيت على الشاشة الرئيسية', 'شاهد الصلاة القادمة من شاشة هاتفك الرئيسية قبل فتح التطبيق.'],
+    ['phone-style', 'ألوان وخلفيات على ذوقك', 'اختر من الثيمات الملوّنة والمناظر الطبيعية والزخارف ما يناسبك.'],
+    ['phone-location', 'مواقيتك أينما ذهبت', 'تابع مواقيت مدينتك، مع تحديث اختياري للموقع أثناء السفر.'],
   ],
-  widgets: 'ويدجت بأحجام مختلفة', widgetCopy: 'اختر بطاقة الصلاة القادمة أو شريط المواقيت أو جدول اليوم. تتكيّف التفاصيل مع المساحة، مع التاريخ الهجري وإضافة الميلادي اختياريًا.', widgetAlt: 'معاينة ويدجت شريط الصلاة بالأيقونات والمواقيت وإطار الصلاة القادمة',
-  companionTitle: 'إعداد التلفاز والتحكم فيه', companionIntro: 'من «أجهزة التلفاز» ثبّت ميقات على أندرويد أو LG، واربطه على شبكة البيت.',
+  widgets: 'الصلاة القادمة أمامك', widgetCopy: 'شاهد الصلاة القادمة وجدول اليوم والتاريخ الهجري على الشاشة الرئيسية، بحجم يناسب ترتيب شاشتك.', widgetAlt: 'ويدجت ميقات يعرض مواقيت الصلاة على الشاشة الرئيسية',
+  companionTitle: 'تحكّم بميقات على التلفاز من هاتفك', companionIntro: 'ثبّت ميقات على التلفاز، وغيّر مظهره وشغّل إذاعة القرآن من تطبيق الهاتف.',
   companionGuide: 'الإعداد والربط',
   companionScreens: [
-    ['companion-tvs', 'أجهزة التلفاز', 'إعداد جهاز جديد، ربط ميقات المثبّت، أو فتح تلفاز محفوظ.'],
-    ['companion-remote', 'ريموت الهاتف', 'الرئيسية والمداخل وإذاعة القرآن واختبار الأذان.'],
-    ['companion-appearance', 'مظهر التلفاز', 'غيّر الثيم والخلفية وإعدادات التلفاز من الهاتف، مع حفظ مباشر.'],
+    ['companion-tvs', 'أجهزة تلفازك في تطبيق واحد', 'ثبّت ميقات وأضف أجهزة التلفاز التي تستخدمها في البيت.'],
+    ['companion-remote', 'الإذاعة والمداخل من هاتفك', 'شغّل إذاعة القرآن، أو بدّل مدخل التلفاز، أو عُد إلى شاشة ميقات.'],
+    ['companion-appearance', 'مظهر تختاره للتلفاز', 'اختر ألوان التلفاز وخلفياته واضبط إعدادات ميقات من هاتفك.'],
   ],
-  pairTitle: 'ربط على شبكة البيت', pairCopy: 'امسح رمز التلفاز ووافق بالريموت. الاتصال مشفّر، ويمكنك إلغاء وصول أي هاتف من التلفاز.',
-  tvTitle: 'ميقات على التلفاز', tvIntro: 'المحراب والتاريخ الهجري والصلاة القادمة، مع خطوط وأيقونات وألوان ميقات وتحكم بالريموت.',
-  androidTitle: 'Android TV / Google TV', androidCopy: 'شاشة رئيسية لتطبيقاتك المفضلة ومواقيت الصلاة، مع الأذان والتذكير والقبلة وإذاعة القرآن.',
-  lgTitle: 'LG webOS', lgCopy: 'اعرض HDMI داخل ميقات، مع مواقيت الصلاة والأذان وإذاعة القرآن.',
-  getTitle: 'احصل على ميقات', getCopy: 'تطبيق الهاتف يشمل الصلاة ووضع رفيق التلفاز. لأندرويد TV وLG حزمتان مختلفتان.',
-  build: 'البناء من المصدر', releases: 'تنزيل نسخة المعاينة',
-  packages: [['miqat-phone.apk', 'تطبيق الهاتف ورفيق التلفاز'], ['miqat.apk', 'تطبيق أندرويد TV'], ['.ipk', 'تطبيق LG webOS'], ['miqat-installer.apk', 'أداة إعداد أندرويد TV المستقلة، اختياريًا']],
+  tvTitle: 'مواقيت الصلاة لكل أهل البيت', tvIntro: 'شاهد موعد الصلاة القادمة من مكانك في الغرفة، واستمع إلى الأذان وإذاعة القرآن على التلفاز.',
+  androidTitle: 'Android TV / Google TV', androidCopy: 'اجمع تطبيقات التلفاز المفضّلة ومواقيت الصلاة في شاشة رئيسية واحدة، مع الأذان والتذكير وإذاعة القرآن.',
+  lgTitle: 'LG webOS', lgCopy: 'تابع مدخل HDMI إلى جانب مواقيت الصلاة، واستمع إلى الأذان وإذاعة القرآن على تلفاز LG.',
+  getTitle: 'نزّل ميقات لجهازك',
+  guide: 'دليل التثبيت', releases: 'ملاحظات الإصدار وكل التنزيلات',
+  downloads: [
+    ['miqat-phone.apk', 'هاتف أندرويد', 'المواقيت والأذان والتقويم والويدجت، مع إعداد التلفاز والتحكم فيه.', 'تنزيل لأندرويد', 'docs/PHONE.md'],
+    ['miqat.apk', 'Android TV / Google TV', 'مواقيت الصلاة وتطبيقاتك المفضّلة على شاشة التلفاز الرئيسية.', 'تنزيل لأندرويد TV', 'docs/ANDROID-SETUP.md'],
+    ['tv.miqat.webos_0.2.30_all.ipk', 'LG webOS', 'مواقيت الصلاة والأذان وإذاعة القرآن على تلفاز LG.', 'تنزيل لتلفاز LG', 'docs/WEBOS.md'],
+  ],
 } : {
-  eyebrow: 'MIQAT · ميقات', title: ['Prayer times.', 'On phone and TV.'],
-  intro: 'Offline prayer times and Adhan on Android, with a Hijri calendar, Qibla and widgets. Set up and control Miqat on your TV from the same app.',
-  phoneCta: 'Explore the phone app', tvCta: 'Try the TV preview',
-  phone: 'Android phone', companion: 'TV companion', android: 'Android TV', lg: 'LG webOS',
-  phoneTitle: 'Prayer times and Adhan on Android', phoneIntro: 'Calculate prayer times offline and set alerts for each prayer. Phone and TV settings stay separate.',
+  eyebrow: 'MIQAT · ميقات', title: ['Prayer times for', 'your phone and TV'],
+  intro: 'Keep up with daily prayers on your Android phone and TV, with offline prayer times and Adhan.',
+  getCta: 'Download Miqat', phoneCta: 'Explore features', tvCta: 'Try the TV demo',
+  phone: 'Phone', companion: 'TV controls', android: 'Android TV', lg: 'LG webOS',
+  phoneTitle: 'Your daily prayers, on your phone', phoneIntro: 'Today’s prayer times, the Hijri calendar and Qibla, with Adhan and reminders to suit your day.',
   phoneGuide: 'Phone guide',
   screens: [
-    ['phone-home', 'Today’s prayers', 'Hijri date and city inside the prayer card, a daily timetable and a next-prayer outline.'],
-    ['phone-calendar', 'Hijri calendar', 'Browse the month and events, with the selected day’s prayer times below.'],
-    ['phone-prayer', 'Prayer alerts', 'Adhan, Short tone or Silent, with vibration, weekdays, reminders and time adjustments for each prayer.'],
-    ['phone-voices', 'Adhan library', 'Built-in voices and recordings from your device. Choose a name, volume and playback length.'],
-    ['phone-qibla', 'Qibla direction', 'An offline compass and bearing from your location, with an optional map.'],
-    ['phone-widgets', 'Prayer widgets', 'Start at 1×1 and resize, with separate styles and a next-prayer highlight.'],
-    ['phone-style', 'Themes and backgrounds', 'Miqat and Signature come first. Preview the whole page and save changes as you choose.'],
-    ['phone-location', 'Location', 'Choose a city or detect your location, with optional updates while the app is closed.'],
+    ['phone-home', 'Your next prayer and the day ahead', 'See when the next prayer begins, how long remains and the rest of your day’s prayer times.'],
+    ['phone-calendar', 'Hijri dates and Islamic events', 'Browse daily prayer times and see Ramadan, Eid and other Islamic dates on the calendar.'],
+    ['phone-prayer', 'Alerts for your routine', 'Hear the Adhan, use a short tone or keep a prayer silent. Set reminders for the days you need them.'],
+    ['phone-voices', 'Hear your favourite Adhan', 'Choose from 13 voices or add a recording you love from your own device.'],
+    ['phone-qibla', 'Find the Qibla', 'Find the direction of Makkah with a compass and map, at home or while travelling.'],
+    ['phone-widgets', 'Prayer times on your home screen', 'Check the next prayer from your phone’s home screen, before opening the app.'],
+    ['phone-style', 'Colours and backgrounds', 'Personalise Miqat with colours, illustrated landscapes and geometric patterns.'],
+    ['phone-location', 'Prayer times wherever you go', 'Get prayer times for your city, with optional location updates when you travel.'],
   ],
-  widgets: 'Resizable home-screen widgets', widgetCopy: 'Choose a next-prayer card, timetable strip or daily list. Details adapt to the space, with a Hijri date and optional Gregorian date.', widgetAlt: 'Native prayer-strip widget preview with prayer icons, times and a next-prayer border',
-  companionTitle: 'Set up and control your TV', companionIntro: 'Open Your TVs to install Miqat on Android or LG and pair on your home network.',
+  widgets: 'Keep the next prayer in view', widgetCopy: 'See the next prayer, daily timetable and Hijri date on your home screen, in a size that suits your layout.', widgetAlt: 'Miqat prayer-times widget for the Android home screen',
+  companionTitle: 'Control Miqat on TV from your phone', companionIntro: 'Install Miqat on your TV, choose its look and control Quran radio from the phone app.',
   companionGuide: 'Setup and pairing',
   companionScreens: [
-    ['companion-tvs', 'Your TVs', 'Set up a new TV, pair Miqat, or open a saved TV.'],
-    ['companion-remote', 'Phone remote', 'Home, inputs, Quran radio and an Adhan test.'],
-    ['companion-appearance', 'TV appearance', 'Change TV themes, backgrounds and settings from your phone. Changes save as you choose.'],
+    ['companion-tvs', 'Your TVs in one app', 'Install Miqat and add the TVs you use at home.'],
+    ['companion-remote', 'Radio and TV controls', 'Start Quran radio, switch TV inputs or return to Miqat from your phone.'],
+    ['companion-appearance', 'Personalise your TV', 'Choose your TV’s colours and backgrounds from your phone.'],
   ],
-  pairTitle: 'Pair on your home network', pairCopy: 'Scan the TV’s code and approve with its remote. The connection is encrypted, and you can revoke any phone from the TV.',
-  tvTitle: 'Miqat on your TV', tvIntro: 'The mihrab, Hijri date and next prayer, with Miqat fonts, prayer icons, themes and remote controls.',
-  androidTitle: 'Android TV / Google TV', androidCopy: 'A Home launcher for favourite apps and prayer times, with Adhan, reminders, Qibla and Quran radio.',
-  lgTitle: 'LG webOS', lgCopy: 'Watch HDMI inside Miqat alongside prayer times, Adhan and Quran radio.',
-  getTitle: 'Get Miqat', getCopy: 'The phone app includes prayers and TV companion mode. Android TV and LG use separate packages.',
-  build: 'Build from source', releases: 'Download preview',
-  packages: [['miqat-phone.apk', 'Android phone + TV companion'], ['miqat.apk', 'Android TV app'], ['.ipk', 'LG webOS app'], ['miqat-installer.apk', 'Optional standalone Android TV setup tool']],
+  tvTitle: 'Prayer times for the whole household', tvIntro: 'See the next prayer across the room, hear the Adhan and listen to Quran radio on your TV.',
+  androidTitle: 'Android TV / Google TV', androidCopy: 'Bring your favourite TV apps and prayer times together on the Home screen, with Adhan, reminders and Quran radio.',
+  lgTitle: 'LG webOS', lgCopy: 'Watch HDMI alongside prayer times, and listen to Adhan and Quran radio on your LG TV.',
+  getTitle: 'Download Miqat for your device',
+  guide: 'Installation guide', releases: 'Release notes & all downloads',
+  downloads: [
+    ['miqat-phone.apk', 'Android phone', 'Prayer times, Adhan, calendar and widgets, plus TV setup and controls.', 'Download for Android', 'docs/PHONE.md'],
+    ['miqat.apk', 'Android TV / Google TV', 'Prayer times and your favourite apps on the TV Home screen.', 'Download for Android TV', 'docs/ANDROID-SETUP.md'],
+    ['tv.miqat.webos_0.2.30_all.ipk', 'LG webOS', 'Prayer times, Adhan and Quran radio on your LG TV.', 'Download for LG', 'docs/WEBOS.md'],
+  ],
 };
 ---
 <section class="product-hero" aria-labelledby="product-title">
@@ -87,11 +93,11 @@ const L = ar ? {
     <p class="kicker">{L.eyebrow}</p>
     <h1 id="product-title">{L.title.map(line => <span>{line}</span>)}</h1>
     <p class="hero-intro">{L.intro}</p>
-    <div class="actions"><a class="primary" href="#phone">{L.phoneCta}</a><a href="#tv">{L.tvCta}</a></div>
+    <div class="actions"><a class="primary" href="#get-miqat">{L.getCta}</a><a href="#phone">{L.phoneCta}</a></div>
   </div>
   <figure class="hero-images">
     <div class="hero-tv"><Image src={shot('android-home')} alt={L.androidTitle} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 54vw" loading="eager" format="webp" /></div>
-    <Image class="hero-phone" src={shot('phone-home')} alt={L.phone} widths={[240, 420, 640]} sizes="(max-width: 800px) 24vw, 15vw" loading="eager" format="webp" />
+    <Image class="hero-phone" src={shot('phone-home')} alt={ar ? 'ميقات على هاتف أندرويد' : 'Miqat on an Android phone'} widths={[240, 420, 640]} sizes="(max-width: 800px) 24vw, 15vw" loading="eager" format="webp" />
   </figure>
 </section>
 <nav class="product-rail" aria-label={ar ? 'تطبيقات ميقات' : 'Miqat apps'}>
@@ -117,7 +123,6 @@ const L = ar ? {
       <figcaption><h3>{title}</h3><p>{description}</p></figcaption>
     </figure>)}
   </div>
-  <div class="trust-note"><h3>{L.pairTitle}</h3><p>{L.pairCopy}</p></div>
 </section>
 <section class="product-section" aria-labelledby="tvs-title">
   <p class="kicker">{L.android} · {L.lg}</p><h2 id="tvs-title">{L.tvTitle}</h2><p class="section-intro">{L.tvIntro}</p>
@@ -130,10 +135,15 @@ const L = ar ? {
       <figcaption><h3>{title}</h3><p>{copy}</p></figcaption>
     </figure>)}
   </div>
+  <div class="actions tv-demo-link"><a href="#tv">{L.tvCta}</a></div>
 </section>
 <section id="get-miqat" class="product-section get-section" aria-labelledby="get-title">
-  <div><p class="kicker">MIQAT · ميقات</p><h2 id="get-title">{L.getTitle}</h2><p>{L.getCopy}</p><div class="actions"><a class="primary" href={`${REPO}/releases`}>{L.releases}</a><a href={`${REPO}/blob/main/docs/BUILD.md`}>{L.build}</a></div></div>
-  <dl>{L.packages.map(([file, label]) => <div><dt dir="ltr">{file}</dt><dd>{label}</dd></div>)}</dl>
+  <h2 id="get-title">{L.getTitle}</h2>
+  <div class="download-grid">{L.downloads.map(([file, title, description, label, guide]) => <article class="download-card">
+    <h3>{title}</h3><p>{description}</p>
+    <div class="actions"><a class="primary" href={`${REPO}/releases/download/${RELEASE_TAG}/${file}`}>{label}</a><a href={`${REPO}/blob/main/${guide}`}>{L.guide}</a></div>
+  </article>)}</div>
+  <a class="release-link" href={`${REPO}/releases/tag/${RELEASE_TAG}`}>{L.releases}</a>
 </section>
 <style>
   section, figure[id] { scroll-margin-top:2rem; }
@@ -163,25 +173,22 @@ const L = ar ? {
   .phone-image { display:block; padding:10px; background:linear-gradient(150deg,#1d474c88,#082b3088); border:1px solid var(--color-line-soft); border-radius:24px; cursor:zoom-in; }
   .phone-image :global(img) { display:block; width:100%; height:auto; border-radius:15px; }
   figcaption h3 { margin:20px 0 10px; }
-  figcaption p, .widget-feature p, .trust-note p, .get-section p { font-size:1rem; line-height:1.85; color:var(--color-mist-400); margin:0; }
+  figcaption p, .widget-feature p, .download-card p { font-size:1rem; line-height:1.85; color:var(--color-mist-400); margin:0; }
   .widget-feature { display:grid; grid-template-columns:1fr 1.3fr; align-items:center; gap:40px; margin-top:52px; padding:32px; background:#123b4088; border-radius:18px; }
   .widget-feature h3 { margin-bottom:12px; }
   .widget-feature :global(img) { width:100%; height:auto; }
   .companion-gallery { grid-template-columns:repeat(3,minmax(0,1fr)); max-width:1020px; margin-inline:auto; gap:40px; }
-  .trust-note { display:grid; grid-template-columns:1fr 2fr; gap:32px; margin-top:36px; padding-top:28px; border-top:1px solid var(--color-line-soft); }
   .tv-gallery { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
   .tv-image { display:block; position:relative; aspect-ratio:16/9; overflow:hidden; border-radius:12px; border:1px solid var(--color-line-soft); }
   .tv-image.native { aspect-ratio:1920/1020; }
   .tv-image :global(img) { position:absolute; inset:0; width:100%; height:auto; display:block; }
-  .get-section { display:grid; grid-template-columns:1.3fr 1fr; gap:64px; }
-  .get-section h2 { margin-bottom:24px; }
-  .get-section .actions { margin:26px 0; }
-  dl { margin:0; }
-  dl div { padding:20px 0; border-bottom:1px solid var(--color-line-soft); }
-  dt { font-size:1rem; color:var(--color-gold-400); text-align:start; overflow-wrap:anywhere; }
-  dd { font-size:1rem; color:var(--color-mist-400); margin:8px 0 0; }
+  .tv-demo-link { margin-top:28px; }
+  .download-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin-top:32px; }
+  .download-card { display:flex; flex-direction:column; gap:20px; padding:28px; background:#123b4088; border:1px solid var(--color-line-soft); border-radius:16px; }
+  .download-card .actions { margin-top:auto; padding-top:12px; align-items:start; flex-direction:column; gap:8px; }
+  .release-link { display:inline-block; margin-top:28px; font-size:1rem; text-underline-offset:5px; }
   @media(max-width:1100px) { .phone-gallery { grid-template-columns:repeat(3,minmax(0,1fr)); } .companion-gallery { gap:24px; } }
-  @media(max-width:800px) { .product-hero { grid-template-columns:1fr; gap:12px; } .hero-images { max-width:680px; margin:auto; } .phone-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } .widget-feature,.trust-note,.get-section { grid-template-columns:1fr; gap:26px; } .tv-gallery { grid-template-columns:1fr; gap:40px; } .section-heading { align-items:start; flex-direction:column; gap:18px; } .get-section { gap:32px; } }
+  @media(max-width:800px) { .product-hero { grid-template-columns:1fr; gap:12px; } .hero-images { max-width:680px; margin:auto; } .phone-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } .widget-feature,.download-grid { grid-template-columns:1fr; gap:26px; } .tv-gallery { grid-template-columns:1fr; gap:40px; } .section-heading { align-items:start; flex-direction:column; gap:18px; } }
   @media(max-width:560px) { .phone-gallery { grid-template-columns:1fr; max-width:360px; margin-inline:auto; gap:38px; } .product-rail { justify-content:start; gap:16px 24px; } .widget-feature { padding:24px 18px; } .hero-images :global(.hero-phone) { border-width:3px; border-radius:14px; } }
   :global([dir='rtl']) .kicker { letter-spacing:0; }
   :global([dir='rtl']) .hero-images { padding-inline:0 9%; }

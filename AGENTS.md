@@ -29,6 +29,10 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
   explanatory filler during later work. Avoid generic marketing slogans and
   defensive hardware-verification disclaimers in product copy. Keep concrete
   requirements in setup guides and test history in EVIDENCE.md.
+  Write the product website for first-time visitors: introduce what Miqat does,
+  connect features to everyday use and provide device-labelled downloads. Keep
+  release notes, catalog order, internal names and design/implementation choices
+  out of marketing copy. See the research and copy guide in site/README.md.
 
 - Use Miqat / ميقات and tv.miqat.* identifiers. Migration from the previous app
   identity uses a fresh installation; do not add legacy aliases.

@@ -2,6 +2,7 @@
 
 ## Product website and documentation
 
+- Rewrite the English/Arabic website around daily prayer features, phone-to-TV controls and device-labelled downloads, informed by product website research.
 - Showcase standalone Android phone prayers, TV companion mode, Android/Google TV and LG across the bilingual website and guides, with current screenshots.
 - Replace filler and repeated hardware disclaimers with concise feature descriptions in English and Arabic.
 - Reuse the website build's Pages artifact when retrying deployment.

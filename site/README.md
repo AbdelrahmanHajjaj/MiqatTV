@@ -5,6 +5,29 @@ at [MiqatTV](https://abdelrahmanhajjaj.github.io/MiqatTV/). Arabic is at the roo
 English is under `/en/`. The static Astro site presents four product surfaces:
 standalone Android phone, TV companion mode, Android/Google TV and LG webOS.
 
+## Product copy
+
+Write for someone meeting Miqat for the first time. Introduce prayer times and
+Adhan, show what people can do on each device, then offer the matching download.
+Each screenshot caption should explain a useful feature. Keep catalog order,
+internal preset names, geometry, save behaviour and implementation history in
+the development guides. Use the same approach in Arabic and English.
+
+Research reviewed on 22 November 2026:
+
+- [Pillars](https://thepillarsapp.com/): prayer features presented through daily
+  use, with screenshots and an app download.
+- [Things](https://culturedcode.com/things/): the app's purpose before feature
+  exploration, with downloads grouped by device.
+- [Flighty](https://flighty.com/): features explained through travel situations
+  and their usefulness to the traveller.
+
+Miqat applies these patterns to its own features and screenshots. Do not copy
+competitor wording, ratings, awards or unimplemented features.
+`src/lib/site.ts` owns `RELEASE_TAG`; update it when publishing a new preview and
+check the three device download links. The release page also provides the
+optional standalone TV installer.
+
 ## Content and assets
 
 - `src/components/ProductShowcase.astro`: phone feature gallery, companion mode,

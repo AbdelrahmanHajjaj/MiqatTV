@@ -1,5 +1,21 @@
 # Validation evidence
 
+## Product website for first-time visitors — 22 November 2026
+
+Reviewed the live Pillars, Things and Flighty product websites. Sources and the
+resulting copy guide are in site/README.md. English/Arabic product sections and
+TV feature pages now describe everyday uses. Removed catalog order, internal
+names, control geometry and save behaviour from marketing copy. Added three
+device-labelled download cards linked to the published v0.7.2-preview.2 assets.
+README and agent guidance follow the same audience distinction.
+
+Canonical data/token checks and website unit/build/browser checks pass. Both
+languages pass at 390/900/1440 px, including full-size image links, navigation
+and page keys. Existing TV settings/pairing/focus checks pass at 80/100/150%.
+Reviewed mobile heroes, desktop/mobile downloads and refreshed social cards.
+Relative links and whitespace checks pass. Raw captures stay under state/.
+PR and Pages records own delivery status. App packages remain unchanged.
+
 ## Product copy and preview publication — 22 November 2026
 
 Removed filler and repeated hardware disclaimers from the English/Arabic website,

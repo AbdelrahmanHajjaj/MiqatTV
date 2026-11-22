@@ -1,12 +1,7 @@
 // Every page of the preview: one per TV screen or mode, in Arabic (default, at the root) and English (/en/).
 import type { Lang } from './text';
-import { CITIES } from './data';
-
-const cityCount = CITIES.length;
-const countryCount = new Set(CITIES.map((city) => city.countryEn)).size;
-
 export const REPO = 'https://github.com/AbdelrahmanHajjaj/MiqatTV';
-export const INSTALL = `${REPO}#install`;
+export const RELEASE_TAG = 'v0.7.2-preview.2';
 
 type L = Record<Lang, string>;
 export type Page = {
@@ -23,19 +18,17 @@ export const PAGES: Page[] = [
   {
     slug: '', screen: 'home',
     nav: { ar: 'الرئيسية', en: 'Home' },
-    title: { ar: 'ميقات · مواقيت الصلاة على هاتف أندرويد والتلفاز', en: 'Miqat · Prayer times for Android phones and TVs' },
+    title: { ar: 'ميقات · مواقيت الصلاة والأذان على هاتفك وتلفازك', en: 'Miqat · Prayer times and Adhan for your phone and TV' },
     description: {
-      ar: 'مواقيت الصلاة والأذان والتقويم الهجري والقبلة والويدجت على هاتف أندرويد، مع وضع رفيق التلفاز وتطبيقَي Android TV وLG webOS. بالعربية والإنجليزية.',
-      en: 'Offline prayer times, Adhan, Hijri calendar, Qibla and widgets on Android phones, with TV companion mode and Android TV / LG webOS apps. Arabic and English.',
+      ar: 'تابع مواقيت صلاتك واستمع إلى الأذان على هاتف أندرويد وتلفاز البيت. تقويم هجري وقبلة وويدجت، مع تطبيقَي Android TV وLG webOS.',
+      en: 'Prayer times and Adhan on your Android phone and TV. Discover the Hijri calendar, Qibla, home-screen widgets and apps for Android TV and LG webOS.',
     },
     body: {
       ar: [
-        'الصلاة القادمة والعدّ التنازلي داخل المحراب، ومواقيت اليوم وتطبيقاتك المفضلة بجانبه. يعمل ميقات كشاشة رئيسية على أندرويد TV، وكتطبيق مستقل يعرض HDMI على LG.',
-        `المواقيت تُحسب على التلفاز نفسه دون إنترنت، لـ ${cityCount} مدينة في ${countryCount} دولة، مع اختيار طريقة الحساب ومذهب العصر وتعديل التاريخ الهجري.`,
+        'تابع الصلاة القادمة ومواقيت اليوم، واستمع إلى الأذان وإذاعة القرآن على شاشة البيت.',
       ],
       en: [
-        'The next prayer and countdown sit inside the mihrab, with today’s times and your favourite apps alongside. Android TV uses Miqat as Home; LG runs it as a separate app with HDMI.',
-        `Times are calculated on the TV, fully offline, for ${cityCount} cities in ${countryCount} countries, with your choice of calculation method, Asr school and Hijri date offset.`,
+        'Keep the next prayer and today’s times in view, with Adhan and Quran radio on the TV at home.',
       ],
     },
   },
@@ -44,17 +37,15 @@ export const PAGES: Page[] = [
     nav: { ar: 'مواقيت اليوم والقبلة', en: 'Today & Qibla' },
     title: { ar: 'مواقيت الصلاة اليوم والقبلة على التلفاز · ميقات', en: 'Today’s prayer times and Qibla on your TV · Miqat' },
     description: {
-      ar: 'مواقيت اليوم مع الوقت المتبقي ومفاتيح الأذان لكل صلاة واتجاه القبلة من مدينتك.',
-      en: 'Today’s prayer times, countdowns, per-prayer Adhan switches and the Qibla bearing from your city.',
+      ar: 'تابع مواقيت الصلاة اليوم واعرف اتجاه القبلة من مدينتك.',
+      en: 'See today’s prayer times and find the Qibla direction from your city.',
     },
     body: {
       ar: [
-        'شاشة «مواقيت اليوم» تعرض المواقيت الست مع الوقت المتبقي، ومفتاحًا مستقلًا لأذان كل صلاة.',
-        'تعرض البوصلة اتجاه القبلة من مدينتك، مع ضبط اتجاه الغرفة على أندرويد TV.',
+        'اعرف الوقت المتبقي لكل صلاة، واختر الصلوات التي تريد سماع أذانها.',
       ],
       en: [
-        'Today’s prayers shows all six times with the time left to each, and an independent Adhan switch for each prayer.',
-        'The compass shows the Qibla bearing from your city, with room-facing calibration on Android TV.',
+        'See how long remains until each prayer and choose which Adhan alerts to hear.',
       ],
     },
   },
@@ -63,51 +54,51 @@ export const PAGES: Page[] = [
     nav: { ar: 'تذكير قبل الصلاة', en: 'Reminder' },
     title: { ar: 'تذكير قبل الصلاة على التلفاز · ميقات', en: 'A reminder before each prayer on your TV · Miqat' },
     description: {
-      ar: 'تظهر التذكيرات على شاشة ميقات الرئيسية. ويمكن لخدمة الصلاة المفعّلة على أندرويد إظهار شريط فوق التطبيقات والمداخل المدعومة.',
-      en: 'Prayer reminders appear on Miqat Home. Android’s enabled prayer service can also show a banner over supported apps and inputs.',
+      ar: 'تذكير قبل الصلاة لتُنهي ما تشاهده وتستعد لها.',
+      en: 'A reminder before prayer, so you can finish what you’re watching and get ready.',
     },
     body: {
-      ar: ['تختار في الإعدادات متى يظهر التذكير: قبل الصلاة بعشر دقائق أو بخمس عشرة، أو إيقافه. ويتحوّل إطار المحراب إلى الذهبي الفاتح في آخر ربع ساعة.'],
-      en: ['Settings picks when the reminder comes: 10 or 15 minutes before the prayer, or off. The arch outline turns light gold in the last quarter hour.'],
+      ar: ['اختر وقت التذكير المناسب لك قبل أن يحين الأذان.'],
+      en: ['Choose how far ahead of the Adhan you’d like a reminder.'],
     },
   },
   {
     slug: 'call', screen: 'call', mode: 'call',
-    nav: { ar: 'الأذان', en: 'The call' },
-    title: { ar: 'الأذان على التلفاز في وقته · ميقات', en: 'The adhan on your TV, on time · Miqat' },
+    nav: { ar: 'الأذان', en: 'Adhan' },
+    title: { ar: 'استمع إلى الأذان على تلفازك · ميقات', en: 'Hear the Adhan on your TV · Miqat' },
     description: {
-      ar: 'أذان مجدول مع ١٣ صوتًا مدمجًا وتسجيل خاص للفجر.',
-      en: 'Scheduled Adhan with 13 built-in voices and a separate Fajr recording.',
+      ar: 'استمع إلى الأذان في البيت، مع ١٣ صوتًا للاختيار منها.',
+      en: 'Hear the call to prayer at home, with 13 Adhan voices to choose from.',
     },
     body: {
-      ar: ['اضبط مستوى الأذان من الإعدادات. أغلق شاشته بزر الرجوع، أو انتظر الإغلاق التلقائي بعد عشر دقائق.'],
-      en: ['Set the Adhan level in Settings. Press Back to dismiss its screen, or let it close after ten minutes.'],
+      ar: ['اختر الصوت ومستواه المناسبين للبيت، مع تسجيل مستقل لأذان الفجر.'],
+      en: ['Choose a voice and volume for your home, with a separate recording for Fajr.'],
     },
   },
   {
     slug: 'friday', screen: 'home', mode: 'friday',
     nav: { ar: 'الجمعة', en: 'Friday' },
-    title: { ar: 'وضع الجمعة: صلاة الجمعة وسورة الكهف · ميقات', en: 'Friday mode: Jumu’ah and Surat Al-Kahf · Miqat' },
+    title: { ar: 'صلاة الجمعة وسورة الكهف · ميقات', en: 'Jumu’ah and Surat Al-Kahf · Miqat' },
     description: {
-      ar: 'يوم الجمعة تحلّ صلاة الجمعة محل الظهر في المحراب وفي المواقيت، مع تذكير بقراءة سورة الكهف.',
-      en: 'On Fridays Jumu’ah replaces Dhuhr in the arch and the times, with a reminder to read Surat Al-Kahf.',
+      ar: 'عرض ليوم الجمعة مع صلاة الجمعة وتذكير بقراءة سورة الكهف.',
+      en: 'A Friday view with Jumu’ah and a reminder to read Surat Al-Kahf.',
     },
     body: {
-      ar: ['يبدأ وضع الجمعة تلقائيًا كل جمعة.'],
-      en: ['Friday mode starts each Friday.'],
+      ar: [],
+      en: [],
     },
   },
   {
     slug: 'ramadan', screen: 'home', mode: 'ramadan',
     nav: { ar: 'رمضان', en: 'Ramadan' },
-    title: { ar: 'وضع رمضان: العد التنازلي للإفطار والسحور · ميقات', en: 'Ramadan mode: countdown to iftar and suhoor · Miqat' },
+    title: { ar: 'الإفطار والسحور على تلفازك في رمضان · ميقات', en: 'Ramadan: iftar and suhoor on your TV · Miqat' },
     description: {
-      ar: 'في رمضان يعدّ المحراب تنازليًا إلى الإفطار، ويعرض موعد انتهاء السحور.',
-      en: 'In Ramadan the arch counts down to iftar and shows when suhoor ends.',
+      ar: 'تابع موعد الإفطار ونهاية وقت السحور على شاشة التلفاز في رمضان.',
+      en: 'Keep track of iftar and the end of suhoor on your TV during Ramadan.',
     },
     body: {
-      ar: ['يبدأ وضع رمضان وحده من التاريخ الهجري (أم القرى)، ويمكن تعديل التاريخ يومًا أو يومين في الإعدادات حسب رؤية الهلال في بلدك.'],
-      en: ['Ramadan mode starts by itself from the Hijri date (Umm al-Qura), which Settings can shift a day or two to match the moon sighting where you live.'],
+      ar: ['اعرف الوقت المتبقي للمغرب وأنت تستعد للإفطار.'],
+      en: ['See how long remains until Maghrib as you prepare for iftar.'],
     },
   },
   {
@@ -115,38 +106,38 @@ export const PAGES: Page[] = [
     nav: { ar: 'كل التطبيقات', en: 'All apps' },
     title: { ar: 'كل التطبيقات · ميقات', en: 'All apps · Miqat' },
     description: {
-      ar: 'كل التطبيقات المثبتة على التلفاز في شبكة واحدة، مع الصلاة القادمة في الأعلى. اضغط OK مطولًا لوضع تطبيق في المفضلة.',
-      en: 'Every app on the TV in one grid, with the next prayer at the top. Hold OK to put an app in favourites.',
+      ar: 'افتح تطبيقات تلفازك من مكان واحد، مع موعد الصلاة القادمة أمامك.',
+      en: 'Open your TV apps from one place, with the next prayer in view.',
     },
     body: {
-      ar: ['المعاينة تعرض أسماء تطبيقات للتوضيح؛ على التلفاز تظهر تطبيقاتك أنت.'],
-      en: ['The preview shows example apps; on the TV you see your own.'],
+      ar: ['احتفظ بالتطبيقات التي تستخدمها كثيرًا على الشاشة الرئيسية.'],
+      en: ['Keep the apps you use most on the Home screen.'],
     },
   },
   {
     slug: 'settings', screen: 'settings',
     nav: { ar: 'الإعدادات', en: 'Settings' },
-    title: { ar: 'إعدادات ميقات: المدينة وطريقة الحساب والأذان والإذاعة', en: 'Miqat settings: city, method, adhan and radio' },
+    title: { ar: 'إعدادات الصلاة والمظهر · ميقات', en: 'Prayer and display settings · Miqat' },
     description: {
-      ar: 'اختر مدينتك وطريقة حساب المواقيت ومذهب العصر والتذكير وصوت الأذان ومحطة إذاعة القرآن الكريم واللغة والأرقام.',
-      en: 'Choose your city, calculation method, Asr school, reminders, adhan voice, Quran radio station, language and digits.',
+      ar: 'مواقيت وأذان وألوان وخلفيات تناسبك.',
+      en: 'Prayer times, Adhan, colours and backgrounds to suit you.',
     },
     body: {
-      ar: ['غيّر المدينة أو طريقة الحساب لعرض مواقيتك. تُحفظ إعدادات المعاينة في متصفحك.'],
-      en: ['Choose a city and calculation method to see your prayer times. Preview settings stay in your browser.'],
+      ar: ['اضبط مواقيت مدينتك واختر صوت الأذان ومحطة إذاعة القرآن التي تحبّها.'],
+      en: ['Set prayer times for your location and choose the Adhan voice and Quran radio station you enjoy.'],
     },
   },
   {
     slug: 'screensaver', screen: 'screensaver',
     nav: { ar: 'شاشة التوقف', en: 'Screensaver' },
-    title: { ar: 'شاشة التوقف: محراب خافت والصلاة القادمة · ميقات', en: 'Screensaver: a dim arch and the next prayer · Miqat' },
+    title: { ar: 'الساعة والصلاة القادمة على التلفاز · ميقات', en: 'Clock and next prayer on TV · Miqat' },
     description: {
-      ar: 'شاشة توقف خافتة: محراب ينتقل ببطء مع الساعة والصلاة القادمة، والإذاعة إن كانت تعمل.',
-      en: 'A dim screensaver: a slowly drifting arch with the clock and the next prayer, plus the radio when it plays.',
+      ar: 'شاهد الساعة والصلاة القادمة على شاشة توقف خافتة.',
+      en: 'Keep the clock and next prayer visible on a dim screensaver.',
     },
     body: {
-      ar: ['تتحرك كل دقيقة لتحمي الشاشة، وتبقى خافتة لتناسب الغرفة ليلًا.'],
-      en: ['It moves every minute to protect the panel and stays dim for a dark room.'],
+      ar: [],
+      en: [],
     },
   },
 ];
