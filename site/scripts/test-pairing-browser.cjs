@@ -5,12 +5,50 @@ const server=http.createServer((request,response)=>{
   let route=new URL(request.url,'http://localhost').pathname.replace(/^\/MiqatTV/,'');if(route.endsWith('/'))route+='index.html';
   const file=path.resolve(base,'.'+route);
   if(!file.startsWith(base+path.sep)||!fs.existsSync(file)){response.writeHead(404);response.end();return;}
-  response.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.svg':'image/svg+xml','.ttf':'font/ttf','.woff2':'font/woff2'})[path.extname(file)]||'application/octet-stream');response.end(fs.readFileSync(file));
+  response.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.ttf':'font/ttf','.woff2':'font/woff2'})[path.extname(file)]||'application/octet-stream');response.end(fs.readFileSync(file));
 });
 (async()=>{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));let browser,page;
   try{
     browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'msedge',headless:true});
+    for(const language of ['ar','en'])for(const width of [390,900,1440]){
+      page=await browser.newPage({viewport:{width,height:1000}});const errors=[];
+      page.on('pageerror',error=>errors.push(error.message));
+      const home='http://127.0.0.1:'+server.address().port+'/MiqatTV/'+(language==='en'?'en/':'');
+      await page.goto(home);await page.evaluate(()=>document.fonts.ready);
+      assert.equal(await page.locator('h1').count(),1);
+      assert.equal(await page.evaluate(()=>scrollY),0,'product entry must not jump to the TV');
+      assert.ok(await page.locator('.hero-tv').evaluate(el=>el.getBoundingClientRect().width>=250),'hero screenshots retain visible width on phones');
+      assert.ok(await page.locator('.hero-images').evaluate(el=>el.querySelector('figcaption').getBoundingClientRect().top>=el.querySelector('.hero-phone').getBoundingClientRect().bottom),'hero caption stays below the phone image');
+      await page.keyboard.press('ArrowDown');await page.waitForFunction(()=>scrollY>0);
+      assert.equal(await page.locator('.tv :focus').count(),0,'off-screen TV must not steal page arrow keys');
+      for(const id of ['phone','companion','android-tv','lg-webos','get-miqat'])assert.equal(await page.locator('#'+id).count(),1);
+      for(const image of await page.locator('main img').all()){
+        await image.scrollIntoViewIfNeeded();await image.evaluate(el=>el.decode());
+      }
+      assert.ok(await page.locator('main img').count()>=15,'all product families have actual screenshots');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no horizontal page overflow');
+      if(process.argv.includes('--capture')&&width!==900){
+        await page.evaluate(()=>scrollTo(0,0));
+        await page.screenshot({path:path.resolve(__dirname,'../../state/website-'+language+'-'+width+'.png'),fullPage:width!==390});
+        if(width===1440){
+          const hero=page.locator('.product-hero');
+          await hero.evaluate(el=>{el.style.width='1200px';el.style.height='630px';el.style.padding='48px';el.style.background='#06282e';el.style.gap='36px';});
+          const bounds=await hero.boundingBox();
+          await page.screenshot({path:path.resolve(__dirname,'../public/branding/product-'+language+'.png'),clip:{x:Math.round(bounds.x),y:Math.round(bounds.y),width:1200,height:630}});
+        }
+      }
+      const popup=page.waitForEvent('popup');await page.locator('.phone-image').first().click();
+      const full=await popup;await full.waitForLoadState('load');
+      assert.ok(await full.locator('img').evaluate(el=>el.naturalWidth>=1080),'full-size native screenshot opens');await full.close();
+      await page.locator('.top-links a[href$="#phone"]').click();assert.equal(new URL(page.url()).hash,'#phone');
+      assert.equal(await page.locator('.tv').getAttribute('data-screen'),'home','product nav is separate from TV navigation');
+      await page.locator('[data-preview-language]').click();
+      assert.equal(await page.locator('html').getAttribute('dir'),language==='ar'?'ltr':'rtl');
+      assert.equal(await page.locator('#phone').count(),1,'language switch keeps the product entry');
+      assert.deepEqual(errors,[]);await page.close();console.log('PASS: product website '+language+' '+width+'px, images, full-size links, anchors, language and normal page keys');
+    }
+    if(process.argv.includes('--showcase-only'))return;
     for(const language of ['ar','en'])for(const size of [80,100,150]){
       page=await browser.newPage({viewport:{width:1600,height:1200}});const errors=[],requests=[];
       page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(['fetch','xhr'].includes(request.resourceType()))requests.push(request.url());});

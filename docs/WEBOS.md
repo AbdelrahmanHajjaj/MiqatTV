@@ -127,7 +127,7 @@ and the platform [agent rules](../platforms/webos/AGENTS.md).
 
 ## Foreground phone pairing
 
-The companion branch adds Settings / Phones with themed local QR and physical
+Settings / Phones provides themed local QR and physical
 remote approval/revocation. Its listener follows the foreground app subscription.
 See [protocol and legacy TLS limits](COMPANION-LAN.md) and
 [current companion evidence](COMPANION-WORK.md). The owner confirmed working
@@ -143,23 +143,23 @@ of SVG image/filter rendering or camera recognition on physical legacy LG hardwa
 
 Appearance also offers six bundled illustrated landscapes: Dusk peaks, Golden
 coast, Moon lake, Aurora sky, Tea hills and Monsoon. These static choices retain
-full color with a 20% dark overlay in Home and draft previews. Android's procedural
+full color with a 20% dark overlay in Home and appearance previews. Android's procedural
 Mountains/Dunes and time-based light fields remain unported. Current validation
 is a mocked browser check; physical LG picture acceptance remains pending.
 
 The Appearance preset carousel now comes first, above Customize controls. Choosing
-a different preset restores its supported canonical background in the draft;
-manual overrides and Apply/Cancel remain available. Six scenic presets pair their
+a different preset immediately saves its supported canonical background;
+manual overrides also save immediately. Six scenic presets pair their
 landscape, palette and surface. Unsupported procedural defaults use plain fill;
 this does not add Android's procedural renderer to LG.
 
 Miqat's default preset now pairs its branded palette with the original Signature
 background. Fresh preferences select it; existing explicit background selections
 remain unchanged. Choosing Miqat in the preset carousel restores the Signature
-background in the draft. The scene is a bundled JPEG, not a runtime effect.
+background immediately. It appears first in the background list. The scene is a bundled JPEG, not a runtime effect.
 
 Home mihrab fill opacity is adjustable from 50–100% in 5% steps, recommended 85%,
-using portable numeric rules and draft Apply/Cancel. It changes the opaque panel
+using portable numeric rules and immediate saving. It changes the opaque panel
 fill only; text/outlines retain full opacity. Different presets restore 85%.
 Prayer labels use the canonical shared vector family. Home icons occupy the
 header strip so long labels retain their own line at larger interface sizes.

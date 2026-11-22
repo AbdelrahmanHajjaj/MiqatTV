@@ -6,7 +6,8 @@ private logs, captures, device details and credentials under ignored state/.
 
 Read [architecture](docs/ARCHITECTURE.md), [contributing](docs/CONTRIBUTING.md) and
 [testing](docs/TESTING.md) before substantial changes. Work sequentially within
-the approved scope. Companion work belongs to its separate project/branch.
+the approved scope. The standalone phone app and its TV companion mode both live
+in companion/ in this repository; keep phone prayer settings independent of TVs.
 
 ## Structure
 
@@ -16,9 +17,9 @@ the approved scope. Companion work belongs to its separate project/branch.
 - shared/media/: the approved, checksummed recordings packaged by Android and LG.
 - platforms/android-tv/: Java and Android Views; [Android notes](docs/ANDROID-INTEGRATION.md).
 - platforms/webos/: ES5 app and JS service; read its [AGENTS.md](platforms/webos/AGENTS.md).
-- installer/: Android phone installation/recovery tool; separate from the companion.
-- companion/: Android phone UI and portable settings workflow; see docs/COMPANION-WORK.md.
-- site/: browser demonstration and resource generators, with simulated TV APIs.
+- installer/: reusable TV setup/recovery runtime plus its optional standalone phone host.
+- companion/: standalone Android phone prayers and optional TV setup/control; see docs/PHONE.md and companion/README.md.
+- site/: bilingual product website, current screenshots, interactive TV preview and resource generators; device APIs are simulated.
 - docs/: setup, development, technical references and validation status.
 
 ## Changes
@@ -40,8 +41,10 @@ the approved scope. Companion work belongs to its separate project/branch.
 - Preserve Arabic/English, RTL/LTR, joined Arabic and exact religious text.
   Mirror horizontal physical input once at the shell boundary.
 - Keep runtime networking limited to selected radio, manual advisory prayer
-  comparison and the authorized foreground household-LAN companion protocol.
-  Installer ADB/downloads are separate. No ads, analytics or feeds.
+  comparison, explicitly loaded phone Qibla maps and the authorized foreground
+  household-LAN companion protocol. Phone location uses Android APIs with explicit
+  optional background consent. Installer ADB/SSH/downloads are separate.
+  No ads, analytics or feeds.
 - Keep keys, local device configuration, private state, outputs, unreviewed audio
   and original recordings out of Git. Only the approved shared/media set is shipped. Retain MIT and third-party notices in distributed builds.
 - Keep the portable core independent of any SDK or renderer. Android stays Java
@@ -73,5 +76,9 @@ the approved scope. Companion work belongs to its separate project/branch.
   task PRs after all required checks pass, followed by syncing local main. Release
   publication and physical-device deployment still need specific instruction.
 - Update CHANGELOG.md for visible changes. Keep current support limits accurate.
+- Keep README, current guides and the bilingual website aligned with all shipped
+  products: standalone phone, TV companion mode, Android TV and LG. Public images
+  belong in docs/screenshots/ with provenance; use sanitized native/demo captures,
+  distinguish LG browser mocks from hardware and never publish pairing secrets.
 - Use Context7 for SDK/library/CLI behavior; prefer official documentation when
   it lacks coverage. Ordinary refactoring and product logic need no lookup.

@@ -2,7 +2,7 @@
   "name": "miqat-tv-preview",
   "private": true,
   "type": "module",
-  "description": "Miqat browser preview and shared token generator",
+  "description": "Miqat phone, TV companion and TV product website, interactive TV preview and shared token generator",
   "scripts": {
     "test": "npm run gen && node ../tools/catalogs.test.mjs && node ../tools/validate-shared.test.mjs && node scripts/test.mjs",
     "test:browser": "node scripts/test-pairing-browser.cjs",

@@ -6,6 +6,18 @@ prayer alerts and integrated Android/LG TV setup and control. See
 See [scope and evidence](../docs/COMPANION-WORK.md) and the
 [foreground LAN protocol](../docs/COMPANION-LAN.md).
 
+[Explore all Miqat apps](https://abdelrahmanhajjaj.github.io/MiqatTV/en/) ·
+[Current phone/companion screenshots](../docs/screenshots/README.md)
+
+## Two uses in one app
+
+**Prayer** is this phone's offline prayer day, Hijri calendar/events, per-prayer
+alerts, named audio library, Qibla and adaptive widgets. **Phone settings** controls
+its location, appearance and Android permissions. **Your TVs** is optional TV
+installation, pairing, settings and remote control. It never supplies the phone's
+schedule or receives phone prayer edits. Ordinary phone and TV settings save
+immediately; voice/import/calibration dialogs retain their explicit validation.
+
 The phone uses Miqat's shared artwork, tokens, palettes, icons and mihrab geometry.
 Java Views expose inline +/- controls, visible short choices and searchable catalogs. Appearance
 for a TV keeps a representative phone preview and saves each valid selection directly. Phone prayer

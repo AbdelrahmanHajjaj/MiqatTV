@@ -67,9 +67,12 @@ and content review locally when recordings or preparation code change.
 ## Website
 
 [Miqat's website](https://abdelrahmanhajjaj.github.io/MiqatTV/) serves the existing
-interactive preview, in Arabic at the root and English under /en/. It is a static
-site; the browser calculates prayer times and handles preview settings locally.
-The hosted preview simulates TV integration. Its screen buttons switch the TV
+product showcase, in Arabic at the root and English under /en/. It covers the
+standalone Android phone, TV companion mode, Android/Google TV and LG, with
+current bilingual screenshots and identified emulator/browser sources.
+The site is static. Phone images show native app screens; the interactive
+TV preview calculates prayer times and handles its settings locally.
+It simulates TV integration. Its screen buttons switch the TV
 preview in place without changing the URL. Existing direct screen links still
 work; language, installation and GitHub links keep their destinations.
 
@@ -84,6 +87,10 @@ environment allows main deployments only. Astro's site/base configuration owns
 the public address and /MiqatTV path; update it if the repository or domain changes.
 The README links to both languages. Check the deployed Home, language switch,
 Settings and asset requests after changing deployment or base-path behavior.
+Canonical screenshot PNGs live under docs/screenshots/ with provenance; the site
+build produces responsive web images. Keep source images free of private device
+data, credentials and pairing QR material. Review phone and desktop widths in
+both languages when changing product sections or screenshot layout.
 
 ## Draft release
 

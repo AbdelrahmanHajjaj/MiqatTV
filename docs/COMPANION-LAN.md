@@ -1,7 +1,8 @@
 # Foreground companion LAN design
 
-Implementation design for the authorized Miqat companion branch. Scope/status remain in
-[COMPANION-WORK.md](COMPANION-WORK.md). This document is not hardware evidence.
+Protocol for the Android phone app's optional TV companion mode, integrated in
+this repository. Use [the companion guide](../companion/README.md) for setup and
+[EVIDENCE.md](EVIDENCE.md) for current validation. This design is not hardware evidence.
 
 ## Trust and lifecycle
 

@@ -28,7 +28,7 @@ flowchart TD
 | shared/design | Tokens, themes, mihrab geometry, SVG patterns, icons, artwork, fonts and notices. |
 | platforms/android-tv | Java Views, Adhan Java/ICU adapters, preferences, Home, accessibility/remote keys, scheduling and media. |
 | platforms/webos | ES5 UI, Adhan JS/calendar adapters, preferences, HDMI/audio and Activity Manager service. |
-| site | Browser demonstration and design-resource generators; simulated device integration. |
+| site | Bilingual phone/companion/TV product presentation, current screenshots, interactive TV preview and design-resource generators; simulated device integration. |
 | companion/core | Portable settings drafts/session contracts and phone event planning. |
 | companion/android | Independent prayer UI, alerts/media, location/sensors/widgets, and TV setup/control. |
 | companion/android-shared | Native Android LAN trust/transport and QR helpers. |
@@ -39,7 +39,8 @@ storage, renderer or clock dependency. The JVM artifact is tv.miqat:core; JS
 emits ES5 UMD under tv.miqat:core and exposes a private @miqat/core package.
 Load kotlin-kotlin-stdlib.js before Miqat-core.js in browser hosts.
 
-Define controls and choices in shared/data/ui-contract.json, then bind real
+Define common TV controls and choices in shared/data/ui-contract.json and
+phone-only controls in shared/data/phone-ui-contract.json, then bind real
 views/DOM in each shell. Core owns logical focus transitions and editor policy;
 shells translate physical RTL input once and implement rendering, scrolling and
 save scopes. Unsupported controls/options have explicit [gaps](UI-GAPS.md).
@@ -64,15 +65,16 @@ Each project builds independently with the root Gradle wrapper and shared source
 See [build instructions](BUILD.md), [core API](CORE.md), [data](DATA.md),
 [design](DESIGN.md) and [testing](TESTING.md). Shared JS generators run sequentially.
 
-The phone companion is maintained in this repository. Samsung/Tizen is unimplemented;
+The standalone Android phone app and TV companion mode are maintained in this
+repository. Samsung/Tizen and iOS apps are unimplemented;
 Sony Android/Google TV uses the Android shell. Current hardware limits are in
 [validation evidence](EVIDENCE.md).
 
-## Phone companion
+## Android phone and TV companion mode
 
 `companion/core` owns portable settings drafts/session contracts; native phone and
 TV shells own rendering, persistence and LAN transport. See [protocol boundaries](COMPANION-LAN.md)
-and [separate companion scope/evidence](COMPANION-WORK.md).
+and [companion delivery history](COMPANION-WORK.md).
 
 The Android companion also hosts `installer/runtime` through a private setup
 activity. The standalone installer uses that same implementation. Installation
@@ -80,7 +82,7 @@ credentials/recovery records live in the hosting app's private storage, separate
 from ordinary companion LAN credentials; the two installed apps do not share
 private files. LG phone setup uses its own foreground SSH transport, explicit
 host-key approval and local IPK verification; keys/passphrases remain session-only.
-Phone prayer/iOS work is sequenced in [WORK.md](WORK.md).
+Current approved work is sequenced in [WORK.md](WORK.md).
 
 ### Independent phone prayer runtime
 

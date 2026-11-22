@@ -1,7 +1,14 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-22. PR #9 merged normally after full Validate and Apple core passed.
-Latest scope: common TV UI alignment; WORK.md owns next action.
+Updated: 2026-11-22. PR #13's common TV UI alignment is merged after full CI.
+Latest scope: public phone/companion/TV documentation and screenshot showcase;
+WORK.md owns next action. Earlier sections below are delivery history and may
+describe superseded preview/Apply controls. PHONE.md owns current behavior.
+
+The presentation refresh keeps phone 0.5.18/code 34, corrects its obsolete TV
+preview Apply caption and replaces the latest review APK with the same signer.
+Capture-only toast cleanup produces settled public images; it changes no runtime
+delivery or saved settings. Bilingual native capture journeys pass.
 
 ## TV UI alignment — 0.5.18/code 34
 

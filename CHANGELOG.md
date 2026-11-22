@@ -1,5 +1,10 @@
 # Changelog
 
+## Product website and documentation
+
+- Showcase standalone Android phone prayers, TV companion mode, Android/Google TV and LG across the bilingual website and guides, with current native/demo screenshots and explicit platform limits.
+- Correct the phone TV-preview caption that still referred to the retired Appearance Apply step.
+
 ## TV UI alignment — Android TV 0.7.2 / LG 0.2.30 / phone 0.5.18
 
 - Bring the phone’s immediate settings saving to both TVs. Adjust numbers and short choices directly; remove Appearance Apply/Cancel. Preserve saved values and paired-phone conflict protection.
