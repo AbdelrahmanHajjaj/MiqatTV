@@ -2,7 +2,7 @@
 
 [Validate](CI.md) builds the Android phone app, Android TV, the optional standalone
 installer and LG webOS. The phone includes standalone prayers and TV companion
-mode. Each main commit must pass its applicable core, phone/TV emulator, LG and
+mode. Each main commit must pass its applicable core, Android build/lint, LG and
 website checks before its artifacts can enter the draft publication workflow.
 
 ## Create a draft
@@ -22,15 +22,60 @@ The draft contains four packages and their SHA256SUMS:
 | `tv.miqat.webos_<version>_all.ipk` | LG webOS app and service. |
 | `miqat-installer.apk` | Optional standalone Android TV setup/recovery host. |
 
-All come from the same successful current-main Validate run. Instrumentation APKs
-are excluded. The publisher refuses stale, failed, PR/fork or other-workflow runs.
-It creates an unpublished draft prerelease only.
+All come from the same successful current-main Validate run. Validation compiles
+and lints the Android release variants, then the publisher signs those unsigned
+APKs. Instrumentation/debug APKs are excluded. The publisher refuses stale,
+failed, PR/fork or other-workflow runs. It creates an unpublished draft prerelease.
 
-## Before stable distribution
+## Persistent Android signing
 
-CI Android APKs have runner-generated debug signatures, which can change between
-builds. Configure and back up a private persistent signing key before stable
-updates. Never commit it or cache it in a public runner cache.
+Phone, Android TV and installer have separate RSA release keys in one encrypted
+PKCS12 keystore. `tools/release-certificates.json` records only public certificate
+fingerprints, aliases and package IDs. Preserve these identities for updates.
+
+GitHub's `android-release` environment allows the `main` branch only. It contains
+`MIQAT_SIGNING_KEYSTORE_BASE64` and `MIQAT_SIGNING_PASSWORD` as encrypted secrets.
+PR validation has no access to them. Only the manual publisher decodes the key
+into its private runner temporary directory, signs the validated release APKs,
+and deletes the temporary keystore on success/failure. Signing material never
+enters a cache or artifact.
+
+The publisher checks signatures, package IDs and non-debuggable release mode with
+`tools/check_android_release.py`, then verifies exact packaged audio and hashes
+the signed outputs. A missing key, unexpected signer or debug APK fails delivery.
+
+The primary checkout's private `state/signing/` contains the recovery keystore,
+password and recovery notes, restricted to the owner and SYSTEM. Keep a secure
+off-device copy of that entire folder; GitHub secrets cannot be downloaded for
+recovery. Never commit, upload as an artifact, or paste its contents into chat.
+
+For a local release build:
+
+```sh
+./gradlew :app:assembleRelease :installer:assembleRelease :companion:assembleRelease --no-daemon
+```
+
+These outputs are unsigned under each module's `build/outputs/apk/release/`.
+Use Android Build Tools 35.0.0 `zipalign -P 16 -f 4` before `apksigner sign`.
+Pass `--ks state/signing/miqat-release.keystore`, the matching `--ks-key-alias`
+from the public certificate file, and both `--ks-pass env:MIQAT_SIGNING_PASSWORD`
+and `--key-pass env:MIQAT_SIGNING_PASSWORD`. Load the password from the private
+recovery file into that process environment; never place its value in arguments.
+Name the signed outputs `miqat.apk`, `miqat-phone.apk` and `miqat-installer.apk`,
+then verify:
+
+```sh
+python3 tools/check_android_release.py "$ANDROID_HOME/build-tools/35.0.0" state/release/miqat.apk state/release/miqat-phone.apk state/release/miqat-installer.apk
+```
+
+Moving from the old debug-signed previews requires a fresh install once. Removing
+an Android app removes its local data, including phone settings/imported audio;
+keep original recordings and installer recovery records before switching.
+Future release APKs keep the same signing keys. Debug review builds retain their
+separate development key. Publishing a preview and building in release mode are
+independent: signed release-mode APKs may still be labelled prerelease on GitHub.
+
+## Versioning and publication
 
 Phone versions live in `companion/android/build.gradle`, Android TV versions in
 `platforms/android-tv/build.gradle`, and installer versions in `installer/build.gradle`.

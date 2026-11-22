@@ -53,6 +53,9 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
   No ads, analytics or feeds.
 - Keep keys, local device configuration, private state, outputs, unreviewed audio
   and original recordings out of Git. Only the approved shared/media set is shipped. Retain MIT and third-party notices in distributed builds.
+- Preserve the primary checkout's private state/signing/ during cleanup; it holds
+  persistent release identities, not disposable build output. Never replace keys
+  to fix a signing failure. See docs/RELEASING.md for signing and recovery.
 - Keep the portable core independent of any SDK or renderer. Android stays Java
   Views; LG app/service must run on WebKit 538.2 and Node 0.10.25.
 
@@ -74,6 +77,9 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
 
 - Follow docs/TESTING.md for affected-consumer checks and focused regressions.
   Check prose-only edits for links, paths and claims; they need no device tests.
+- Routine CI must not launch phone/TV emulators. Keep build, lint, portable/JVM,
+  browser, signing and package-integrity checks; native device suites are targeted
+  manual checks when requested, not automatic merge or release gates.
 - Browser mocks, emulators, live diagnostics and human TV acceptance are separate
   evidence. Physical remote, picture/sound and power checks need a ready watcher.
 - Use a feature branch and the PR template. Review staged files for private data.

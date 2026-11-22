@@ -1,0 +1,17 @@
+{
+  "miqat-phone.apk": {
+    "applicationId": "tv.miqat.companion",
+    "alias": "miqat-phone",
+    "certificateSha256": "6013082a03783bbc2e24815f58acaede43b69294c317607eb0c87f2920d0b8fc"
+  },
+  "miqat.apk": {
+    "applicationId": "tv.miqat.home",
+    "alias": "miqat-tv",
+    "certificateSha256": "8c64a8332f037cdfd48dac39f9e5e88d61f3adca00bf7e20b9ebc166a3951c1c"
+  },
+  "miqat-installer.apk": {
+    "applicationId": "tv.miqat.installer",
+    "alias": "miqat-installer",
+    "certificateSha256": "9250f24cc537a46b7ec6011455a35424b9af021fdeba7da15b9f98b8571602a5"
+  }
+}

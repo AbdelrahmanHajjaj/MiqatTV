@@ -1,5 +1,11 @@
 # Changelog
 
+## Persistent Android release signing
+
+- Build phone, Android TV and installer release APKs with permanent Miqat signing keys for future updates.
+- Verify release mode, package identity and signing certificates before release packaging.
+- Remove automatic Android phone/TV emulator runs from routine CI; retain build, lint, portable-rule, browser and release-package checks.
+
 ## Product website and documentation
 
 - Rewrite the English/Arabic website around daily prayer features, phone-to-TV controls and device-labelled downloads, informed by product website research.

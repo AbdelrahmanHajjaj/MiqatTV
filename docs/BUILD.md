@@ -84,8 +84,9 @@ before publishing replacements.
 [Validate](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/validate.yml)
 produces full-audio APK and LG IPK artifacts after building and testing the source.
 Artifacts expire after seven days. They are test builds; Android uses a CI debug
-signing key that can differ between runs. Stable signing is not configured.
-See [CI and draft publication](CI.md) before distributing an update.
+signing key that can differ between runs. The release workflow signs validated
+release variants with persistent Miqat keys. See [release signing](RELEASING.md#persistent-android-signing)
+and [CI and draft publication](CI.md) before distributing an update.
 
 ## Fresh installation
 

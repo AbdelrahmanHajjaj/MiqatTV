@@ -22,7 +22,7 @@ PR selection is conservative:
 - Ordinary documentation and the PR template run only Select checks and Required
   checks. Packaged licences/notices and generated docs/UI-GAPS.md run all jobs.
 - Site changes select Preview; Android TV or installer changes select Android
-  build and emulator; LG changes select LG build and tests.
+  build; LG changes select LG build and tests.
 - Companion changes select Companion, Android, LG and Preview because the shells
   consume its contract, generated bindings, QR and LAN sources.
 - Shared sources, tooling, workflow/build configuration and unrecognized paths
@@ -39,15 +39,14 @@ read-only repository access.
 | --- | --- |
 | Core | Canonical projections, complete media hashes, JVM/Java/JS and legacy ES5 tests |
 | Android build | Full-audio TV APK, phone-installer APK, test APK, lint and local regressions |
-| Android emulator | Native prayer/ICU linkage and Arabic/English UI bindings on API 34 |
 | LG build and tests | Complete app/service, ES5, volume/scheduling/HTTPS mocks, browser suite and full-audio IPK |
 | Preview | Data/token freshness, regressions and 18-route static build |
-| Companion | Portable settings checks, native bilingual UI and pinned-TLS LAN regressions |
+| Companion | Portable settings, QR/LAN host-JVM checks, debug/release builds and lint |
 
-PRs still compile and validate packages; they do not publish review-build
-artifacts. The Android jobs retain an android-test-inputs artifact containing
-only the TV app and test APK for the emulator. Failure reports and native logs
-remain available. All artifacts expire after seven days.
+PRs compile and validate packages without publishing review-build artifacts.
+Routine CI does not launch phone or TV emulators. Native instrumentation remains
+available for requested manual checks. Failure reports remain available, and
+main/manual build artifacts expire after seven days.
 
 Download android-builds, webos-build, browser-preview or companion-debug from a
 successful main Validate run. For an installable branch review build, choose
@@ -103,13 +102,17 @@ a draft prerelease. It never publishes a stable release automatically.
 
 The phone asset is `miqat-phone.apk`; Android TV remains `miqat.apk` and the
 standalone installer is `miqat-installer.apk`. SHA256SUMS covers all three APKs
-and the LG IPK. The phone asset requires the same successful Validate run's
-`companion-debug` artifact, rather than a separately built or unverified file.
+and the LG IPK. The publisher uses `companion-release` and the two unsigned release
+APKs in `android-builds` from that successful Validate run. It signs them with
+persistent keys in the main-only `android-release` environment and verifies
+their release mode, package IDs and pinned certificates before creating the draft.
 
 Only the manual build-release job has contents write permission. Its token has no
 PR approval grant. The repository default remains read-only. No personal token
-or signing key is stored by this setup.
+is stored by this setup. Signing secrets belong only to the `android-release`
+environment; the temporary decoded key is removed and excluded from artifacts/caches.
 
-Android artifacts use a runner-generated debug signing key. Fresh installation
-may be needed between runs. Configure a persistent release keystore before using
-this channel for stable updates. [EVIDENCE.md](EVIDENCE.md) records validation results.
+CI debug artifacts retain their development signatures. Published Android release
+APKs use persistent Miqat keys. Moving from an old debug-signed preview requires
+a fresh install once; subsequent signed releases preserve identity. See
+[signing and recovery](RELEASING.md#persistent-android-signing).

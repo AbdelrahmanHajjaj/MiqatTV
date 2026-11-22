@@ -22,7 +22,6 @@ jobs:
     outputs:
       core: ${{ steps.select.outputs.core }}
       android: ${{ steps.select.outputs.android }}
-      emulator: ${{ steps.select.outputs.emulator }}
       webos: ${{ steps.select.outputs.webos }}
       preview: ${{ steps.select.outputs.preview }}
       companion: ${{ steps.select.outputs.companion }}
@@ -103,25 +102,27 @@ jobs:
           python-version: '3.12'
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       - name: Build and lint standalone Android TV
-        run: ./gradlew -p platforms/android-tv verifyApkSize lintDebug assembleDebugAndroidTest --no-daemon
+        run: |
+          ./gradlew -p platforms/android-tv verifyApkSize lintDebug assembleDebugAndroidTest assembleRelease lintRelease --no-daemon
+          python3 tools/check_apk_media.py platforms/android-tv/build/outputs/apk/debug/app-debug.apk
+          python3 tools/check_apk_media.py platforms/android-tv/build/outputs/apk/release/app-release-unsigned.apk
       - name: Build and lint the phone installer
-        run: ./gradlew :installer:assembleDebug :installer:lintDebug --no-daemon
+        run: ./gradlew :installer:assembleDebug :installer:lintDebug :installer:assembleRelease :installer:lintRelease --no-daemon
       - name: Run Java and setup/recovery regressions
         run: python3 -S -B -m unittest discover -s tests -v
       - name: Collect full-audio APKs
-        env:
-          EVENT_NAME: ${{ github.event_name }}
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p state/builds/android
           cp platforms/android-tv/build/outputs/apk/debug/app-debug.apk state/builds/android/miqat.apk
-          if [ "$EVENT_NAME" != pull_request ]; then
-            cp installer/build/outputs/apk/debug/installer-debug.apk state/builds/android/miqat-installer.apk
-          fi
+          cp installer/build/outputs/apk/debug/installer-debug.apk state/builds/android/miqat-installer.apk
+          cp platforms/android-tv/build/outputs/apk/release/app-release-unsigned.apk state/builds/android/miqat-release-unsigned.apk
+          cp installer/build/outputs/apk/release/installer-release-unsigned.apk state/builds/android/miqat-installer-release-unsigned.apk
           cp platforms/android-tv/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk state/builds/android/miqat-android-test.apk
-          python3 tools/check_apk_media.py state/builds/android/miqat.apk
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name != 'pull_request'
         with:
-          name: ${{ github.event_name == 'pull_request' && 'android-test-inputs' || 'android-builds' }}
+          name: android-builds
           path: state/builds/android/
           if-no-files-found: error
           retention-days: 7
@@ -132,43 +133,6 @@ jobs:
           path: |
             platforms/android-tv/build/reports/
             installer/build/reports/
-          retention-days: 7
-
-  emulator:
-    name: Android emulator
-    needs: [changes, android]
-    if: needs.changes.outputs.emulator == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    steps:
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: ${{ github.event_name == 'pull_request' && 'android-test-inputs' || 'android-builds' }}
-          path: state/apks
-      - name: Allow the runner to use KVM
-        run: sudo setfacl -m "u:$(id -un):rw" /dev/kvm
-      - uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
-        with:
-          api-level: 34
-          target: google_apis
-          arch: x86_64
-          profile: pixel_2
-          disable-animations: true
-          emulator-options: -no-window -gpu software -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: |
-            adb shell wm size 1920x1080
-            adb shell wm density 160
-            adb install -r state/apks/miqat.apk
-            adb install -r -t state/apks/miqat-android-test.apk
-            adb shell am instrument -w -e check prayer tv.miqat.home.test/tv.miqat.home.AppearanceCycleDeviceCheck | tee state/native-prayer.log
-            grep -Fq 'Native prayer regression, core/reminder linkage' state/native-prayer.log
-            adb shell am instrument -w -e check ui tv.miqat.home.test/tv.miqat.home.AppearanceCycleDeviceCheck | tee state/native-ui.log
-            grep -Fq 'Native UI contract passed:' state/native-ui.log
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
-        with:
-          name: native-emulator-results
-          path: state/native-*.log
           retention-days: 7
 
   webos:
@@ -272,7 +236,7 @@ jobs:
   required:
     name: Required checks
     if: always()
-    needs: [changes, core, android, emulator, webos, preview, companion]
+    needs: [changes, core, android, webos, preview, companion]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

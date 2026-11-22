@@ -48,9 +48,9 @@ class CiChecks(unittest.TestCase):
         cases = [
             (["docs/CI.md", "README.md"], set()),
             (["site/src/lib/test.ts"], {"preview"}),
-            (["platforms/android-tv/build.gradle"], {"android", "emulator"}),
+            (["platforms/android-tv/build.gradle"], {"android"}),
             (["platforms/webos/app/index.html"], {"webos"}),
-            (["installer/build.gradle"], {"android", "emulator"}),
+            (["installer/build.gradle"], {"android"}),
             (["companion/contract.json"], set(JOBS) - {"core"}),
             (["shared/core/rules.kt"], set(JOBS)),
             (["shared/media/adhan/test.mp3"], set(JOBS)),
@@ -70,7 +70,7 @@ class CiChecks(unittest.TestCase):
                 self.assertEqual(affected(paths), expected)
 
     def test_gate_accepts_only_success_and_intentional_skips(self):
-        for selected in (set(), {"android", "emulator"}, set(JOBS)):
+        for selected in (set(), {"android"}, set(JOBS)):
             needs = {name: {"result": "success" if name in selected else "skipped"}
                      for name in JOBS}
             needs["changes"] = {"result": "success", "outputs": {
