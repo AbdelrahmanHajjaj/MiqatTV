@@ -6,7 +6,7 @@ TV or account. Prayer calculation and the city catalog work offline.
 
 [Current screenshots](screenshots/README.md) · [Build/install](BUILD.md#android-phone) · [TV setup and pairing](../companion/README.md)
 
-[Download the signed preview](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.3-preview.1).
+[Download Miqat](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.3).
 Replacing an older debug-signed build requires one fresh install; uninstalling
 clears local settings and imported audio. Later signed releases retain the same key.
 
@@ -180,7 +180,7 @@ installs default to 12-hour time; saved explicit choices are retained.
 
 **Set up my TV** and **Pair a new TV** use Android/Google TV or LG webOS preparation,
 then Latest/Stable/Preview public release selection or Advanced local APK/IPK.
-Choose Preview for preview releases, or Advanced to select a local package.
+Choose Stable for the current release, Preview for previews, or Advanced for a local package.
 
 Android reuses the guarded ADB installer/recovery runtime. LG uses Developer Mode,
 explicit SSH host-key approval, package size/SHA-256 checks and downgrade refusal;

@@ -1,10 +1,11 @@
 # Changelog
 
-## Signed preview — Android TV 0.7.3 / phone 0.5.19 / installer 1.1.5
+## Stable release — Android TV 0.7.3 / phone 0.5.19 / installer 1.1.5
 
 - Build phone, Android TV and installer release APKs with permanent Miqat signing keys for future updates.
 - Verify release mode, package identity and signing certificates before release packaging.
 - Remove automatic Android phone/TV emulator runs from routine CI; retain build, lint, portable-rule, browser and release-package checks.
+- Promote the verified signed packages to stable v0.7.3, preserving their checksums and the published preview.
 
 ## Product website and documentation
 
