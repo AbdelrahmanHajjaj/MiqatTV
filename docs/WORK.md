@@ -1,22 +1,19 @@
 # Current work
 
-Updated: 2026-11-22. Owner accepts widget readability and requests release
-preparation, full CI fixes and Android TV/LG contract verification. Correct the
-existing-widget Add label to Update; retain immediate per-instance saves.
-Branch feature/companion-installation, PR #9. Phone: 0.5.17/code 33.
+Updated: 2026-11-22. PR #9 is merged normally and local main is synced.
+Phone 0.5.17/code 33 fixes existing-widget Update labeling; four hosted widget
+instances retain independent immediate settings. Owner accepts widget readability.
 
-The location request is once per guide history, with manual fallback. Background
-updates remain off without explicit consent and cannot schedule before location
-confirmation. Setup edits retain the update choice and cancel pending detection.
-Reuse canonical prayer geometry and native notification layout/direction.
+Full PR Validate and Apple core pass at 77f51ca. Android TV/LG supported UI
+contracts and generated catalogs pass native/browser checks; their documented
+platform gaps remain. Notification automation checks SystemUI dismissibility,
+actual playback stop and volume restoration. OEM gestures are outside automation
+scope by explicit owner instruction. EVIDENCE.md owns validation details.
 
-The widget-label regression passes natively. Per owner instruction, require
-notification dismissibility and real stop/volume cleanup, with no OEM gesture test. Include the phone APK in the
-existing verified-source draft-release workflow. Supported TV contracts currently
-pass canonical/native/browser CI; retain explicit LG/OS capability gaps.
+Next: prepare the owner's preview release candidate from successful current-main
+Validate artifacts, including phone, TV, installer, LG and SHA256SUMS. The draft
+workflow enforces this source. Public publication and physical deployment need
+specific instruction. Stable signing remains unconfigured for this preview.
 
-Next: finish local focused checks, push and require the full CI gate before
-release preparation completes. Preserve earlier CI failure evidence. Merge latest
-main normally before pushing. Overwrite only state/builds/companion/Miqat-latest.apk
-for review exports. Prepare a preview candidate as selected by the owner.
-Public release publication and physical deployment require specific instruction.
+Overwrite only state/builds/companion/Miqat-latest.apk for local review builds.
+Retain the existing local signer and keep private logs/captures under state/.

@@ -36,7 +36,11 @@ is still unconfigured; release preparation does not publish a stable release.
 All 25 exact recordings and the unchanged local signer are verified. Review APK:
 35,065,731 bytes; SHA256
 `2EACAF8AA2AD2FC3DB4737749FA01FAB7BD072ECCE347C8B162CBCD03106B0FF`.
-Exact-head/full CI and release evidence are tracked in PR #9.
+Full [Validate run 45013834410](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45013834410)
+and Apple core pass at 77f51ca, including the required aggregate, native phone
+runtime/dismissal, Android TV, LG ES5/browser/package and Preview. PR #9 merged
+normally as 4e0a5bd; local main is synced. Preview publication must use successful
+current-main artifacts through the existing verified-source draft workflow.
 
 Local complete runtime also passes actual alarm delivery, playback/notification,
 custom length, silent/vibration channels, duplicate rejection, Stop and focus
