@@ -65,8 +65,9 @@ final class PhonePresentationCheck {
     }
     private static void swipeRight(Instrumentation test,Rect row,int width) throws java.io.IOException {
         // Android supplies finger tool properties and monotonic timing even on a busy CI renderer.
-        PhoneRuntimeCheck.shell(test,"input touchscreen swipe "+(row.left+row.width()/4)+" "+row.centerY()
-                +" "+(width-4)+" "+row.centerY()+" 300");
+        int y=row.top+Math.min(72,row.height()/4);
+        PhoneRuntimeCheck.shell(test,"input touchscreen swipe "+(row.left+row.width()/4)+" "+y
+                +" "+(width-4)+" "+y+" 300");
     }
     static void run(Instrumentation test,String selected,boolean capture) throws Exception {
         check(Arrays.asList("all","home","swipe","screen","actions","actions-ar").contains(selected),"Unknown presentation case");
