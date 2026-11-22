@@ -7,6 +7,8 @@ and both website languages now cover standalone Android prayers, TV companion
 mode, Android/Google TV and LG. Historical phone/companion delivery notes are
 identified as history. Public-download copy was checked against the repository:
 the preview releases remain unpublished drafts.
+The release guide also lists all four packages, phone version ownership and the
+different standalone-installer versus integrated-phone download channels.
 
 The 26 curated English/Arabic PNGs have [recorded sources](screenshots/README.md).
 Phone UI, onboarding/widgets/Qibla and companion demo capture journeys pass on an
