@@ -1,0 +1,199 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import type { Lang } from '../lib/text';
+import { REPO } from '../lib/site';
+import widgetStrip from '../../../companion/android/src/main/res/drawable-nodpi/widget_preview_strip.png';
+import widgetStripAr from '../../../companion/android/src/main/res/drawable-ar-nodpi/widget_preview_strip.png';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const ar = lang === 'ar';
+const fullSize = ar ? 'افتح اللقطة بالحجم الكامل' : 'Open full-size screenshot';
+const sources = import.meta.glob('../../../docs/screenshots/*.png', { eager: true, import: 'default' }) as Record<string, ImageMetadata>;
+const shot = (name: string) => {
+  const source = sources[`../../../docs/screenshots/${name}-${lang}.png`];
+  if (!source) throw new Error(`Missing product screenshot: ${name}-${lang}`);
+  return source;
+};
+const L = ar ? {
+  eyebrow: 'ميقات · للهاتف وللبيت', title: ['مواقيتك.', 'على الهاتف والتلفاز.'],
+  intro: 'مواقيت الصلاة والأذان على أندرويد، مع التقويم الهجري والقبلة والويدجت. واستخدم التطبيق نفسه لإعداد ميقات على تلفاز البيت والتحكم فيه.',
+  phoneCta: 'اكتشف تطبيق الهاتف', tvCta: 'جرّب معاينة التلفاز',
+  heroSource: 'لقطات أصلية من تطبيقَي أندرويد على محاكي الهاتف والتلفاز.',
+  phone: 'تطبيق أندرويد', companion: 'رفيق التلفاز', android: 'أندرويد TV', lg: 'LG webOS',
+  phoneTitle: 'يومك مع الصلاة، أينما كنت.', phoneIntro: 'استخدم ميقات على الهاتف بمفرده. المواقيت تُحسب على الجهاز، وتبقى إعدادات صلواتك مستقلة عن أي تلفاز.',
+  phoneGuide: 'دليل الهاتف', phoneSource: 'لقطات من تطبيق الهاتف الأصلي بالعربية. الموقع والتواريخ بيانات توضيحية.',
+  screens: [
+    ['phone-home', 'الصلاة القادمة ويومك كاملًا', 'التاريخ الهجري والمدينة داخل بطاقة الصلاة، مع جدول اليوم وإطار واضح للصلاة القادمة.'],
+    ['phone-calendar', 'التقويم الهجري', 'تصفّح الشهر وأيام المناسبات، وشاهد مواقيت اليوم المحدد تحت التقويم مباشرة.'],
+    ['phone-prayer', 'تنبيهات تناسب يومك', 'أذان أو نغمة قصيرة أو صامت، مع اهتزاز مستقل وأيام الأسبوع والتذكير والتعديلات لكل صلاة.'],
+    ['phone-voices', 'أصواتك في مكتبتك', 'أصوات مدمجة ومكتبة خاصة لتسجيلات جهازك. اختر الاسم ومستوى الصوت ونسبة مدة الأذان.'],
+    ['phone-qibla', 'اتجاه القبلة', 'بوصلة واتجاه محسوب من موقعك، وخريطة اختيارية تُحمّل عند طلبك. دقة الاتجاه تعتمد على حساسات الهاتف.'],
+    ['phone-widgets', 'المواقيت على شاشتك', 'ويدجت تبدأ من ١×١ وتتكيّف عند تغيير حجمها، مع تخصيص مستقل وإبراز الصلاة القادمة.'],
+    ['phone-style', 'ميقات كما تحب', 'ميقات وخلفيته المميزة أولًا، مع معاينة كاملة وألوان وخيارات تُحفظ مباشرة.'],
+    ['phone-location', 'موقعك، باختيارك', 'اختر المدينة أو اكتشف الموقع. التحديث التلقائي أثناء إغلاق التطبيق اختياري ويحتاج إذن أندرويد المنفصل.'],
+  ],
+  widgets: 'من بطاقة صغيرة إلى جدول يومك', widgetCopy: 'تتكيّف التفاصيل مع المساحة. التاريخ الهجري هو الافتراضي، ويمكن إضافة الميلادي. هذه معاينة أصلية للويدجت؛ يحدد اللانشر الأحجام والتحديث.', widgetAlt: 'معاينة ويدجت شريط الصلاة مع التاريخين وإطار الصلاة القادمة',
+  companionTitle: 'هاتفك، رفيق التلفاز أيضًا.', companionIntro: 'من «أجهزة التلفاز» ثبّت ميقات على أندرويد أو LG، ثم اربطه على شبكة البيت بموافقة ريموت التلفاز. لا يغيّر ذلك إعدادات صلاة الهاتف.',
+  companionGuide: 'الإعداد والربط', companionSource: 'واجهات أصلية للهاتف مع أجهزة تلفاز توضيحية. لا تتصل هذه الصفحة بتلفازك.',
+  companionScreens: [
+    ['companion-tvs', 'أجهزة التلفاز في مكان واحد', 'إعداد جهاز جديد، ربط ميقات المثبّت، أو فتح تلفاز محفوظ.'],
+    ['companion-remote', 'تحكم واضح ومباشر', 'الرئيسية والمداخل وإذاعة القرآن واختبار أذان محدود، بأوامر صريحة.'],
+    ['companion-appearance', 'اضبط شاشة البيت', 'ثيمات وخلفيات وإعدادات يدعمها التلفاز، مع حفظ مباشر وحماية من تعارض التغييرات.'],
+  ],
+  pairTitle: 'ربط محلي بموافقتك', pairCopy: 'امسح رمز التلفاز ووافق بالريموت. الاتصال مشفّر وتستطيع إلغاء وصول كل هاتف. إعدادات الهاتف وكل تلفاز مستقلة؛ لا تُرفع إعدادات قديمة عند إعادة الاتصال.',
+  tvTitle: 'مكان للمواقيت على شاشة البيت.', tvIntro: 'المحراب والتاريخ الهجري والصلاة القادمة، مع خطوط وأيقونات وألوان ميقات نفسها وتحكم يناسب الريموت.',
+  androidTitle: 'Android TV / Google TV', androidCopy: 'شاشة رئيسية أصلية لتطبيقاتك المفضلة ومواقيت الصلاة، مع الأذان والتذكير والقبلة وإذاعة القرآن.', androidSource: 'تطبيق أندرويد TV · لقطة محاكي',
+  lgTitle: 'LG webOS', lgCopy: 'تطبيق مستقل يعرض HDMI داخل ميقات، مع المواقيت والأذان والإذاعة. لا يستبدل شاشة LG الرئيسية ولا يوقظ التلفاز من الاستعداد.', lgSource: 'واجهة LG · لقطة متصفح بمحاكاة واجهات الجهاز',
+  support: 'تنفيذ LG يستهدف الأجهزة القديمة من فئة LF6300 / webOS 2.2. الأجهزة الأحدث غير مؤكدة. لا توجد تطبيقات iOS أو Samsung Tizen أو Roku حاليًا.',
+  getTitle: 'اختر الحزمة المناسبة لجهازك.', getCopy: 'تطبيق الهاتف يشمل الصلاة المستقلة ووضع رفيق التلفاز. لأندرويد TV وLG حزمتان مختلفتان.',
+  build: 'البناء والتثبيت', releases: 'الإصدارات العامة', getNote: 'نسخة المعاينة الحالية مسودة غير منشورة. لا يوجد تنزيل عام بعد؛ استخدم بناءً محليًا أو حزمة CI مخوّلة. توقيع APK في CI مؤقت وقد يتطلب تثبيتًا جديدًا.',
+  packages: [['miqat-phone.apk', 'تطبيق الهاتف ورفيق التلفاز'], ['miqat.apk', 'تطبيق أندرويد TV'], ['.ipk', 'تطبيق LG webOS'], ['miqat-installer.apk', 'أداة إعداد أندرويد TV المستقلة، اختياريًا']],
+} : {
+  eyebrow: 'MIQAT · ON YOUR PHONE. AT HOME.', title: ['Your prayers.', 'On your phone and TV.'],
+  intro: 'Offline prayer times and Adhan on Android, with a Hijri calendar, Qibla and widgets. Set up and control Miqat on your TV from the same app.',
+  phoneCta: 'Explore the phone app', tvCta: 'Try the TV preview',
+  heroSource: 'Native Android phone and Android TV emulator captures.',
+  phone: 'Android phone', companion: 'TV companion', android: 'Android TV', lg: 'LG webOS',
+  phoneTitle: 'Your prayer day, wherever you are.', phoneIntro: 'Use Miqat on your phone on its own. Times are calculated on the device, and your phone prayer settings stay independent of every TV.',
+  phoneGuide: 'Phone guide', phoneSource: 'Native Android phone screens. Locations and dates are demonstration data.',
+  screens: [
+    ['phone-home', 'Your next prayer, and the day ahead', 'Hijri date and city inside the prayer card, a daily timetable and a clear next-prayer outline.'],
+    ['phone-calendar', 'A Hijri calendar that goes further', 'Browse the month and recurring events, with the selected day’s prayer times directly below.'],
+    ['phone-prayer', 'Alerts that fit your day', 'Adhan, Short tone or Silent, independent vibration, weekdays, reminders and adjustments for each prayer.'],
+    ['phone-voices', 'Your recordings, in your library', 'Built-in voices and private imports from your device. Name a recording, choose its level and set how much plays.'],
+    ['phone-qibla', 'Find your Qibla', 'An offline bearing and sensor compass, plus a map you choose to load. Heading accuracy depends on the phone’s sensors.'],
+    ['phone-widgets', 'Prayer times at a glance', 'Widgets start at 1×1 and adapt as you resize, with independent styles and a next-prayer highlight.'],
+    ['phone-style', 'Make Miqat yours', 'Miqat and Signature lead the visual catalogs. Preview the whole page; ordinary choices save immediately.'],
+    ['phone-location', 'Location, on your terms', 'Choose a city or detect your location. Optional updates while the app is closed need separate Android background access.'],
+  ],
+  widgets: 'A small tile. Your whole timetable.', widgetCopy: 'Details adapt to the available space. Hijri date comes first; Gregorian is optional. This is a native widget preview; your launcher owns sizing and refresh timing.', widgetAlt: 'Native prayer-strip widget preview with dates and a border around the next prayer',
+  companionTitle: 'Your phone is the TV companion, too.', companionIntro: 'Open Your TVs to install Miqat on Android or LG, then pair on your home network with the TV remote’s approval. Your phone prayers keep their own settings.',
+  companionGuide: 'Setup and pairing', companionSource: 'Native phone interfaces with demonstration TVs. This website does not connect to your TV.',
+  companionScreens: [
+    ['companion-tvs', 'Your TVs, together', 'Set up a new TV, pair an existing Miqat installation, or open a saved TV.'],
+    ['companion-remote', 'Direct, deliberate controls', 'Home, inputs, Quran radio and a bounded Adhan test, through explicit commands.'],
+    ['companion-appearance', 'Set the scene at home', 'Supported TV themes, backgrounds and settings, with immediate saves and conflict protection.'],
+  ],
+  pairTitle: 'Paired locally, with your approval', pairCopy: 'Scan the TV’s code and approve with its remote. Connections are encrypted and each phone can be revoked. Phone and TV settings stay separate; reconnecting never uploads old settings.',
+  tvTitle: 'A place for prayer times at home.', tvIntro: 'The mihrab, Hijri date and next prayer, with the same Miqat fonts, prayer icons and palette, arranged for your TV remote.',
+  androidTitle: 'Android TV / Google TV', androidCopy: 'A native Home launcher for favourite apps and prayer times, with Adhan, reminders, Qibla bearing and Quran radio.', androidSource: 'Native Android TV app · emulator capture',
+  lgTitle: 'LG webOS', lgCopy: 'A separate app with embedded HDMI, prayer times, Adhan and radio. It does not replace LG Home or wake the TV from standby.', lgSource: 'LG interface · browser capture with mocked device APIs',
+  support: 'LG integration targets legacy LF6300 / webOS 2.2. Newer LG hardware is unverified. iOS, Samsung Tizen and Roku apps are not implemented.',
+  getTitle: 'The right package for your screen.', getCopy: 'The phone app includes standalone prayers and TV companion mode. Android TV and LG use their own packages.',
+  build: 'Build and install', releases: 'Public releases', getNote: 'The current preview candidate is an unpublished draft. No public download is available yet; use a source build or authorized CI artifact. CI APK signing is temporary and may require a fresh install.',
+  packages: [['miqat-phone.apk', 'Android phone + TV companion'], ['miqat.apk', 'Android TV app'], ['.ipk', 'LG webOS app'], ['miqat-installer.apk', 'Optional standalone Android TV setup tool']],
+};
+---
+<section class="product-hero" aria-labelledby="product-title">
+  <div class="hero-copy">
+    <p class="kicker">{L.eyebrow}</p>
+    <h1 id="product-title">{L.title.map(line => <span>{line}</span>)}</h1>
+    <p class="hero-intro">{L.intro}</p>
+    <div class="actions"><a class="primary" href="#phone">{L.phoneCta}</a><a href="#tv">{L.tvCta}</a></div>
+  </div>
+  <figure class="hero-images">
+    <div class="hero-tv"><Image src={shot('android-home')} alt={L.androidTitle} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 54vw" loading="eager" format="webp" /></div>
+    <Image class="hero-phone" src={shot('phone-home')} alt={L.phone} widths={[240, 420, 640]} sizes="(max-width: 800px) 24vw, 15vw" loading="eager" format="webp" />
+    <figcaption>{L.heroSource}</figcaption>
+  </figure>
+</section>
+<nav class="product-rail" aria-label={ar ? 'تطبيقات ميقات' : 'Miqat apps'}>
+  <a href="#phone">{L.phone}</a><a href="#companion">{L.companion}</a><a href="#android-tv">{L.android}</a><a href="#lg-webos">{L.lg}</a>
+</nav>
+<section id="phone" class="product-section" aria-labelledby="phone-title">
+  <div class="section-heading"><div><p class="kicker">{L.phone} · Android 8+</p><h2 id="phone-title">{L.phoneTitle}</h2></div><a href={`${REPO}/blob/main/docs/PHONE.md`}>{L.phoneGuide}</a></div>
+  <p class="section-intro">{L.phoneIntro}</p>
+  <div class="phone-gallery">
+    {L.screens.map(([name, title, description]) => <figure>
+      <a class="phone-image" href={shot(name).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><Image src={shot(name)} alt={title} widths={[320, 480, 720]} sizes="(max-width: 560px) 84vw, (max-width: 1000px) 40vw, 21vw" format="webp" /></a>
+      <figcaption><h3>{title}</h3><p>{description}</p></figcaption>
+    </figure>)}
+  </div>
+  <p class="capture-note">{L.phoneSource}</p>
+  <div class="widget-feature"><div><h3>{L.widgets}</h3><p>{L.widgetCopy}</p></div><Image src={ar ? widgetStripAr : widgetStrip} alt={L.widgetAlt} widths={[480, 800, 1200]} sizes="(max-width: 800px) 85vw, 48vw" format="webp" /></div>
+</section>
+<section id="companion" class="product-section companion-section" aria-labelledby="companion-title">
+  <div class="section-heading"><div><p class="kicker">{L.companion}</p><h2 id="companion-title">{L.companionTitle}</h2></div><a href={`${REPO}/blob/main/companion/README.md`}>{L.companionGuide}</a></div>
+  <p class="section-intro">{L.companionIntro}</p>
+  <div class="phone-gallery companion-gallery">
+    {L.companionScreens.map(([name, title, description]) => <figure>
+      <a class="phone-image" href={shot(name).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><Image src={shot(name)} alt={title} widths={[320, 480, 720]} sizes="(max-width: 560px) 84vw, (max-width: 1000px) 40vw, 24vw" format="webp" /></a>
+      <figcaption><h3>{title}</h3><p>{description}</p></figcaption>
+    </figure>)}
+  </div>
+  <p class="capture-note">{L.companionSource}</p>
+  <div class="trust-note"><h3>{L.pairTitle}</h3><p>{L.pairCopy}</p></div>
+</section>
+<section class="product-section" aria-labelledby="tvs-title">
+  <p class="kicker">{L.android} · {L.lg}</p><h2 id="tvs-title">{L.tvTitle}</h2><p class="section-intro">{L.tvIntro}</p>
+  <div class="tv-gallery">
+    {[
+      ['android-tv', 'android-home', L.androidTitle, L.androidCopy, L.androidSource],
+      ['lg-webos', 'lg-home', L.lgTitle, L.lgCopy, L.lgSource],
+    ].map(([id, image, title, copy, source]) => <figure id={id}>
+      <a class:list={['tv-image', { native: id === 'android-tv' }]} href={shot(image).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><Image src={shot(image)} alt={title} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 45vw" format="webp" /></a>
+      <figcaption><h3>{title}</h3><p>{copy}</p><p class="capture-note">{source}</p></figcaption>
+    </figure>)}
+  </div><p class="capture-note">{L.support}</p>
+</section>
+<section id="get-miqat" class="product-section get-section" aria-labelledby="get-title">
+  <div><p class="kicker">MIQAT · ميقات</p><h2 id="get-title">{L.getTitle}</h2><p>{L.getCopy}</p><div class="actions"><a class="primary" href={`${REPO}/blob/main/docs/BUILD.md`}>{L.build}</a><a href={`${REPO}/releases`}>{L.releases}</a></div><p class="capture-note">{L.getNote}</p></div>
+  <dl>{L.packages.map(([file, label]) => <div><dt dir="ltr">{file}</dt><dd>{label}</dd></div>)}</dl>
+</section>
+<style>
+  section, figure[id] { scroll-margin-top:2rem; }
+  .product-hero { display:grid; grid-template-columns:1fr 1.15fr; gap:clamp(28px,4vw,64px); align-items:center; padding:clamp(44px,6vw,100px) 0 48px; }
+  .kicker { color:var(--color-gold-400); font-size:.875rem; line-height:1.7; letter-spacing:.07em; margin:0 0 18px; }
+  h1 { font-size:clamp(2.75rem,4.7vw,5rem); line-height:1.12; text-wrap:balance; }
+  h1 span { display:block; }
+  .hero-intro { font-size:1.125rem; color:var(--color-mist-400); line-height:1.85; max-width:35rem; margin:26px 0; }
+  .actions { display:flex; align-items:center; gap:20px; flex-wrap:wrap; font-size:1rem; }
+  .actions a { padding:14px 0; text-underline-offset:5px; }
+  .actions .primary { padding:14px 22px; background:var(--color-gold-400); color:var(--color-lapis-950); border-radius:10px; text-decoration:none; font-weight:600; }
+  .hero-images { position:relative; width:100%; min-width:0; margin:0; padding:10% 9% 0 0; }
+  .hero-images :global(img) { display:block; height:auto; box-shadow:0 20px 60px #0005; }
+  .hero-tv { position:relative; aspect-ratio:1920/1020; width:100%; overflow:hidden; border:1px solid var(--color-line-soft); border-radius:12px; box-shadow:0 20px 60px #0005; }
+  .hero-tv :global(img) { position:absolute; inset:0; width:100%; }
+  .hero-images :global(.hero-phone) { position:absolute; width:29%; inset-inline-end:0; top:0; border:5px solid #102b30; border-radius:24px; }
+  .hero-images figcaption { margin-top:12%; font-size:.875rem; line-height:1.6; color:var(--color-mist-400); }
+  .product-rail { display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px 32px; border-block:1px solid var(--color-line-soft); padding:22px 0; font-size:1rem; }
+  .product-rail a { text-decoration:none; }
+  .product-section { padding:clamp(52px,7vw,100px) 0; border-bottom:1px solid var(--color-line-soft); }
+  .section-heading { display:flex; align-items:end; justify-content:space-between; gap:28px; }
+  .section-heading > a { flex:none; font-size:1rem; padding-bottom:8px; text-underline-offset:5px; }
+  h2 { font-size:clamp(2rem,3.2vw,3.5rem); line-height:1.25; text-wrap:balance; }
+  h3 { font-size:1.4rem; line-height:1.45; }
+  .section-intro { color:var(--color-mist-400); font-size:1.125rem; line-height:1.85; max-width:56rem; margin:24px 0 40px; }
+  .phone-gallery { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:44px 26px; }
+  figure { margin:0; min-width:0; }
+  .phone-image { display:block; padding:10px; background:linear-gradient(150deg,#1d474c88,#082b3088); border:1px solid var(--color-line-soft); border-radius:24px; cursor:zoom-in; }
+  .phone-image :global(img) { display:block; width:100%; height:auto; border-radius:15px; }
+  figcaption h3 { margin:20px 0 10px; }
+  figcaption p, .widget-feature p, .trust-note p, .get-section p { font-size:1rem; line-height:1.85; color:var(--color-mist-400); margin:0; }
+  .capture-note { font-size:.875rem !important; line-height:1.8; color:var(--color-mist-400); margin:24px 0 0; }
+  .widget-feature { display:grid; grid-template-columns:1fr 1.3fr; align-items:center; gap:40px; margin-top:52px; padding:32px; background:#123b4088; border-radius:18px; }
+  .widget-feature h3 { margin-bottom:12px; }
+  .widget-feature :global(img) { width:100%; height:auto; }
+  .companion-gallery { grid-template-columns:repeat(3,minmax(0,1fr)); max-width:1020px; margin-inline:auto; gap:40px; }
+  .trust-note { display:grid; grid-template-columns:1fr 2fr; gap:32px; margin-top:36px; padding-top:28px; border-top:1px solid var(--color-line-soft); }
+  .tv-gallery { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
+  .tv-image { display:block; position:relative; aspect-ratio:16/9; overflow:hidden; border-radius:12px; border:1px solid var(--color-line-soft); }
+  .tv-image.native { aspect-ratio:1920/1020; }
+  .tv-image :global(img) { position:absolute; inset:0; width:100%; height:auto; display:block; }
+  .tv-gallery .capture-note { margin-top:14px; }
+  .get-section { display:grid; grid-template-columns:1.3fr 1fr; gap:64px; }
+  .get-section h2 { margin-bottom:24px; }
+  .get-section .actions { margin:26px 0; }
+  dl { margin:0; }
+  dl div { padding:20px 0; border-bottom:1px solid var(--color-line-soft); }
+  dt { font-size:1rem; color:var(--color-gold-400); text-align:start; overflow-wrap:anywhere; }
+  dd { font-size:1rem; color:var(--color-mist-400); margin:8px 0 0; }
+  @media(max-width:1100px) { .phone-gallery { grid-template-columns:repeat(3,minmax(0,1fr)); } .companion-gallery { gap:24px; } }
+  @media(max-width:800px) { .product-hero { grid-template-columns:1fr; gap:12px; } .hero-images { max-width:680px; margin:auto; } .phone-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } .widget-feature,.trust-note,.get-section { grid-template-columns:1fr; gap:26px; } .tv-gallery { grid-template-columns:1fr; gap:40px; } .section-heading { align-items:start; flex-direction:column; gap:18px; } .get-section { gap:32px; } }
+  @media(max-width:560px) { .phone-gallery { grid-template-columns:1fr; max-width:360px; margin-inline:auto; gap:38px; } .product-rail { justify-content:start; gap:16px 24px; } .widget-feature { padding:24px 18px; } .hero-images :global(.hero-phone) { border-width:3px; border-radius:14px; } .hero-images figcaption { font-size:.8125rem; } }
+  :global([dir='rtl']) .kicker { letter-spacing:0; }
+  :global([dir='rtl']) .hero-images { padding-inline:0 9%; }
+  a:focus-visible { outline:2px solid var(--color-gold-400); outline-offset:5px; }
+</style>

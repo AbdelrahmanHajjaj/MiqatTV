@@ -1,23 +1,21 @@
 # Current work
 
-Updated: 2026-11-22. Approved scope: align Android TV and LG's common UI with
-phone: immediate settings/appearance saves, raised selected/inset inactive short
-choices, Miqat-first theme/background lists, filled artwork cards, and Home's
-in-card Hijri date/city, clean verse and next-prayer emphasis. Preserve TV launcher,
-input/audio and saved preference behaviour; existing capability gaps stay explicit.
+Updated: 2026-11-22. Approved scope: refresh README, agent guidance, current docs,
+website and screenshots for the standalone Android phone app, its TV companion
+mode, Android/Google TV and LG webOS. Preserve the existing interactive TV preview
+and its direct links. Use current native phone/Android captures and explicitly
+label LG browser captures; exclude private state and unsupported product claims.
 
-Implementation and local native/browser validation are complete. Versions:
-Android TV 0.7.2/code 13, LG 0.2.30, phone 0.5.18/code 34. EVIDENCE.md records
-checks, the corrected scroll bounds and emulator versus physical limits.
-Delivery uses required PR checks and a normal merge, then an updated preview from
-successful current-main CI. PR and draft-release records own remote run status.
-Next product acceptance: owner checks physical TV picture, sound and remote input.
-Publication and physical TV deployment still need specific instruction.
+Implementation and local native/browser/document checks are complete; EVIDENCE.md
+records the capture sources and corrected mobile hero. Delivery uses required PR
+checks and a normal merge, followed by the existing validated Pages workflow.
+PR/main/deployment records own remote status. No additional feature work is approved.
 
-The v0.7.1-preview.1 draft covers the preceding revision; the aligned candidate is
-v0.7.2-preview.1. Stable signing remains unconfigured. Notification automation
-checks actual dismissibility and cleanup; no fixed OEM swipe gesture is required
-by the owner.
+Product baseline: Android TV 0.7.2/code 13, LG 0.2.30, phone 0.5.18/code 34.
+PR #13 is merged and v0.7.2-preview.1 is an unpublished, verified preview draft.
+Stable signing remains unconfigured. Physical TV acceptance and public app
+release publication remain separate. No app behavior changes are in this scope;
+correct the stale TV-preview Apply caption found while capturing the current UI.
 
 Overwrite only the existing Miqat-latest review exports under state/builds/.
 Retain the phone's existing local signer; private logs/captures stay under state/.

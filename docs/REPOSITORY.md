@@ -1,21 +1,22 @@
-# Repository setup
+# Repository
 
-Miqat lives at https://github.com/AbdelrahmanHajjaj/MiqatTV. This is a new independent
-repository populated from the platform-core implementation, without the companion
-branch, inherited workflows, previous Git history or private device state.
-Original MIT copyright and third-party notices remain with reused code.
+[MiqatTV](https://github.com/AbdelrahmanHajjaj/MiqatTV) contains the standalone
+Android phone app, its TV companion/setup mode, Android TV, LG webOS, the shared
+rules/data/design sources and the bilingual product website. The repository name
+does not limit the product to TVs. iOS, Samsung/Tizen and Roku apps are unimplemented.
 
-The local checkout is D:/Dev/MiqatTv. It has its own .git directory and does not
-depend on the previous repository's worktree links. Its origin points to MiqatTV.
-No local-folder move or remote rename is needed.
+`companion/android` is the Android phone app. Its Prayer section works independently;
+Your TVs owns optional household-LAN setup, pairing, settings and remote control.
+`installer/runtime` is reused by that phone app and the optional standalone
+installer. [Architecture](ARCHITECTURE.md) owns these boundaries.
 
-The new workflows are owned here: Validate checks the shared core and all three
-consumers; Draft build release publishes verified artifacts to a draft prerelease.
-Main protection and token defaults follow [CI.md](CI.md). No inherited workflow
-is retained. GitHub Pages serves the validated browser preview automatically
-from main; see [website deployment](CI.md#website).
+Use feature branches and normal PR merges. Validate checks affected consumers;
+GitHub Pages publishes the validated website from main. Draft build release
+creates an unpublished candidate from successful current-main artifacts. See
+[CI and website deployment](CI.md) and [release procedure](RELEASING.md).
 
-Main starts with the validated foundation and fresh Git history, as approved
-by the owner on 17 November 2026. Future changes use feature branches. Stable releases still need explicit
-authorization and persistent signing. Keep credentials, unreviewed recordings,
-build outputs and device configuration outside source control.
+The fresh Miqat history began with the approved platform foundation on
+17 November 2026; phone and companion work is now integrated. Original MIT and
+third-party notices remain. Keep credentials, private device state, raw logs and
+build outputs outside Git. Public screenshot sources are the sanitized captures
+under docs/screenshots/, with [provenance](screenshots/README.md).

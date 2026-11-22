@@ -23,7 +23,7 @@ onScreen('*', (stage, signal) => {
   stage.addEventListener('focusin', (e) => showHints(e.target as Element));
   showHints(null);
 
-  // Arrow keys: the first press anywhere on the page wakes the TV at its default focus; after that they move
+  // Arrow keys: the first press while the TV is visible wakes its default focus; after that they move
   // focus inside the TV (the polyfill's search, its own key handling off) and never scroll the page.
   const DIRS: Record<string, 'left' | 'right' | 'up' | 'down'> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
   const spatnav = (window as any).__spatialNavigation__;
@@ -34,6 +34,8 @@ onScreen('*', (stage, signal) => {
     const inside = stage.contains(document.activeElement);
     if (!inside) {
       if (document.activeElement && document.activeElement !== document.body) return; // focus is elsewhere on the page
+      const bounds = frame.getBoundingClientRect();
+      if (bounds.top >= window.innerHeight || bounds.bottom <= 0) return;
       e.preventDefault();
       start();
       return;

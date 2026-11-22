@@ -5,16 +5,21 @@ English Miqat in the frame baseline and separate plain TV. Source rasters and
 provenance live in [`branding/miqat-tv-v1/`](../shared/design/branding/miqat-tv-v1/README.md).
 `node site/scripts/splash.mjs` exports the shared full-HD splash, LG 80/130 px
 icons, Android/installer 512 px icons, Android launch artwork/TV banner and the
-preview favicon/social image. Regenerate them together; never redraw the lettering.
+preview favicon/splash. Regenerate them together; never redraw the lettering.
+The product website's phone/TV social cards are captured from its own hero;
+see [site instructions](../site/README.md) and [screenshot provenance](screenshots/README.md).
 Android's initial window uses the splash; newer Android versions control their
 own system splash treatment with the new application icon. LG maps both
 `splashBackground` and legacy `bgImage` to the shared full-HD PNG.
 
 [`mihrab.json`](../shared/design/mihrab.json) owns the new crown/shoulder geometry. Android TV,
-the installer, LG and preview use it for the main prayer arch, call and dim
+the phone, installer, LG and preview use it for the main prayer arch, call and dim
 screensaver where those screens exist. `node tools/catalogs.mjs` also projects
 it into both native `MiqatShape` classes; `--check` detects stale projections.
 The geometry preserves existing content positions and focus treatments.
+Phone Home, widgets and Adhan reuse canonical icons, fonts, theme colors and
+geometry while composing scenes for portrait. The phone's TV preview is
+representative; each native TV shell still owns its actual layout.
 
 The default tokens now use petrol, gold and ivory. All eight SVG masks under
 `shared/design/mihrab/patterns/` are original Miqat portal/diamond/arcade compositions;

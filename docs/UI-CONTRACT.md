@@ -5,6 +5,12 @@ and priority live in [WORK.md](WORK.md); verification
 facts live in [EVIDENCE.md](EVIDENCE.md). The approved Android phone design is the common presentation and editing
 reference; platform renderers, OS APIs and saved preference keys remain separate.
 
+The phone's independent prayer controls use phone-ui-contract.json; its TV
+companion controls use the common TV contract/capabilities. The product website
+shows native phone/TV screenshots and a separate simulated TV preview. A static
+screenshot is presentation evidence, not proof of a working native binding.
+See [website source](../site/README.md) and [capture sources](screenshots/README.md).
+
 ## Shared responsibilities
 
 | Contract | Shared definition | Platform binding and proof |

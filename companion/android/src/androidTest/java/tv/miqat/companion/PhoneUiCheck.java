@@ -361,7 +361,9 @@ final class PhoneUiCheck {
     static void on(Instrumentation test,Runnable action){Throwable[] failure={null};test.runOnMainSync(()->{try{action.run();}catch(Throwable error){failure[0]=error;}});if(failure[0]!=null)throw new AssertionError(failure[0]);test.waitForIdleSync();}
     static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
     static void capture(Instrumentation test,android.content.Context a,String name,boolean enabled)throws Exception {
-        if(!enabled)return;android.os.SystemClock.sleep(500);Bitmap screenshot=test.getUiAutomation().takeScreenshot();check(screenshot!=null,"Screenshot unavailable");
+        if(!enabled)return;
+        if(a instanceof MainActivity)on(test,()->{MainActivity activity=(MainActivity)a;if(activity.toast!=null)activity.toast.cancel();});
+        android.os.SystemClock.sleep(500);Bitmap screenshot=test.getUiAutomation().takeScreenshot();check(screenshot!=null,"Screenshot unavailable");
         try(FileOutputStream file=new FileOutputStream(new File(a.getExternalFilesDir(null),name+".png"))){screenshot.compress(Bitmap.CompressFormat.PNG,100,file);}finally{screenshot.recycle();}
     }
 }

@@ -1,8 +1,10 @@
 # Shared catalogs
 
 `cities.json`, `regions.json`, `methods.json`, `stations.json`, `voices.json` and
-`strings.json` are canonical inputs for Android,
-LG and the browser preview. Keep existing city/method IDs and ordering so upgrades retain selected locations;
+`strings.json` are canonical inputs for Android phone/TV,
+LG and the browser preview. The phone projects them through companion/generate.mjs;
+its additional native copy lives in companion/strings.json, and phone-only
+controls in shared/data/phone-ui-contract.json. Keep existing city/method IDs and ordering so upgrades retain selected locations;
 Cairo is the fallback. Current work and decisions are tracked
 only in [`docs/WORK.md`](WORK.md).
 

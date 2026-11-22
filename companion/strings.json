@@ -256,7 +256,7 @@
   "reconnect":{"en":"Reconnect demo TV","ar":"إعادة اتصال التلفاز التجريبي"},
   "disconnect":{"en":"Disconnect demo TV","ar":"قطع اتصال التلفاز التجريبي"},
   "search":{"en":"Search settings","ar":"البحث في الإعدادات"},
-  "preview":{"en":"Representative preview · changes stay on this phone until Apply","ar":"معاينة تقريبية · تبقى التغييرات على الهاتف حتى التطبيق"},
+  "preview":{"en":"Representative TV preview","ar":"معاينة تقريبية للتلفاز"},
   "discard":{"en":"Discard appearance changes?","ar":"تجاهل تغييرات المظهر؟"},
   "discard_yes":{"en":"Discard","ar":"تجاهل"},
   "unsaved":{"en":"Unsaved appearance changes","ar":"تغييرات مظهر غير محفوظة"},

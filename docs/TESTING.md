@@ -85,7 +85,7 @@ changes accessibility/screensaver system settings; do not use it as a routine
 physical-TV check. The real-network mode is separate from deterministic fixtures.
 
 For preview navigation, check repeated screen changes without URL changes, browser
-Back and return focus, settings Apply/cancel and re-entry, direct screen links and
+Back and return focus, immediate settings persistence and re-entry, direct screen links and
 language switching. The preview route/lifecycle regressions check route boundaries
 and cleanup when a screen is replaced. Check the page at a narrow viewport too.
 
@@ -203,16 +203,16 @@ Target declarations follow [Kotlin's hierarchy documentation](https://www.jetbra
 The runner/toolchain is recorded in [GitHub's macOS 15 ARM64 image](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md).
 
 
-Phone pass-3 journey: `-e suite phone-journey` exercises fresh/resumable first use,
-real appearance Cancel, a temporary native AppWidgetHost bind/update and the
+Phone journey: `-e suite phone-journey` exercises fresh/resumable first use,
+immediate appearance persistence, a temporary native AppWidgetHost bind/update and the
 common TV platform/preparation/source flow, plus rejecting a late cancelled job.
 The widget fixture requires API 29+ and releases its test-owned host and scoped
 shell binding permission in finally. No physical TV or public release is used.
 
 Pass-4 phone journey coverage follows the single-decision/Skip guide and real
-carousel selection, then ordinary Appearance Apply/Cancel. Widget checks bind
+carousel selection and immediate Appearance saving. Widget checks bind
 all launcher variants through AppWidgetService, configure independent instances,
-verify Cancel, resize fallback/restoration, strip rendering and missing-location
+verify retained settings after Back, resize fallback/restoration, strip rendering and missing-location
 updates. The phone-size suite covers their actual previews at both scale edges.
 The native LAN suite accepts an older TV's retired voice baseline without a
 write, rejects an unknown choice and verifies the retired option is hidden in
@@ -221,8 +221,8 @@ command sent to a TV. Physical launcher/OEM/TV acceptance remains separate.
 
 
 Pass-7 phone journeys exercise two-page first use, a single direct appearance
-preview with Apply/Cancel (including display drafts), compact visual widget
-choices and new-widget Add versus existing-widget Apply. Numbered TV preparation,
+preview with immediate display saving, compact visual widget
+choices and new-widget Add versus existing-widget Update. Numbered TV preparation,
 release choices and LG address/passphrase share one page; invalid addresses must
 preserve session-only input without networking. Voice search tests selection
 from filtered results as well as unchanged Cancel/Apply behavior.

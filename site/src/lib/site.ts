@@ -23,10 +23,10 @@ export const PAGES: Page[] = [
   {
     slug: '', screen: 'home',
     nav: { ar: 'الرئيسية', en: 'Home' },
-    title: { ar: 'ميقات · مواقيت الصلاة على تلفازك', en: 'Miqat · Prayer times, on your TV' },
+    title: { ar: 'ميقات · مواقيت الصلاة على هاتف أندرويد والتلفاز', en: 'Miqat · Prayer times for Android phones and TVs' },
     description: {
-      ar: 'ميقات لتلفاز أندرويد وLG webOS: مواقيت الصلاة دون إنترنت، والأذان في وقته، والقبلة وإذاعة القرآن الكريم، بالعربية والإنجليزية.',
-      en: 'Miqat for Android TV and LG webOS: offline prayer times, scheduled adhan, Qibla and Quran radio, in Arabic and English.',
+      ar: 'مواقيت الصلاة والأذان والتقويم الهجري والقبلة والويدجت على هاتف أندرويد، مع وضع رفيق التلفاز وتطبيقَي Android TV وLG webOS. بالعربية والإنجليزية.',
+      en: 'Offline prayer times, Adhan, Hijri calendar, Qibla and widgets on Android phones, with TV companion mode and Android TV / LG webOS apps. Arabic and English.',
     },
     body: {
       ar: [
@@ -46,17 +46,17 @@ export const PAGES: Page[] = [
     nav: { ar: 'مواقيت اليوم والقبلة', en: 'Today & Qibla' },
     title: { ar: 'مواقيت الصلاة اليوم والقبلة على التلفاز · ميقات', en: 'Today’s prayer times and Qibla on your TV · Miqat' },
     description: {
-      ar: 'كل مواقيت اليوم مع الوقت المتبقي لكل صلاة، وجرس أذان لكل صلاة، واتجاه القبلة من مدينتك ومن مكان جلوسك أمام التلفاز.',
-      en: 'Every prayer time today with its countdown, an adhan bell per prayer, and the Qibla from your city and from where you sit facing the TV.',
+      ar: 'مواقيت اليوم مع الوقت المتبقي ومفاتيح الأذان لكل صلاة واتجاه القبلة من مدينتك. يعتمد اتجاه الغرفة على إمكانات التلفاز المدعومة.',
+      en: 'Every prayer time today with its countdown, per-prayer Adhan switches and the Qibla bearing. Room-relative direction depends on the TV’s supported capabilities.',
     },
     body: {
       ar: [
-        'شاشة «مواقيت اليوم» تعرض الصلوات الست مع الوقت المتبقي لكل منها، وجرسًا يشغّل الأذان أو يوقفه لكل صلاة على حدة.',
-        'البوصلة تعرض اتجاه القبلة من مدينتك. وبعد ضبط اتجاه الغرفة مرة واحدة، تقول لك الشاشة أين القبلة منك: أمامك أو خلفك أو عن يمينك.',
+        'شاشة «مواقيت اليوم» تعرض المواقيت الست مع الوقت المتبقي، ومفتاحًا مستقلًا لأذان كل صلاة.',
+        'البوصلة تعرض اتجاه القبلة من مدينتك. يدعم أندرويد TV وهذه المعاينة ضبط اتجاه الغرفة؛ ضبط الاتجاه النسبي على LG ما زال غير متاح.',
       ],
       en: [
-        'Today’s prayers shows all six times with the time left to each, and a bell that turns the adhan on or off for each prayer.',
-        'The compass shows the Qibla bearing from your city. Set which way the TV faces once, and the screen tells you where the Qibla is from your seat: ahead, behind or to one side.',
+        'Today’s prayers shows all six times with the time left to each, and an independent Adhan switch for each prayer.',
+        'The compass shows the Qibla bearing from your city. Android TV and this preview support room-facing calibration; LG’s room-relative calibration remains a declared capability gap.',
       ],
     },
   },
@@ -65,8 +65,8 @@ export const PAGES: Page[] = [
     nav: { ar: 'تذكير قبل الصلاة', en: 'Reminder' },
     title: { ar: 'تذكير قبل الصلاة على التلفاز · ميقات', en: 'A reminder before each prayer on your TV · Miqat' },
     description: {
-      ar: 'قبل كل صلاة بدقائق تظهر بطاقة على الشاشة الرئيسية، أو شريط فوق أي تطبيق مفتوح، فلا تفوتك الصلاة وأنت تشاهد.',
-      en: 'Minutes before each prayer a card appears on Home, or a banner over whatever app is open, so you never miss a prayer while watching.',
+      ar: 'تظهر التذكيرات على شاشة ميقات الرئيسية. ويمكن لخدمة الصلاة المفعّلة على أندرويد إظهار شريط فوق التطبيقات والمداخل المدعومة.',
+      en: 'Prayer reminders appear on Miqat Home. Android’s enabled prayer service can also show a banner over supported apps and inputs.',
     },
     body: {
       ar: ['تختار في الإعدادات متى يظهر التذكير: قبل الصلاة بعشر دقائق أو بخمس عشرة، أو إيقافه. ويتحوّل إطار المحراب إلى الذهبي الفاتح في آخر ربع ساعة.'],
@@ -78,8 +78,8 @@ export const PAGES: Page[] = [
     nav: { ar: 'الأذان', en: 'The call' },
     title: { ar: 'الأذان على التلفاز في وقته · ميقات', en: 'The adhan on your TV, on time · Miqat' },
     description: {
-      ar: 'في وقت الصلاة تظهر شاشة الأذان فوق أي شيء يُعرض ويُرفع الأذان وحده، بـ 13 صوتًا وأذان خاص للفجر.',
-      en: 'At prayer time the call comes up over whatever is playing and the adhan plays by itself, with 13 voices and a separate Fajr adhan.',
+      ar: 'أذان مجدول مع ١٣ صوتًا مدمجًا وتسجيل خاص للفجر. تخضع خدمة أندرويد وتكامل LG أثناء فتح التطبيق لحدود كل منصة.',
+      en: 'Scheduled Adhan with 13 built-in voices and a separate Fajr recording. Android service and LG foreground integration follow their own platform limits.',
     },
     body: {
       ar: ['إذا كان التلفاز صامتًا أو صوته صفرًا يرتفع الصوت للأذان ثم يعود كما كان. وتُغلق الشاشة بزر الرجوع أو وحدها بعد عشر دقائق. (المعاينة على الويب لا تشغّل صوت الأذان.)'],

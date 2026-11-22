@@ -1,5 +1,12 @@
 # Miqat companion work
 
+This is the historical delivery ledger, including superseded draft/Apply flows.
+The companion is integrated into the standalone Android phone app on main.
+Use [PHONE.md](PHONE.md), [the companion guide](../companion/README.md) and
+[UI-CONTRACT.md](UI-CONTRACT.md) for current behavior: ordinary settings and
+Appearance save immediately; phone prayers remain independent of each TV.
+WORK.md owns current scope, and EVIDENCE.md owns current acceptance limits.
+
 Build delivery: run `companion/export-apk.ps1` after each phone build and share
 the primary checkout's `state/builds/companion/Miqat-latest.apk`. Keep only the
 latest export. Owner preference: no new per-task evidence folders, duplicate

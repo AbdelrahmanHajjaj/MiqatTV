@@ -4,6 +4,13 @@ The native Java Views launcher uses package `tv.miqat.home`, its existing settin
 and debug signing configuration. The portable domain rules come from `shared/core`;
 astronomy, Android ICU dates, persistence, scheduling, playback and UI stay here.
 
+Miqat can be Android/Google TV Home. Its current common UI matches the phone's
+control family: immediate settings, short segmented choices, switches and
+Miqat-first theme/background catalogs. The full Home card contains Hijri date/city;
+only the next prayer keeps the highlight outline. [Phone companion mode](../companion/README.md)
+offers optional setup, pairing and control; it is separate from standalone phone prayers.
+[Current native captures](screenshots/README.md) are emulator evidence.
+
 **Settings → Prayer times → Check online** makes one advisory AlAdhan comparison
 for the selected city/method/school and today's civil day. It shows six calculated
 times, six reference times and signed minute differences. Calculated times retain

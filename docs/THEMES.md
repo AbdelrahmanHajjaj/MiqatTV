@@ -1,10 +1,27 @@
 # Themes and ambient backgrounds
 
-In **Settings → Home & appearance**, choose from **20 built-in themes**, plus an imported Custom theme. The original eight retain their names and saved selections. Use Left/Right on the horizontal theme and background lists to update a miniature Home preview immediately. **Apply changes** saves the whole page; leaving it without applying keeps the active theme and settings unchanged. Imported Custom themes remain available. Home layout, theme and background share this preview and Apply action. Up/Down scrolls through the choices while the preview stays fixed. Prayer calculations, radio and Quran text stay unchanged. New modern styles reuse the bundled Alexandria font for the Home clock and countdown; classic and framed styles retain the original display fonts. Quran text always uses Amiri. Background choices include lattice, solid, panorama, daylight, mountains, dunes, halo and night sky, plus eight line patterns: Arches, Eight-point stars, Mashrabiya, Arabesque, Star tiles, Rosettes, Octagon lattice and Corner medallions. Every pattern takes its line colour from the selected theme; Ambient light also adjusts line strength. They use local full-HD PNG masks composited into a cached background at the app’s resolution, capped at 1920×1080, with no wallpaper downloads or animation loop. The settings thumbnail remains 480×270 and downsamples the mask before decoding; Home never stretches that thumbnail across the screen. The browser preview reads their shared SVG source paths. Pattern names and selection controls are available in Arabic and English. Ambient light controls the subtle colour wash, from 0 to 100. Daylight follows the TV clock; it does not fetch weather or images. The static background updates at most once a minute on the existing foreground clock tick. Reduce motion removes focus scaling and UI transitions; the screensaver still moves to avoid a static image.
+In Phone settings → Appearance or TV Settings → Home & appearance, **Miqat** and
+**Miqat signature** appear first. Fresh installs use the Signature artwork and
+petrol/gold palette. Explicit saved selections remain intact. Phone backgrounds
+are composed for portrait; TV scenes fill the landscape viewport.
+
+Theme/background cards have filled artwork previews, and the Appearance page
+shows the active colors/background. Ordinary changes save immediately, including
+leaving with Back. Short choices use visible segmented controls and on/off values
+use switches; only large visual catalogs use carousels. Special import/palette
+or audio-selection dialogs still validate/confirm their complete value.
+
+The common design has 20 built-in themes, plus imported Custom support where the
+shell implements it. See [capabilities](UI-GAPS.md) for LG differences. Quran text
+keeps Amiri; app labels use bundled Alexandria, with display fonts appropriate to
+each surface. No wallpaper download is needed. TV procedural/daylight effects
+and line patterns use local sources; the browser preview shares those definitions.
+Phone Home dims its artwork and can turn it off independently. Widgets retain
+per-instance background, opacity, shape and date choices; see [PHONE.md](PHONE.md).
 
 ## Built-in themes
 
-The original eight retain their saved IDs and classic treatment: **Mihrab, Aurora, Ember, Forest, Midnight, Rose, Sand and Slate**. The twelve additions bring six other surface styles. All use dark TV-friendly backgrounds and the existing focus ring. Background choice remains independent; choose **Theme default** to use the preset’s background.
+The original eight retain their saved IDs and classic treatment: **Miqat, Aurora, Ember, Forest, Midnight, Rose, Sand and Slate** (Miqat retains its saved `mihrab` ID). The twelve additions bring six other surface styles. All use dark TV-friendly backgrounds and the existing focus ring. Background choice remains independent; choose **Theme default** to use the preset’s background.
 
 | Theme | العربية | Treatment | Default background |
 |---|---|---|---|
@@ -34,6 +51,9 @@ Cinema/Carbon, Signal/Arcade and Brass/Mosaic share a 12-pixel surface radius. I
 Prayer cards align their name and time to the start edge: left in English, right in Arabic. The icon sits above the name, with Now/Next or Ramadan status at the opposite end of the top row. This retains the card height and gives long names their own full-width line. Prayer cards use 20-pixel side padding and cap their corner radius at 28 pixels; larger app tiles retain the full theme radius. Current/next state colours stay distinct in every style.
 
 ## Custom themes
+
+The JSON-file workflow below belongs to Android TV/tooling. Phone appearance uses
+its native custom-palette dialog; LG import/export remains a declared gap.
 
 Custom themes are local JSON, imported over ADB. Copy a preset from `shared/design/assets/themes/`, edit it and run:
 
@@ -76,15 +96,15 @@ The optional `surface` field accepts `classic` (default for old files), `glass`,
 
 **Home & appearance → App focus lighting** adds a subtle wash using the focused app's banner or icon colours. It is off by default. Colours are sampled from a 12×12 image and cached for the current Home view, following CleanYourTV's colour sampling approach (MIT; `CLEANYOURTV-LICENSE.txt`). Ambient light controls its strength. A focus change transitions for 280 ms, then stops; Reduce motion makes the change immediate. There is no idle animation loop. It works with panorama, daylight and the other backgrounds.
 
-Home supports up to nine favourites in two rows. **Home & appearance → Favourite rows** offers **Two favourite rows** (default) and **Classic — one row**, which displays the first four saved favourites as larger tiles. Left/Right previews, **Apply changes** saves the page and Back cancels the draft. Switching layouts preserves the full favourites list, and both retain recent apps and All apps. Six favourites use four columns when the mihrab is compact or hidden; Arabic mirrors the layout and navigation. Below them, up to five recently opened apps appear beside All apps. Recent history stays on the TV and records launches made through the launcher, including its assigned remote buttons; apps opened directly by the TV firmware are not tracked. **All apps → hold OK** adds or reorders a favourite; extra favourites can also be removed. **Replace a favourite** returns to Home: select a favourite tile and press OK to replace it, or Back to cancel. **Uninstall** opens Android’s confirmation for removable apps; system apps and the launcher are excluded. The phone installer reads the TV's supported capacity, retaining compatibility with older four-slot builds.
+Home supports up to nine favourites in two rows. **Home & appearance → Favourite rows** offers **Two favourite rows** (default) and **Classic — one row**, which displays the first four saved favourites as larger tiles. The short layout choice saves immediately; Back retains it. Switching layouts preserves the full favourites list, and both retain recent apps and All apps. Six favourites use four columns when the mihrab is compact or hidden; Arabic mirrors the layout and navigation. Below them, up to five recently opened apps appear beside All apps. Recent history stays on the TV and records launches made through the launcher, including its assigned remote buttons; apps opened directly by the TV firmware are not tracked. **All apps → hold OK** adds or reorders a favourite; extra favourites can also be removed. **Replace a favourite** returns to Home: select a favourite tile and press OK to replace it, or Back to cancel. **Uninstall** opens Android’s confirmation for removable apps; system apps and the launcher are excluded. The phone installer reads the TV's supported capacity, retaining compatibility with older four-slot builds.
 
 **Display & language → Hide system apps in All apps** filters out system utilities while keeping media apps, games and Play Store visible, including preinstalled YouTube, YouTube Music, Play Movies, Play Games, Netflix and TCL Gallery/Media Player. It uses Android app categories with a small fallback list for those common TV apps. It is off by default. Home favourites and recent apps remain visible, and nothing is disabled or removed from the TV. All apps displays four rows and scrolls by row; tiles are created as they enter view. The Home, All apps, prayer and settings footer instructions and adhan dismissal hints have been removed; buttons and automatic dismissal still work.
 
 **Prayer times → Calculation method** offers [19 offline presets](PRAYER-METHODS.md), shared by all prayer displays and alerts. **Reminders & adhan → Test reminders & adhan** previews the reminder banner or adhan popup using the current sound settings, without changing scheduled alerts.
 
-**Prayer times → Prayer time offsets** shows one **− / number / +** row per prayer (including the sunrise marker), matching Hijri date adjustment. The adjusted prayer time appears in larger type at the centre of each card, in the same relative position in English and Arabic. It updates immediately while editing and follows the selected 12-hour (AM/PM) or 24-hour format; Back restores the saved time. Press OK to edit, Left/Right to adjust between −30 and +30 minutes, OK to save or Back to cancel. Back again returns to Prayer times. Negative means earlier, positive means later, and zero restores the selected calculation method's time. Displays, reminders and adhan use the same offsets. Offsets are preserved when changing location or method, so review them then. A fixed offset is not a seasonal mosque timetable. Leamington Spa is available in the UK city list; location discovery is not implemented.
+**Prayer times → Prayer time offsets** shows one **− / number / +** row per prayer (including the sunrise marker), matching Hijri date adjustment. The adjusted prayer time appears in larger type at the centre of each card, in the same relative position in English and Arabic. It follows the selected 12-hour (AM/PM) or 24-hour format. Left/Right or the visible −/+ controls adjust between −30 and +30 minutes and save immediately. Back keeps the change and returns to Prayer times. Negative means earlier, positive means later, and zero restores the selected calculation method's time. Displays, reminders and adhan use the same offsets. Offsets are preserved when changing location or method, so review them then. A fixed offset is not a seasonal mosque timetable. Leamington Spa is available in the UK city list; location discovery is not implemented.
 
-The browser preview mirrors the shared Home & appearance page, both favourite layouts and prayer-offset editing. The Asr school row previews today’s Asr time while editing; Back restores the saved choice. The separate Asr sidebar card has been removed.
+The browser preview mirrors the shared Home & appearance page, both favourite layouts and prayer-offset editing. The Asr school row shows today’s Asr time; choices save immediately and Back retains them. The separate Asr sidebar card has been removed.
 
 
 ## Quick controls and prayer bar
@@ -109,7 +129,7 @@ Reminder banners continue over the current app/input, and adhan opens its existi
 
 ### Random appearance
 
-In **Settings → Home & appearance → Random appearance**, choose **Off**, **Every 15 minutes** or **Every 30 minutes**, then Apply. It is off by default. The first change happens after the selected interval; applying a manual theme/background starts a fresh interval.
+In **Settings → Home & appearance → Random appearance**, choose **Off**, **Every 15 minutes** or **Every 30 minutes**. The choice saves immediately and is off by default. The first change follows the selected interval after enabling it.
 
 Each change picks from the 20 built-in themes and 16 backgrounds, excluding the current theme and visible background. Custom theme data is retained but is not included in random selection. Layout, favourites, language, lighting preferences and prayer settings stay unchanged. Turning rotation off keeps the currently displayed theme and background.
 

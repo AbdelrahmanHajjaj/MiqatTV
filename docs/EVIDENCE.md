@@ -1,5 +1,35 @@
 # Validation evidence
 
+## Phone, companion and TV product presentation — 22 November 2026
+
+README, agent guidance, current product/build/privacy/theme/architecture guides
+and both website languages now cover standalone Android prayers, TV companion
+mode, Android/Google TV and LG. Historical phone/companion delivery notes are
+identified as history. Public-download copy was checked against the repository:
+the preview releases remain unpublished drafts.
+
+The 26 curated English/Arabic PNGs have [recorded sources](screenshots/README.md).
+Phone UI, onboarding/widgets/Qibla and companion demo capture journeys pass on an
+owned Android 14/API 34 Google APIs emulator at native portrait 1080×2400/420.
+The initial inherited landscape overrides were corrected before public selection.
+Optional capture now clears transient toasts; the old TV-preview Apply caption
+was corrected in both languages. App/test builds and 12 generator tests pass.
+The single latest phone APK was replaced, with the same local signer
+d5b22399…0784f02; APK SHA-256 016f3f62…976e1fc. Functional app behavior is unchanged.
+
+Canonical data/token checks and website unit/build/browser checks pass. Product
+pages pass Arabic/English at 390/900/1440 px, loaded/full-size images, anchors,
+language switching and normal page keys outside the TV. Visual review corrected
+the narrow hero's collapsed image width and caption overlap. Both 1200×630 social
+cards were regenerated. Existing TV settings/pairing and nine-screen focus checks
+pass both languages at 80/100/150%. Changed-guide relative links/images and
+whitespace checks pass. Raw logs, captures and exports stay under ignored state/.
+
+Android TV/LG images reuse the reviewed PR #13 renderings with their emulator and
+mocked-browser limits. No new physical TV/phone acceptance or app release
+publication occurred. Required PR/main checks and Pages deployment records own
+remote delivery status; website publication uses the existing validated pipeline.
+
 ## Shared TV UI alignment — 22 November 2026
 
 Android TV 0.7.2/code 13, LG 0.2.30 and phone 0.5.18/code 34 align common

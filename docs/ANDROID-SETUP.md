@@ -9,7 +9,8 @@ This uses the same guarded runtime as the standalone installer, including option
 reviewed cleanup and recovery, in the phone's selected language and theme. After successful setup,
 **Pair TV** opens ordinary pairing; confirm access using the TV's remote. Cancelling
 or finishing incomplete setup does not start pairing. This setup entry supports
-Android/Google TV; LG installation still follows [the LG guide](WEBOS.md).
+Android/Google TV; the phone's LG option uses its separate SSH flow described in
+[the LG guide](WEBOS.md).
 
 The standalone installer remains available. Its ADB authorisation and private
 recovery files are not automatically transferred to the companion. Export and
