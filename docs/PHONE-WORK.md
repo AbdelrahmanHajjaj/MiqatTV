@@ -1,7 +1,15 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-22. Branch feature/companion-installation, draft PR #9.
-Latest scope: widget date/countdown readability; WORK.md owns next action.
+Latest scope: release preparation and widget Add/Update labeling; WORK.md owns next action.
+
+## Release candidate — 0.5.17/code 33
+
+Owner accepts 0.5.16 readability and requests full CI/TV contract verification.
+Reopening a configured widget uses Update; a new widget keeps Add through its
+initial edits. Saved values and separate widget instances remain independent.
+Prepare the phone APK in the verified draft bundle. Full CI is required again;
+release-channel/signing selection and public publication remain separate.
 
 ## Widget readability — 0.5.16/code 32
 

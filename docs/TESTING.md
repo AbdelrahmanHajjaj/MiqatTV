@@ -396,3 +396,8 @@ real Hijri date, full countdown text and pixels inside a 28dp launcher corner
 outline for every shape. Reapply successive square/wide RemoteViews to the same
 host view so resizing cannot retain the previous prayer layout. Inspect native
 English/Arabic renders; these checks do not replace Samsung launcher acceptance.
+
+The hosted multi-widget journey distinguishes Add during first configuration
+from Update on re-entry, retaining immediate saves and independent instances.
+The CI runtime swipe uses Android's touchscreen input command for actual finger
+events; dismissal must still stop playback and restore the owned media level.

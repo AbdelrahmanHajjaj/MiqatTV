@@ -63,16 +63,10 @@ final class PhonePresentationCheck {
         try{return android.graphics.Bitmap.createBitmap(screen,bounds.left,bounds.top,bounds.width(),bounds.height());}
         finally{screen.recycle();}
     }
-    private static void swipeRight(Instrumentation test,Rect row,int width) {
-        float start=row.left+row.width()/4f,y=row.centerY();long down=SystemClock.uptimeMillis();
-        for(int step=0;step<=20;step++) {
-            int action=step==0?MotionEvent.ACTION_DOWN:step==20?MotionEvent.ACTION_UP:MotionEvent.ACTION_MOVE;
-            MotionEvent event=MotionEvent.obtain(down,SystemClock.uptimeMillis(),action,start+(width-4-start)*step/20f,y,0);
-            event.setSource(android.view.InputDevice.SOURCE_TOUCHSCREEN);
-            try {check(test.getUiAutomation().injectInputEvent(event,true),"Notification swipe input was rejected");}
-            finally {event.recycle();}
-            if(step<20)SystemClock.sleep(16);
-        }
+    private static void swipeRight(Instrumentation test,Rect row,int width) throws java.io.IOException {
+        // Android supplies finger tool properties and monotonic timing even on a busy CI renderer.
+        PhoneRuntimeCheck.shell(test,"input touchscreen swipe "+(row.left+row.width()/4)+" "+row.centerY()
+                +" "+(width-4)+" "+row.centerY()+" 300");
     }
     static void run(Instrumentation test,String selected,boolean capture) throws Exception {
         check(Arrays.asList("all","home","swipe","screen","actions","actions-ar").contains(selected),"Unknown presentation case");

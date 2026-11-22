@@ -13,7 +13,7 @@ final class WidgetUi {
     private final MainActivity a;
     private WidgetOptions draft;
     private int id = AppWidgetManager.INVALID_APPWIDGET_ID;
-    private boolean configuring;
+    private boolean configuring, editingExisting;
     private String style = "appearance.theme";
 
     WidgetUi(MainActivity activity) {
@@ -32,6 +32,7 @@ final class WidgetUi {
             return true;
         }
         draft = WidgetOptions.read(a, id);
+        editingExisting = PhoneStore.preferences(a).contains("widget-" + id);
         a.page = "widgets";
         return true;
     }
@@ -50,10 +51,12 @@ final class WidgetUi {
         if (draft != null) state.putString("widget-draft", draft.encode());
         state.putInt("widget-edit-id", id);
         state.putString("widget-style-tab", style);
+        state.putBoolean("widget-existing", editingExisting);
     }
 
     void restore(Bundle state) {
         style = state.getString("widget-style-tab", "appearance.theme");
+        editingExisting = state.getBoolean("widget-existing", editingExisting);
         if (state.containsKey("widget-draft"))
             draft = WidgetOptions.from(a, state.getString("widget-draft"));
         int saved = state.getInt("widget-edit-id", AppWidgetManager.INVALID_APPWIDGET_ID);
@@ -293,7 +296,7 @@ final class WidgetUi {
     void footer(LinearLayout shell) {
         if (id != AppWidgetManager.INVALID_APPWIDGET_ID && !configuring) return;
         LinearLayout actions = a.views.actionBar(shell);
-        a.views.primaryAction(actions, a.t("widget_add"), this::add).setTag("widget.add");
+        a.views.primaryAction(actions, a.t(editingExisting ? "widget_update" : "widget_add"), this::add).setTag("widget.add");
     }
 
     private void add() {

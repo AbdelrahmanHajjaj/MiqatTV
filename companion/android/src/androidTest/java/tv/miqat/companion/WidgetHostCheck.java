@@ -91,6 +91,8 @@ final class WidgetHostCheck {
             PhoneUiCheck.on(
                     test,
                     () -> {
+                        PhoneUiCheck.check(((Button)cancelled.getWindow().getDecorView().findViewWithTag("widget.add"))
+                                .getText().toString().equals(cancelled.t("widget_add")),"A new widget must offer Add");
                         for (String layout : WidgetOptions.LAYOUTS) {
                             cancelled.body.findViewWithTag("widget.layout." + layout).performClick();
                             PhoneUiCheck.check((cancelled.body.findViewById(R.id.widget_strip).getVisibility()==View.VISIBLE)==layout.equals("strip")
@@ -116,6 +118,8 @@ final class WidgetHostCheck {
             PhoneUiCheck.on(
                     test,
                     () -> {
+                        PhoneUiCheck.check(((Button)config.getWindow().getDecorView().findViewWithTag("widget.add"))
+                                .getText().toString().equals(config.t("widget_update")),"Editing a placed widget still offers Add instead of Update");
                         config.body.findViewWithTag("widget.layout.next").performClick();
                         config.body.findViewWithTag("widget.size.120").performClick();
                         ((SeekBar) config.body.findViewWithTag("widget.opacity")).setProgress(42);

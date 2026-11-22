@@ -1,5 +1,42 @@
 # Validation evidence
 
+## Release candidate and TV contracts — 22 November 2026
+
+Phone 0.5.17/code 33: the native multi-widget journey reproduced Add on an
+existing widget, then passes bilingual Add/Update labels, immediate persistence
+and independent configuration of four hosted widgets after the fix. The session's
+initial/reconfigure distinction survives saved activity state. Build/test
+compilation and lint pass (0 errors, 40 existing warnings); generator tests pass
+12/12. Canonical projections, catalog/shared validators and CI/release guards pass.
+Review exports overwrite only `state/builds/companion/Miqat-latest.apk`.
+
+The previous PR CI run passed Core, Android build/emulator, LG build/browser,
+Preview and Apple core. Companion failed the injected notification swipe after
+its other phone journeys, location/background, UI, sizing and LAN checks passed.
+Use Android's standard finger swipe command instead of hand-built unknown-tool
+events, retaining real dismissal, audio-stop and volume-restoration assertions.
+The focused native swipe passes locally; the exact-head CI gate remains required.
+Move failure capture after instrumentation so the runner's per-line shell cannot
+run an EXIT trap before the failure exists. Add the focused small-widget suite.
+
+TV audit: the shared TV contract and its generated catalogs remain current.
+Native Android TV checks cover bilingual actual controls/choices, offsets, prayer
+switches, room direction, favourite menus and declared gaps. LG's ES5/browser
+checks cover its real supported bindings and choices. The phone-only contract
+does not add phone widgets/background GPS to TV shells. TV-local appearance
+confirmation and the explicit LG favourite/Qibla/OS gaps remain documented in
+UI-CONTRACT.md and UI-GAPS.md; this is supported-contract conformance, not identical
+phone/TV layouts or new physical-TV acceptance.
+
+The draft release workflow now includes and verifies `miqat-phone.apk` from the
+same trusted successful main Validate run as the other packages. Its checksum is
+included with the TV, installer and LG assets. Persistent stable Android signing
+is still unconfigured; release preparation does not publish a stable release.
+All 25 exact recordings and the unchanged local signer are verified. Review APK:
+35,065,731 bytes; SHA256
+`2EACAF8AA2AD2FC3DB4737749FA01FAB7BD072ECCE347C8B162CBCD03106B0FF`.
+Exact-head/full CI and release evidence are tracked in PR #9.
+
 ## Widget date/countdown readability — 22 November 2026
 
 Phone 0.5.16/code 32 fixes a reproduced native failure: a 340×80dp next-prayer

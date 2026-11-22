@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.17 release preparation
+
+- Show **Update prayer widget** when reopening an existing widget's settings; keep **Add prayer widget** for a new widget. Settings still save immediately and remain independent per widget.
+- Include the Android phone app and its checksum in prepared draft release bundles alongside Android TV, the installer and LG webOS.
+
 ## 0.5.16 widget readability
 
 - Keep a prominent Hijri date on wide one-row widgets instead of hiding it with compact metadata.

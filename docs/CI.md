@@ -90,8 +90,13 @@ Settings and asset requests after changing deployment or base-path behavior.
 Run Draft build release from main, supplying a successful Validate run ID for the
 current main commit and a new tag such as v0.7.0-preview.1. The publisher rejects
 PR/fork artifacts, stale commits, other workflows and unsuccessful runs. It reuses
-the verified Android/LG artifacts, checks APK media, computes SHA256SUMS and creates
+the verified Android phone/TV, installer and LG artifacts, checks APK media, computes SHA256SUMS and creates
 a draft prerelease. It never publishes a stable release automatically.
+
+The phone asset is `miqat-phone.apk`; Android TV remains `miqat.apk` and the
+standalone installer is `miqat-installer.apk`. SHA256SUMS covers all three APKs
+and the LG IPK. The phone asset requires the same successful Validate run's
+`companion-debug` artifact, rather than a separately built or unverified file.
 
 Only the manual build-release job has contents write permission. Its token has no
 PR approval grant. The repository default remains read-only. No personal token
