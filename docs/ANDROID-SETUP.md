@@ -85,7 +85,7 @@ It does not run as part of the offline unit suite. Confirm the sound with the TV
 
 ## Finish on the real TV
 
-Verify Home from another app and after reboot; HDMI/source menu, volume hold, Bluetooth pairing, voice, Wi-Fi, prayer alerts, radio and saver wake-up. Test remapped buttons on the physical remote: injected ADB keys do not prove accessibility interception works. Keep the stock launcher enabled until these checks pass. Compare startup and navigation before making speed claims. After installation, turn debugging off, revoke authorisations, reboot and confirm ADB can no longer connect.
+Check Home from another app and after reboot, HDMI/source selection, held volume keys, Bluetooth pairing, voice, Wi-Fi, prayer alerts, radio and screensaver wake-up. Test remapped buttons with the TV's remote. Keep the stock launcher enabled until setup works. After installation, turn debugging off, revoke authorisations, reboot and confirm ADB can no longer connect.
 
 ## Local checks
 

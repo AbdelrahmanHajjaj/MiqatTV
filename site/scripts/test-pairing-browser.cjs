@@ -19,7 +19,7 @@ const server=http.createServer((request,response)=>{
       assert.equal(await page.locator('h1').count(),1);
       assert.equal(await page.evaluate(()=>scrollY),0,'product entry must not jump to the TV');
       assert.ok(await page.locator('.hero-tv').evaluate(el=>el.getBoundingClientRect().width>=250),'hero screenshots retain visible width on phones');
-      assert.ok(await page.locator('.hero-images').evaluate(el=>el.querySelector('figcaption').getBoundingClientRect().top>=el.querySelector('.hero-phone').getBoundingClientRect().bottom),'hero caption stays below the phone image');
+      assert.ok(await page.locator('.product-rail').evaluate(el=>el.getBoundingClientRect().top>=document.querySelector('.hero-phone').getBoundingClientRect().bottom),'product navigation stays below the phone image');
       await page.keyboard.press('ArrowDown');await page.waitForFunction(()=>scrollY>0);
       assert.equal(await page.locator('.tv :focus').count(),0,'off-screen TV must not steal page arrow keys');
       for(const id of ['phone','companion','android-tv','lg-webos','get-miqat'])assert.equal(await page.locator('#'+id).count(),1);

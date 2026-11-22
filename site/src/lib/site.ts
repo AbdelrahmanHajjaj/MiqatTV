@@ -32,12 +32,10 @@ export const PAGES: Page[] = [
       ar: [
         'الصلاة القادمة والعدّ التنازلي داخل المحراب، ومواقيت اليوم وتطبيقاتك المفضلة بجانبه. يعمل ميقات كشاشة رئيسية على أندرويد TV، وكتطبيق مستقل يعرض HDMI على LG.',
         `المواقيت تُحسب على التلفاز نفسه دون إنترنت، لـ ${cityCount} مدينة في ${countryCount} دولة، مع اختيار طريقة الحساب ومذهب العصر وتعديل التاريخ الهجري.`,
-        'هذه معاينة تفاعلية للشاشة: استخدم الأسهم ومفتاح Enter كأنها أزرار جهاز التحكم، أو اضغط بالفأرة. المواقيت محسوبة لمدينتك المختارة الآن.',
       ],
       en: [
         'The next prayer and countdown sit inside the mihrab, with today’s times and your favourite apps alongside. Android TV uses Miqat as Home; LG runs it as a separate app with HDMI.',
         `Times are calculated on the TV, fully offline, for ${cityCount} cities in ${countryCount} countries, with your choice of calculation method, Asr school and Hijri date offset.`,
-        'This is a live preview of the screen: use the arrow keys and Enter like the remote, or click. The times are calculated for your chosen city right now.',
       ],
     },
   },
@@ -46,17 +44,17 @@ export const PAGES: Page[] = [
     nav: { ar: 'مواقيت اليوم والقبلة', en: 'Today & Qibla' },
     title: { ar: 'مواقيت الصلاة اليوم والقبلة على التلفاز · ميقات', en: 'Today’s prayer times and Qibla on your TV · Miqat' },
     description: {
-      ar: 'مواقيت اليوم مع الوقت المتبقي ومفاتيح الأذان لكل صلاة واتجاه القبلة من مدينتك. يعتمد اتجاه الغرفة على إمكانات التلفاز المدعومة.',
-      en: 'Every prayer time today with its countdown, per-prayer Adhan switches and the Qibla bearing. Room-relative direction depends on the TV’s supported capabilities.',
+      ar: 'مواقيت اليوم مع الوقت المتبقي ومفاتيح الأذان لكل صلاة واتجاه القبلة من مدينتك.',
+      en: 'Today’s prayer times, countdowns, per-prayer Adhan switches and the Qibla bearing from your city.',
     },
     body: {
       ar: [
         'شاشة «مواقيت اليوم» تعرض المواقيت الست مع الوقت المتبقي، ومفتاحًا مستقلًا لأذان كل صلاة.',
-        'البوصلة تعرض اتجاه القبلة من مدينتك. يدعم أندرويد TV وهذه المعاينة ضبط اتجاه الغرفة؛ ضبط الاتجاه النسبي على LG ما زال غير متاح.',
+        'تعرض البوصلة اتجاه القبلة من مدينتك، مع ضبط اتجاه الغرفة على أندرويد TV.',
       ],
       en: [
         'Today’s prayers shows all six times with the time left to each, and an independent Adhan switch for each prayer.',
-        'The compass shows the Qibla bearing from your city. Android TV and this preview support room-facing calibration; LG’s room-relative calibration remains a declared capability gap.',
+        'The compass shows the Qibla bearing from your city, with room-facing calibration on Android TV.',
       ],
     },
   },
@@ -78,12 +76,12 @@ export const PAGES: Page[] = [
     nav: { ar: 'الأذان', en: 'The call' },
     title: { ar: 'الأذان على التلفاز في وقته · ميقات', en: 'The adhan on your TV, on time · Miqat' },
     description: {
-      ar: 'أذان مجدول مع ١٣ صوتًا مدمجًا وتسجيل خاص للفجر. تخضع خدمة أندرويد وتكامل LG أثناء فتح التطبيق لحدود كل منصة.',
-      en: 'Scheduled Adhan with 13 built-in voices and a separate Fajr recording. Android service and LG foreground integration follow their own platform limits.',
+      ar: 'أذان مجدول مع ١٣ صوتًا مدمجًا وتسجيل خاص للفجر.',
+      en: 'Scheduled Adhan with 13 built-in voices and a separate Fajr recording.',
     },
     body: {
-      ar: ['إذا كان التلفاز صامتًا أو صوته صفرًا يرتفع الصوت للأذان ثم يعود كما كان. وتُغلق الشاشة بزر الرجوع أو وحدها بعد عشر دقائق. (المعاينة على الويب لا تشغّل صوت الأذان.)'],
-      en: ['If the TV is muted or at zero, the volume comes up for the adhan and goes back afterwards. Back dismisses it, or it closes by itself after ten minutes. (The web preview does not play the adhan audio.)'],
+      ar: ['اضبط مستوى الأذان من الإعدادات. أغلق شاشته بزر الرجوع، أو انتظر الإغلاق التلقائي بعد عشر دقائق.'],
+      en: ['Set the Adhan level in Settings. Press Back to dismiss its screen, or let it close after ten minutes.'],
     },
   },
   {
@@ -95,8 +93,8 @@ export const PAGES: Page[] = [
       en: 'On Fridays Jumu’ah replaces Dhuhr in the arch and the times, with a reminder to read Surat Al-Kahf.',
     },
     body: {
-      ar: ['يعمل وضع الجمعة وحده من التاريخ، دون أي إعداد.'],
-      en: ['Friday mode switches itself on from the date, with nothing to set.'],
+      ar: ['يبدأ وضع الجمعة تلقائيًا كل جمعة.'],
+      en: ['Friday mode starts each Friday.'],
     },
   },
   {
@@ -134,8 +132,8 @@ export const PAGES: Page[] = [
       en: 'Choose your city, calculation method, Asr school, reminders, adhan voice, Quran radio station, language and digits.',
     },
     body: {
-      ar: ['الإعدادات في المعاينة تعمل فعلًا: غيّر المدينة أو طريقة الحساب وارجع إلى الرئيسية لترى مواقيتك. تُحفظ في هذا المتصفح فقط.'],
-      en: ['The settings in this preview work: change the city or method and go back Home to see your own times. They are saved in this browser only.'],
+      ar: ['غيّر المدينة أو طريقة الحساب لعرض مواقيتك. تُحفظ إعدادات المعاينة في متصفحك.'],
+      en: ['Choose a city and calculation method to see your prayer times. Preview settings stay in your browser.'],
     },
   },
   {

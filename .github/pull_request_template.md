@@ -10,6 +10,6 @@
 
 <!-- Follow docs/TESTING.md. Shared changes need affected Android, LG and preview checks. Label browser, emulator and physical-TV captures. -->
 
-## Remaining limits
+## Installation notes
 
-<!-- Skipped checks, pending hardware acceptance and any setup, media or signing impact. -->
+<!-- Include setup, migration or signing changes when relevant. -->

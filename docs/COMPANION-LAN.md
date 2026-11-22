@@ -2,7 +2,7 @@
 
 Protocol for the Android phone app's optional TV companion mode, integrated in
 this repository. Use [the companion guide](../companion/README.md) for setup and
-[EVIDENCE.md](EVIDENCE.md) for current validation. This design is not hardware evidence.
+[EVIDENCE.md](EVIDENCE.md) for validation results.
 
 ## Trust and lifecycle
 
@@ -126,17 +126,15 @@ Private identity/trust files are separate from launcher settings and require own
 POSIX directories/files, no symlinks and atomic durable writes. Unsupported or
 unsafe TLS capabilities must fail closed and leave that TV standalone. The legacy
 cipher is an explicit owner-approved compatibility tradeoff; no plaintext, RC4,
-CBC or unverified-certificate fallback is allowed. Do not infer actual LG OpenSSL patch status.
+CBC or unverified-certificate fallback is allowed.
 The official Node 0.10.25 server API explicitly lacks ECDH ciphers, so that documented
 runtime cannot meet the modern endpoint's ECDHE/GCM baseline. RSA/AES-GCM instead
-interoperates with the existing pinned Android client. Newer LG runtime/API support is not proof of
-vendor security patch status or hardware acceptance. LG's current runtime table is
+interoperates with the existing pinned Android client. LG's runtime table is
 in its [service basics](https://webostv.developer.lge.com/develop/guides/js-service-basics).
 
 The owner approved RSA/AES-GCM compatibility for the legacy runtime. Static RSA
 lacks forward secrecy: later private-key compromise can expose recorded sessions.
-Old runtime vulnerabilities remain. The owner confirmed fresh Miqat LG pairing
-and smooth connected controls/settings; see the separate work ledger for limits.
+Keep the private key protected and revoke paired phones you no longer use.
 
 Verify malformed/expired QR, pending/rejected/approved exchange, token isolation,
 wrong certificate, unauthenticated access, revocation, bounded input, lifecycle,

@@ -9,7 +9,7 @@ control family: immediate settings, short segmented choices, switches and
 Miqat-first theme/background catalogs. The full Home card contains Hijri date/city;
 only the next prayer keeps the highlight outline. [Phone companion mode](../companion/README.md)
 offers optional setup, pairing and control; it is separate from standalone phone prayers.
-[Current native captures](screenshots/README.md) are emulator evidence.
+[Current screenshots](screenshots/README.md).
 
 **Settings → Prayer times → Check online** makes one advisory AlAdhan comparison
 for the selected city/method/school and today's civil day. It shows six calculated
@@ -51,7 +51,7 @@ and [test requirements](TESTING.md), plus
 [guarded installation and recovery](ANDROID-SETUP.md). Edit canonical data
 and design sources in `shared/` and `shared/design/mihrab/`; regenerate their Java/XML/PNG
 outputs through the existing tools. Keep restricted audio and build/device state
-ignored. Automated checks do not replace physical TV, sound and remote acceptance.
+ignored.
 
 ## Native runtime check
 
@@ -71,7 +71,7 @@ and LG Umm al-Qura adapters, covering DST/civil offsets, leap/year boundaries,
 Ramadan and Friday. Update expected data only for an intentional calendar change.
 The runner restores process timezone defaults and does not write preferences, open
 UI, schedule alerts or play sound. Omitting `-e check prayer` retains the existing
-appearance-cycle UI test. Emulator results describe that image/API, not a physical TV or its older ICU.
+appearance-cycle UI test.
 
 Use `-e check ui` for UI contract conformance. It opens real settings rows in
 Arabic/English, visits every section and the six-offset editor, and checks semantic
@@ -84,8 +84,7 @@ checked as removable but never launched or uninstalled. The runner temporarily
 sets bounded UI prerequisites, then restores the complete original preference
 object. It does not play test audio or change TV integrations. D-pad injection
 establishes remote focus mode, with further key codes dispatched through the real
-Activity handler; physical remote/firmware delivery remains a separate hardware check.
-This mode can run on an API 34 emulator; this repository has no CI workflow yet. Shell omissions are declared in
+Activity handler. This mode runs on an API 34 emulator in [CI](CI.md). Shell omissions are declared in
 `src/androidTest/assets/ui-{gaps,choice-gaps}.json`; see the generated [gap report](UI-GAPS.md).
 
 Use `-e check size` for both-language size-contract and real View layout checks
@@ -102,10 +101,8 @@ the process timezone. They exercise the actual Settings action, D-pad return foc
 12/24-hour formats, cancellation and an external fixture's pause/resume interruption.
 Use `-e check online-network` separately for one real verified HTTPS request to
 AlAdhan. This sends the fixed public Cairo test coordinates/date/method/school.
-Emulator proof does not validate a physical Android TV's firmware or network stack.
 
 Use `-e check opacity` with the same instrumentation runner for the focused Home
 mihrab control check. It verifies bilingual 50–100% limits, immediate independent
 edits, Back/re-entry persistence and fill-only alpha, then restores the complete
-original preferences. Run only on an authorized target; the design review used a
-task-owned read-only emulator, not a physical TV.
+original preferences. Run only on an authorized target.

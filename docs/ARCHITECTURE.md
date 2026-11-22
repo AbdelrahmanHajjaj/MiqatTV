@@ -44,7 +44,6 @@ phone-only controls in shared/data/phone-ui-contract.json, then bind real
 views/DOM in each shell. Core owns logical focus transitions and editor policy;
 shells translate physical RTL input once and implement rendering, scrolling and
 save scopes. Unsupported controls/options have explicit [gaps](UI-GAPS.md).
-Shared IDs alone do not prove matching appearance or behavior.
 
 ## Platform differences
 
@@ -59,16 +58,14 @@ Shared IDs alone do not prove matching appearance or behavior.
 - Prayer calculations remain offline and round down to whole minutes. Manual
   online comparison is advisory and never replaces the schedule or adjustments.
 - LG's old calendar adapter has a finite supported range and reports unavailable
-  outside it. A modern browser result does not establish old-LG compatibility.
+  outside it.
 
 Each project builds independently with the root Gradle wrapper and shared sources.
 See [build instructions](BUILD.md), [core API](CORE.md), [data](DATA.md),
 [design](DESIGN.md) and [testing](TESTING.md). Shared JS generators run sequentially.
 
 The standalone Android phone app and TV companion mode are maintained in this
-repository. Samsung/Tizen and iOS apps are unimplemented;
-Sony Android/Google TV uses the Android shell. Current hardware limits are in
-[validation evidence](EVIDENCE.md).
+repository. Sony Android/Google TV uses the Android shell.
 
 ## Android phone and TV companion mode
 
@@ -123,7 +120,7 @@ Location settings; an unconfirmed setup may retain consent but cannot schedule
 the job. Manual setup calibration cancels the foreground fix and retains the
 choice. Foreground permission-result state survives Activity recreation.
 Neither phone settings nor alarm recovery connect to a TV.
-See [phone guide and limits](PHONE.md) and [delivery ledger](PHONE-WORK.md).
+See [phone guide](PHONE.md) and [delivery ledger](PHONE-WORK.md).
 
 PhoneAudio/PhoneAudioLibrary retain immutable private recordings and an atomic
 named index, separate from portable settings' selected hashes. PhoneAlertTest owns

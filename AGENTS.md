@@ -26,7 +26,9 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
 
 - Keep product copy brief: labels, useful status and required setup actions.
   Remove narration, redundant hints and obvious usage tutorials. Do not re-add
-  explanatory filler during later work.
+  explanatory filler during later work. Avoid generic marketing slogans and
+  defensive hardware-verification disclaimers in product copy. Keep concrete
+  requirements in setup guides and test history in EVIDENCE.md.
 
 - Use Miqat / ميقات and tv.miqat.* identifiers. Migration from the previous app
   identity uses a fresh installation; do not add legacy aliases.
