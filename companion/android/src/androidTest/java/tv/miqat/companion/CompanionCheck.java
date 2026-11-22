@@ -22,7 +22,7 @@ public final class CompanionCheck extends Instrumentation {
     String expectedOrientation = "";
     String presentation = "";
     String backgroundSuite = "";
-    boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary, phoneAudioRoute;
+    boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary, phoneAudioRoute, setupLocation;
     boolean mapNetwork;
     boolean journey,
             customCheck,
@@ -54,6 +54,7 @@ public final class CompanionCheck extends Instrumentation {
         phoneTests = suite.equals("phone-tests");
         phoneLibrary = suite.equals("phone-library");
         phoneAudioRoute = suite.equals("phone-audio-route");
+        setupLocation = suite.equals("phone-setup-location");
         if (suite.equals("phone-presentation")) presentation = arguments.getString("case","all");
         calendarReturn = suite.equals("phone-calendar-return");
         journey = suite.equals("phone-journey");
@@ -83,6 +84,11 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if(setupLocation) {
+                PhoneJourneyCheck.location(this,captures);
+                result.putString("stream","PASS: guided location request, optional automatic updates and confirmation gating\n");
+                finish(-1,result);return;
+            }
             if (!presentation.isEmpty()) {
                 PhonePresentationCheck.run(this,presentation,captures);
                 result.putString("stream","PASS: Adhan card, notification swipe and foreground screen\n");

@@ -68,6 +68,17 @@ final class PhoneOnboarding {
         return "onboarding:" + step();
     }
 
+    void requestLocation() {
+        android.content.SharedPreferences prefs=PhoneStore.preferences(a);
+        if (!a.phoneForeground || !a.page.equals("onboarding") || step()!=1
+                || prefs.getBoolean("onboarding-location-asked",false)) return;
+        if (!prefs.edit().putBoolean("onboarding-location-asked",true).commit()) {
+            a.notice("phone_save_failed");
+            return;
+        }
+        a.phoneUi.locationUi.useLocation();
+    }
+
     void render() {
         if (step() == 0) {
             a.body.setGravity(android.view.Gravity.CENTER);
@@ -213,6 +224,7 @@ final class PhoneOnboarding {
             return;
         }
         a.render();
+        requestLocation();
     }
 
     private void finish(boolean complete) {

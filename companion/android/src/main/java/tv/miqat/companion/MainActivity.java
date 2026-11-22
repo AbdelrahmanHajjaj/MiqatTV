@@ -849,6 +849,7 @@ public final class MainActivity extends Activity {
             phoneUi.locationUi.refreshTravel();
         }
         getWindow().getDecorView().post(MainActivity::showPlayingAdhan);
+        getWindow().getDecorView().post(onboarding::requestLocation);
     }
 
     @Override

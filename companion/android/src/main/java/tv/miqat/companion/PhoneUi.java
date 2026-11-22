@@ -58,6 +58,7 @@ final class PhoneUi {
         locationUi.latitude = b.getString("phone-lat", "");
         locationUi.longitude = b.getString("phone-lng", "");
         locationUi.selectedCountry = b.getString("phone-country", "");
+        locationUi.locationPermissionPending = b.getBoolean("phone-location-permission-pending");
     }
 
     void save(Bundle b) {
@@ -71,6 +72,7 @@ final class PhoneUi {
         b.putString("phone-lat", locationUi.latitude);
         b.putString("phone-lng", locationUi.longitude);
         b.putString("phone-country", locationUi.selectedCountry);
+        b.putBoolean("phone-location-permission-pending",locationUi.locationPermissionPending);
     }
 
     void stop() {

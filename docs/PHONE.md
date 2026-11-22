@@ -7,8 +7,13 @@ is not needed for phone prayer times. Minimum Android version: 8 (API 26).
 ## First use
 
 First use opens with a centered welcome, then **Your location & alerts** and
-**Your style**. Choose a country and city, or tap the compact location icon.
-Detection fills the fields; the page has one location confirmation. Android's
+**Your style**. Entering the location step automatically requests foreground
+location access when needed and detects location once. Detection fills the fields;
+deny access to choose country/city manually, or use the compact icon to retry.
+The step also offers **Automatic location**, off by default. Its separate consent
+flow requests background access; updates start only after location confirmation.
+Manual setup edits retain that explicit choice and cancel pending detection.
+Back/reopening does not repeat the automatic request. Android's
 own notification permission request follows on new setups when needed. Denial
 continues setup without another prompt. Alarm timing access is not part of setup.
 An existing voluntary alert opt-out remains off when repeating the guide.
@@ -67,7 +72,7 @@ pending restoration is recovered at the next Miqat entry. Volume buttons and med
 Changing the mode stops current playback; the next playback uses the new mode.
 Short-tone notifications retain Android's notification-volume/channel behavior.
 
-Playback notifications show the prayer and scheduled time, plus the selected
+Playback notifications show the matching prayer icon, prayer and scheduled time, plus the selected
 recording's name, including names assigned to imported audio. Decorative artwork
 is omitted. Expand the notification for accessible Pause/Play and Stop icons;
 Android supplies the compact layout and a single progress bar. Swipe dismissal

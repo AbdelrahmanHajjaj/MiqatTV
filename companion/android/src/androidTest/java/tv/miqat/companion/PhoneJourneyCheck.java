@@ -61,6 +61,7 @@ final class PhoneJourneyCheck {
                                     .getText().toString().equals(a.t("phone_confirm_location")),
                             "Location confirmation must not be replaced with permission instructions");
                 });
+                resolveLocationRequest(test,a);
                 PhoneUiCheck.capture(test, a, lang + "-journey-location", captures);
                 PhoneUiCheck.on(test, a::finish);
                 LiveUiCheck.untilUi(test, a::isDestroyed);
@@ -362,16 +363,7 @@ final class PhoneJourneyCheck {
             }
         } finally {
             if (current[0] != null) PhoneUiCheck.on(test, current[0]::finish);
-            SharedPreferences.Editor restore = prefs.edit().clear();
-            for (Map.Entry<String, ?> entry : original.entrySet()) {
-                Object value = entry.getValue();
-                String key = entry.getKey();
-                if (value instanceof String) restore.putString(key, (String) value);
-                else if (value instanceof Boolean) restore.putBoolean(key, (Boolean) value);
-                else if (value instanceof Long) restore.putLong(key, (Long) value);
-                else if (value instanceof Integer) restore.putInt(key, (Integer) value);
-            }
-            check(restore.commit(), "Cannot restore journey fixture");
+            restore(prefs,original);
             context.getSharedPreferences("companion", 0)
                     .edit()
                     .putString("language", language)
@@ -408,6 +400,7 @@ final class PhoneJourneyCheck {
                                 && !prefs.getBoolean("onboarding-notifications-pending", false),
                         "Resuming setup after Explore first mistook default false for an opt-out");
             });
+            resolveLocationRequest(test,a);
         } finally {
             PhoneUiCheck.on(test, a::finish);
             LiveUiCheck.untilUi(test, a::isDestroyed);
@@ -447,6 +440,104 @@ final class PhoneJourneyCheck {
         LiveUiCheck.untilUi(test, () -> a.hasWindowFocus() && a.onboarding.step() == 2);
     }
 
+    private static void resolveLocationRequest(Instrumentation test,MainActivity a) throws Exception {
+        android.accessibilityservice.AccessibilityServiceInfo service=test.getUiAutomation().getServiceInfo();
+        service.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
+        test.getUiAutomation().setServiceInfo(service);
+        test.getUiAutomation().waitForIdle(300,5000);
+        boolean[] clicked={false};
+        LiveUiCheck.until(()->{
+            android.view.accessibility.AccessibilityNodeInfo root=test.getUiAutomation().getRootInActiveWindow();
+            try {
+                if(!clicked[0] && root!=null && String.valueOf(root.getPackageName()).contains("permissioncontroller"))
+                    clicked[0]=declineNotification(root,new LinkedHashSet<>());
+            } finally {if(root!=null)root.recycle();}
+            return !a.phoneUi.locationUi.locationPermissionPending;
+        });
+        LiveUiCheck.untilUi(test,a::hasWindowFocus);
+        PhoneUiCheck.on(test,()->{if(a.phoneUi.locationUi.locator.running){a.phoneUi.locationUi.cancelLocation();a.render();}});
+    }
+
+    static void location(Instrumentation test,boolean captures) throws Exception {
+        Context c=test.getTargetContext();SharedPreferences prefs=PhoneStore.preferences(c);
+        Map<String,?> original=new LinkedHashMap<>(prefs.getAll());
+        SharedPreferences ui=c.getSharedPreferences("companion",0);String lang=ui.getString("language","system");
+        boolean granted=PhoneLocation.allowed(c);
+        android.location.LocationManager manager=c.getSystemService(android.location.LocationManager.class);
+        MainActivity a=null;boolean provider=false;
+        try {
+            PhoneBackgroundLocation.cancel(c);prefs.edit().clear().commit();
+            ui.edit().putString("language",granted?"ar":"en").commit();
+            if(granted) {
+                check(PhoneBackgroundLocation.allowed(c),"Grant optional background access for the enabled-path fixture");
+                manager.addTestProvider("gps",false,false,false,false,true,true,true,android.location.Criteria.POWER_LOW,android.location.Criteria.ACCURACY_FINE);
+                provider=true;manager.setTestProviderEnabled("gps",true);
+                android.location.Location fix=new android.location.Location("gps");fix.setLatitude(51.5074);fix.setLongitude(-0.1278);
+                fix.setAccuracy(1);fix.setTime(System.currentTimeMillis());fix.setElapsedRealtimeNanos(android.os.SystemClock.elapsedRealtimeNanos());
+                manager.setTestProviderLocation("gps",fix);
+            }
+            a=LiveUiCheck.launch(test);MainActivity shown=a;
+            PhoneUiCheck.on(test,()->{
+                check(shown.onboarding.step()==0 && !prefs.getBoolean("onboarding-location-asked",false),"Welcome requested location early");
+                shown.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick();
+                check(shown.onboarding.step()==1 && prefs.getBoolean("onboarding-location-asked",false),"Location entry did not initiate detection automatically");
+                check(!shown.phoneUi.settings.value("prayer.background-location").equals("true"),"Automatic background updates opted in without a choice");
+            });
+            if(granted) {
+                LiveUiCheck.untilUi(test,()->!shown.phoneUi.locationUi.locator.running && shown.phoneUi.settings.value("prayer.location").startsWith("detected"));
+                check(Math.abs(shown.phoneUi.settings.latitude-51.5074)<0.01,"Automatic setup detection did not use the OS fix");
+            } else resolveLocationRequest(test,shown);
+            PhoneUiCheck.on(test,()->{
+                Switch toggle=shown.body.findViewWithTag("phone.prayer.background-location.edit");
+                check(toggle!=null && toggle.isEnabled() && !toggle.isChecked(),"Automatic updates must be visible and optional on the location step");
+                check(shown.body.findViewWithTag("phone.country")!=null && shown.body.findViewWithTag("phone.city")!=null,"Manual location fallback is missing");
+                shown.render();shown.onboarding.requestLocation();
+                check(!shown.phoneUi.locationUi.locationPermissionPending && !shown.phoneUi.locationUi.locator.running,"Rerender repeated automatic detection or permission");
+                toggle=shown.body.findViewWithTag("phone.prayer.background-location.edit");toggle.performClick();
+            });
+            if(!granted)LiveUiCheck.key(test,KeyEvent.KEYCODE_BACK);
+            PhoneUiCheck.on(test,()->{
+                check(shown.page.equals("onboarding") && shown.onboarding.step()==1,"Optional permission left guided setup");
+                shown.body.findViewWithTag("phone.city").performClick();
+                ListView cities=shown.phoneUi.choiceDialog.getWindow().getDecorView().findViewWithTag("phone.choice.list");
+                cities.performItemClick(null,0,0);
+                check(!shown.phoneUi.settings.value("prayer.location").startsWith("detected")
+                                && !shown.phoneUi.locationUi.locator.running,"Manual city selection did not take priority over detection");
+                check(shown.phoneUi.settings.value("prayer.background-location").equals(Boolean.toString(granted)),"Automatic update choice was lost");
+                check(!PhoneBackgroundLocation.enabled(c) && c.getSystemService(android.app.job.JobScheduler.class).getPendingJob(PhoneBackgroundLocation.JOB)==null,"Unconfirmed setup scheduled background location");
+            });
+            PhoneUiCheck.capture(test,shown,granted?"setup-automatic-location":"setup-manual-location",captures);
+            PhoneUiCheck.on(test,()->shown.getWindow().getDecorView().findViewWithTag("onboarding.next").performClick());
+            resolveNotificationRequest(test,shown);
+            PhoneUiCheck.on(test,()->{
+                check(shown.phoneUi.settings.locationReady && PhoneBackgroundLocation.enabled(c)==granted,"Confirmation did not apply the explicit automatic update choice");
+                check((c.getSystemService(android.app.job.JobScheduler.class).getPendingJob(PhoneBackgroundLocation.JOB)!=null)==granted,
+                        "Background job did not follow the confirmed automatic update choice");
+                shown.back();
+                check(shown.onboarding.step()==1 && !shown.phoneUi.locationUi.locationPermissionPending && !shown.phoneUi.locationUi.locator.running,"Returning to location requested detection again");
+            });
+        } finally {
+            if(a!=null){MainActivity close=a;PhoneUiCheck.on(test,close::finish);}
+            if(provider)manager.removeTestProvider("gps");
+            restore(prefs,original);ui.edit().putString("language",lang).commit();PhoneAlarms.rebuild(c);PhoneBackgroundLocation.sync(c);
+        }
+    }
+
+    private static void restore(SharedPreferences prefs,Map<String,?> original) {
+        SharedPreferences.Editor restore=prefs.edit().clear();
+        for(Map.Entry<String,?> entry:original.entrySet()) {
+            Object value=entry.getValue();String key=entry.getKey();
+            if(value instanceof String)restore.putString(key,(String)value);
+            else if(value instanceof Boolean)restore.putBoolean(key,(Boolean)value);
+            else if(value instanceof Long)restore.putLong(key,(Long)value);
+            else if(value instanceof Integer)restore.putInt(key,(Integer)value);
+            else if(value instanceof Float)restore.putFloat(key,(Float)value);
+            else if(value instanceof Set)restore.putStringSet(key,new LinkedHashSet<>((Set<String>)value));
+            else throw new IllegalStateException("Unknown preference type");
+        }
+        check(restore.commit(),"Cannot restore journey fixture");
+    }
+
     private static boolean declineNotification(
             android.view.accessibility.AccessibilityNodeInfo node, Set<String> observed) {
         String id = node.getViewIdResourceName();
@@ -455,7 +546,7 @@ final class PhoneJourneyCheck {
         if (id != null && (id.endsWith(":id/permission_deny_button") || id.endsWith(":id/permission_deny_and_dont_ask_again_button"))
                 && node.isVisibleToUser() && node.isEnabled() && node.isClickable()) {
             check(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK),
-                    "Could not decline the system notification request");
+                    "Could not decline the system permission request");
             return true;
         }
         for (int i = 0; i < node.getChildCount(); i++) {

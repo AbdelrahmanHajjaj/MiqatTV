@@ -77,6 +77,8 @@ final class PhoneAdhanCheck {
                 "Notification does not name the playing voice");
         check(notice(c).getLargeIcon()==null && notice(c).bigContentView!=null,
                 "Notification must use text and icon controls without decorative artwork");
+        check(notice(c).getSmallIcon().getResId()==Icons.resource(c,PhoneStore.PRAYERS[event.getPrayer()]),
+                "Notification does not identify the actual prayer with its canonical icon");
         PhoneRuntimeCheck.shell(test, "cmd statusbar expand-notifications");
         try {
             PhonePresentationCheck.expandNotification(test,settings.data.prayerName(event.getPrayer(),ar));

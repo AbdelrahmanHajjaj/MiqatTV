@@ -370,3 +370,13 @@ expanded view, then clicks the actual Pause, Play and Stop icons. `actions-ar`
 exercises Arabic direction and labels. Existing private settings, names and files
 are restored. Inspect native light/dark renders for contrast, wrapping and a
 single progress bar. The compact view remains Android's system template.
+
+`phone-setup-location` is the focused guided-location fixture. With foreground
+access denied it handles the actual automatic permission request, checks manual
+fallback and background-disclosure cancellation. With foreground/background
+access granted and the test-only mock-location app-op, it seeds a real framework
+GPS provider, checks automatic field filling and an explicit update opt-in, then
+selects a city manually and confirms. No background job may exist before
+confirmation. Returning to the location step cannot repeat detection/permission.
+Preferences, language and the test provider are restored. Ordinary journey tests
+also resolve the new automatic permission request before continuing manual setup.

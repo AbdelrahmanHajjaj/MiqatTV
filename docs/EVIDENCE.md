@@ -1,5 +1,32 @@
 # Validation evidence
 
+## Guided location and prayer icons — 22 November 2026
+
+Phone 0.5.13/code 29 reuses the canonical prayer glyph in the compact notification
+header and beside its expanded title, respecting RTL and dark theme tint. The
+guided location step requests foreground access/detection once after Welcome,
+retains manual selection after denial, and includes the existing optional
+background consent control. Unconfirmed setup cannot schedule a background job.
+
+Owned muted API 34: native denied-permission/manual fallback and disclosure
+Cancel pass; the granted path receives a real framework GPS fixture, fills the
+country/city, retains opt-in through manual city choice, and enables background
+scheduling only after confirmation. Back/rerender does not re-request detection.
+Arabic/dark notification rendering and actual Pause/Play/Stop controls pass.
+Inspect the retained private captures under state/. Fixtures restore private
+preferences/language and remove their mock provider; no physical device operated.
+
+Build/test compilation and lint pass (0 errors, 40 existing warnings); companion
+generator tests pass 12/12. The icon source and TV/LG/preview bindings are unchanged.
+All 25 packaged recordings and the unchanged signer are verified. Review APK:
+35,368,472 bytes; SHA256
+`809191886FC3AC57A459B8F2E8E8FFA9DA07B3991B4FB0D5C499E54CC59246DA`.
+
+Owner reports most device tests working and will daily-drive this candidate.
+Full CI is deferred during this feedback loop, to be checked before merge/release;
+the new version's OEM permission journeys and natural background cadence remain
+for owner acceptance. PR #9 stays draft; no merge, release or deployment.
+
 ## Notification polish — 22 November 2026
 
 Owner reports that swiping 0.5.11 on physical hardware dismisses the notification

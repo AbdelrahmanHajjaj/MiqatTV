@@ -301,6 +301,8 @@ public final class PhonePlayback extends Service {
         expanded.setInt(R.id.adhan_notice_content, "setLayoutDirection",
                 PhoneAlarms.arabic(this) ? android.view.View.LAYOUT_DIRECTION_RTL : android.view.View.LAYOUT_DIRECTION_LTR);
         expanded.setTextViewText(R.id.adhan_notice_title, title(settings));
+        int prayerIcon=Icons.resource(this,PhoneStore.PRAYERS[prayerIndex]);
+        expanded.setTextViewCompoundDrawablesRelative(R.id.adhan_notice_title,prayerIcon,0,0,0);
         expanded.setTextViewText(R.id.adhan_notice_recording, recordingName);
         expanded.setImageViewResource(R.id.adhan_notice_pause,
                 paused ? R.drawable.companion_icon_play : R.drawable.companion_icon_pause);
@@ -310,7 +312,7 @@ public final class PhonePlayback extends Service {
         expanded.setOnClickPendingIntent(R.id.adhan_notice_stop, command(STOP, 42501));
         Notification.Builder notice =
                 new Notification.Builder(this, PhoneAlarms.playbackChannel(this, screen))
-                        .setSmallIcon(R.drawable.companion_icon_mihrab)
+                        .setSmallIcon(prayerIcon)
                         .setContentTitle(title(settings))
                         .setContentText(recordingName)
                         .setColor(

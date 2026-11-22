@@ -47,6 +47,8 @@ final class PhoneBackgroundPermission {
                     else set(false);
                 });
         toggle.setTag("phone.prayer.background-location.edit");
+        toggle.setEnabled(!settingUp() || toggle.isChecked()
+                || (!ui.locationUi.locator.running && !ui.locationUi.locationPermissionPending));
         row.setTag("phone.prayer.background-location");
         row.addView(a.views.text(a.t("phone_background_location_summary"), 11, a.muted));
         String error = PhoneStore.preferences(a).getString("background-location-error", "");
@@ -59,7 +61,7 @@ final class PhoneBackgroundPermission {
     }
 
     void begin() {
-        if (!ui.settings.locationReady) {
+        if (!ui.settings.locationReady && !settingUp()) {
             a.notice("phone_location_needed");
             ui.open("calculation");
             return;
@@ -83,6 +85,10 @@ final class PhoneBackgroundPermission {
         dialog.show();
         a.views.styleDialog(dialog);
         a.render();
+    }
+
+    private boolean settingUp() {
+        return a.page.equals("onboarding") && a.onboarding.step()==1;
     }
 
     private void request() {
@@ -153,7 +159,7 @@ final class PhoneBackgroundPermission {
         stage = 0;
         try {
             PhoneStore current = PhoneStore.read(a);
-            if (enabled && (!PhoneBackgroundLocation.allowed(a) || !current.locationReady
+            if (enabled && (!PhoneBackgroundLocation.allowed(a) || (!current.locationReady && !settingUp())
                     || !fingerprint(current).equals(location))) {
                 declined();
                 return;

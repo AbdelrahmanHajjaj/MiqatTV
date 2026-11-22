@@ -1,30 +1,21 @@
 # Current work
 
-Updated: 2026-11-22. Owner confirms 0.5.11 swipe dismissal stops Adhan on physical
-hardware. Current scope is notification polish: remove decorative artwork,
-display the actual custom recording name, emphasize prayer/time and replace
-text actions with icon controls. Branch feature/companion-installation,
-draft PR #9. Review version is 0.5.12/code 28.
+Updated: 2026-11-22. Owner reports most physical-device tests working and will
+daily-drive the next candidate before merge/release preparation. Current scope:
+prayer notification icons, automatic foreground location request after Welcome,
+and optional background update consent on the guided location screen.
+Branch feature/companion-installation, draft PR #9. Version: 0.5.13/code 29.
 
-PhonePrayerRules maps the percentage to OS steps. PhoneVolume sets that level
-without double attenuation, restores on pause/finish and preserves manual
-changes. A private journal recovers interrupted restoration at the next Miqat
-entry. Default/per-prayer levels, auditions and tests share the same path.
+The location request is once per guide history, with manual fallback. Background
+updates remain off without explicit consent and cannot schedule before location
+confirmation. Setup edits retain the update choice and cancel pending detection.
+Reuse canonical prayer geometry and native notification layout/direction.
 
-All focused and complete local runtime checks pass, including real background
-swipe-to-stop with prior-volume restoration, automatic alarm timing, foreground
-screen, motion/reduced-motion pixels and bilingual UI. Core/generator/canonical,
-build/lint and the signed review export pass; see EVIDENCE.md. Android still
-controls presentation over other apps/lock screens.
+Focused native permission-denied/granted setup, manual choice, notification
+controls/rendering, build/lint and generator checks pass. The signed daily-test
+APK is exported; EVIDENCE.md records its identity. Next: owner daily-drive feedback.
 
-Keep the compact system template and a decorated expanded view with wrapping
-recording text, accessible Pause/Play/Stop icons and one native progress bar.
-Resolve custom labels from the actual playing file identity, including unsaved
-auditions. Focused native light/dark and bilingual control checks, swipe-to-stop,
-build/lint and canonical checks pass. The signed review APK is exported; see
-EVIDENCE.md. Next: owner hardware review of the notification.
-
-Owner requested hardware review instead of prolonged emulator investigation;
-do not hold APK handoff for repeated broad CI or emulator-version experiments.
+Owner explicitly defers full CI during feedback iterations; run it when preparing
+to merge/release after hardware confirmation. Do not delay APK handoff for it.
 Preserve unresolved CI evidence. Main must remain merged before pushing.
 Keep PR #9 draft. No merge, release or physical deployment requested.

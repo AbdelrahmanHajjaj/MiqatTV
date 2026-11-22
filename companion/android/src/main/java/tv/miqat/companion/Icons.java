@@ -6,7 +6,7 @@ import android.graphics.drawable.Drawable;
 /** Generated native vectors share the TV/browser's canonical icon geometry. */
 final class Icons {
     private Icons(){}
-    static Drawable get(Context context,String name,int color){
+    static int resource(Context context,String name){
         int id;
         switch(name) {
             case "fajr": id=R.drawable.companion_icon_fajr; break;
@@ -18,7 +18,10 @@ final class Icons {
             default: id=context.getResources().getIdentifier("companion_icon_"+name,"drawable",context.getPackageName());
         }
         if(id==0)throw new IllegalArgumentException("Unknown icon: "+name);
-        Drawable icon=context.getDrawable(id).mutate();icon.setTint(color);
+        return id;
+    }
+    static Drawable get(Context context,String name,int color){
+        Drawable icon=context.getDrawable(resource(context,name)).mutate();icon.setTint(color);
         int size=Math.round(24*context.getResources().getDisplayMetrics().density);icon.setBounds(0,0,size,size);return icon;
     }
 }

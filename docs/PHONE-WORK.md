@@ -1,7 +1,18 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-22. Branch feature/companion-installation, draft PR #9.
-Latest scope: clearer Adhan notification content and icon controls; WORK.md owns next action.
+Latest scope: guided location permission/update choice and prayer notification icons; WORK.md owns next action.
+
+## Daily-drive candidate — 0.5.13/code 29
+
+Reuse canonical prayer icons in notifications. The guide requests foreground
+location once on location entry after Welcome and offers the existing optional
+background-location consent flow on the same screen. Confirmation still gates
+background scheduling; manual setup edits retain the explicit choice.
+Focused native denied/granted setup, manual city choice, Arabic/dark notification
+controls and rendering pass. Owner reports most device tests working and will
+daily-drive this candidate before merge/release preparation. Full CI is deferred
+during the feedback loop; no merge/release is authorized by this handoff.
 
 ## Notification polish — 0.5.12/code 28
 

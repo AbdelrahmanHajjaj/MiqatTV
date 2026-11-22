@@ -92,7 +92,7 @@ final class PhoneLocationUi {
         TextView timezone = a.views.text(a.t("phone_zone") + " · " + ui.settings.zone().getID(), 11, a.muted);
         timezone.setPadding(a.views.dp(4), a.views.dp(4), 0, a.views.dp(12));
         a.body.addView(timezone);
-        if (!a.page.equals("onboarding")) background.control(a.body);
+        background.control(a.body);
         if (!locationMessage.isEmpty())
             a.body.addView(a.views.text(a.t(locationMessage), 14, a.accent));
         if (locationMessage.equals("phone_location_disabled"))
@@ -164,6 +164,8 @@ final class PhoneLocationUi {
                     options,
                     selectedCountry,
                     selected -> {
+                        locator.close();
+                        locationMessage = "";
                         selectedCountry = selected;
                         a.render();
                         chooseCity();
@@ -188,11 +190,15 @@ final class PhoneLocationUi {
                     ui.settings.value("prayer.location"),
                     id -> {
                         try {
+                            locator.close();
+                            locationMessage = "";
                             JSONObject city = ui.data.city(id);
                             Map<String, String> changes = new LinkedHashMap<>();
                             changes.put("prayer.location", id);
-                            changes.put("prayer.background-location", "false");
-                            changes.put("prayer.travel-refresh", "false");
+                            if (!a.page.equals("onboarding")) {
+                                changes.put("prayer.background-location", "false");
+                                changes.put("prayer.travel-refresh", "false");
+                            }
                             changes.put("prayer.latitude", city.getString("lat"));
                             changes.put("prayer.longitude", city.getString("lng"));
                             changes.put("prayer.method", city.getString("method"));
@@ -270,10 +276,14 @@ final class PhoneLocationUi {
                         || !Double.isFinite(y)
                         || Math.abs(x) > 90
                         || Math.abs(y) > 180) throw new IllegalArgumentException();
+                locator.close();
+                locationMessage = "";
                 Map<String, String> changes = new LinkedHashMap<>();
                 changes.put("prayer.location", "custom");
-                changes.put("prayer.background-location", "false");
-                changes.put("prayer.travel-refresh", "false");
+                if (!a.page.equals("onboarding")) {
+                    changes.put("prayer.background-location", "false");
+                    changes.put("prayer.travel-refresh", "false");
+                }
                 changes.put("prayer.latitude", Double.toString(x));
                 changes.put("prayer.longitude", Double.toString(y));
                 changes.put("prayer.zone", draftZone[0]);

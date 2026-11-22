@@ -112,6 +112,11 @@ inputs. The exact Home verse is projected from the existing TV source.
 one bounded OS location request per persisted periodic job; `PhoneBackgroundLocation`
 gates permission/opt-in and rejects fixes invalidated by newer user calibration.
 No continuous foreground service or application network transport is added.
+The guided location step durably claims its one automatic foreground detection
+request, after Welcome. The optional background consent control is shared with
+Location settings; an unconfirmed setup may retain consent but cannot schedule
+the job. Manual setup calibration cancels the foreground fix and retains the
+choice. Foreground permission-result state survives Activity recreation.
 Neither phone settings nor alarm recovery connect to a TV.
 See [phone guide and limits](PHONE.md) and [delivery ledger](PHONE-WORK.md).
 

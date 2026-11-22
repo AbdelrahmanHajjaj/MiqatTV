@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.13 guided location and prayer icons
+
+- Show the matching prayer icon beside the expanded notification heading and in its compact system header.
+- Automatically request location access and detect location on the guided location step, once after Welcome. Keep manual country/city selection available after denial.
+- Include optional automatic location updates on that step. Require separate background consent and location confirmation before scheduling updates; preserve the choice during setup edits.
+
 ## 0.5.12 clearer Adhan notifications
 
 - Remove decorative artwork from the notification. Keep the prayer and scheduled time prominent and show the actual saved custom recording name.
