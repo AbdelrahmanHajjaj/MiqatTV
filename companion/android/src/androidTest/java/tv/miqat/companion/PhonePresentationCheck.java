@@ -196,9 +196,20 @@ final class PhonePresentationCheck {
                             await(test,()->!PhonePlayback.playing(),5000,"Swiping the notification did not stop Adhan; SDK="+android.os.Build.VERSION.SDK_INT+" bounds="+title+" width="+width+" flags="+notification.flags+" style="+notification.extras.getString("android.template"));
                         } catch(AssertionError failure) {
                             PhoneUiCheck.capture(test,c,"adhan-swipe-failure",true);
+                            AccessibilityNodeInfo probe=notificationText(test,prayerName);
+                            boolean dismissed=false;
+                            try {
+                                while(probe!=null && !String.valueOf(probe.getViewIdResourceName()).endsWith("/expandableNotificationRow")) {
+                                    AccessibilityNodeInfo parent=probe.getParent();probe.recycle();probe=parent;
+                                }
+                                if(probe!=null)dismissed=probe.performAction(AccessibilityNodeInfo.ACTION_DISMISS);
+                            }finally{if(probe!=null)probe.recycle();}
+                            SystemClock.sleep(500);
                             String notices=Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
                                     .map(n->n.getId()+":"+n.getNotification().extras.getCharSequence(Notification.EXTRA_TITLE)).collect(java.util.stream.Collectors.joining(","));
-                            throw new AssertionError(failure.getMessage()+" active="+notices+" same-session="+id.equals(PhonePlayback.currentId()),failure);
+                            throw new AssertionError(failure.getMessage()+" active="+notices+" same-session="+id.equals(PhonePlayback.currentId())
+                                    +" accessibility-dismiss="+dismissed+" playing-after-accessibility="+PhonePlayback.playing()
+                                    +" keyguard="+c.getSystemService(KeyguardManager.class).isKeyguardLocked(),failure);
                         }
                         check(audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==1,"Background swipe did not restore prior media volume");
                     }

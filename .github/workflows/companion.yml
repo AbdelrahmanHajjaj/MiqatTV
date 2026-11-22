@@ -51,6 +51,15 @@ jobs:
             adb shell am force-stop com.google.android.apps.nexuslauncher
             adb install -r companion/android/build/outputs/apk/debug/companion-debug.apk
             adb install -r -t companion/android/build/outputs/apk/androidTest/debug/companion-debug-androidTest.apk
+            adb shell pm grant tv.miqat.companion android.permission.POST_NOTIFICATIONS
+            timeout 90s adb shell am instrument -r -w -e suite phone-presentation -e case swipe tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-swipe-result.log
+            mkdir -p state
+            adb pull /sdcard/Android/data/tv.miqat.companion/files/adhan-swipe-failure.png state/adhan-swipe-failure.png >/dev/null 2>&1 || true
+            adb shell getprop ro.build.fingerprint > state/phone-image.txt
+            adb emu sensor get proximity >> state/phone-image.txt
+            adb shell dumpsys activity service com.android.systemui/.SystemUIService FalsingManager > state/phone-systemui.txt
+            grep -q '^INSTRUMENTATION_CODE: -1' phone-swipe-result.log
+            adb shell pm revoke tv.miqat.companion android.permission.POST_NOTIFICATIONS
             timeout 420s adb shell am instrument -r -w -e suite phone-journey tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-journey-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-journey-result.log
             grep -q 'PASS: bilingual fresh-use' phone-journey-result.log
@@ -120,7 +129,10 @@ jobs:
         if: failure()
         with:
           name: phone-swipe-failure
-          path: state/adhan-swipe-failure.png
+          path: |
+            state/adhan-swipe-failure.png
+            state/phone-image.txt
+            state/phone-systemui.txt
           if-no-files-found: ignore
           retention-days: 3
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
