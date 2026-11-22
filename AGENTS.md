@@ -77,6 +77,9 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
 
 - Follow docs/TESTING.md for affected-consumer checks and focused regressions.
   Check prose-only edits for links, paths and claims; they need no device tests.
+- Routine CI must not launch phone/TV emulators. Keep build, lint, portable/JVM,
+  browser, signing and package-integrity checks; native device suites are targeted
+  manual checks when requested, not automatic merge or release gates.
 - Browser mocks, emulators, live diagnostics and human TV acceptance are separate
   evidence. Physical remote, picture/sound and power checks need a ready watcher.
 - Use a feature branch and the PR template. Review staged files for private data.

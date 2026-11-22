@@ -129,17 +129,18 @@ The Validate workflow selects affected PR consumers using tools/ci.py; shared,
 workflow/tooling and unknown paths select all consumers. Ordinary documentation
 changes run workflow/selection/whitespace checks. Packaged notices and generated
 docs/UI-GAPS.md still select all consumers. Main and manual Validate runs execute
-the full suite: core JVM/JS/Java and canonical checks, Android/installer builds and
-lint, Python/Java regressions, native prayer/UI checks on an API 34 emulator,
-complete LG ES5/service/browser tests and packaging, preview suite/build, and
-Companion native settings/LAN checks. Required checks verifies every selected job
+the automated suite: core JVM/JS/Java and canonical checks, Android/installer builds
+and lint, Python/Java regressions, complete LG ES5/service/browser tests and
+packaging, preview suite/build, and Companion portable/host-JVM checks and builds.
+Routine CI does not launch Android emulators or run native instrumentation.
+Those suites remain available for targeted manual checks when requested.
+Required checks verifies every selected job
 succeeded and every unselected job skipped. Failures, cancellation, missing
 selection or unexpected skips fail the gate. No workflow-level PR path filter
 can leave the required status pending.
 
 GitHub jobs use separate workspaces; generators stay sequential within each job.
-CI artifacts contain the reviewed audio and expire after seven days. CI does not
-provide physical-TV acceptance or run all optional instrumentation modes.
+CI artifacts contain the reviewed audio and expire after seven days.
 After Required checks passes on main, GitHub Pages deploys the tested preview
 artifact. PRs skip deployment. See [CI.md](CI.md) for protection, website deployment,
 artifacts and draft publishing.

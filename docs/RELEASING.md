@@ -2,7 +2,7 @@
 
 [Validate](CI.md) builds the Android phone app, Android TV, the optional standalone
 installer and LG webOS. The phone includes standalone prayers and TV companion
-mode. Each main commit must pass its applicable core, phone/TV emulator, LG and
+mode. Each main commit must pass its applicable core, Android build/lint, LG and
 website checks before its artifacts can enter the draft publication workflow.
 
 ## Create a draft

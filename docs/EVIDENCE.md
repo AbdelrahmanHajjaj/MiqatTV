@@ -20,6 +20,11 @@ Validation now compiles release variants without private keys. The publisher
 signs those artifacts only after successful current-main validation and removes
 temporary signing material. Hosted workflow and PR records own delivery status.
 Keep the current public preview unchanged while validating the signed candidate.
+The owner then explicitly removed routine emulator CI. The TV emulator job,
+phone emulator step and their automatic gate were removed; selector/gate tests
+follow the five remaining jobs. Native instrumentation code remains available
+for requested manual checks. The earlier notification-shade timeout was not
+reported as a signing failure or a fixed app bug.
 
 ## Product website for first-time visitors — 22 November 2026
 

@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-JOBS = ("core", "android", "emulator", "webos", "preview", "companion")
+JOBS = ("core", "android", "webos", "preview", "companion")
 
 
 def affected(paths):
@@ -21,7 +21,7 @@ def affected(paths):
         elif path.startswith("site/"):
             jobs.add("preview")
         elif path.startswith("platforms/android-tv/"):
-            jobs.update(("android", "emulator"))
+            jobs.add("android")
             if path.endswith(("/ui-gaps.json", "/ui-choice-gaps.json")):
                 jobs.update(JOBS)
         elif path.startswith("platforms/webos/"):
@@ -29,10 +29,10 @@ def affected(paths):
             if path.endswith(("/ui-gaps.json", "/ui-choice-gaps.json")):
                 jobs.update(JOBS)
         elif path.startswith("installer/"):
-            jobs.update(("android", "emulator"))
+            jobs.add("android")
         elif path.startswith("companion/"):
             # TV shells and preview consume the companion contract, QR and LAN sources.
-            jobs.update(("android", "emulator", "webos", "preview", "companion"))
+            jobs.update(("android", "webos", "preview", "companion"))
         else:
             # Unknown paths fail safe: shared sources, tooling and workflow changes reach all consumers.
             jobs.update(JOBS)

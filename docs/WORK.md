@@ -12,6 +12,9 @@ Exercise rejection of debug APKs, wrong packages and unexpected signers. Deliver
 through required checks and a normal merge. Preserve existing published binaries.
 Local release builds/signatures, release lint and focused checks pass. Next:
 required PR/main checks, then exercise the main-only signed-draft workflow.
+The owner explicitly removed automatic phone/TV emulator jobs from routine CI.
+Keep build/lint, portable/JVM/browser and package/signature gates; native device
+suites remain available for targeted manual checks. No further emulator runs.
 
 Next Android versions: TV 0.7.3/code 14, phone 0.5.19/code 35, installer 1.1.5/code 8.
 LG remains 0.2.30. v0.7.2-preview.2 stays public and unchanged. Transition from

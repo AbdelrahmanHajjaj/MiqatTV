@@ -22,7 +22,7 @@ PR selection is conservative:
 - Ordinary documentation and the PR template run only Select checks and Required
   checks. Packaged licences/notices and generated docs/UI-GAPS.md run all jobs.
 - Site changes select Preview; Android TV or installer changes select Android
-  build and emulator; LG changes select LG build and tests.
+  build; LG changes select LG build and tests.
 - Companion changes select Companion, Android, LG and Preview because the shells
   consume its contract, generated bindings, QR and LAN sources.
 - Shared sources, tooling, workflow/build configuration and unrecognized paths
@@ -39,15 +39,14 @@ read-only repository access.
 | --- | --- |
 | Core | Canonical projections, complete media hashes, JVM/Java/JS and legacy ES5 tests |
 | Android build | Full-audio TV APK, phone-installer APK, test APK, lint and local regressions |
-| Android emulator | Native prayer/ICU linkage and Arabic/English UI bindings on API 34 |
 | LG build and tests | Complete app/service, ES5, volume/scheduling/HTTPS mocks, browser suite and full-audio IPK |
 | Preview | Data/token freshness, regressions and 18-route static build |
-| Companion | Portable settings checks, native bilingual UI and pinned-TLS LAN regressions |
+| Companion | Portable settings, QR/LAN host-JVM checks, debug/release builds and lint |
 
-PRs still compile and validate packages; they do not publish review-build
-artifacts. The Android jobs retain an android-test-inputs artifact containing
-only the TV app and test APK for the emulator. Failure reports and native logs
-remain available. All artifacts expire after seven days.
+PRs compile and validate packages without publishing review-build artifacts.
+Routine CI does not launch phone or TV emulators. Native instrumentation remains
+available for requested manual checks. Failure reports remain available, and
+main/manual build artifacts expire after seven days.
 
 Download android-builds, webos-build, browser-preview or companion-debug from a
 successful main Validate run. For an installable branch review build, choose

@@ -4,6 +4,7 @@
 
 - Build phone, Android TV and installer release APKs with permanent Miqat signing keys for future updates.
 - Verify release mode, package identity and signing certificates before release packaging.
+- Remove automatic Android phone/TV emulator runs from routine CI; retain build, lint, portable-rule, browser and release-package checks.
 
 ## Product website and documentation
 
