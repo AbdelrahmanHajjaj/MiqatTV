@@ -390,3 +390,9 @@ modern size maps and legacy bounds. Require full, unclipped prayer/time text,
 accessible full time, a readable missing-location state and restored detail after
 growing the widget. Native `*-picker-next-small.png` captures are the source for
 the Next prayer fallback preview PNGs. Physical launcher grid behavior is separate.
+
+The same focused suite checks wide one-row and narrow/tall bounds, a prominent
+real Hijri date, full countdown text and pixels inside a 28dp launcher corner
+outline for every shape. Reapply successive square/wide RemoteViews to the same
+host view so resizing cannot retain the previous prayer layout. Inspect native
+English/Arabic renders; these checks do not replace Samsung launcher acceptance.

@@ -1,7 +1,16 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-22. Branch feature/companion-installation, draft PR #9.
-Latest scope: widgets starting at one cell; WORK.md owns next action.
+Latest scope: widget date/countdown readability; WORK.md owns next action.
+
+## Widget readability — 0.5.16/code 32
+
+Restore a prominent Hijri date in wide one-row cards, center/enlarge the countdown
+inside safe bounds and use small tiles' available space for it. Replace next-prayer
+content on every resize so host reapply cannot retain the previous arrangement.
+Native bilingual text/corner pixels and resize reuse, build/lint and generator
+checks pass. Picker previews are refreshed. Owner Samsung launcher acceptance and
+full CI remain pending under the feedback-loop agreement.
 
 ## One-cell widgets — 0.5.15/code 31
 

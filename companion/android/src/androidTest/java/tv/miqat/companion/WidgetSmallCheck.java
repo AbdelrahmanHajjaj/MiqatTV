@@ -51,6 +51,8 @@ final class WidgetSmallCheck {
             for(String lang:new String[]{"en","ar"}) {
                 ui.edit().putString("language",lang).commit();
                 String widestPrayer=settings.data.prayerName(4,lang.equals("ar"));
+                String hijri=PhoneTime.hijri(settings,now,lang.equals("ar"));
+                PhoneUiCheck.on(test,()->spacing(c,shown,now,lang,hijri,captures));
                 for(float font:new float[]{1f,2f}) for(int size:new int[]{100,120}) {
                     Configuration config=new Configuration(c.getResources().getConfiguration());config.fontScale=font;
                     Context scaled=c.createConfigurationContext(config);
@@ -108,6 +110,52 @@ final class WidgetSmallCheck {
             PhoneUiCheck.check(ui.edit().putString("language",language).commit(),"Cannot restore widget language fixture");
             PhoneAlarms.rebuild(c);PhoneBackgroundLocation.sync(c);
         }
+    }
+    private static void spacing(Context c,MainActivity a,long now,String lang,String hijri,boolean captures) {
+        for(float font:new float[]{1f,2f}) for(String shape:WidgetOptions.SHAPES) {
+            Configuration config=new Configuration(c.getResources().getConfiguration());config.fontScale=font;
+            Context context=c.createConfigurationContext(config);
+            WidgetOptions options=new WidgetOptions();options.layout="next";options.shape=shape;
+            for(int[] dimensions:new int[][]{{340,80},{340,100},{340,180},{80,320},{80,80}}) {
+                int width=dimensions[0],height=dimensions[1];
+                View view=WidgetRenderer.create(context,options,width,height,now).apply(context,new FrameLayout(context));measure(view,a,width,height);
+                TextView title=view.findViewById(R.id.widget_title),remaining=view.findViewById(R.id.widget_next_remaining);
+                if(width>200 || height>200) {
+                    PhoneUiCheck.check(title.getVisibility()==View.VISIBLE,"Wide one-row widget hides the Hijri date despite available width");
+                    PhoneUiCheck.check(title.getText().toString().equals(hijri),"Widget date is not the real Hijri date");
+                    text(view,R.id.widget_title,width,lang,font);inside(view,title);
+                    if(width>200)PhoneUiCheck.check(title.getTextSize()>remaining.getTextSize(),"Hijri date must be more prominent than the countdown");
+                }
+                PhoneUiCheck.check(remaining.getVisibility()==View.VISIBLE && !remaining.getText().toString().isEmpty(),"Available widget space lost its countdown");
+                for(int id:new int[]{R.id.widget_next_label,R.id.widget_next_time,R.id.widget_next_remaining}) {
+                    text(view,id,width,lang,font);inside(view,view.findViewById(id));
+                }
+                if(width>200 && height>=100 && font==1f)
+                    PhoneUiCheck.check(remaining.getTextSize()/c.getResources().getDisplayMetrics().density>=13,"Countdown is still unnecessarily small");
+                if(captures && font==1f && shape.equals("rounded"))capture(c,view,lang+"-widget-spacing-"+width+"x"+height);
+            }
+            View reused=null;
+            for(int[] dimensions:new int[][]{{80,80},{340,80},{80,80},{340,180}}) {
+                RemoteViews content=WidgetRenderer.create(context,options,dimensions[0],dimensions[1],now);
+                if(reused==null)reused=content.apply(context,new FrameLayout(context));else content.reapply(context,reused);
+                measure(reused,a,dimensions[0],dimensions[1]);
+                PhoneUiCheck.check((reused.findViewById(R.id.widget_next_wide_row)!=null)==(dimensions[0]>200),"Host reused the previous size's prayer layout");
+                for(int id:new int[]{R.id.widget_next_label,R.id.widget_next_time,R.id.widget_next_remaining})text(reused,id,dimensions[0],lang,font);
+            }
+        }
+    }
+    private static void inside(View root,TextView text) {
+        Rect bounds=new Rect();text.getDrawingRect(bounds);((ViewGroup)root).offsetDescendantRectToMyCoords(text,bounds);
+        PhoneUiCheck.check(new Rect(0,0,root.getWidth(),root.getHeight()).contains(bounds),"Widget text leaves actual host bounds: "+text.getText()+" "+bounds);
+        Bitmap pixels=Bitmap.createBitmap(text.getWidth(),text.getHeight(),Bitmap.Config.ARGB_8888);text.draw(new Canvas(pixels));
+        float radius=Math.min(root.getResources().getDisplayMetrics().density*28,Math.min(root.getWidth(),root.getHeight())/2f);
+        try {
+            for(int y=0;y<pixels.getHeight();y++)for(int x=0;x<pixels.getWidth();x++)if(Color.alpha(pixels.getPixel(x,y))>16) {
+                float px=bounds.left+x+.5f,py=bounds.top+y+.5f;
+                float dx=Math.max(radius-px,px-(root.getWidth()-radius)),dy=Math.max(radius-py,py-(root.getHeight()-radius));
+                PhoneUiCheck.check(dx<=0 || dy<=0 || dx*dx+dy*dy<=radius*radius,"Launcher rounding cuts widget text: "+text.getText());
+            }
+        }finally{pixels.recycle();}
     }
     private static Bundle bounds(int width,int height,boolean modern) {
         Bundle bounds=new Bundle();bounds.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,width);bounds.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH,width);

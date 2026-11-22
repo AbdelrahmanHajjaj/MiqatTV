@@ -1,17 +1,24 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical" android:layoutDirection="locale"
-    android:padding="2dp" android:background="@drawable/widget_background_small">
+    android:layoutDirection="locale" android:padding="8dp" android:background="@drawable/widget_background_small">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
+        android:layout_above="@+id/widget_next_remaining" android:orientation="vertical">
     <TextView android:id="@+id/widget_next_label" style="@style/MiqatWidgetHero"
         android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
         android:gravity="center" android:includeFontPadding="false" android:maxLines="1"
         android:text="@string/widget_preview_prayer_0" android:textColor="@color/companion_gold_400"
         android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
-        android:autoSizeMaxTextSize="32sp" android:autoSizeStepGranularity="1sp" />
+        android:autoSizeMaxTextSize="48sp" android:autoSizeStepGranularity="1sp" />
     <TextView android:id="@+id/widget_next_time" style="@style/MiqatWidgetHero"
         android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
         android:gravity="center" android:includeFontPadding="false" android:maxLines="1"
         android:text="@string/widget_preview_time_0"
         android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
-        android:autoSizeMaxTextSize="44sp" android:autoSizeStepGranularity="1sp" />
-</LinearLayout>
+        android:autoSizeMaxTextSize="64sp" android:autoSizeStepGranularity="1sp" />
+    </LinearLayout>
+    <TextView android:id="@id/widget_next_remaining" style="@style/MiqatWidgetMuted"
+        android:layout_width="match_parent" android:layout_height="16dp" android:layout_alignParentBottom="true"
+        android:gravity="center" android:includeFontPadding="false" android:maxLines="1"
+        android:text="@string/widget_preview_countdown" android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="4sp" android:autoSizeMaxTextSize="14sp" android:autoSizeStepGranularity="1sp" />
+</RelativeLayout>

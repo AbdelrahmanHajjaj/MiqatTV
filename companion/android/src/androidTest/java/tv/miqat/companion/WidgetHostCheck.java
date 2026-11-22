@@ -344,7 +344,7 @@ final class WidgetHostCheck {
                     "Wide next card must put the prominent prayer name and time on one row");
             View nextCard = wide.findViewById(R.id.widget_next);
             PhoneUiCheck.check(wide.findViewById(R.id.widget_next_highlight).getVisibility()==View.GONE
-                    && nextCard.getHeight()>wideHeight*0.7f
+                    && nextCard.getHeight()+wide.findViewById(R.id.widget_next_remaining).getHeight()>wideHeight*0.7f
                     && wide.findViewById(R.id.widget_next_wide_row).getHeight()>a.views.dp(70),
                     "Next-prayer card must use allocated height without an inset golden outline");
             android.graphics.Typeface heading=context.getResources().getFont(a.ar?R.font.amiri_bold:R.font.marcellus_regular);

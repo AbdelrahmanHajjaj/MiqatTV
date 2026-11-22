@@ -78,8 +78,9 @@ final class WidgetRenderer {
         this.width = width > 0 ? width : options.layout.equals("strip") ? 400 : options.layout.equals("next") ? 80 : 280;
         this.height = height > 0 ? height : options.height();
         float scale = Math.max(1f, context.getResources().getConfiguration().fontScale) * options.size / 100f;
-        minimal = layout.equals("next") && (this.width < 140 * scale || this.height < 140 * scale);
-        wide = !layout.equals("strip") && !minimal && this.width >= 260 * Math.max(1f, context.getResources().getConfiguration().fontScale) * options.size / 100f;
+        wide = !layout.equals("strip") && (this.width >= 260 * scale
+                || layout.equals("next") && this.width >= 240 && this.width >= this.height * 1.5f);
+        minimal = layout.equals("next") && !wide && this.width < 180 * scale && this.height < 140 * scale;
         settings = PhoneStore.read(context);
         data = PhoneData.get(context);
         ar = PhoneAlarms.arabic(context);
@@ -97,11 +98,13 @@ final class WidgetRenderer {
     }
 
     private void render() throws Exception {
-        if (wide) {
+        if (wide || layout.equals("next")) {
             view.removeAllViews(R.id.widget_next);
-            int content = layout.equals("next")
-                    ? ar ? R.layout.widget_next_card_wide_ar : R.layout.widget_next_card_wide
-                    : ar ? R.layout.widget_next_wide_ar : R.layout.widget_next_wide;
+            int content = ar ? R.layout.widget_next_wide_ar : R.layout.widget_next_wide;
+            if (layout.equals("next")) {
+                content = ar ? R.layout.widget_next_card_stacked_ar : R.layout.widget_next_card_stacked;
+                if (wide) content = ar ? R.layout.widget_next_card_wide_ar : R.layout.widget_next_card_wide;
+            }
             view.addView(R.id.widget_next, new RemoteViews(context.getPackageName(), content));
         }
         view.setImageViewBitmap(
@@ -129,15 +132,6 @@ final class WidgetRenderer {
                 (ar ? "ميقات" : "Miqat") + (options.date ? " · " + date.format(new Date(now)) : "");
         boolean compact = height < 180 && !layout.equals("day");
         if (compact) view.setViewPadding(R.id.widget_content, dp(8), dp(6), dp(8), dp(6));
-        if (minimal) {
-            view.setViewPadding(R.id.widget_content, dp(2), dp(2), dp(2), dp(2));
-            view.setViewPadding(R.id.widget_next_content, 0, 0, 0, 0);
-            view.setViewVisibility(R.id.widget_next_icon, View.GONE);
-            if (width < 120 && height < 120) {
-                view.setInt(R.id.widget_next_label, "setGravity", android.view.Gravity.CENTER);
-                view.setInt(R.id.widget_next_time, "setGravity", android.view.Gravity.CENTER);
-            }
-        }
         view.setInt(R.id.widget_next_highlight, "setColorFilter", accent);
         view.setViewVisibility(R.id.widget_next_highlight, layout.equals("next") ? View.GONE : View.VISIBLE);
         if (options.hijri) {
@@ -152,13 +146,34 @@ final class WidgetRenderer {
             view.setInt(R.id.widget_title, "setMaxLines", 1);
             view.setTextViewTextSize(R.id.widget_title, android.util.TypedValue.COMPLEX_UNIT_SP, 11 * options.size / 100f);
         }
-        if (wide) {
+        if (wide && !layout.equals("next")) {
             String metadata = options.hijri ? PhoneTime.hijri(settings, now, ar) : options.date ? date.format(new Date(now)) : "";
             title = (metadata.isEmpty() ? "" : metadata + " · ") + place();
             if (options.hijri && options.date) title += "\n" + date.format(new Date(now));
             view.setInt(R.id.widget_title, "setMaxLines", options.hijri && options.date ? 2 : 1);
             view.setTextViewTextSize(R.id.widget_title, android.util.TypedValue.COMPLEX_UNIT_SP, 11 * options.size / 100f);
             view.setTextColor(R.id.widget_next_remaining, Color.parseColor(colors.getString("mist-400")));
+        }
+        if (layout.equals("next")) {
+            // Reserve real text height inside the host's rounded outline, including transparent widgets.
+            int inset = Math.min(12, Math.max(4, Math.min(width, height) / 10));
+            view.setViewPadding(R.id.widget_content, dp(inset), dp(inset), dp(inset), dp(inset));
+            view.setViewPadding(R.id.widget_next_content, 0, 0, 0, 0);
+            boolean narrow = width < 180;
+            title = options.hijri ? PhoneTime.hijri(settings, now, ar) : "";
+            if (options.date) title += (title.isEmpty() ? "" : "\n") + date.format(new Date(now));
+            view.setInt(R.id.widget_title, "setMaxLines", narrow ? 4 : options.hijri && options.date ? 2 : 1);
+            int dateHeight = narrow ? 96 : options.hijri && options.date ? 56 : 28;
+            view.setInt(R.id.widget_title, "setHeight", dp(Math.min(dateHeight, Math.round(height * (narrow ? .4f : .27f)))));
+            view.setInt(R.id.widget_next_remaining, "setHeight", dp(Math.min(24, height / 5)));
+            view.setViewVisibility(R.id.widget_next_remaining, height >= 80 && width >= 72 ? View.VISIBLE : View.GONE);
+            view.setTextColor(R.id.widget_title, ink);
+            view.setTextColor(R.id.widget_next_remaining, Color.parseColor(colors.getString("mist-400")));
+            if (narrow) {
+                view.setViewVisibility(R.id.widget_next_icon, View.GONE);
+                view.setInt(R.id.widget_next_label, "setGravity", android.view.Gravity.CENTER);
+                view.setInt(R.id.widget_next_time, "setGravity", android.view.Gravity.CENTER);
+            }
         }
         view.setTextViewText(R.id.widget_title, text(title));
         prayers();
@@ -191,11 +206,12 @@ final class WidgetRenderer {
         view.setViewVisibility(R.id.widget_next, ready && !strip ? View.VISIBLE : View.GONE);
         view.setViewVisibility(
                 R.id.widget_title,
-                minimal || !wide && nextOnly && height < 180 && !options.hijri && !options.date ? View.GONE : View.VISIBLE);
+                minimal || nextOnly && !options.hijri && !options.date ? View.GONE : View.VISIBLE);
         view.setViewVisibility(
                 R.id.widget_prayers, ready && !nextOnly && !strip ? View.VISIBLE : View.GONE);
         view.setViewVisibility(R.id.widget_strip, ready && strip ? View.VISIBLE : View.GONE);
         if (!ready) {
+            if (nextOnly) view.setViewVisibility(R.id.widget_next_remaining, View.GONE);
             if (minimal) view.setContentDescription(R.id.widget_root,
                     data.text(!settings.locationReady ? "phone_location_needed" : "phone_unavailable", ar));
             return;
@@ -225,10 +241,12 @@ final class WidgetRenderer {
                 R.id.widget_next_label,
                 android.util.TypedValue.COMPLEX_UNIT_SP,
                 12 * options.size / 100f);
-        if (wide) {
+        if (wide || nextOnly) {
             long minutes = next == null ? 0 : (long) tv.miqat.core.ReminderRules.INSTANCE.minutesLeft(next.getNextTime(), now);
             String remaining = text(String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60));
-            view.setTextViewText(R.id.widget_next_remaining, next == null ? "" : String.format(locale, data.text("phone_remaining", ar), remaining));
+            String description = String.format(locale, data.text("phone_remaining", ar), remaining);
+            view.setTextViewText(R.id.widget_next_remaining, next == null ? "" : nextOnly && width < 240 ? remaining : description);
+            view.setContentDescription(R.id.widget_next_remaining, description);
         }
         if (!nextOnly) {
             for (int i = 0; i < 6; i++) {

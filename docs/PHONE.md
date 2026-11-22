@@ -220,7 +220,7 @@ removes its Home resume prompt, including after reopening the app.
 presentations with one live preview and visible initial-presentation/shape choices
 and visual Theme/Background catalogs. Next prayer starts at **1×1**; every provider
 allows resizing down to one cell on compatible launchers. At the smallest sizes,
-only the next prayer and time remain visible. Very narrow tiles omit the visible
+the next prayer and time take priority; a countdown appears when it fits. Very narrow tiles omit the visible
 AM/PM marker while accessibility retains the full time. Date/icon preferences
 are kept and details return as space permits. Long-press a placed widget to resize
 it; some launchers need an existing widget removed/re-added to refresh its limits.
@@ -228,7 +228,10 @@ A placed widget adapts its content to the
 allocated width and height: next prayer when narrow, a timetable strip when wide
 and short, and a daily list when tall enough. Android 12+ supports exact launcher
 size variants; older launchers use their resize bounds. Small sizes prioritize
-the prayer name/time over date/footer details. The next-prayer card uses the
+the prayer name/time over date/footer details. Wide one-row cards retain the
+enabled Hijri date, larger and brighter than the countdown. The countdown stays
+centered inside the card's safe text area, including transparent and square styles.
+The next-prayer card uses the
 allocated height for its serif prayer name and time, without an inset outline. Remaining time is a snapshot at
 the existing widget refresh, rather than a separate background ticker.
 Each has a launcher entry with a suitable default

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.16 widget readability
+
+- Keep a prominent Hijri date on wide one-row widgets instead of hiding it with compact metadata.
+- Enlarge and center the remaining time inside safe bounds, including transparent and square styles. Use the smallest tile's spare space for its countdown.
+- Rebuild the prayer layout correctly when resizing between a square and a wide card, and refresh native picker previews.
+
 ## 0.5.15 one-cell widgets
 
 - Start Next prayer at 1×1 and allow every widget to resize down to one cell on supported launchers.

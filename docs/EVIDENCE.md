@@ -1,5 +1,28 @@
 # Validation evidence
 
+## Widget date/countdown readability — 22 November 2026
+
+Phone 0.5.16/code 32 fixes a reproduced native failure: a 340×80dp next-prayer
+card hid its enabled Hijri date. Short height no longer forces a wide card into
+the metadata-free tile. The date is larger/brighter than the countdown; the latter
+has its own centered, bounded area, including transparent/square styles. A small
+square also uses spare space for its timer. Resizing rebuilds stacked/wide prayer
+content rather than retaining the prior RemoteViews children.
+
+Owned API 34: the focused widget suite passes actual provider bindings, modern
+and legacy sizes, 40/56/80dp squares, wide one-row/narrow-tall cards, English/Arabic,
+system text 1×/2× and the existing 100%/120% small-tile checks. New assertions check
+the real date, its prominence, complete countdown text, text pixels inside a 28dp
+launcher corner outline for every shape and successive RemoteViews reapplication.
+Inspect native bilingual renders and refresh picker PNGs from native XML captures.
+This is not physical Samsung launcher acceptance or an older Android device test.
+
+Build/test compilation and lint pass (0 errors, 40 existing warnings), companion
+generator tests pass 12/12 and canonical checks pass. All 25 exact recordings and
+the unchanged signer are verified. Exported APK: 35,321,056 bytes; SHA256
+`7B087089E71498C8F05489459CE7986D3CCF92F608364267BB0D09189FD268EC`.
+Full CI remains deferred during feedback; the owner continues hardware daily use.
+
 ## One-cell widgets — 22 November 2026
 
 Phone 0.5.15/code 31 declares 40dp resize minima on all three providers and a 1×1
