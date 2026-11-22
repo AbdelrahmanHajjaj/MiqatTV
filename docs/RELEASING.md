@@ -11,7 +11,7 @@ website checks before its artifacts can enter the draft publication workflow.
 2. Run Draft build release on main with that run ID and a unique version tag,
    for example v0.7.0-preview.1.
 3. Inspect the draft assets and SHA256SUMS, source commit, validation link and
-   stated hardware/signing limits before any public release.
+   signing configuration before publication.
 
 The draft contains four packages and their SHA256SUMS:
 
@@ -41,7 +41,7 @@ and chosen signing key, and never replace a published version's binaries.
 The reviewed media set is included under shared/media/ with maintainer approval
 and its own attribution; see [third-party notices](THIRD-PARTY.md). Private
 originals and device data stay ignored. Follow [TESTING.md](TESTING.md) and record
-actual TV/phone evidence. CI/emulator results do not establish physical acceptance.
+the results.
 
 The standalone installer's default downloader expects miqat.apk in a stable
 release. The main phone app's TV setup separately offers public Latest, Stable

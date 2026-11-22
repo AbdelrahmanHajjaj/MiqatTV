@@ -18,25 +18,20 @@ no real household addresses, credentials, private recordings or pairing QR codes
 | `android-home` | Native Android TV Home from the 0.7.2 UI-alignment review. |
 | `lg-home` | LG browser-test's aligned Home capture from the 0.2.30 review. |
 
-Phone captures use Miqat 0.5.18/code 34 from current source, including the caption
-correction in this change, on an isolated Android 14/API 34 Google APIs emulator:
-1080×2400, density 420. Fixture dates, selected clocks, permissions, themes and
-sound modes vary deliberately. Compass heading comes from the simulated sensor;
-it is not evidence of real-device accuracy. Demo TVs do not establish LAN or
-physical TV acceptance.
+Phone captures use Miqat 0.5.18/code 34 on an Android 14/API 34 Google APIs
+emulator at 1080×2400, density 420. Fixtures provide dates, locations, themes,
+audio names, sensor headings and demo TVs.
 
 Android TV 0.7.2/code 13 captures use native Views in a landscape API 34 Google APIs
-emulator at 1920×1080/density 160, not an Android TV system image. Original PNGs
-include its system navigation area; website frames show the app viewport above
-it. The app's content is preserved. LG 0.2.30 images are 1920×1080 browser renders
-with mocked Luna/media/device APIs, not photographs or physical-LG screenshots.
+emulator at 1920×1080/density 160. Original PNGs include its system navigation
+area; website frames show the app viewport above it. LG 0.2.30 images are
+1920×1080 browser renders with mocked Luna/media/device APIs.
 TV renderings come from the [PR #13](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/13)
 source tree; the subsequent correction in that PR affected thumbnail proportions.
 
 The website imports these PNGs and generates responsive WebP variants. Full-size
 links open the originals. Its widget-strip images are the canonical native picker
-renders in `companion/android/src/main/res/drawable{,-ar}-nodpi/`; they are previews,
-not a claim about a particular launcher's placement. Website social cards in
+renders in `companion/android/src/main/res/drawable{,-ar}-nodpi/`. Website social cards in
 `site/public/branding/product-{en,ar}.png` are browser captures of the product hero.
 
 ## Refresh
@@ -55,4 +50,4 @@ that emulator's app external-files directory. Review images for clipping, actual
 state and private information before copying the selected PNGs here. Keep raw
 capture sets and logs under ignored state/. Follow [testing](../TESTING.md) for
 LG `--capture` and native TV checks, and [site instructions](../../site/README.md)
-for responsive review/social-card regeneration. Hardware acceptance stays separate.
+for responsive review/social-card regeneration.

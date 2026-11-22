@@ -56,8 +56,7 @@ and uploads the same artifacts without deploying the website. The workflow must
 already exist on main before GitHub offers manual dispatch. Companion is reusable
 by Validate and also supports a standalone manual run.
 
-The test APK is for instrumentation, not household installation. Browser/emulator
-output is not TV picture, sound or physical-remote acceptance.
+The test APK is for instrumentation; install the app APK for ordinary use.
 
 The approved recordings are checked in under shared/media/; no private originals,
 stamps or device state are uploaded. Actions verify approved checksums and packaged
@@ -76,8 +75,10 @@ It simulates TV integration. Its screen buttons switch the TV
 preview in place without changing the URL. Existing direct screen links still
 work; language, installation and GitHub links keep their destinations.
 
-Validate deploys the same browser-preview artifact after Required checks succeeds
-on main. Every main push rebuilds it; Run workflow on main can redeploy it. PRs
+The Preview job uploads both browser-preview and the Pages artifact from the same
+build. Validate deploys it after Required checks succeeds on main; deployment
+retries reuse the uploaded artifact. Every main push rebuilds it; Run workflow
+on main can redeploy it. PRs
 build and test the site without deploying. A failed validation leaves the last
 successful website in place. No separate gh-pages branch or personal token is used.
 Only the GitHub Pages job receives pages write and id-token write permissions.
@@ -111,5 +112,4 @@ or signing key is stored by this setup.
 
 Android artifacts use a runner-generated debug signing key. Fresh installation
 may be needed between runs. Configure a persistent release keystore before using
-this channel for stable updates. Source versions and physical acceptance limits
-remain in [EVIDENCE.md](EVIDENCE.md); a green CI run does not remove those limits.
+this channel for stable updates. [EVIDENCE.md](EVIDENCE.md) records validation results.

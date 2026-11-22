@@ -59,8 +59,8 @@ npm --prefix site run dev
 Explore the [website](https://abdelrahmanhajjaj.github.io/MiqatTV/en/) or follow
 [website deployment](CI.md#website) for its automatic main-branch updates.
 The bilingual site presents the phone, TV companion mode and both TVs using current
-screenshots. Its interactive TV preview simulates device integrations; screenshots
-are not interactive phone emulation. Run core, preview and LG builds sequentially
+screenshots. Its interactive TV preview simulates device integrations.
+Run core, preview and LG builds sequentially
 because they generate the same shared JavaScript files.
 
 ## Audio assets

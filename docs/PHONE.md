@@ -13,7 +13,7 @@ step requests foreground location access once and fills the location when a fix
 is available. Deny access to choose country/city manually; the compact location
 icon can retry. Confirm the location to proceed to Android's notification
 permission request when needed. Denial continues setup without repeated prompts.
-Alarm timing access is not part of this guide. Setup can be skipped and resumed.
+Setup can be skipped and resumed.
 
 Detected coordinates stay authoritative; a nearest-city label never replaces
 them. Advanced location provides manual coordinates and timezone in a validated
@@ -132,7 +132,7 @@ The offline compass uses the confirmed location and a foreground orientation
 sensor. Bearing is clockwise from true north; location accuracy does not measure
 phone orientation. Keep the phone level, calibrate it and avoid magnets/metal.
 Without a suitable sensor, use its numeric bearing with another compass. A bearing
-at the destination is explicitly unavailable; physical accuracy needs device testing.
+at the destination is unavailable.
 
 **Load map** is explicit. It loads a bounded OpenStreetMap area and draws the
 great-circle route to the Kaaba with attribution. The provider receives your IP
@@ -176,9 +176,7 @@ installs default to 12-hour time; saved explicit choices are retained.
 
 **Set up my TV** and **Pair a new TV** use Android/Google TV or LG webOS preparation,
 then Latest/Stable/Preview public release selection or Advanced local APK/IPK.
-No public release is currently available; private CI artifacts/drafts are not
-fetched by the app. Local packages are supported. Samsung/Tizen, Roku and Other TV
-options are omitted. A platform family does not certify every model.
+Choose Preview for preview releases, or Advanced to select a local package.
 
 Android reuses the guarded ADB installer/recovery runtime. LG uses Developer Mode,
 explicit SSH host-key approval, package size/SHA-256 checks and downgrade refusal;
@@ -195,17 +193,9 @@ use refreshed state on entry/after commands, without continuous polling.
 **Your TVs → ⋮ → Forget TV** removes its phone-side credentials/cache; revocation
 on the TV still requires its remote. [Companion guide](../companion/README.md).
 
-## Storage, support and review
+## Storage
 
 Phone prayers use protected local storage for pre-unlock recovery; paired TVs use
 a separate encrypted store. Neither is in Android backup/transfer. **Reset phone
 prayer settings** removes private prayer/audio data and leaves paired TVs intact.
-There is no cloud sync. Quran, adhkar and other future worship modules remain
-locked Coming soon entries. An iOS app is unimplemented; Apple-core CI only proves
-portable-rule compilation/tests.
-
-For real-device review, check scheduled delivery with the screen off, notification
-Stop/dismissal and restoration, sensor accuracy, multiple independently configured
-widgets and launcher resizing. TV picture/sound/remote/power checks need a ready
-watcher. Keep device addresses, credentials and private recordings out of feedback
-captures. [Validation evidence](EVIDENCE.md) owns observed results and open limits.
+There is no cloud sync.

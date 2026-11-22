@@ -1,5 +1,24 @@
 # Validation evidence
 
+## Product copy and preview publication — 22 November 2026
+
+Removed filler and repeated hardware disclaimers from the English/Arabic website,
+README and current guides. Screenshot sources remain in screenshots/README.md;
+historical test records remain here. Refreshed both 1200×630 social cards and
+corrected stale design-guide Apply/Cancel instructions to immediate saving.
+Canonical data/token checks, website unit/build/browser checks and changed-guide
+links pass. Browser checks cover both languages at 390/900/1440 px and existing
+TV settings/pairing/focus journeys at 80/100/150%. Hero images clear navigation.
+Visual review covers the two mobile heroes and both social cards.
+
+The owner authorized merging and publishing preview packages for Android phone,
+Android TV, LG and the standalone installer from final-main validation. Release
+notes retain the actionable CI-signing installation requirement. PR, validation
+and release records own delivery status. App behavior is unchanged.
+The previous main run passed all build/test jobs but failed Pages artifact lookup;
+retrying duplicated the deployment job's upload. Pages now uploads in Preview and
+deploys after the required gate, so deployment-only retries reuse that artifact.
+
 ## Phone, companion and TV product presentation — 22 November 2026
 
 README, agent guidance, current product/build/privacy/theme/architecture guides

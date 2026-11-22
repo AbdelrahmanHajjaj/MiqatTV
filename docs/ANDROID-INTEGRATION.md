@@ -19,9 +19,8 @@ and [setup/recovery](ANDROID-SETUP.md) for commands.
 
 ## Remote keys and firmware
 
-Historical local testing used TCL 50C641K / Android 11. Confirm the actual
-model/firmware before device tests; the current package has no physical acceptance.
-Injected ADB key events do not establish real accessibility/firmware key delivery.
+TCL integration uses the 50C641K / Android 11 firmware profile. Test remote
+mappings with the TV's remote, including held volume keys.
 
 On supported TCL firmware, TclKeys uses system_server's remapping rather than
 accessibility filtering so held volume can repeat. With no supported TCL feature
@@ -34,8 +33,8 @@ only values still owned by this app. Incorrect writes can restart system UI.
 Relevant hardware checks include an empty SYSTEM PROCESS crash log and held volume.
 
 FirmwareKeys detects CVTE boards and leaves their key filtering alone. Source
-opens CVTE's source menu where available. TCL and CVTE paths need separate tests;
-neither establishes support for another brand. Remote mappings and setup state
+opens CVTE's source menu where available. Test TCL and CVTE paths separately.
+Remote mappings and setup state
 must not overwrite later user choices.
 
 ## Device tests

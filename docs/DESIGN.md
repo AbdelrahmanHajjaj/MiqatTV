@@ -18,8 +18,8 @@ screensaver where those screens exist. `node tools/catalogs.mjs` also projects
 it into both native `MiqatShape` classes; `--check` detects stale projections.
 The geometry preserves existing content positions and focus treatments.
 Phone Home, widgets and Adhan reuse canonical icons, fonts, theme colors and
-geometry while composing scenes for portrait. The phone's TV preview is
-representative; each native TV shell still owns its actual layout.
+geometry while composing scenes for portrait. Each TV shell renders its layout;
+the phone includes a TV appearance preview.
 
 The default tokens now use petrol, gold and ivory. All eight SVG masks under
 `shared/design/mihrab/patterns/` are original Miqat portal/diamond/arcade compositions;
@@ -84,15 +84,12 @@ alpha mark to the active app accent over the QR's theme-derived body fill.
 `assets/qr-style.json` owns high error correction, centre size/crop, borderless
 fill and 0.35-module half-gap clearance; do not duplicate these design values.
 The SVG renderer uses embedded local PNG data and SVG 1.1 image/filter attributes;
-Android draws the same crop and alpha tint with native Canvas. QR/frame decoding
-and rendered shell checks remain separate from physical TV/camera acceptance.
-
-## Palette/background refinement (review draft)
+Android draws the same crop and alpha tint with native Canvas.
 
 ## Palette and background refinement
 
 The default uses deeper petrol, warm gold and ivory. Built-in palettes keep their IDs, with six landscape presets gaining paired
-artwork, names, palettes and surface styles. The others retain distinct mineral/earth/night colors and calmer
+artwork, names, palettes and surface styles. The others retain mineral/earth/night colors and
 lighting. Every text/accent role passes the existing 4.5:1 validator against all
 four surface colors; glass also passes over white video. User imports are unchanged.
 
@@ -119,19 +116,19 @@ Neutral landscape choices use the six local JPEGs in
 They keep their original colors under a 20% black readability overlay; lighting
 continues to affect generated backgrounds only. Android decodes only the selected
 scene, downsampling settings previews and retaining the existing screen cache.
-Preview/LG use the same assets as CSS backgrounds, including draft previews.
+Preview/LG use the same assets as CSS backgrounds.
 Attribution and source filenames are in [THIRD-PARTY.md](THIRD-PARTY.md).
 
 ### Complete presets and customization
 
 The preset carousel is the first Appearance control. A Customize heading separates
 it from the existing layout, background, lighting and other fine controls; these
-remain directly accessible. Selecting a different preset restores its background
-and lighting in the draft, without changing prayer settings or layout. Apply saves
-and Back/cancellation discards the draft. Repeated input at a carousel boundary
+remain directly accessible. Selecting a different preset saves its background
+and lighting, without changing prayer settings or layout. Back keeps changes.
+Repeated input at a carousel boundary
 preserves manual changes. Saved settings are not reset on page entry or upgrade.
 
-Six stable preset IDs now carry handcrafted scene themes:
+Six preset IDs carry scene themes:
 
 | Display name | Stable ID | Palette / surface | Default scene |
 | --- | --- | --- | --- |
@@ -144,10 +141,10 @@ Six stable preset IDs now carry handcrafted scene themes:
 
 Android/preview resolve the existing Theme background and inherited lighting;
 manual overrides remain available. LG uses its explicit background selection:
-choosing a preset sets the supported canonical mask/scene in its draft; an
+choosing a preset saves the supported canonical mask/scene; an
 unsupported procedural default resolves to plain, retaining the documented gaps.
 
-### Miqat flagship default
+### Miqat default
 
 `appearance.json.defaultBackground` selects `miqat_signature`, an original
 material landscape made specifically for Miqat. Petrol ceramic and jade folds
@@ -166,11 +163,11 @@ are preserved. No runtime AI, new network access, animation or blur is introduce
 ### Home mihrab opacity and prayer symbols
 
 Home supports 50–100% fill opacity in 5% steps, default/recommended 85%. The
-percentage applies directly to the opaque panel color, including Glass; it does
+percentage applies to the opaque panel color, including Glass; it does
 not compound another surface alpha. Text and outlines remain opaque. Non-Home
 prayer/alert frames retain their existing rendering. Invalid stored values resolve
-to 85%. The inline editor previews its draft; numeric Back restores that draft,
-and outer Cancel discards it. Apply persists it. A different preset restores 85%;
+to 85%. The inline editor saves each step; Back keeps the value.
+A different preset restores 85%;
 clamped selection preserves manual changes.
 
 `shared/design/prayer-icons.json` owns all six symbols. The symbols use

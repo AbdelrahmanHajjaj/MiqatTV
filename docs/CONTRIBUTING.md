@@ -46,8 +46,7 @@ or support. Keep raw evidence in ignored state/, with concise durable outcomes
 in [EVIDENCE.md](EVIDENCE.md). Review the staged diff for credentials, keys,
 restricted media, outputs and private device data before committing.
 Update the bilingual website and current screenshots when product presentation
-changes. Public screenshots use sanitized fixtures and recorded versions/sources;
-emulator and browser captures do not establish physical hardware support.
+changes. Public screenshots use sanitized fixtures and recorded versions/sources.
 
 Only reviewed, approved recordings belong in shared/media/; originals and review
 material remain under ignored state/. Keep

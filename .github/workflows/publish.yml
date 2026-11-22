@@ -70,13 +70,13 @@ jobs:
           python3 tools/check_apk_media.py state/release/miqat-phone.apk
           (cd state/release && sha256sum -- miqat.apk miqat-installer.apk miqat-phone.apk ./*.ipk > SHA256SUMS)
           cat > state/release-notes.md <<EOF
-          Full-audio Miqat Android phone, Android TV, phone installer and LG webOS builds from $GITHUB_SHA.
+          Miqat preview builds for Android phones, Android TV / Google TV and LG webOS, plus the optional standalone TV installer.
 
           Validation: https://github.com/$GITHUB_REPOSITORY/actions/runs/$RUN_ID
 
-          These are CI debug APKs for fresh-install testing. Their signing key may change between runs; persistent release signing is not configured. Physical acceptance under the new Miqat identities remains pending.
+          Android APKs use CI debug signing. Installing over a build with a different signing key requires a fresh install.
 
-          SHA256SUMS covers the attached binaries. This draft requires maintainer review before publication.
+          SHA256SUMS covers all four packages. Source: $GITHUB_SHA.
           EOF
       - name: Create a draft; do not publish a stable release
         run: |

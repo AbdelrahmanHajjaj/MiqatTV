@@ -1,17 +1,10 @@
 # LG webOS
 
-Miqat is a standalone Developer Mode app with an ES5 UI and a JavaScript service.
-It can display a TV input inside its window. It does not replace LG Home, embed
-arbitrary native apps or wake the TV from standby.
+Miqat runs alongside LG Home as a Developer Mode app with an ES5 UI and a
+JavaScript service. It displays HDMI inside the app while the TV is on.
 
-## Device status
-
-The integration was developed on LG LF6300 / webOS 2.2, WebKit 538.2 and service
-Node 0.10.25. Prior device checks confirmed HDMI picture/sound, physical remote,
-Arabic shaping, sizing, startup, prayer audio and restoration. Miqat was installed on that TV on 18 November 2026. Live service readback verified
-the one-time settings transfer and the old launcher was uninstalled. The owner confirmed the 0.2.24 splash, picture and sound on the physical TV.
-The owner also reports working pairing and smooth connected controls/settings.
-Detailed physical remote and power/lifecycle acceptance remain pending. Newer LG hardware is unverified.
+The LG integration supports the LF6300 / webOS 2.2 runtime: WebKit 538.2 and
+service Node 0.10.25.
 
 ## Build and install
 
@@ -20,9 +13,8 @@ new TV**) → **LG webOS**. Follow the preparation guide to enable LG Developer
 Mode and Key Server. Select Latest (default), Stable or Preview, or choose a
 local IPK through the Advanced icon. Enter the TV's private IPv4 address; public
 IPK download follows the approved Developer Mode connection, with size/SHA-256
-verification. If no public build exists, Miqat says so; it does not use private
-CI artifacts. First confirm the SSH identity on your
-trusted home network; then enter LG's case-sensitive passphrase and connect.
+verification. Confirm the SSH identity on your trusted home network, then enter
+LG's case-sensitive passphrase and connect.
 Review the installed/selected version before explicitly installing or updating.
 The phone verifies transfer bytes and the installed version, refuses downgrades,
 and can launch Miqat before ordinary phone pairing. It does not uninstall apps.
@@ -36,9 +28,7 @@ to this installer. Ordinary companion pairing remains pinned HTTPS.
 If interrupted or refused, reconnect to read the installed version before retrying;
 do not uninstall Miqat to recover an update. Keep Developer Mode active and extend
 its session in LG's app before expiry; expiry can remove developer-installed apps.
-An expired session needs Developer Mode setup and installation again. This is not
-root access, system Home replacement, Android-style cleanup or standby wake.
-Current phone-install validation is a local SSH fixture, not physical LG acceptance.
+An expired session needs Developer Mode setup and installation again.
 
 Use JDK 17 and Node 24, and prepare the shared audio inputs in [BUILD.md](BUILD.md).
 Run from the repository root:
@@ -62,7 +52,7 @@ ares-launch --device YOUR_LG_ALIAS tv.miqat.webos
 The service ID is tv.miqat.webos.service. App and service IDs must share that
 prefix. Keep the four package/version declarations aligned. --no-minify keeps
 the prebuilt ES5 files checked by the suite. The browser suite uses installed
-Microsoft Edge and mocks Luna/media; its captures are not TV screenshots.
+Microsoft Edge with Luna/media mocks.
 
 Share tested packages from the primary checkout's ignored `state/builds/webos/`
 folder as `Miqat-latest.ipk`. Verify its SHA-256 matches before sharing. Keep
@@ -99,7 +89,7 @@ suspend use the existing cleanup and input-restoration handlers.
 On SDKs below 4, adhan volume is an absolute TV level: 30% means 30/100, then the
 app conditionally restores the captured level. It preserves a different level
 chosen with the remote and never changes mute. Recovery after a process crash
-waits for a new silent app instance. Newer SDK media attenuation is unverified.
+waits for a new silent app instance.
 
 Startup and scheduled alerts are off until enabled in Settings. Startup launches
 once per new kernel boot. Prayer activities can reopen the closed app while the
@@ -108,8 +98,7 @@ The demand-started service is not a global remote listener. There is no supporte
 closed-app colored-button shortcut or standby wake.
 
 An in-app alert restores its originating screen/focus. After interrupting another
-app, Miqat closes its window so LG can return to app history. Browser return was
-observed; streaming playback position is not guaranteed.
+app, Miqat closes its window so LG can return to app history.
 
 ## Diagnostics and removal
 
@@ -130,22 +119,18 @@ and the platform [agent rules](../platforms/webos/AGENTS.md).
 Settings / Phones provides themed local QR and physical
 remote approval/revocation. Its listener follows the foreground app subscription.
 See [protocol and legacy TLS limits](COMPANION-LAN.md) and
-[current companion evidence](COMPANION-WORK.md). The owner confirmed working
-Miqat pairing and smooth connected controls/settings on the physical LF6300.
-The 0.2.25 speed improvements still need a timed full pairing retest.
+[companion development history](COMPANION-WORK.md).
 
 The approved pairing QR now uses the shared Miqat centre mark, theme body fill
 and accent tint, no border and half-width (0.35-module) centre clearance with
-high error correction. Automated SVG and mocked browser checks are not evidence
-of SVG image/filter rendering or camera recognition on physical legacy LG hardware.
+high error correction.
 
-### Neutral landscapes (review draft)
+## Appearance
 
 Appearance also offers six bundled illustrated landscapes: Dusk peaks, Golden
 coast, Moon lake, Aurora sky, Tea hills and Monsoon. These static choices retain
 full color with a 20% dark overlay in Home and appearance previews. Android's procedural
-Mountains/Dunes and time-based light fields remain unported. Current validation
-is a mocked browser check; physical LG picture acceptance remains pending.
+Mountains/Dunes and time-based light fields remain Android-specific.
 
 The Appearance preset carousel now comes first, above Customize controls. Choosing
 a different preset immediately saves its supported canonical background;
@@ -163,35 +148,29 @@ using portable numeric rules and immediate saving. It changes the opaque panel
 fill only; text/outlines retain full opacity. Different presets restore 85%.
 Prayer labels use the canonical shared vector family. Home icons occupy the
 header strip so long labels retain their own line at larger interface sizes.
-Validation is mocked browser/service testing; physical LG acceptance is pending.
 
 Miqat quiet is an additional canonical scene; the original Signature stays default.
 Home next-prayer fill is 75% of the selected surface panel color, with opaque gold
 labels/outline. This alpha is independent of the Home mihrab setting and Glass.
 
 
-The app displays the canonical splash artwork while its first screen loads, for
-at least 600 ms, in addition to LG's configured splash image. It does not replay
-on foreground resume. The owner confirmed the splash, picture and sound with 0.2.24 on 18 November 2026.
+The app displays the shared splash artwork for at least 600 ms while its first
+screen loads. It does not replay on foreground resume.
 
 
 Legacy pairing preparation uses bounded native OpenSSL RSA-2048 generation when
 Node lacks its own key-generation API. Stored identity is reused; keys are not
 passed through shell arguments or temporary files. If the binary is absent, the
-existing OS-random Forge path remains available. One-off physical identity-only
-measurements were 65.3 seconds before and 2.0 seconds after; these are not full
-pairing timings. The app also reuses unchanged QR artwork while awaiting approval.
+existing OS-random Forge path remains available. The app reuses unchanged QR
+artwork while awaiting approval.
 
 
 On the pairing page, Down from Back enters the first enabled control; Up returns
 to Back. Up/Down follow the visible control order, including Reject and Approve.
 With a QR open, the controls scroll independently so the complete code remains
-visible. Version 0.2.26 passes bilingual mocked navigation checks; physical remote
-confirmation of this correction remains pending.
+visible.
 
 
-Version 0.2.27 preserves the QR element while pending/approval controls update.
-Bilingual DOM-retention and focus regressions pass. The owner confirmed much
-more responsive physical pairing with phone 0.1.3 and accepted the result.
+The QR element stays in place while pending/approval controls update.
 This legacy TV profile uses Web Inspector console/timeline diagnostics;
 `ares-log` is not supported for the TV profile.

@@ -16,8 +16,7 @@ standalone Android phone, TV companion mode, Android/Google TV and LG webOS.
   creates responsive WebP images; full-size links keep the original screenshot.
 - `public/branding/product-{en,ar}.png`: social cards captured from the product hero.
 
-Phone screenshots show the real native app; they are not an interactive HTML
-phone emulator. The TV preview has working local prayer calculation/settings,
+Phone screenshots show the native app. The TV preview has local prayer calculation/settings,
 with simulated device/network/media boundaries and no Adhan playback. Its screen
 links update the TV stage in place; existing deep links and browser Back remain.
 Product links navigate the website separately. Normal page arrow keys keep
@@ -57,7 +56,6 @@ to include them, then run browser checks without `--capture` against final outpu
 The default browser suite also retains TV settings, pairing and focus regressions.
 
 Keep app capabilities, preview simulation, source builds, private CI artifacts and
-public releases distinct. Current release drafts are unpublished; the site must
-not present a private artifact as an available public download. Preserve screenshot
+public releases distinct. Link downloads to published releases. Preserve screenshot
 provenance and exact religious text. Use [PHONE.md](../docs/PHONE.md) and the TV
 [capability report](../docs/UI-GAPS.md) for supported behavior.

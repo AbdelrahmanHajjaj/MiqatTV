@@ -17,7 +17,7 @@ Use Miqat on its own; a TV is optional.
 - Miqat-first themes and portrait backgrounds, Arabic/English, clock/digit choices and accessible sizing.
 - Manual or detected location, with optional Android-scheduled location updates while the app is closed.
 
-Android permissions, notification channels, battery restrictions and sensor quality still apply. [Phone setup, controls and limits](docs/PHONE.md).
+[Phone setup and controls](docs/PHONE.md).
 
 <p>
   <img src="docs/screenshots/phone-home-en.png" width="240" alt="Native Android phone Home with the Hijri date, city and next prayer" />
@@ -29,12 +29,12 @@ Android permissions, notification channels, battery restrictions and sensor qual
 
 The same phone app has **Your TVs** for Android/Google TV and LG webOS.
 
-- Follow the platform's setup guide and install a verified public build or a local APK/IPK.
+- Install Miqat using the Android TV or LG setup guide.
 - Pair on your home network by scanning the TV's QR code and approving with its physical remote.
-- Change supported TV settings, preview its appearance and use explicit Home, input, radio and Adhan test controls.
-- Keep phone prayer settings and each TV's settings independent. Reconnecting never uploads cached settings.
+- Change TV settings, preview its appearance and control Home, inputs, radio and Adhan tests.
+- Keep separate prayer settings for your phone and each TV.
 
-Pairing uses pinned HTTPS and individually revocable phone access. TV control is a foreground home-network feature. [Pairing and control](companion/README.md) · [Protocol and trust](docs/COMPANION-LAN.md).
+Pairing uses encrypted connections with revocable phone access. [Pairing and control](companion/README.md) · [Protocol](docs/COMPANION-LAN.md).
 
 <p>
   <img src="docs/screenshots/companion-tvs-en.png" width="240" alt="Your TVs in the Android phone app" />
@@ -49,19 +49,17 @@ Both TV apps offer offline prayer times, Adhan, reminders, Qibla bearing, Quran 
 | Platform | What it does |
 | --- | --- |
 | Android phone, Android 8+ | Standalone prayers, alerts, calendar, Qibla, widgets and optional TV setup/control. |
-| Android TV / Google TV | Native Home launcher with favourite apps, remote navigation and supported Android integration. |
-| LG webOS | Separate app with embedded HDMI; it does not replace LG Home or wake from standby. Legacy integration targets LF6300 / webOS 2.2. |
+| Android TV / Google TV | Home launcher with favourite apps and remote navigation. |
+| LG webOS | Prayer times, Adhan and radio alongside embedded HDMI. |
 | Website | Product screenshots and an interactive TV preview with simulated device integration. |
 
 ![Android TV Home in English with the current prayer card, date and next-prayer highlight](docs/screenshots/android-home-en.png)
 
-[Arabic TV Home](docs/screenshots/android-home-ar.png) · [LG browser capture](docs/screenshots/lg-home-en.png) · [Screenshot sources and limits](docs/screenshots/README.md)
-
-Sony Android/Google TV uses the Android TV app. Samsung/Tizen, Roku and iOS apps are not implemented. LG support on newer hardware is unverified. See [current validation](docs/EVIDENCE.md) and [declared TV capabilities](docs/UI-GAPS.md).
+[Arabic TV Home](docs/screenshots/android-home-ar.png) · [LG Home](docs/screenshots/lg-home-en.png) · [Screenshot sources](docs/screenshots/README.md)
 
 ## Install
 
-Use [build instructions](docs/BUILD.md) or [CI test artifacts](docs/CI.md#checks-and-artifacts). Package names are distinct:
+[Download preview builds](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases) or [build from source](docs/BUILD.md). Choose the package for your device:
 
 | Package | Purpose |
 | --- | --- |
@@ -70,7 +68,7 @@ Use [build instructions](docs/BUILD.md) or [CI test artifacts](docs/CI.md#checks
 | `tv.miqat.webos_…_all.ipk` | LG webOS app and service. |
 | `miqat-installer.apk` | Optional standalone Android TV setup/recovery tool; the phone app includes the same runtime. |
 
-[Public releases](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases) are the in-app download source. The current preview candidate is unpublished; no public package is available yet. Use a source build or an authorized CI artifact as a local package. CI APKs use temporary debug signing and may require a fresh install; stable signing is not configured.
+In the phone app's TV setup, choose **Preview** to download a preview release.
 
 ## Privacy
 
