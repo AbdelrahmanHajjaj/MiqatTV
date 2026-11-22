@@ -18,5 +18,5 @@ pass canonical/native/browser CI; retain explicit LG/OS capability gaps.
 Next: finish local focused checks, push and require the full CI gate before
 release preparation completes. Preserve earlier CI failure evidence. Merge latest
 main normally before pushing. Overwrite only state/builds/companion/Miqat-latest.apk
-for review exports. Release-channel/signing preference is pending; no public
-release or physical deployment is authorized by preparation alone.
+for review exports. Prepare a preview candidate as selected by the owner.
+Public release publication and physical deployment require specific instruction.

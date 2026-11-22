@@ -49,6 +49,8 @@ jobs:
           script: |
             # A cold Google APIs image can leave Pixel Launcher ANR covering the test app.
             adb shell am force-stop com.google.android.apps.nexuslauncher
+            # Voice-model downloads move the notification row during the swipe fixture.
+            adb shell am force-stop com.google.android.googlequicksearchbox
             adb install -r companion/android/build/outputs/apk/debug/companion-debug.apk
             adb install -r -t companion/android/build/outputs/apk/androidTest/debug/companion-debug-androidTest.apk
             adb shell pm grant tv.miqat.companion android.permission.POST_NOTIFICATIONS
@@ -59,6 +61,7 @@ jobs:
             adb emu sensor get proximity >> state/phone-image.txt
             adb shell dumpsys activity service com.android.systemui/.SystemUIService FalsingManager > state/phone-systemui.txt
             grep -q '^INSTRUMENTATION_CODE: -1' phone-swipe-result.log
+            grep -q 'PASS: Adhan card, notification swipe and foreground screen' phone-swipe-result.log
             adb shell pm revoke tv.miqat.companion android.permission.POST_NOTIFICATIONS
             timeout 420s adb shell am instrument -r -w -e suite phone-journey tv.miqat.companion.test/tv.miqat.companion.CompanionCheck | tee phone-journey-result.log
             grep -q '^INSTRUMENTATION_CODE: -1' phone-journey-result.log
