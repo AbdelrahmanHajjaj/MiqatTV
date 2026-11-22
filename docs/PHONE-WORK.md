@@ -1,6 +1,6 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-22. Branch feature/companion-installation, draft PR #9.
+Updated: 2026-11-22. PR #9 merged normally after full Validate and Apple core passed.
 Latest scope: release preparation and widget Add/Update labeling; WORK.md owns next action.
 
 ## Release candidate — 0.5.17/code 33
@@ -8,8 +8,9 @@ Latest scope: release preparation and widget Add/Update labeling; WORK.md owns n
 Owner accepts 0.5.16 readability and requests full CI/TV contract verification.
 Reopening a configured widget uses Update; a new widget keeps Add through its
 initial edits. Saved values and separate widget instances remain independent.
-Prepare the phone APK in the verified draft bundle. Full CI is required again;
-release-channel/signing selection and public publication remain separate.
+The full CI gate passes at 77f51ca, including native dismissal/stop/volume checks
+without prescribing an OEM gesture. Prepare a preview candidate from the next
+successful current-main Validate run. Public publication remains separate.
 
 ## Widget readability — 0.5.16/code 32
 
