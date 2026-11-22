@@ -343,13 +343,14 @@ activity because Android 17 restricts background volume APIs, including shell
 media-session commands. The normal runtime suite includes this regression.
 
 
-`phone-presentation` (`-e case home|swipe|screen|actions`, default all) drives actual
+`phone-presentation` (`-e case home|dismiss|screen|actions`, default all) drives actual
 scheduled playback. It checks the full-width card band, accessible canonical
 control, changing native pixels with motion enabled and stable pixels with
 reduced motion. The fixture temporarily enables/restores the owned emulator's
 animator scale. It targets the SystemUI notification row through the accessibility
-tree, waits for a distinct prayer's stable bounds, sends a real horizontal swipe
-and requires audio to stop and the original media volume to return. It also requires
+tree, requires the distinct prayer's actual dismiss action, invokes it and
+requires audio to stop and the original media volume to return. OEM-specific
+notification gestures are outside automation scope by owner instruction. It also requires
 the opted-in foreground screen, even when lock-screen access is denied. On
 Android 13+ it verifies automatically granted core-alarm permission. Full runtime
 includes these checks; no system restriction is disabled.
@@ -399,5 +400,5 @@ English/Arabic renders; these checks do not replace Samsung launcher acceptance.
 
 The hosted multi-widget journey distinguishes Add during first configuration
 from Update on re-entry, retaining immediate saves and independent instances.
-The CI runtime swipe uses Android's touchscreen input command for actual finger
-events; dismissal must still stop playback and restore the owned media level.
+The CI runtime verifies SystemUI dismissibility and actual dismissal cleanup;
+it does not prescribe a touch gesture for different Android/OEM implementations.

@@ -10,8 +10,8 @@ updates remain off without explicit consent and cannot schedule before location
 confirmation. Setup edits retain the update choice and cancel pending detection.
 Reuse canonical prayer geometry and native notification layout/direction.
 
-The widget-label regression reproduces natively. Fix the CI-only swipe gesture
-without weakening dismissal/audio-stop checks. Include the phone APK in the
+The widget-label regression passes natively. Per owner instruction, require
+notification dismissibility and real stop/volume cleanup, with no OEM gesture test. Include the phone APK in the
 existing verified-source draft-release workflow. Supported TV contracts currently
 pass canonical/native/browser CI; retain explicit LG/OS capability gaps.
 

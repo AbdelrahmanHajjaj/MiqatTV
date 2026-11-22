@@ -63,14 +63,8 @@ final class PhonePresentationCheck {
         try{return android.graphics.Bitmap.createBitmap(screen,bounds.left,bounds.top,bounds.width(),bounds.height());}
         finally{screen.recycle();}
     }
-    private static void swipeRight(Instrumentation test,Rect row,int width) throws java.io.IOException {
-        // Android supplies finger tool properties and monotonic timing even on a busy CI renderer.
-        int y=row.top+Math.min(72,row.height()/4);
-        PhoneRuntimeCheck.shell(test,"input touchscreen swipe "+(row.left+row.width()/4)+" "+y
-                +" "+(width-4)+" "+y+" 300");
-    }
     static void run(Instrumentation test,String selected,boolean capture) throws Exception {
-        check(Arrays.asList("all","home","swipe","screen","actions","actions-ar").contains(selected),"Unknown presentation case");
+        check(Arrays.asList("all","home","dismiss","screen","actions","actions-ar").contains(selected),"Unknown presentation case");
         boolean actions=selected.equals("actions") || selected.equals("actions-ar");
         Context c=test.getTargetContext();
         PhoneStore original=PhoneStore.read(c);
@@ -91,14 +85,14 @@ final class PhonePresentationCheck {
             if(android.os.Build.VERSION.SDK_INT>=33)
                 check(c.checkSelfPermission(android.Manifest.permission.USE_EXACT_ALARM)==android.content.pm.PackageManager.PERMISSION_GRANTED
                         && PhoneAlarms.exact(c),"Prayer timing should be granted without a manual alarm-access step");
-            for (String phase:actions?new String[]{"actions"}:new String[]{"home","swipe","screen"}) {
+            for (String phase:actions?new String[]{"actions"}:new String[]{"home","dismiss","screen"}) {
                 if (!selected.equals("all") && !actions && !selected.equals(phase)) continue;
-                int prayer=phase.equals("swipe")?2:phase.equals("actions")?3:0;
+                int prayer=phase.equals("dismiss")?2:phase.equals("actions")?3:0;
                 String prayerKey=PhoneStore.PRAYERS[prayer];
                 String prayerName=PhoneData.get(c).prayerName(prayer,false);
                 Map<String,String> edits=new HashMap<>();
                 edits.put("reminders.enabled","true");edits.put("prayer.location-ready","true");
-                edits.put("quiet.enabled","false");edits.put("reminders.volume",phase.equals("swipe")?"70":"0");
+                edits.put("quiet.enabled","false");edits.put("reminders.volume",phase.equals("dismiss")?"70":"0");
                 edits.put("reminders.alarm-mode","false");
                 edits.put("call."+prayerKey+".default-audio","true");edits.put("call."+prayerKey+".enabled","true");
                 edits.put("call."+prayerKey+".voice","almalki");
@@ -122,7 +116,7 @@ final class PhonePresentationCheck {
                 Activity shown=null;
                 try {
                     on(test,()->a.tab("prayers"));
-                    if(phase.equals("swipe"))audio.setStreamVolume(android.media.AudioManager.STREAM_MUSIC,1,0);
+                    if(phase.equals("dismiss"))audio.setStreamVolume(android.media.AudioManager.STREAM_MUSIC,1,0);
                     String id="phone:presentation:"+UUID.randomUUID();long at=System.currentTimeMillis();
                     on(test,()->c.startForegroundService(PhonePlayback.intent(c,prayer,phase.equals("actions")?"custom":"almalki",false,id).putExtra("prayerTime",(double)at)));
                     await(test,PhonePlayback::outputStarted,10000,"Presentation audio did not start");
@@ -159,7 +153,7 @@ final class PhonePresentationCheck {
                         shown=test.waitForMonitorWithTimeout(monitor,5000);
                         check(shown instanceof PhoneAdhanScreen,"Playing wave does not open accessible playback controls");
                     } else {
-                        check(audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==tv.miqat.companion.core.PhonePrayerRules.INSTANCE.volumeIndex(70,audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)),"Swipe fixture did not acquire its absolute media level");
+                        check(audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==tv.miqat.companion.core.PhonePrayerRules.INSTANCE.volumeIndex(70,audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)),"Dismiss fixture did not acquire its absolute media level");
                         on(test,()->a.startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)));
                         await(test,()->!a.phoneForeground,5000,"Playback fixture did not enter the background");
                         PhoneRuntimeCheck.shell(test,"cmd statusbar expand-notifications");
@@ -172,52 +166,35 @@ final class PhonePresentationCheck {
                         Notification notification=Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
                                 .map(n->n.getNotification()).filter(n->(n.flags&Notification.FLAG_FOREGROUND_SERVICE)!=0).findFirst().get();
                         test.getUiAutomation().waitForIdle(300,5000);
-                        Rect title=new Rect(),previous=new Rect();long[] stable={SystemClock.elapsedRealtime()};
                         LiveUiCheck.until(()-> {
                             AccessibilityNodeInfo node=notificationText(test,prayerName);
-                            if(node==null){stable[0]=SystemClock.elapsedRealtime();return false;}
-                            try {
-                                while(!String.valueOf(node.getViewIdResourceName()).endsWith("/expandableNotificationRow")) {
-                                    AccessibilityNodeInfo parent=node.getParent();node.recycle();node=parent;
-                                    check(node!=null,"Playing notification row is missing");
-                                }
-                                check(node.getActionList().contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_DISMISS),
-                                        "Android offers no dismiss action for the playing notification: "+node.getActionList());
-                                node.getBoundsInScreen(title);
-                                if(title.isEmpty() || !title.equals(previous))stable[0]=SystemClock.elapsedRealtime();
-                                previous.set(title);return !title.isEmpty() && SystemClock.elapsedRealtime()-stable[0]>=500;
-                            } finally {if(node!=null)node.recycle();}
+                            if(node==null)return false;
+                            node.recycle();return true;
                         });
-                        check(!title.isEmpty(),"Cannot locate the playing notification");
-                        PhoneUiCheck.capture(test,c,"adhan-before-notification-swipe",capture);
-                        int width=c.getResources().getDisplayMetrics().widthPixels;
-                        swipeRight(test,title,width);
-                        PhoneUiCheck.capture(test,c,"adhan-after-notification-swipe",capture);
+                        PhoneUiCheck.capture(test,c,"adhan-before-notification-dismiss",capture);
+                        AccessibilityNodeInfo row=notificationText(test,prayerName);
                         try {
-                            await(test,()->!PhonePlayback.playing(),5000,"Swiping the notification did not stop Adhan; SDK="+android.os.Build.VERSION.SDK_INT+" bounds="+title+" width="+width+" flags="+notification.flags+" style="+notification.extras.getString("android.template"));
+                            while(row!=null && !String.valueOf(row.getViewIdResourceName()).endsWith("/expandableNotificationRow")) {
+                                AccessibilityNodeInfo parent=row.getParent();row.recycle();row=parent;
+                            }
+                            check(row!=null,"Playing notification row is missing");
+                            check(row.getActionList().contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_DISMISS),
+                                    "Android offers no dismiss action for the playing notification: "+row.getActionList());
+                            check(row.performAction(AccessibilityNodeInfo.ACTION_DISMISS),"Android rejected notification dismissal");
+                        }finally{if(row!=null)row.recycle();}
+                        try {
+                            await(test,()->!PhonePlayback.playing(),5000,"Dismissing the notification did not stop Adhan; SDK="+android.os.Build.VERSION.SDK_INT+" flags="+notification.flags);
+                            await(test,()->audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==1,5000,
+                                    "Background dismissal did not restore prior media volume");
                         } catch(AssertionError failure) {
-                            PhoneUiCheck.capture(test,c,"adhan-swipe-failure",true);
-                            AccessibilityNodeInfo probe=notificationText(test,prayerName);
-                            boolean dismissed=false;
-                            try {
-                                while(probe!=null && !String.valueOf(probe.getViewIdResourceName()).endsWith("/expandableNotificationRow")) {
-                                    AccessibilityNodeInfo parent=probe.getParent();probe.recycle();probe=parent;
-                                }
-                                if(probe!=null)dismissed=probe.performAction(AccessibilityNodeInfo.ACTION_DISMISS);
-                            }finally{if(probe!=null)probe.recycle();}
-                            SystemClock.sleep(500);
-                            String notices=Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
-                                    .map(n->n.getId()+":"+n.getNotification().extras.getCharSequence(Notification.EXTRA_TITLE)).collect(java.util.stream.Collectors.joining(","));
-                            throw new AssertionError(failure.getMessage()+" active="+notices+" same-session="+id.equals(PhonePlayback.currentId())
-                                    +" accessibility-dismiss="+dismissed+" playing-after-accessibility="+PhonePlayback.playing()
-                                    +" keyguard="+c.getSystemService(KeyguardManager.class).isKeyguardLocked(),failure);
+                            PhoneUiCheck.capture(test,c,"adhan-dismiss-failure",true);throw failure;
                         }
-                        check(audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==1,"Background swipe did not restore prior media volume");
+                        PhoneUiCheck.capture(test,c,"adhan-after-notification-dismiss",capture);
                     }
                 } finally {
                     PhoneRuntimeCheck.shell(test,"cmd statusbar collapse");PhonePlayback.stop(c);
                     await(test,()->!PhonePlayback.playing(),5000,"Presentation cleanup did not stop audio");
-                    if(phase.equals("swipe")) {
+                    if(phase.equals("dismiss")) {
                         MainActivity restore=LiveUiCheck.launch(test);
                         try {audio.setStreamVolume(android.media.AudioManager.STREAM_MUSIC,originalMedia,0);}
                         finally {on(test,restore::finish);}

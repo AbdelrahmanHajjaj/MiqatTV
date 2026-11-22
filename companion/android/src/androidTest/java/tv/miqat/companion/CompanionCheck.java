@@ -97,7 +97,7 @@ public final class CompanionCheck extends Instrumentation {
             }
             if (!presentation.isEmpty()) {
                 PhonePresentationCheck.run(this,presentation,captures);
-                result.putString("stream","PASS: Adhan card, notification swipe and foreground screen\n");
+                result.putString("stream","PASS: Adhan card, notification dismissal and foreground screen\n");
                 finish(-1,result);return;
             }
             if (phoneAudioRoute) {

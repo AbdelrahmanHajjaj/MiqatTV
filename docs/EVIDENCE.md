@@ -10,14 +10,15 @@ compilation and lint pass (0 errors, 40 existing warnings); generator tests pass
 12/12. Canonical projections, catalog/shared validators and CI/release guards pass.
 Review exports overwrite only `state/builds/companion/Miqat-latest.apk`.
 
-The previous PR CI run passed Core, Android build/emulator, LG build/browser,
-Preview and Apple core. Companion failed the injected notification swipe after
-its other phone journeys, location/background, UI, sizing and LAN checks passed.
-Use Android's standard finger swipe command instead of hand-built unknown-tool
-events, retaining real dismissal, audio-stop and volume-restoration assertions.
-The focused native swipe passes locally; the exact-head CI gate remains required.
-Move failure capture after instrumentation so the runner's per-line shell cannot
-run an EXIT trap before the failure exists. Add the focused small-widget suite.
+Previous PR CI passed Core, Android build/emulator, LG build/browser, Preview
+and Apple core; Companion's other phone journeys, location/background, UI,
+sizing and LAN checks passed before a coordinate-specific swipe failure. The
+owner explicitly replaced gesture requirements with notification dismissibility
+because OEM gestures vary. The focused native check now requires Android's
+SystemUI dismiss action and verifies actual audio stop and prior-volume restoration.
+It passes locally. Gesture injection, temporary early probes and unrelated-app/
+sensor diagnostics are removed. The full runtime suite retains this dismissal
+check; the required CI gate and focused small-widget suite stay enabled.
 
 TV audit: the shared TV contract and its generated catalogs remain current.
 Native Android TV checks cover bilingual actual controls/choices, offsets, prayer
@@ -37,14 +38,10 @@ All 25 exact recordings and the unchanged local signer are verified. Review APK:
 `2EACAF8AA2AD2FC3DB4737749FA01FAB7BD072ECCE347C8B162CBCD03106B0FF`.
 Exact-head/full CI and release evidence are tracked in PR #9.
 
-The isolated CI swipe probe uses the same Android 14 image fingerprint as local
-validation, with an unlocked keyguard and uncovered proximity sensor. Accessibility
-dismiss stops the actual playback, while the screenshot shows a Google voice-model
-download inserting above Miqat and shifting its row away from the recorded swipe
-bounds. The CI fixture stops that unrelated updater on its owned emulator. The
-real gesture/audio-stop/volume checks remain required; failure-only accessibility
-probing still reports a failed gesture. Local full runtime also passes. The owner
-selected a preview release candidate; stable signing is not part of this release.
+Local complete runtime also passes actual alarm delivery, playback/notification,
+custom length, silent/vibration channels, duplicate rejection, Stop and focus
+cleanup. The owner selected a preview release candidate; stable signing is
+outside this release. Physical gesture behavior remains OEM-owned acceptance.
 
 ## Widget date/countdown readability — 22 November 2026
 
