@@ -53,6 +53,9 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
   No ads, analytics or feeds.
 - Keep keys, local device configuration, private state, outputs, unreviewed audio
   and original recordings out of Git. Only the approved shared/media set is shipped. Retain MIT and third-party notices in distributed builds.
+- Preserve the primary checkout's private state/signing/ during cleanup; it holds
+  persistent release identities, not disposable build output. Never replace keys
+  to fix a signing failure. See docs/RELEASING.md for signing and recovery.
 - Keep the portable core independent of any SDK or renderer. Android stays Java
   Views; LG app/service must run on WebKit 538.2 and Node 0.10.25.
 
