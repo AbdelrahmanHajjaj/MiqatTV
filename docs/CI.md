@@ -103,13 +103,17 @@ a draft prerelease. It never publishes a stable release automatically.
 
 The phone asset is `miqat-phone.apk`; Android TV remains `miqat.apk` and the
 standalone installer is `miqat-installer.apk`. SHA256SUMS covers all three APKs
-and the LG IPK. The phone asset requires the same successful Validate run's
-`companion-debug` artifact, rather than a separately built or unverified file.
+and the LG IPK. The publisher uses `companion-release` and the two unsigned release
+APKs in `android-builds` from that successful Validate run. It signs them with
+persistent keys in the main-only `android-release` environment and verifies
+their release mode, package IDs and pinned certificates before creating the draft.
 
 Only the manual build-release job has contents write permission. Its token has no
 PR approval grant. The repository default remains read-only. No personal token
-or signing key is stored by this setup.
+is stored by this setup. Signing secrets belong only to the `android-release`
+environment; the temporary decoded key is removed and excluded from artifacts/caches.
 
-Android artifacts use a runner-generated debug signing key. Fresh installation
-may be needed between runs. Configure a persistent release keystore before using
-this channel for stable updates. [EVIDENCE.md](EVIDENCE.md) records validation results.
+CI debug artifacts retain their development signatures. Published Android release
+APKs use persistent Miqat keys. Moving from an old debug-signed preview requires
+a fresh install once; subsequent signed releases preserve identity. See
+[signing and recovery](RELEASING.md#persistent-android-signing).

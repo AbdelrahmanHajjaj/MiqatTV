@@ -60,6 +60,13 @@ python3 tools/check_apk_media.py PATH_TO_APK verifies exact packaged media.
 
 ## UI and input acceptance
 
+For Android release delivery, compile/lint all three release variants and run
+`python3 -S -B -m unittest discover -s tests -p test_release_signing.py -v`.
+Verify real signed outputs with `tools/check_android_release.py` and the SDK
+Build Tools directory, including the pinned certificate and non-debuggable
+manifest. Verify the publisher rejects a real debug APK. These packaging checks
+do not require an emulator or changes to a physical installation.
+
 Use [UI-CONTRACT.md](UI-CONTRACT.md) and the generated
 [gap report](UI-GAPS.md). Tests must inspect actual bound views/DOM controls,
 including choice values, rather than asserting only a support manifest.

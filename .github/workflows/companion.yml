@@ -31,7 +31,7 @@ jobs:
           node companion/qr.test.cjs
           node companion/android-shared/check.mjs
           ./gradlew -p companion/core check jvmJar --no-daemon
-          ./gradlew :companion:assembleDebug :companion:lintDebug :companion:assembleDebugAndroidTest --no-daemon
+          ./gradlew :companion:assembleDebug :companion:lintDebug :companion:assembleDebugAndroidTest :companion:assembleRelease :companion:lintRelease --no-daemon
           python3 tools/check_apk_media.py companion/android/build/outputs/apk/debug/companion-debug.apk
       - name: Enable KVM
         run: |
@@ -128,5 +128,12 @@ jobs:
         with:
           name: companion-debug
           path: companion/android/build/outputs/apk/debug/companion-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name != 'pull_request'
+        with:
+          name: companion-release
+          path: companion/android/build/outputs/apk/release/companion-release-unsigned.apk
           if-no-files-found: error
           retention-days: 7

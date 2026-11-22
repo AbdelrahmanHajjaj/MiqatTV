@@ -1,5 +1,26 @@
 # Validation evidence
 
+## Persistent Android release signing — 22 November 2026
+
+Created separate RSA-3072 release keys for phone, Android TV and installer in an
+encrypted PKCS12 store. Private recovery files are excluded from Git and limited
+to the owner/SYSTEM. GitHub's android-release environment has two encrypted
+signing secrets and a single main-branch policy. Only the publisher uses it.
+Public certificate fingerprints are pinned in tools/release-certificates.json.
+
+Local phone 0.5.19/code 35, TV 0.7.3/code 14 and installer 1.1.5/code 8 release
+builds and release lint pass. All three signed APKs verify against the pinned
+certificates, package IDs and non-debuggable manifests. Phone/TV retain all 25
+exact approved recordings. A real debug APK is rejected. Focused signing and
+source/media-delivery regressions, workflow lint, links and whitespace pass.
+The runtime debug flags affect development loopback/demo paths; release builds
+keep those exceptions disabled. No physical installation was changed.
+
+Validation now compiles release variants without private keys. The publisher
+signs those artifacts only after successful current-main validation and removes
+temporary signing material. Hosted workflow and PR records own delivery status.
+Keep the current public preview unchanged while validating the signed candidate.
+
 ## Product website for first-time visitors — 22 November 2026
 
 Reviewed the live Pillars, Things and Flighty product websites. Sources and the
