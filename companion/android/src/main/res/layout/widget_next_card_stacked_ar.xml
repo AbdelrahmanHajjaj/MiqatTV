@@ -1,0 +1,12 @@
+<!-- RemoteViews requires a concrete root when rebuilding a resized card. -->
+<FrameLayout xmlns:tools="http://schemas.android.com/tools" tools:ignore="MergeRootFrame" xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:id="@+id/widget_next_highlight" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/widget_highlight" android:scaleType="fitXY" android:importantForAccessibility="no" android:contentDescription="@null" />
+    <RelativeLayout android:id="@+id/widget_next_content" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="6dp">
+        <ImageView android:id="@+id/widget_next_icon" android:layout_width="28dp" android:layout_height="28dp" android:importantForAccessibility="no" android:contentDescription="@null" android:layout_alignParentStart="true" android:layout_centerVertical="true" android:layout_marginEnd="8dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center_vertical" android:layout_toEndOf="@id/widget_next_icon">
+            <!-- Autosizing also fits one-cell hosts with enlarged system text. -->
+            <TextView android:includeFontPadding="false" android:id="@+id/widget_next_label" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical" style="@style/MiqatWidgetHeroArabic" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp" android:autoSizeMaxTextSize="48sp" android:autoSizeStepGranularity="1sp" />
+            <TextView android:includeFontPadding="false" android:id="@+id/widget_next_time" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical" style="@style/MiqatWidgetHeroArabic" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp" android:autoSizeMaxTextSize="64sp" android:autoSizeStepGranularity="1sp" />
+        </LinearLayout>
+    </RelativeLayout>
+</FrameLayout>

@@ -6,12 +6,14 @@ import android.text.format.DateFormat;
 
 import com.batoulapps.adhan.Coordinates;
 import com.batoulapps.adhan.Madhab;
+
 import tv.miqat.core.PrayerRules;
 import tv.miqat.core.UiScale;
 
 /**
- * Miqat's own settings (SharedPreferences "miqat"), read by every screen and the screensaver. Language and digits
- * live in {@link Screen#loadText}; the room direction in {@link Screen#facing()}.
+ * Miqat's own settings (SharedPreferences "miqat"), read by every screen and the screensaver.
+ * Language and digits live in {@link Screen#loadText}; the room direction in {@link
+ * Screen#facing()}.
  */
 final class Prefs {
     private Prefs() {}
@@ -25,16 +27,35 @@ final class Prefs {
     static final class City {
         final String id, ar, en, countryAr, countryEn;
         final double lat, lng;
+
         /** The method that city's mosques follow; picked for it when the city changes. */
         final PrayerMethod method;
+
         /** The Asr school most of its mosques follow, also picked when the city changes. */
         final Madhab madhab;
 
-        City(String id, String ar, String en, String countryAr, String countryEn, double lat, double lng, PrayerMethod method) {
+        City(
+                String id,
+                String ar,
+                String en,
+                String countryAr,
+                String countryEn,
+                double lat,
+                double lng,
+                PrayerMethod method) {
             this(id, ar, en, countryAr, countryEn, lat, lng, method, Madhab.SHAFI);
         }
 
-        City(String id, String ar, String en, String countryAr, String countryEn, double lat, double lng, PrayerMethod method, Madhab madhab) {
+        City(
+                String id,
+                String ar,
+                String en,
+                String countryAr,
+                String countryEn,
+                double lat,
+                double lng,
+                PrayerMethod method,
+                Madhab madhab) {
             this.id = id;
             this.ar = ar;
             this.en = en;
@@ -59,22 +80,30 @@ final class Prefs {
         return CITIES[cityIndex(c)];
     }
 
-    /** A new city also takes that city's usual method and Asr school; their rows can still override them after. */
+    /**
+     * A new city also takes that city's usual method and Asr school; their rows can still override
+     * them after.
+     */
     static void setCity(Context c, int index) {
         City city = CITIES[index];
-        of(c).edit().putString("city", city.id).putString("method", city.method.name())
-            .putString("madhab", city.madhab == Madhab.HANAFI ? "hanafi" : "shafi").apply();
+        of(c).edit()
+                .putString("city", city.id)
+                .putString("method", city.method.name())
+                .putString("madhab", city.madhab == Madhab.HANAFI ? "hanafi" : "shafi")
+                .apply();
     }
 
     /**
-     * Location's first step: each region's countries (English names, as in {@link #CITIES}), in the order of
-     * {@link Text#regions()}. Every country in CITIES must be in exactly one region, or its cities can't be picked.
+     * Location's first step: each region's countries (English names, as in {@link #CITIES}), in the
+     * order of {@link Text#regions()}. Every country in CITIES must be in exactly one region, or
+     * its cities can't be picked.
      */
     static final String[][] REGIONS = CityCatalog.REGIONS;
 
     /** The region (index into {@link #REGIONS}) a city's country is in; -1 if it is in none. */
     static int region(City city) {
-        for (int r = 0; r < REGIONS.length; r++) for (String n : REGIONS[r]) if (n.equals(city.countryEn)) return r;
+        for (int r = 0; r < REGIONS.length; r++)
+            for (String n : REGIONS[r]) if (n.equals(city.countryEn)) return r;
         return -1;
     }
 
@@ -124,13 +153,19 @@ final class Prefs {
         of(c).edit().putString("madhab", m == Madhab.HANAFI ? "hanafi" : "shafi").apply();
     }
 
-    /** Days added to the computed Hijri date, for when the local moon sighting differs: −2 to +2. */
+    /**
+     * Days added to the computed Hijri date, for when the local moon sighting differs: −2 to +2.
+     */
     static int hijriOffset(Context c) {
         return of(c).getInt("hijri_offset", 0);
     }
 
     static void setHijriOffset(Context c, int days) {
-        of(c).edit().putInt("hijri_offset", Math.max(-MAX_HIJRI_OFFSET, Math.min(MAX_HIJRI_OFFSET, days))).apply();
+        of(c).edit()
+                .putInt(
+                        "hijri_offset",
+                        Math.max(-MAX_HIJRI_OFFSET, Math.min(MAX_HIJRI_OFFSET, days)))
+                .apply();
     }
 
     // ---------------------------------------------------------------- reminders
@@ -153,7 +188,10 @@ final class Prefs {
         of(c).edit().putBoolean("remind_voice", on).apply();
     }
 
-    /** Say «حان الآن موعد صلاة …» when a prayer's time begins with its adhan off (Announce, on by default). */
+    /**
+     * Say «حان الآن موعد صلاة …» when a prayer's time begins with its adhan off (Announce, on by
+     * default).
+     */
     static boolean announce(Context c) {
         return of(c).getBoolean("announce", true);
     }
@@ -163,8 +201,8 @@ final class Prefs {
     }
 
     /**
-     * When the call screen closes by itself: 1, 5 or 10 minutes after it opens ({@link Tokens#MOTION_CALL_AUTO_DISMISS_MS}
-     * by default), or 0 when the adhan ends.
+     * When the call screen closes by itself: 1, 5 or 10 minutes after it opens ({@link
+     * Tokens#MOTION_CALL_AUTO_DISMISS_MS} by default), or 0 when the adhan ends.
      */
     static int callCloseMinutes(Context c) {
         return of(c).getInt("call_close", (int) (Tokens.MOTION_CALL_AUTO_DISMISS_MS / 60_000));
@@ -183,14 +221,21 @@ final class Prefs {
         of(c).edit().putBoolean("adhan", on).apply();
     }
 
-    /** Each prayer's own adhan bell (Prayer day); on by default except Sunrise, which has no adhan. */
+    /**
+     * Each prayer's own adhan bell (Prayer day); on by default except Sunrise, which has no adhan.
+     */
     static boolean bell(Context c, int prayer) {
         return of(c).getBoolean("bell_" + prayer, prayer != PrayerDay.SUNRISE);
     }
 
-    /** The recording (Adhans id) for every prayer but Fajr, and the one for Fajr, whose adhan has its own line. */
+    /**
+     * The recording (Adhans id) for every prayer but Fajr, and the one for Fajr, whose adhan has
+     * its own line.
+     */
     static String voice(Context c, boolean fajr) {
-        return fajr ? of(c).getString("voice_fajr", "chebae_fajr") : of(c).getString("voice", "alafasy");
+        String selected =
+                of(c).getString(fajr ? "voice_fajr" : "voice", fajr ? "chebae_fajr" : "almalki");
+        return "alafasy".equals(selected) ? (fajr ? "chebae_fajr" : "almalki") : selected;
     }
 
     static void setVoice(Context c, boolean fajr, String id) {
@@ -208,7 +253,10 @@ final class Prefs {
         of(c).edit().putBoolean("radio_resume", on).apply();
     }
 
-    /** Minutes of screensaver before the screen goes dark while the radio plays: 0 at once (the default), -1 never. */
+    /**
+     * Minutes of screensaver before the screen goes dark while the radio plays: 0 at once (the
+     * default), -1 never.
+     */
     static int radioScreenOff(Context c) {
         return of(c).getInt("radio_dark", 0);
     }
@@ -229,31 +277,98 @@ final class Prefs {
         return "system".equals(s) ? DateFormat.is24HourFormat(c) : "24".equals(s);
     }
 
-    /** Everything a built screen depends on; a screen whose key changed while it was away rebuilds. */
-    static boolean quickLabels(Context c) { return of(c).getBoolean("quick_labels", false); }
+    /**
+     * Everything a built screen depends on; a screen whose key changed while it was away rebuilds.
+     */
+    static boolean quickLabels(Context c) {
+        return of(c).getBoolean("quick_labels", false);
+    }
 
     static int uiScale(Context c) {
-        try { return UiScale.INSTANCE.percent(of(c).getInt("ui_scale", UiScale.DEFAULT_PERCENT)); }
-        catch (ClassCastException ignored) { return UiScale.DEFAULT_PERCENT; }
+        try {
+            return UiScale.INSTANCE.percent(of(c).getInt("ui_scale", UiScale.DEFAULT_PERCENT));
+        } catch (ClassCastException ignored) {
+            return UiScale.DEFAULT_PERCENT;
+        }
     }
 
     static void setUiScale(Context c, int value) {
-        if (UiScale.INSTANCE.percent(value) != value) throw new IllegalArgumentException("Invalid UI size");
+        if (UiScale.INSTANCE.percent(value) != value)
+            throw new IllegalArgumentException("Invalid UI size");
         of(c).edit().putInt("ui_scale", value).apply();
     }
 
-    static boolean classicHome(Context c) { return "classic".equals(of(c).getString("home_layout", "two_rows")); }
+    static boolean classicHome(Context c) {
+        return "classic".equals(of(c).getString("home_layout", "two_rows"));
+    }
 
-    static int mihrabOpacity(Context c) { return tv.miqat.core.UiContract.INSTANCE.mihrabOpacity(of(c).getInt("mihrab_opacity", tv.miqat.core.UiContract.MIHRAB_OPACITY_DEFAULT)); }
-    static int homeCountdown(Context c) { return HomeLayout.clamp(of(c).getInt("home_countdown", 0), HomeLayout.HIDDEN); }
-    static int homeSide(Context c) { return HomeLayout.clamp(of(c).getInt("home_side", 0), 2); }
-    static int homeBar(Context c) { return HomeLayout.clamp(of(c).getInt("home_bar", 0), 1); }
-    static int homePrayers(Context c) { return HomeLayout.clamp(of(c).getInt("home_prayers", 0), HomeLayout.NONE); }
+    static int mihrabOpacity(Context c) {
+        return tv.miqat.core.UiContract.INSTANCE.mihrabOpacity(
+                of(c).getInt("mihrab_opacity", tv.miqat.core.UiContract.MIHRAB_OPACITY_DEFAULT));
+    }
+
+    static int homeCountdown(Context c) {
+        return HomeLayout.clamp(of(c).getInt("home_countdown", 0), HomeLayout.HIDDEN);
+    }
+
+    static int homeSide(Context c) {
+        return HomeLayout.clamp(of(c).getInt("home_side", 0), 2);
+    }
+
+    static int homeBar(Context c) {
+        return HomeLayout.clamp(of(c).getInt("home_bar", 0), 1);
+    }
+
+    static int homePrayers(Context c) {
+        return HomeLayout.clamp(of(c).getInt("home_prayers", 0), HomeLayout.NONE);
+    }
 
     static String key(Context c) {
         SharedPreferences p = of(c);
-        return p.getString("locale", "") + "|" + p.getString("digits", "") + "|" + clock24(c) + "|" + cityIndex(c)
-            + "|" + method(c) + "|" + madhab(c) + "|" + java.util.Arrays.toString(prayerOffsets(c)) + "|" + hijriOffset(c) + "|" + p.getInt("facing", -1) + "|" + Appearance.key(c) + "|" + Appearance.reduced(c) + "|" + p.getBoolean("hide_system_apps", false) + "|" + p.getString("dock_mode", "hidden") + "|" + p.getString("dock_position", "bottom") + "|" + quickLabels(c) + "|" + classicHome(c)
-            + "|" + mihrabOpacity(c) + "|" + homeCountdown(c) + "|" + homeSide(c) + "|" + homeBar(c) + "|" + homePrayers(c) + "|" + Appearance.cycleMinutes(c) + "|" + uiScale(c);
+        return p.getString("locale", "")
+                + "|"
+                + p.getString("digits", "")
+                + "|"
+                + clock24(c)
+                + "|"
+                + cityIndex(c)
+                + "|"
+                + method(c)
+                + "|"
+                + madhab(c)
+                + "|"
+                + java.util.Arrays.toString(prayerOffsets(c))
+                + "|"
+                + hijriOffset(c)
+                + "|"
+                + p.getInt("facing", -1)
+                + "|"
+                + Appearance.key(c)
+                + "|"
+                + Appearance.reduced(c)
+                + "|"
+                + p.getBoolean("hide_system_apps", false)
+                + "|"
+                + p.getString("dock_mode", "hidden")
+                + "|"
+                + p.getString("dock_position", "bottom")
+                + "|"
+                + quickLabels(c)
+                + "|"
+                + classicHome(c)
+                + "|"
+                + mihrabOpacity(c)
+                + "|"
+                + homeCountdown(c)
+                + "|"
+                + homeSide(c)
+                + "|"
+                + homeBar(c)
+                + "|"
+                + homePrayers(c)
+                + "|"
+                + Appearance.cycleMinutes(c)
+                + "|"
+                + uiScale(c);
     }
 }

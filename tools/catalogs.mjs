@@ -76,7 +76,7 @@ export function validateStations(stations) {
 }
 
 export function validateVoices(voices) {
-  if (!Array.isArray(voices) || voices[0]?.id !== 'alafasy' || !voices.some(voice => voice?.id === 'chebae_fajr')) {
+  if (!Array.isArray(voices) || voices[0]?.id !== 'almalki' || !voices.some(voice => voice?.id === 'chebae_fajr')) {
     throw new Error('Voice catalog must retain regular and Fajr defaults');
   }
   const ids = new Set();
@@ -121,6 +121,12 @@ function generate() {
     return;
   }
   generateBranding(args[0] === '--check');
+  const phoneColorIds=['lapis-900','lapis-800','lapis-700','gold-400','gold-200','plaster-100','mist-400'];
+  const designColors=JSON.parse(read('shared/design/mihrab/tokens.json')).color;
+  const installerColors=phoneColorIds.map(id=>{
+    const value=designColors[id].$value;if(!/^#[0-9a-f]{6}$/i.test(value))throw new Error('Invalid installer color');
+    return {id,value,name:id.replaceAll('-','_')};
+  });
   const cities = JSON.parse(read('shared/data/cities.json'));
   const regions = JSON.parse(read('shared/data/regions.json'));
   const stations = JSON.parse(read('shared/data/stations.json'));
@@ -190,12 +196,15 @@ function generate() {
     '        android:strokeColor="#FFFFFFFF" android:strokeWidth="' + prayerIcons.strokeWidth + '"\n' +
     '        android:strokeLineCap="round" android:strokeLineJoin="round" />\n</vector>\n']);
   for (const [destination, output] of [
+    ['installer/src/main/java/tv/miqat/installer/InstallerColors.java', 'package tv.miqat.installer;\n\n// Generated from shared/design/mihrab/tokens.json by tools/catalogs.mjs.\nfinal class InstallerColors {\n    private InstallerColors() {}\n'+installerColors.map(c=>'    static final int '+c.name.toUpperCase()+' = 0xff'+c.value.slice(1)+';').join('\n')+'\n}\n'],
+    ['installer/src/main/res/values/installer_colors.xml', '<!-- Generated from shared/design/mihrab/tokens.json by tools/catalogs.mjs. -->\n<resources>\n'+installerColors.map(c=>'    <color name="installer_'+c.name+'">'+c.value+'</color>').join('\n')+'\n</resources>\n'],
     ...['shared/design/assets', 'installer/src/main/assets'].flatMap(base => [
       [base + '/licenses/Miqat-MIT.txt', read('LICENSE')],
       [base + '/licenses/CleanYourTV-MIT.txt', read('docs/CLEANYOURTV-LICENSE.txt')],
     ]),
     ['platforms/android-tv/src/main/java/tv/miqat/home/CityCatalog.java', source],
     ['platforms/android-tv/src/main/java/tv/miqat/home/PrayerMethod.java', nativeMethods],
+    ['companion/android/src/main/java/tv/miqat/companion/PrayerMethod.java', nativeMethods.replace('package tv.miqat.home;', 'package tv.miqat.companion;')],
     ['platforms/android-tv/src/main/java/tv/miqat/home/RadioCatalog.java', nativeStations],
     ['platforms/android-tv/src/main/java/tv/miqat/home/VoiceCatalog.java', nativeVoices],
     ['tools/adhan-sources.tsv', voiceSources],

@@ -50,7 +50,7 @@ files, and inspect `git diff` afterwards.
 | Android phone installer / PC recovery | `./gradlew :app:assembleDebug :installer:assembleDebug :installer:lintDebug --no-daemon`, then root Python regressions. Exercise changed setup/recovery paths on an explicitly selected test device. |
 | Media preparation | `node tools/prepare-adhans.test.mjs` (FFmpeg/ffprobe required); `node tools/prepare-adhans.mjs --check`; check the affected platform packages and audition any changed religious wording/cut. |
 
-Android and LG builds use the 14 adhan and 12 announcement clips in shared/media/.
+Android and LG builds use the 13 adhan and 12 announcement clips in shared/media/.
 Check the complete set with sha256sum --check shared/media/SHA256SUMS and run
 node tools/prepare-adhans.mjs --check. Original/review audio remains private under
 state/. FFmpeg/ffprobe preparation and decoding tests run locally when media or
@@ -146,3 +146,259 @@ Run [phone checks](../companion/README.md), shared core and affected shell/previ
 checks. Native UI/LAN suites use owned emulators. QR validation uses
 `node companion/check-qr.cjs <cached-zxing-core-jar>`. Physical Miqat TV
 approval/camera/picture/sound acceptance remains separate.
+
+The default bilingual phone suite also opens the embedded Android setup guide,
+checks its private activity/language/direction, verifies cancelling and incomplete
+setup return without pairing, and exercises the successful setup-to-pairing result.
+Completion is a native UI fixture; this does not perform an ADB installation or
+prove cleanup/restore on a physical TV. The standalone installer must still build
+and lint when changing `installer/runtime` or its shared source directories.
+
+LG phone installation: `tests/test_lg_package.py` exercises bounded IPK metadata
+inspection and downgrade protection on the JVM. With the companion APK/test APK
+on an explicitly owned emulator, run `node companion/check-lg-install.cjs SERIAL
+AVD PATH_TO_INSTALLED_WEBOS_CLI MIQAT_IPK [ADB]`. The CLI dependency supplies its
+existing ssh2 test server. This fixture binds only local ports 9922/9991, verifies
+the emulator/AVD identity, and exercises native SSH/key/install behavior with
+ephemeral keys and a real local package. It never contacts a physical TV. Do not
+reuse these fixture credentials for a TV. Physical LG installation remains a
+separate owner acceptance step.
+
+Standalone phone suites: `-e suite phone-ui` checks actual bilingual prayer views,
+Save/Cancel, location confirmation and persistence. `phone-size` checks every
+80–150% app size in both languages, with voice/appearance/first-use/widget edges
+at the smallest/largest sizes. Run in each owned-emulator orientation and with
+enlarged OS text; pass `-e orientation portrait` or `-e orientation landscape`
+to assert the requested configuration. Check screenshot dimensions: changing a
+rotation setting alone may not rotate an emulator. Restore the session's prior
+display settings afterwards.
+`phone-denied` requires exact-alarm or notification access denied. Notification
+denial must prevent scheduling/playback; exact-only denial registers a disclosed
+approximate alarm without starting playback. `phone-runtime` requires both permissions granted on an owned
+muted emulator; it exercises actual AlarmManager delivery, foreground output,
+Stop/focus loss, disabled cleanup, recovery and early/expired/duplicate rejection.
+The fixture saves/restores phone settings; it does not operate a TV. Companion CI
+runs UI, portrait sizing, denial and actual-delivery suites in addition to existing TV UI/LAN checks.
+
+Phone feedback suites: `phone-location-denied` requires foreground location denied;
+`phone-location-approx` uses a framework network-provider fixture with coarse-only
+access and mock-location app-op on an owned emulator; `phone-location` requires
+precise access plus injected London GPS and checks calibrated travel refresh.
+`phone-custom` isolates preferences/files to verify migration, weekday/quiet
+policy and bounded private imports. `public-release` tests release metadata,
+checksums and interrupted/atomic file preservation without a network or TV.
+Phone CI runs these before the existing suites. Public binary end-to-end download
+still needs an actually published release; draft assets are not public downloads.
+
+## Apple portability boundary
+
+On Apple-silicon macOS with Xcode 16.4, use `-PmiqatApple=true` for the two core
+builds and run `macosArm64Test compileKotlinIosArm64 compileKotlinIosSimulatorArm64`.
+The opt-in targets keep Windows/Android/ES5 builds independent of Apple tooling.
+The bounded **Apple core** workflow runs common rule tests as native macOS code
+and compiles both iOS library variants. It boots no iOS simulator and does not
+establish an iPhone application, signed installation or background-audio result.
+Target declarations follow [Kotlin's hierarchy documentation](https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-hierarchy.html).
+The runner/toolchain is recorded in [GitHub's macOS 15 ARM64 image](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md).
+
+
+Phone pass-3 journey: `-e suite phone-journey` exercises fresh/resumable first use,
+real appearance Cancel, a temporary native AppWidgetHost bind/update and the
+common TV platform/preparation/source flow, plus rejecting a late cancelled job.
+The widget fixture requires API 29+ and releases its test-owned host and scoped
+shell binding permission in finally. No physical TV or public release is used.
+
+Pass-4 phone journey coverage follows the single-decision/Skip guide and real
+carousel selection, then ordinary Appearance Apply/Cancel. Widget checks bind
+all launcher variants through AppWidgetService, configure independent instances,
+verify Cancel, resize fallback/restoration, strip rendering and missing-location
+updates. The phone-size suite covers their actual previews at both scale edges.
+The native LAN suite accepts an older TV's retired voice baseline without a
+write, rejects an unknown choice and verifies the retired option is hidden in
+the actual native selector. This is compatible read behavior, not a migration
+command sent to a TV. Physical launcher/OEM/TV acceptance remains separate.
+
+
+Pass-7 phone journeys exercise two-page first use, a single direct appearance
+preview with Apply/Cancel (including display drafts), compact visual widget
+choices and new-widget Add versus existing-widget Apply. Numbered TV preparation,
+release choices and LG address/passphrase share one page; invalid addresses must
+preserve session-only input without networking. Voice search tests selection
+from filtered results as well as unchanged Cancel/Apply behavior.
+
+Widget picker XML layouts are the source for static fallback images. When changing
+those layouts/styles, run the owned-emulator phone journey with `-e capture true`.
+It renders `en-picker-{day,next,strip}.png` and Arabic counterparts under the app’s
+external files directory. Inspect them, then copy English images to native
+`res/drawable-nodpi/widget_preview_*.png` and Arabic to `res/drawable-ar-nodpi/`.
+These images are native renders, not separately authored preview designs.
+
+Phone fidelity checks must inspect rendered names/time bounds as well as values;
+zero-width labels can retain correct text. The phone UI suite also checks stable
+pre-show dialog placement, day-override expansion and direct calendar navigation.
+Hosted widget checks cover initial previews, all three allocated presentations,
+modern/legacy bounds and the minimum size with enlarged text. Keep app UI scale
+separate from launcher text scale. Save native/reference comparisons under state/.
+
+
+Pass-8 phone journeys exercise welcome/location/style resumption, a single
+notification decision (including denial and explicit opt-out preservation),
+country/city detection and advanced-dialog Cancel. Phone UI covers direct weekday
+choices, independent day overrides, master disabling, accessible percent edits,
+and Hijri month/day selection against actual calculated times. The runtime
+suite checks the selected recording's ending preview, including retained legacy
+seconds caps. Short-tone/vibration channels preserve Android-owned user edits.
+
+The optional `-e suite phone-ui -e map-network true -e capture true` check loads
+real OSM tiles only after a simulated explicit Load map tap, using public Cairo
+fixture coordinates. It checks native square geometry, restricted WebView access
+and provider failures; inspect the resulting map capture for route/markers and
+attribution. Ordinary CI phone UI uses no map network request.
+
+Phone settings redraw checks retain the window container and inspect scroll on
+its first drawn frame during repeated number edits and saving. Keep weekdays
+on one row with complete targets when they fit, and preserve narrow scrolling.
+Next-widget checks measure occupied height, canonical fonts and unclipped core
+text at minimum bounds; a short landscape voice picker must keep its preview,
+recording row and Apply reachable with enlarged text.
+
+
+Phone background location: on an owned emulator, `phone-background-denied` checks
+actual opt-in disclosure Cancel, manual fallback and absence of scheduled work.
+Grant coarse/fine/background location for `phone-background-prepare`; it checks
+real switch enable/disable, saves a typed private preference fixture and schedules
+the Cairo fixture. End instrumentation, run `am kill tv.miqat.companion` (not
+force-stop), verify no app PID, inject London GPS (`emu geo fix -0.1278 51.5074`),
+and force `cmd jobscheduler run -f tv.miqat.companion 41703`. Allow the bounded
+20-second request to finish, then run `phone-background-verify`. It checks
+closed-process persistence, unchanged prayer calibration, stale/manual/off-on
+rejection and restores preferences in finally. A failed pre-verify run leaves
+its private fixture for verification/restoration, so do not start a second prepare.
+A forced emulator job proves the closed-process path, not OEM timing or Doze latency.
+The bilingual phone UI suite checks the exact canonical verse, in-card date/city,
+actual event calendar links, timezone/Hijri correction and ordinary dates without
+an empty event row. Migrations must keep the new background opt-in false.
+
+
+`phone-calendar-return` is the short native regression for browsing days, then
+closing by Done, actual Android Back or cancellation. Each path must expose today's
+full hero/countdown/tools and actual prayer times. The bilingual phone UI suite
+runs the same regression alongside calendar month/event/timezone tests. Calendar
+browsing stays inside the popup and no longer persists another date on Home.
+The hosted-widget journey checks strip date toggles independently, modern/legacy
+bounds and full-height unclipped columns at small sizes and enlarged text. Refresh
+native bilingual picker PNGs whenever their XML or generated sample times change.
+
+Strip border regressions supply the renderer's clock explicitly and inspect
+actual selected-column visibility, upcoming time and stroke pixels before/at
+Fajr, after Dhuhr/Isha and after midnight on plain/artwork backgrounds. Overnight
+Fajr must remain outlined with tomorrow's timestamp; sunrise cannot be next.
+
+
+`phone-controls` is the focused native regression for immediate offset/before/after
+steps, valid Arabic typing without replacing the input, invalid-value rejection,
+retained restored text, cross-page and appearance persistence after Back.
+The bilingual phone UI suite also runs it. Keyboard/sizing checks assert the
+inline field and step buttons remain reachable without a per-control footer.
+TV mock/native-LAN checks assert direct +/− saves (including the bearing dialog),
+confirmed values, no lingering per-control/page appearance draft and immediate
+appearance persistence after section changes. No physical TV is used by those fixtures.
+
+Widget journeys check persistence before Android Add completion and after Back,
+with selected placed widgets updating independently. Appearance has no page-level
+Apply/Cancel; custom-palette dialogs still validate the complete value before saving.
+
+Voice-sheet checks require device audio selection to stay visible before selecting
+Custom audio, including compact landscape and enlarged text. The private custom
+audio fixture imports distinct default/Fajr files and checks independent slots,
+inherited defaults, malformed input, interrupted copies and oversize rejection.
+
+
+0.5.9: `phone-dialog` measures actual sheet position/width across entrance frames
+and checks the configured transform for horizontal movement. It first failed at
+x=27,width=1026, then passes x=0,width=1080 after dialog initialization precedes
+window sizing. Bilingual phone UI runs it alongside actual named-library search,
+selection/re-entry and exact restoration of existing private metadata/files.
+`phone-tests` requires notification/exact access on an owned muted emulator. It
+checks real 30-second notification and Adhan delivery, cancellation, early/stale/
+reboot/duplicate rejection and unchanged real settings/claims/schedule. The runtime
+suite includes these checks, a 20-second audition fixture (past the former 12s cap),
+and recording-metadata-driven percentage cutoff from position zero. Fixture caps
+never change the product's complete Listen or percentage previews.
+
+
+`phone-audio-route` checks the actual active player and media-session audio
+attributes: media by default, alarm only after opting in, then media again after
+opting out. It drives the real bilingual toggle and checks immediate persistence
+and Activity volume-key routing. The phone runtime suite includes it; storage
+fixtures check schema-6 migration preserves every field with alarm sound off.
+
+
+The audio-route fixture starts the actual selected stream at 1, then requires a
+70% Adhan level to set the maximum-based index (11/15 for media, 5/7 for alarm).
+It checks both routes, pause/resume, zero, live 50% edits, manual volume changes
+and restoration. Persisted recovery covers owned, user-changed and invalid
+records. The fixture restores stream levels/settings and runs from a visible
+activity because Android 17 restricts background volume APIs, including shell
+media-session commands. The normal runtime suite includes this regression.
+
+
+`phone-presentation` (`-e case home|dismiss|screen|actions`, default all) drives actual
+scheduled playback. It checks the full-width card band, accessible canonical
+control, changing native pixels with motion enabled and stable pixels with
+reduced motion. The fixture temporarily enables/restores the owned emulator's
+animator scale. It targets the SystemUI notification row through the accessibility
+tree, requires the distinct prayer's actual dismiss action, invokes it and
+requires audio to stop and the original media volume to return. OEM-specific
+notification gestures are outside automation scope by owner instruction. It also requires
+the opted-in foreground screen, even when lock-screen access is denied. On
+Android 13+ it verifies automatically granted core-alarm permission. Full runtime
+includes these checks; no system restriction is disabled.
+
+
+Native TV header navigation must wait for loaded tiles and take its readiness
+check and key assertions in one UI-thread snapshot; a queued catalog refresh can
+otherwise clear the list between checks. Run the prayer/UI sequence used by CI
+when validating a fresh installation, and require instrumentation code -1 with
+no preference-restoration warning. Native notification checks expand only a
+collapsed header: Android 14's row expansion action can toggle an already-
+expanded alert closed. The focused `phone-presentation -e case actions` check
+exercises the actual visible notification Stop button.
+
+Notification polish: `phone-presentation -e case actions` imports a named private
+recording, verifies that name in notification/session metadata and the visible
+expanded view, then clicks the actual Pause, Play and Stop icons. `actions-ar`
+exercises Arabic direction and labels. Existing private settings, names and files
+are restored. Inspect native light/dark renders for contrast, wrapping and a
+single progress bar. The compact view remains Android's system template.
+The notification small-icon regression requires the Miqat mihrab; inspect the
+separate prayer glyph in the expanded heading so app identity stays consistent.
+
+`phone-setup-location` is the focused guided-location fixture. With foreground
+access denied it handles the actual automatic permission request, checks manual
+fallback and background-disclosure cancellation. With foreground/background
+access granted and the test-only mock-location app-op, it seeds a real framework
+GPS provider, checks automatic field filling and an explicit update opt-in, then
+selects a city manually and confirms. No background job may exist before
+confirmation. Returning to the location step cannot repeat detection/permission.
+Preferences, language and the test provider are restored. Ordinary journey tests
+also resolve the new automatic permission request before continuing manual setup.
+
+`widget-small` binds every provider through AppWidgetService and checks its
+40dp resize minimum and Next prayer's 1×1 cell target. It renders 40/56/80dp tiles
+in English/Arabic at system text scales 1×/2× and widget scales 100%/120%, using
+modern size maps and legacy bounds. Require full, unclipped prayer/time text,
+accessible full time, a readable missing-location state and restored detail after
+growing the widget. Native `*-picker-next-small.png` captures are the source for
+the Next prayer fallback preview PNGs. Physical launcher grid behavior is separate.
+
+The same focused suite checks wide one-row and narrow/tall bounds, a prominent
+real Hijri date, full countdown text and pixels inside a 28dp launcher corner
+outline for every shape. Reapply successive square/wide RemoteViews to the same
+host view so resizing cannot retain the previous prayer layout. Inspect native
+English/Arabic renders; these checks do not replace Samsung launcher acceptance.
+
+The hosted multi-widget journey distinguishes Add during first configuration
+from Update on re-entry, retaining immediate saves and independent instances.
+The CI runtime verifies SystemUI dismissibility and actual dismissal cleanup;
+it does not prescribe a touch gesture for different Android/OEM implementations.

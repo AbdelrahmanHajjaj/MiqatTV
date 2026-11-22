@@ -23,6 +23,16 @@ def adhan_sources():
             str(ROOT / 'platforms/android-tv/src/main/java/com/batoulapps/adhan/data/CalendarUtil.java')]
 
 class JavaChecks(unittest.TestCase):
+    def test_phone_schedule_uses_explicit_zone_and_shared_adhan_rules(self):
+        runtime = core_runtime()
+        with tempfile.TemporaryDirectory() as output:
+            source = ROOT / 'companion/android/src/main/java/tv/miqat/companion'
+            subprocess.run([shutil.which('javac'), '-encoding', 'UTF-8', '-cp', runtime, '-d', output,
+                            *adhan_sources(), str(source / 'PrayerMethod.java'), str(source / 'PhoneSchedule.java'),
+                            str(ROOT / 'tests/PhoneScheduleCheck.java')], check=True, capture_output=True)
+            subprocess.run([shutil.which('java'), '-cp', output + os.pathsep + runtime,
+                            'tv.miqat.companion.PhoneScheduleCheck'], check=True, capture_output=True)
+
     def test_appearance_rotation_policy(self):
         with tempfile.TemporaryDirectory() as output:
             source = ROOT / "platforms/android-tv/src/main/java/tv/miqat/home"

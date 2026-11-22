@@ -13,6 +13,17 @@ class ReminderEvent(val id: String, val kind: String, val prayer: Int, val time:
 object ReminderRules {
     private const val MAX_SAFE_EPOCH = 9007199254740991.0
 
+    /** Modes: off=0, notification=1, adhan=2, vibration=3, silent=4. Weekday is Sunday=0. */
+    fun alertMode(mode: Double, weekday: Double, daysMask: Double, minute: Double, quiet: Boolean,
+        start: Double, end: Double, quietMode: Double): Int {
+        require(listOf(mode,weekday,daysMask,minute,start,end,quietMode).all { it.isFinite() && it % 1.0 == 0.0 })
+        require(mode in 0.0..4.0 && weekday in 0.0..6.0 && daysMask in 0.0..127.0 && minute in 0.0..1439.0)
+        require(start in 0.0..1439.0 && end in 0.0..1439.0 && quietMode in listOf(0.0,3.0,4.0))
+        if (mode == 0.0 || daysMask.toInt() and (1 shl weekday.toInt()) == 0) return 0
+        val inside = if (start < end) minute >= start && minute < end else minute >= start || minute < end
+        return (if (quiet && inside) quietMode else mode).toInt()
+    }
+
     fun dueCall(times: DoubleArray, now: Double, adhan: Boolean, bellMask: Int, windowMs: Double): Int =
         if (adhan) duePrayer(times, now, bellMask, windowMs) else -1
 

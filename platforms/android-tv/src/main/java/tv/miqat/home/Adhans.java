@@ -8,8 +8,8 @@ import android.media.MediaPlayer;
 import java.io.IOException;
 
 /**
- * The adhan recordings shipped in assets/adhan (from github.com/abodehq/Athan-MP3, no licence stated; for this TV
- * only). Which one plays is chosen in Settings, with a separate choice for Fajr.
+ * Approved shared/media recordings packaged in assets/adhan, with their source notices.
+ * Settings selects the recording, with a separate choice for Fajr.
  */
 final class Adhans {
     private Adhans() {}

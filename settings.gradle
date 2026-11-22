@@ -10,7 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // Only for :installer's ADB library and its SPAKE2 dependency.
+        // Only for the shared installer's ADB library and its SPAKE2 dependency.
         maven {
             url 'https://jitpack.io'
             content { includeGroupByRegex 'com\\.github\\.MuntashirAkon.*' }
@@ -21,6 +21,8 @@ rootProject.name = "Miqat"
 include ':app'
 project(':app').projectDir = file('platforms/android-tv')
 include ':installer'
+include ':installer-runtime'
+project(':installer-runtime').projectDir = file('installer/runtime')
 includeBuild('shared/core')
 include ':companion'
 project(':companion').projectDir = file('companion/android')

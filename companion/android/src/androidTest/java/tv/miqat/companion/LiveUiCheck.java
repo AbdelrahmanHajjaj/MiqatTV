@@ -22,7 +22,66 @@ final class LiveUiCheck {
     static void untilUi(Instrumentation test,Callable<Boolean> condition)throws Exception {
         until(()->{boolean[] value={false};Throwable[] failure={null};test.runOnMainSync(()->{try{value[0]=condition.call();}catch(Throwable error){failure[0]=error;}});if(failure[0]!=null)throw new AssertionError(failure[0]);return value[0];});
     }
-    static MainActivity launch(Instrumentation test){return (MainActivity)test.startActivitySync(new Intent(test.getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}
+    static void key(Instrumentation test, int code) {
+        long down = SystemClock.uptimeMillis();
+        android.app.UiAutomation input = test.getUiAutomation();
+        // UiAutomation waits for window surface operations before dispatching input.
+        check(input.injectInputEvent(new android.view.KeyEvent(down, down,
+                android.view.KeyEvent.ACTION_DOWN, code, 0), true), "Key down was not injected");
+        check(input.injectInputEvent(new android.view.KeyEvent(down, SystemClock.uptimeMillis(),
+                android.view.KeyEvent.ACTION_UP, code, 0), true), "Key up was not injected");
+    }
+    static MainActivity launch(Instrumentation test) throws Exception {
+        android.content.Context c = test.getTargetContext();
+        PhoneRuntimeCheck.shell(test, "input keyevent KEYCODE_WAKEUP");
+        PhoneRuntimeCheck.shell(test, "wm dismiss-keyguard");
+        PhoneRuntimeCheck.await(
+                test,
+                () ->
+                        c.getSystemService(android.os.PowerManager.class).isInteractive()
+                                && !c.getSystemService(android.app.KeyguardManager.class).isKeyguardLocked(),
+                5000,
+                "Unlock the owned emulator before opening the test UI");
+        Instrumentation.ActivityMonitor monitor =
+                test.addMonitor(MainActivity.class.getName(), null, false);
+        MainActivity a;
+        try {
+            // Own a new fixture task; launcher reuse does not notify ActivityMonitor.
+            PhoneRuntimeCheck.shell(test, "am start --activity-multiple-task -n tv.miqat.companion/.MainActivity");
+            a = (MainActivity) test.waitForMonitorWithTimeout(monitor, 5000);
+            CompanionCheck.check(a != null, "Fixture activity did not open after unlock");
+            try {
+                PhoneRuntimeCheck.await(test, a::hasWindowFocus, 5000, "Fixture activity did not gain window focus");
+            } catch (AssertionError failure) {
+                throw new AssertionError("Fixture focus: active=" + PhoneRuntimeCheck.activePackage(test)
+                        + ", dialog=" + focusDialog(test)
+                        + ", foreground=" + a.phoneForeground + ", destroyed=" + a.isDestroyed()
+                        + ", interactive=" + c.getSystemService(android.os.PowerManager.class).isInteractive()
+                        + ", locked=" + c.getSystemService(android.app.KeyguardManager.class).isKeyguardLocked(), failure);
+            }
+            return a;
+        } finally {
+            test.removeMonitor(monitor);
+        }
+    }
+
+    private static String focusDialog(Instrumentation test) {
+        android.view.accessibility.AccessibilityNodeInfo root = test.getUiAutomation().getRootInActiveWindow();
+        if (root == null) return "none";
+        try {
+            StringBuilder text = new StringBuilder();
+            for (String id : new String[] {"android:id/alertTitle", "android:id/message"}) {
+                for (android.view.accessibility.AccessibilityNodeInfo node : root.findAccessibilityNodeInfosByViewId(id)) {
+                    if (node.getText() != null) text.append(node.getText()).append("; ");
+                    node.recycle();
+                }
+            }
+            return text.toString();
+        } finally {
+            root.recycle();
+        }
+    }
+
     static void click(Instrumentation test,MainActivity a,String tag){test.runOnMainSync(()->{View control=a.getWindow().getDecorView().findViewWithTag(tag);check(control!=null&&control.isEnabled(),"Missing enabled phone control: "+tag);control.performClick();});}
     static void run(Instrumentation test,String expectedProfile)throws Exception {
         check(android.os.Build.HARDWARE.contains("ranchu")||android.os.Build.FINGERPRINT.contains("generic"),"Owned emulator only");
@@ -34,55 +93,53 @@ final class LiveUiCheck {
         String previousName=context.getSharedPreferences("companion",0).getString("phone-name",null);
         try {
             context.getSharedPreferences("companion",0).edit().putString("language","en").putString("phone-name","Companion integration fixture").commit();
-            MainActivity a=launch(test);current[0]=a;test.runOnMainSync(()->a.beginPairing(qr));
+            MainActivity a=launch(test);current[0]=a;test.runOnMainSync(()->a.pairingUi.beginPairing(qr));
             untilUi(test,()->a.real()!=null&&!a.networkBusy&&a.page.equals("overview"));
-            check(a.snapshot==null&&a.real().needsRefresh,"Pairing must not read/upload settings");
+            check(a.settingsUi.snapshot==null&&a.real().needsRefresh,"Pairing must not read/upload settings");
             Phones.Phone phone=store.read().get(0);check(!phone.pending&&phone.pin.equals(pin),"Encrypted confirmed grant");
             check(phone.profile.equals(expectedProfile),"Actual paired platform matches the integration target");
             LanConfig config=new LanConfig(context);LanClient verifier=new LanClient(new Endpoint(phone.url,phone.pin,config.port,true),config,phone.certificate);
             JSONObject initial=verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values");
             check(initial.getString("display.size").equals("100"),"Actual TV host prerequisites");
-            test.runOnMainSync(()->{a.readSettings();a.page="settings";a.render();});untilUi(test,()->!a.networkBusy&&a.editable());
-            check(a.backend().getSpecs().size()==a.snapshot.getValues().size(),"Full actual settings inventory");
-            if(expectedProfile.equals("android"))check(!a.spec("favourites.order").getOptions().contains("quran"),"Actual app IDs replace demo apps");
+            test.runOnMainSync(()->{a.settingsUi.readSettings();a.page="settings";a.render();});untilUi(test,()->!a.networkBusy&&a.settingsUi.editable());
+            check(a.backend().getSpecs().size()==a.settingsUi.snapshot.getValues().size(),"Full actual settings inventory");
+            if(expectedProfile.equals("android"))check(!a.settingsUi.spec("favourites.order").getOptions().contains("quran"),"Actual app IDs replace demo apps");
             else {
-                check(!a.catalog.control(a.profile(),"device.remote").getBoolean("available")&&!a.snapshot.getValues().containsKey("favourites.order"),"LG actual capabilities exclude unsupported Android editors");
-                check(a.snapshot.getValues().get("reminders.volume").equals("25"),"LG reads the native fixture value instead of demo defaults");
-                test.runOnMainSync(()->a.openSection("reminders"));click(test,a,"reminders.volume.plus");click(test,a,"reminders.volume.save");
-                untilUi(test,()->!a.networkBusy&&a.snapshot.getValues().get("reminders.volume").equals("30"));
+                check(!a.catalog.control(a.profile(),"device.remote").getBoolean("available")&&!a.settingsUi.snapshot.getValues().containsKey("favourites.order"),"LG actual capabilities exclude unsupported Android editors");
+                check(a.settingsUi.snapshot.getValues().get("reminders.volume").equals("25"),"LG reads the native fixture value instead of demo defaults");
+                test.runOnMainSync(()->a.settingsUi.openSection("reminders"));click(test,a,"reminders.volume.plus");
+                untilUi(test,()->!a.networkBusy&&a.settingsUi.snapshot.getValues().get("reminders.volume").equals("30"));
                 check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("reminders.volume").equals("30"),"LG volume uses the shared 5% editor and real adapter");
             }
-            test.runOnMainSync(()->a.openSection("display"));click(test,a,"display.size.plus");
-            check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("display.size").equals("100"),"Inline number remains staged");
-            click(test,a,"display.size.save");untilUi(test,()->!a.networkBusy&&a.snapshot.getValues().get("display.size").equals("110"));
+            test.runOnMainSync(()->a.settingsUi.openSection("display"));click(test,a,"display.size.plus");
+            untilUi(test,()->!a.networkBusy&&a.settingsUi.snapshot.getValues().get("display.size").equals("110"));
             check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("display.size").equals("110"),"Phone saved to real TV preference adapter");
-            test.runOnMainSync(()->a.openSection("appearance"));click(test,a,"appearance.theme.next");
-            check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("appearance.theme").equals("mihrab"),"Phone preview does not write");
-            click(test,a,"appearance.cancel");test.runOnMainSync(()->a.openSection("appearance"));click(test,a,"appearance.theme.next");click(test,a,"appearance.apply");
-            untilUi(test,()->!a.networkBusy&&a.appearance!=null&&a.appearance.getChanges().isEmpty()&&a.snapshot.getValues().get("appearance.theme").equals("aurora"));check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("appearance.theme").equals("aurora"),"Appearance Apply confirmed by actual TV");
-            test.runOnMainSync(()->a.openSection("appearance"));click(test,a,"appearance.theme.next");String delivered=a.appearance.getValues().get("appearance.theme");
-            JSONObject expected=verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values");
-            check(verifier.call("POST","/v1/settings",new JSONObject().put("expected",expected).put("changes",Json.object("appearance.theme",delivered)),phone.credential()).body.getString("status").equals("saved"),"Fixture models a delivered save whose UI confirmation was lost");
-            test.runOnMainSync(a::readSettings);untilUi(test,()->!a.networkBusy&&a.appearance.getChanges().isEmpty());
-            check(a.snapshot.getValues().get("appearance.theme").equals(delivered),"Refresh clears a draft already confirmed in actual TV values");
-            click(test,a,"appearance.theme.next");String draft=a.appearance.getValues().get("appearance.theme");
+            test.runOnMainSync(()->a.settingsUi.openSection("appearance"));click(test,a,"appearance.theme.next");
+            untilUi(test,()->!a.networkBusy&&a.settingsUi.snapshot.getValues().get("appearance.theme").equals("aurora"));
+            check(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").getString("appearance.theme").equals("aurora"),"Appearance selection confirmed immediately by actual TV");
+            test.runOnMainSync(()->check(a.getWindow().getDecorView().findViewWithTag("appearance.apply")==null
+                    &&a.getWindow().getDecorView().findViewWithTag("appearance.cancel")==null,"Immediate TV appearance has no Apply/Cancel footer"));
+            String savedTheme=a.settingsUi.snapshot.getValues().get("appearance.theme");
+            JSONObject confirmed=verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values");
+            test.runOnMainSync(a.settingsUi::readSettings);untilUi(test,()->!a.networkBusy);
+            check(a.settingsUi.snapshot.getValues().get("appearance.theme").equals(savedTheme),"Refresh retained confirmed appearance");
+            check(MainActivity.decode(confirmed.toString()).equals(MainActivity.decode(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").toString())),"Refresh never rewrites appearance");
             Instrumentation.ActivityMonitor monitor=test.addMonitor(MainActivity.class.getName(),null,false);
             try {
                 test.runOnMainSync(a::recreate);until(()->monitor.getLastActivity()!=null);MainActivity recreated=(MainActivity)monitor.getLastActivity();current[0]=recreated;
-                untilUi(test,()->recreated.body!=null&&recreated.appearance!=null);
-                check(recreated.appearance.getValues().get("appearance.theme").equals(draft)&&!recreated.editable(),"Recreation preserves draft and requires refreshed settings");
-                click(test,recreated,"appearance.cancel");
+                untilUi(test,()->recreated.body!=null&&recreated.settingsUi.snapshot!=null);
+                check(recreated.settingsUi.snapshot.getValues().get("appearance.theme").equals(savedTheme)&&!recreated.settingsUi.editable(),"Recreation preserves confirmed appearance and requires refreshed settings");
             }finally{test.removeMonitor(monitor);}
             Map<String,String> before=MainActivity.decode(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").toString());
             check(current[0].real().connect(),"Known phone reconnects");
             check(before.equals(MainActivity.decode(verifier.call("GET","/v1/settings",null,phone.credential()).body.getJSONObject("values").toString())),"Reconnect never uploads cached settings/draft");
             check(ready.createNewFile(),"Offline phase marker");until(go::exists);MainActivity live=current[0];
-            test.runOnMainSync(()->{live.section="display";live.readSettings();});untilUi(test,()->!live.networkBusy);
-            check(!live.editable()&&live.snapshot.getValues().get("display.size").equals("110"),"Actual transport loss retains stale settings");
+            test.runOnMainSync(()->{live.section="display";live.settingsUi.readSettings();});untilUi(test,()->!live.networkBusy);
+            check(!live.settingsUi.editable()&&live.settingsUi.snapshot.getValues().get("display.size").equals("110"),"Actual transport loss retains stale settings");
             test.runOnMainSync(()->check(!live.body.findViewWithTag("display.size.plus").isEnabled(),"Stale controls are read-only"));
             test.runOnMainSync(live::finish);context.getSharedPreferences("companion",0).edit().putString("language","ar").commit();
-            MainActivity arabic=launch(test);current[0]=arabic;test.runOnMainSync(()->{arabic.selected=2;arabic.page="settings";arabic.section="display";arabic.readSettings();});untilUi(test,()->!arabic.networkBusy);
-            check(arabic.ar&&!arabic.editable()&&arabic.snapshot.getValues().get("display.size").equals("110"),"Arabic restart retains actual TV cache without upload");
+            MainActivity arabic=launch(test);current[0]=arabic;test.runOnMainSync(()->{arabic.selected=2;arabic.page="settings";arabic.section="display";arabic.settingsUi.readSettings();});untilUi(test,()->!arabic.networkBusy);
+            check(arabic.ar&&!arabic.settingsUi.editable()&&arabic.settingsUi.snapshot.getValues().get("display.size").equals("110"),"Arabic restart retains actual TV cache without upload");
             check(arabic.body.getLayoutDirection()==View.LAYOUT_DIRECTION_RTL,"Real TV phone UI keeps RTL");
         }finally {
             if(current[0]!=null){MainActivity close=current[0];test.runOnMainSync(close::finish);test.waitForIdleSync();check(close.io.awaitTermination(10,java.util.concurrent.TimeUnit.SECONDS),"Phone fixture IO stopped before cleanup");}

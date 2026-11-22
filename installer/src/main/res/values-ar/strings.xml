@@ -2,7 +2,8 @@
 <!-- Arabic, for phones set to Arabic. English, the fallback, is in values/strings.xml; keep the two in step. -->
 <resources>
     <string name="lang" translatable="false">ar</string>
-    <string name="app_name">مثبّت ميقات</string>
+    <string name="installer_app_name">مثبّت ميقات</string>
+    <string name="pair_tv">إقران التلفاز</string>
 
     <string name="stage_prepare">التجهيز</string>
     <string name="stage_connect">الاتصال</string>
@@ -157,4 +158,12 @@
     <string name="restore_backup_help">استعادة الشاشة الرئيسية والتطبيقات والإعدادات المسجلة؟ ستبقى ميقات مثبّتة.</string>
     <string name="backup_restored">تمت استعادة إعدادات التلفزيون الأصلية</string>
     <string name="choose_local_apk">تثبيت نسخة التطبيق من الهاتف</string>
+    <string name="advanced_setup">خيارات متقدمة</string>
+    <string name="public_download_help">ينزّل ميقات إصدار التلفاز المنشور من GitHub ويتحقق منه تلقائيًا. ملفات APK المحلية في الخيارات المتقدمة.</string>
+    <string name="use_public_download">استخدام التنزيل العام (افتراضي)</string>
+    <string name="public_unavailable">لا تتوفر حزمة ميقات للتلفاز منشورة بعد. حاول لاحقًا أو اختر ملف APK محليًا من الخيارات المتقدمة.</string>
+    <string name="public_preview">إصدار معاينة منشور</string>
+    <string name="downgrade_kept">النسخة المثبتة أحدث أو تعذّر التحقق من إصدارها. تم الاحتفاظ بها وبإعداداتها.</string>
+    <string name="install_preview_version">ميقات %1$s · إصدار معاينة منشور. أبقِ هذه الشاشة مفتوحة.</string>
+    <string name="local_package_selected">تم اختيار APK محلي. الخيارات المتقدمة ← استخدام التنزيل العام يعيد التنزيل التلقائي.</string>
 </resources>

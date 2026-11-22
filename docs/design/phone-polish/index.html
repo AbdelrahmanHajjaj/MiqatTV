@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Miqat · Phone design review</title>
+<link rel="stylesheet" href="mockups.css">
+<body>
+<a class="skip" href="#boards">Skip to mockups</a>
+<header class="review-head">
+  <div><p class="eyebrow">MIQAT / DESIGN REVIEW / 21 NOV 2026 · REVISION 2</p><h1>A calmer path to prayer.</h1>
+  <p>English mockups for the phone app after 0.4.6. Existing Miqat artwork, typography and palettes. Proposed behavior; no device actions.</p></div>
+  <a class="research-link" href="research.html">Research & decisions ↗</a>
+</header>
+<nav class="review-tools" aria-label="Review controls">
+  <label>Find a page <input id="search" type="search" placeholder="Location, widgets, TV…"></label>
+  <label>Journey <select id="group"><option value="all">Every page</option></select></label>
+  <button id="view" aria-pressed="false">Focus one page</button>
+  <button id="previous" hidden>Previous page</button><button id="next" hidden>Next page</button>
+  <span id="count" aria-live="polite"></span>
+</nav>
+<p class="review-note">Browse the full gallery or focus one page. Controls are clickable demonstrations. Ending preview plays audio only after a tap; map tiles load only on request. Device permissions, location detection, TV playback, installation and widget pinning are simulated. Scroll inside a page to inspect its full contents.</p>
+<main id="boards" class="boards"></main>
+<div id="toast" class="toast" role="status"></div>
+<script src="review-features.js"></script>
+<script src="mockups.js"></script>
+</body>
+</html>

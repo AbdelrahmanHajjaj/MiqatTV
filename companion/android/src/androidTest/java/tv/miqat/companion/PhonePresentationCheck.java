@@ -1,0 +1,218 @@
+package tv.miqat.companion;
+
+import android.app.*;
+import android.content.*;
+import android.graphics.Rect;
+import android.os.SystemClock;
+import android.view.*;
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.*;
+import static tv.miqat.companion.PhoneUiCheck.*;
+import static tv.miqat.companion.PhoneRuntimeCheck.await;
+
+final class PhonePresentationCheck {
+    private static AccessibilityNodeInfo find(AccessibilityNodeInfo node,String value,boolean id) {
+        CharSequence text=node.getText(),description=node.getContentDescription();
+        boolean words=text!=null && text.toString().regionMatches(true,0,value,0,value.length())
+                || description!=null && description.toString().regionMatches(true,0,value,0,value.length());
+        if(node.isVisibleToUser() && (id?value.equals(node.getViewIdResourceName()):words))
+            return AccessibilityNodeInfo.obtain(node);
+        for(int i=0;i<node.getChildCount();i++) {
+            AccessibilityNodeInfo child=node.getChild(i);if(child==null)continue;
+            try{AccessibilityNodeInfo match=find(child,value,id);if(match!=null)return match;}finally{child.recycle();}
+        }
+        return null;
+    }
+    static AccessibilityNodeInfo notificationText(Instrumentation test,String text) {
+        android.accessibilityservice.AccessibilityServiceInfo info=test.getUiAutomation().getServiceInfo();
+        info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+                |android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
+        test.getUiAutomation().setServiceInfo(info);
+        for(android.view.accessibility.AccessibilityWindowInfo window:test.getUiAutomation().getWindows()) {
+            AccessibilityNodeInfo root=window.getRoot();
+            try {
+                if(root!=null && "com.android.systemui".contentEquals(root.getPackageName())) {
+                    AccessibilityNodeInfo found=find(root,text,false);if(found!=null)return found;
+                }
+            } finally {if(root!=null)root.recycle();window.recycle();}
+        }
+        return null;
+    }
+    static void expandNotification(Instrumentation test,String title) throws Exception {
+        LiveUiCheck.until(()->{AccessibilityNodeInfo node=notificationText(test,title);if(node==null)return false;node.recycle();return true;});
+        AccessibilityNodeInfo row=notificationText(test,title);
+        try {
+            while(row!=null && !String.valueOf(row.getViewIdResourceName()).endsWith("/expandableNotificationRow")) {
+                AccessibilityNodeInfo parent=row.getParent();row.recycle();row=parent;
+            }
+            check(row!=null,"Notification row is missing");
+            AccessibilityNodeInfo button=find(row,"android:id/expand_button",true);
+            check(button!=null,"Notification expansion control is missing");
+            try {
+                CharSequence state=button.getContentDescription();
+                if(state!=null && "Expand".contentEquals(state))check(button.performAction(AccessibilityNodeInfo.ACTION_CLICK),"Notification cannot expand");
+                else check(state!=null && "Collapse".contentEquals(state),"Unknown notification expansion state: "+state);
+            } finally {button.recycle();}
+        } finally {if(row!=null)row.recycle();}
+    }
+    private static android.graphics.Bitmap wave(Instrumentation test,MainActivity a) throws Exception {
+        Rect bounds=new Rect();on(test,()->a.body.findViewWithTag("phone.playback-wave").getGlobalVisibleRect(bounds));
+        SystemClock.sleep(100);
+        android.graphics.Bitmap screen=test.getUiAutomation().takeScreenshot();
+        check(screen!=null && !bounds.isEmpty(),"Playing wave did not render");
+        try{return android.graphics.Bitmap.createBitmap(screen,bounds.left,bounds.top,bounds.width(),bounds.height());}
+        finally{screen.recycle();}
+    }
+    static void run(Instrumentation test,String selected,boolean capture) throws Exception {
+        check(Arrays.asList("all","home","dismiss","screen","actions","actions-ar").contains(selected),"Unknown presentation case");
+        boolean actions=selected.equals("actions") || selected.equals("actions-ar");
+        Context c=test.getTargetContext();
+        PhoneStore original=PhoneStore.read(c);
+        android.media.AudioManager audio=c.getSystemService(android.media.AudioManager.class);
+        int originalMedia=audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC);
+        SharedPreferences language=c.getSharedPreferences("companion",0);
+        String lang=language.getString("language","system");
+        String animation=android.provider.Settings.Global.getString(c.getContentResolver(),"animator_duration_scale");
+        java.io.File libraryIndex=new java.io.File(PhoneAudio.directory(c),"library.json");
+        boolean hadIndex=libraryIndex.exists();
+        Map<String,String> names=actions?new LinkedHashMap<>(PhoneAudioLibrary.read(c)):null;
+        Set<String> files=new HashSet<>(Arrays.asList(PhoneAudio.directory(c).list()));
+        check(animation==null || animation.matches("[0-9]+(?:[.][0-9]+)?"),"Unexpected animator scale");
+        try {
+            PhoneRuntimeCheck.shell(test,"settings put global animator_duration_scale 1");
+            await(test,android.animation.ValueAnimator::areAnimatorsEnabled,5000,"Animator setting did not become enabled");
+            language.edit().putString("language",selected.equals("actions-ar")?"ar":"en").commit();
+            if(android.os.Build.VERSION.SDK_INT>=33)
+                check(c.checkSelfPermission(android.Manifest.permission.USE_EXACT_ALARM)==android.content.pm.PackageManager.PERMISSION_GRANTED
+                        && PhoneAlarms.exact(c),"Prayer timing should be granted without a manual alarm-access step");
+            for (String phase:actions?new String[]{"actions"}:new String[]{"home","dismiss","screen"}) {
+                if (!selected.equals("all") && !actions && !selected.equals(phase)) continue;
+                int prayer=phase.equals("dismiss")?2:phase.equals("actions")?3:0;
+                String prayerKey=PhoneStore.PRAYERS[prayer];
+                String prayerName=PhoneData.get(c).prayerName(prayer,false);
+                Map<String,String> edits=new HashMap<>();
+                edits.put("reminders.enabled","true");edits.put("prayer.location-ready","true");
+                edits.put("quiet.enabled","false");edits.put("reminders.volume",phase.equals("dismiss")?"70":"0");
+                edits.put("reminders.alarm-mode","false");
+                edits.put("call."+prayerKey+".default-audio","true");edits.put("call."+prayerKey+".enabled","true");
+                edits.put("call."+prayerKey+".voice","almalki");
+                edits.put("call."+prayerKey+".mode","adhan");edits.put("call."+prayerKey+".weekdays","127");
+                edits.put("reminders.full-screen",Boolean.toString(phase.equals("screen")));
+                edits.put("reminders.duration","60");edits.put("display.reduce-motion","false");
+                if(phase.equals("actions")) {
+                    PhoneAudio.importFile(c,c.getAssets().open("adhan/almalki.mp3"),"call.asr.voice",
+                            selected.equals("actions-ar")?"أذاني المفضل · تسجيل شخصي":"My Adhan · Personal recording");
+                    edits.put("call.asr.voice","custom");
+                    edits.put("audio.custom.asr",PhoneStore.read(c).value("audio.custom.asr"));
+                    edits.put("call.asr.default-audio","false");
+                    edits.put("call.asr.volume","0");
+                    edits.put("call.asr.duration","60");
+                    edits.put("call.asr.length-percent","100");
+                }
+                original.changed(edits).save(c);
+                MainActivity a=LiveUiCheck.launch(test);
+                Instrumentation.ActivityMonitor monitor=new Instrumentation.ActivityMonitor(PhoneAdhanScreen.class.getName(),null,false);
+                test.addMonitor(monitor);
+                Activity shown=null;
+                try {
+                    on(test,()->a.tab("prayers"));
+                    if(phase.equals("dismiss"))audio.setStreamVolume(android.media.AudioManager.STREAM_MUSIC,1,0);
+                    String id="phone:presentation:"+UUID.randomUUID();long at=System.currentTimeMillis();
+                    on(test,()->c.startForegroundService(PhonePlayback.intent(c,prayer,phase.equals("actions")?"custom":"almalki",false,id).putExtra("prayerTime",(double)at)));
+                    await(test,PhonePlayback::outputStarted,10000,"Presentation audio did not start");
+                    if (phase.equals("actions")) {
+                        PhoneAdhanCheck.stop(test,c,new tv.miqat.core.ReminderEvent(id,"call",prayer,at,at));
+                    } else if (phase.equals("screen")) {
+                        shown=test.waitForMonitorWithTimeout(monitor,5000);
+                        check(shown instanceof PhoneAdhanScreen,"Foreground Miqat did not open the opted-in Adhan screen");
+                        PhoneUiCheck.capture(test,c,"adhan-foreground-screen",capture);
+                    } else if (phase.equals("home")) {
+                        SystemClock.sleep(1200);
+                        on(test,()-> {
+                            View wave=a.body.findViewWithTag("phone.playback-wave");
+                            check(wave!=null && wave.getVisibility()==View.VISIBLE,"Home prayer card has no playing wave");
+                            check("playback.controls".equals(wave.getTag(R.id.companion_action)) && wave.getHeight()>=a.views.dp(48),"Playing controls lack a canonical accessible target");
+                            check(a.body.findViewWithTag("phone.stop")==null,"Detached square Stop remains under the card");
+                            Rect card=new Rect(),band=new Rect();
+                            a.body.findViewWithTag("phone.hero").getGlobalVisibleRect(card);wave.getGlobalVisibleRect(band);
+                            check(band.width()>=card.width()-a.views.dp(2) && card.bottom-band.bottom<=a.views.dp(2),
+                                    "Playing wave does not span the card's bottom edge: "+band+" card="+card);
+                        });
+                        PhoneUiCheck.capture(test,c,"adhan-home-wave",capture);
+                        android.graphics.Bitmap moving=wave(test,a);SystemClock.sleep(250);
+                        android.graphics.Bitmap advanced=wave(test,a);
+                        try {check(!moving.sameAs(advanced),"Playing wave did not animate");}finally{moving.recycle();advanced.recycle();}
+                        PhoneStore.read(c).changed(Collections.singletonMap("display.reduce-motion","true")).save(c);
+                        on(test,a::render);
+                        android.graphics.Bitmap still=wave(test,a);SystemClock.sleep(250);
+                        android.graphics.Bitmap unchanged=wave(test,a);
+                        try {check(still.sameAs(unchanged),"Playing wave ignored reduced motion");}finally{still.recycle();unchanged.recycle();}
+                        PhoneStore.read(c).changed(Collections.singletonMap("display.reduce-motion","false")).save(c);
+                        on(test,a::render);
+                        on(test,()->a.body.findViewWithTag("phone.playback-wave").performClick());
+                        shown=test.waitForMonitorWithTimeout(monitor,5000);
+                        check(shown instanceof PhoneAdhanScreen,"Playing wave does not open accessible playback controls");
+                    } else {
+                        check(audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==tv.miqat.companion.core.PhonePrayerRules.INSTANCE.volumeIndex(70,audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)),"Dismiss fixture did not acquire its absolute media level");
+                        on(test,()->a.startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)));
+                        await(test,()->!a.phoneForeground,5000,"Playback fixture did not enter the background");
+                        PhoneRuntimeCheck.shell(test,"cmd statusbar expand-notifications");
+                        LiveUiCheck.until(()-> {
+                            AccessibilityNodeInfo shade=test.getUiAutomation().getRootInActiveWindow();
+                            if(shade==null)return false;
+                            try{return "com.android.systemui".contentEquals(shade.getPackageName());}finally{shade.recycle();}
+                        });
+                        PhoneUiCheck.capture(test,c,"adhan-notification-shade",capture);
+                        Notification notification=Arrays.stream(c.getSystemService(NotificationManager.class).getActiveNotifications())
+                                .map(n->n.getNotification()).filter(n->(n.flags&Notification.FLAG_FOREGROUND_SERVICE)!=0).findFirst().get();
+                        test.getUiAutomation().waitForIdle(300,5000);
+                        LiveUiCheck.until(()-> {
+                            AccessibilityNodeInfo node=notificationText(test,prayerName);
+                            if(node==null)return false;
+                            node.recycle();return true;
+                        });
+                        PhoneUiCheck.capture(test,c,"adhan-before-notification-dismiss",capture);
+                        AccessibilityNodeInfo row=notificationText(test,prayerName);
+                        try {
+                            while(row!=null && !String.valueOf(row.getViewIdResourceName()).endsWith("/expandableNotificationRow")) {
+                                AccessibilityNodeInfo parent=row.getParent();row.recycle();row=parent;
+                            }
+                            check(row!=null,"Playing notification row is missing");
+                            check(row.getActionList().contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_DISMISS),
+                                    "Android offers no dismiss action for the playing notification: "+row.getActionList());
+                            check(row.performAction(AccessibilityNodeInfo.ACTION_DISMISS),"Android rejected notification dismissal");
+                        }finally{if(row!=null)row.recycle();}
+                        try {
+                            await(test,()->!PhonePlayback.playing(),5000,"Dismissing the notification did not stop Adhan; SDK="+android.os.Build.VERSION.SDK_INT+" flags="+notification.flags);
+                            await(test,()->audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)==1,5000,
+                                    "Background dismissal did not restore prior media volume");
+                        } catch(AssertionError failure) {
+                            PhoneUiCheck.capture(test,c,"adhan-dismiss-failure",true);throw failure;
+                        }
+                        PhoneUiCheck.capture(test,c,"adhan-after-notification-dismiss",capture);
+                    }
+                } finally {
+                    PhoneRuntimeCheck.shell(test,"cmd statusbar collapse");PhonePlayback.stop(c);
+                    await(test,()->!PhonePlayback.playing(),5000,"Presentation cleanup did not stop audio");
+                    if(phase.equals("dismiss")) {
+                        MainActivity restore=LiveUiCheck.launch(test);
+                        try {audio.setStreamVolume(android.media.AudioManager.STREAM_MUSIC,originalMedia,0);}
+                        finally {on(test,restore::finish);}
+                    }
+                    if(shown!=null){Activity close=shown;on(test,close::finish);}
+                    test.removeMonitor(monitor);on(test,a::finish);
+                }
+            }
+        } finally {
+            PhoneRuntimeCheck.shell(test,animation==null?"settings delete global animator_duration_scale":"settings put global animator_duration_scale "+animation);
+            original.save(c);language.edit().putString("language",lang).commit();PhoneAlarms.rebuild(c);
+            if(names!=null) {
+                synchronized(PhoneStore.LOCK) {
+                    if(hadIndex)PhoneAudioLibrary.write(c,names);else java.nio.file.Files.deleteIfExists(libraryIndex.toPath());
+                    for(java.io.File file:PhoneAudio.directory(c).listFiles())
+                        if(!files.contains(file.getName()) && file.getName().matches("[a-f0-9]{64}[.]audio"))java.nio.file.Files.delete(file.toPath());
+                }
+            }
+        }
+    }
+}

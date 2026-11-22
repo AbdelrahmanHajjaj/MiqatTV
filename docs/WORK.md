@@ -1,28 +1,22 @@
 # Current work
 
-Updated: 2026-11-21.
+Updated: 2026-11-22. Owner accepts widget readability and requests release
+preparation, full CI fixes and Android TV/LG contract verification. Correct the
+existing-widget Add label to Update; retain immediate per-instance saves.
+Branch feature/companion-installation, PR #9. Phone: 0.5.17/code 33.
 
-## Approved scope and next action
+The location request is once per guide history, with manual fallback. Background
+updates remain off without explicit consent and cannot schedule before location
+confirmation. Setup edits retain the update choice and cancel pending detection.
+Reuse canonical prayer geometry and native notification layout/direction.
 
-Apply the approved CI policy: affected checks on PRs, full validation/build
-artifacts on main, manual branch review builds, and cancellation of superseded
-runs. Keep compilation/package checks and affected native/browser regressions;
-include Companion in the applicable required gate. Work is on
-`feature/affected-ci-checks`. Validate selection, workflow syntax and release
-source regressions, then use gh for a normal-merge PR and sync main after required
-checks pass. No release or physical-device deployment is requested.
+The widget-label regression passes natively. Per owner instruction, require
+notification dismissibility and real stop/volume cleanup, with no OEM gesture test. Include the phone APK in the
+existing verified-source draft-release workflow. Supported TV contracts currently
+pass canonical/native/browser CI; retain explicit LG/OS capability gaps.
 
-The approved adhan cleanup was normally merged as PR #10 (2aaadb3).
-
-## Delivered and remaining limits
-
-The [website refresh](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/4) is live.
-[PR #5](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/5) removed FFmpeg processing
-from Actions and recorded the standing gh/merge workflow. It was normally merged
-as c6ad64f, local main was synced, and [post-merge validation/Pages](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/44349978626)
-passed all seven jobs. Its PR records the native focus-check intermittency and
-single successful retry.
-
-Physical Miqat/installer acceptance, settings transfer, companion integration and
-persistent release signing remain separate. Existing build-tool advisories remain
-in EVIDENCE.md. Raw captures and device details stay under ignored state/.
+Next: finish local focused checks, push and require the full CI gate before
+release preparation completes. Preserve earlier CI failure evidence. Merge latest
+main normally before pushing. Overwrite only state/builds/companion/Miqat-latest.apk
+for review exports. Prepare a preview candidate as selected by the owner.
+Public release publication and physical deployment require specific instruction.

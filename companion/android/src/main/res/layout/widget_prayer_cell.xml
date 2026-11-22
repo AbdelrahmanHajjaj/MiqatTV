@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
+<ImageView android:id="@+id/widget_prayer_highlight" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/widget_highlight" android:scaleType="fitXY" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent" android:padding="3dp">
+<ImageView android:id="@+id/widget_prayer_icon" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentTop="true" android:layout_centerHorizontal="true" android:layout_marginBottom="2dp" android:importantForAccessibility="no" android:contentDescription="@null"/>
+<TextView android:includeFontPadding="false" android:id="@+id/widget_prayer_name" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_below="@id/widget_prayer_icon" android:layout_above="@+id/widget_prayer_time" android:gravity="center" style="@style/MiqatWidgetText" android:textSize="12sp" android:maxLines="2"/>
+<TextView android:includeFontPadding="false" android:id="@id/widget_prayer_time" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_alignParentBottom="true" android:gravity="center" style="@style/MiqatWidgetValue" android:textSize="12sp" android:maxLines="2"/>
+</RelativeLayout>
+</FrameLayout>

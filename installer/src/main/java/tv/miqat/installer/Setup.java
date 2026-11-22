@@ -1,12 +1,8 @@
 package tv.miqat.installer;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -20,9 +16,7 @@ final class Setup {
     private Setup() {}
 
     static final String PACKAGE = "tv.miqat.home";
-    private static final String REPO = "AbdelrahmanHajjaj/Miqat";
-    private static final String LATEST = "https://github.com/" + REPO + "/releases/latest";
-    private static final String APK = LATEST + "/download/miqat.apk";
+    private static final String REPO = "AbdelrahmanHajjaj/MiqatTV";
     private static final String RAW = "https://raw.githubusercontent.com/" + REPO + "/";
 
     /** One setup command (a line of tools/setup-steps.txt) and its check ("?|" line after it), if any. */
@@ -96,57 +90,6 @@ final class Setup {
             }
         }
         return out;
-    }
-
-    interface Progress { void on(long done, long total); }
-
-    /** The latest release's tag ("v0.5"), from where releases/latest redirects; null if GitHub can't be reached. */
-    static String latestTag() {
-        try {
-            HttpURLConnection c = (HttpURLConnection) new URL(LATEST).openConnection();
-            c.setInstanceFollowRedirects(false);
-            c.setRequestMethod("HEAD");
-            c.setConnectTimeout(15_000);
-            c.setReadTimeout(15_000);
-            String to = c.getHeaderField("Location");
-            c.disconnect();
-            if (to == null || !to.contains("/tag/")) return null;
-            return to.substring(to.lastIndexOf('/') + 1);
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    /** Downloads the latest miqat.apk into {@code dir} and checks it is a whole APK (a zip). */
-    static File download(File dir, Progress progress) throws IOException {
-        File part = new File(dir, "miqat.apk.part");
-        File apk = new File(dir, "miqat.apk");
-        HttpURLConnection c = (HttpURLConnection) new URL(APK).openConnection();
-        c.setConnectTimeout(20_000);
-        c.setReadTimeout(30_000);
-        try {
-            if (c.getResponseCode() != 200) throw new IOException("GitHub answered " + c.getResponseCode());
-            long total = c.getContentLengthLong();
-            long done = 0;
-            try (InputStream in = c.getInputStream(); OutputStream out = new FileOutputStream(part)) {
-                byte[] buf = new byte[64 * 1024];
-                int n;
-                while ((n = in.read(buf)) > 0) {
-                    out.write(buf, 0, n);
-                    done += n;
-                    progress.on(done, total);
-                }
-            }
-            if (total > 0 && done != total) throw new IOException("Download cut short");
-        } finally {
-            c.disconnect();
-        }
-        try (RandomAccessFile f = new RandomAccessFile(part, "r")) {
-            if (f.length() < 1024 || f.readInt() != 0x504b0304) throw new IOException("Not an APK");
-        }
-        if (apk.exists() && !apk.delete()) throw new IOException("Can't replace the old download");
-        if (!part.renameTo(apk)) throw new IOException("Can't save the download");
-        return apk;
     }
 
     /** A small text file from GitHub, or null. */

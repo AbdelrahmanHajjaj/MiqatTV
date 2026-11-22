@@ -23,11 +23,16 @@ the approved scope. Companion work belongs to its separate project/branch.
 
 ## Changes
 
+- Keep product copy brief: labels, useful status and required setup actions.
+  Remove narration, redundant hints and obvious usage tutorials. Do not re-add
+  explanatory filler during later work.
+
 - Use Miqat / ميقات and tv.miqat.* identifiers. Migration from the previous app
   identity uses a fresh installation; do not add legacy aliases.
 - Put deterministic policy in core, with explicit inputs/results. Keep astronomy,
   calendars, persistence, rendering, media, networking and OS APIs in shells.
-- Define controls/choices in shared/data/ui-contract.json and behavior in core.
+- Define TV controls/choices in shared/data/ui-contract.json, phone-only controls
+  in shared/data/phone-ui-contract.json, and behavior in core.
   Reuse shared numeric/choice editors, save/cancel rules, focus and design tokens.
   Declare missing shell capabilities; a catalog entry does not implement a UI.
 - Edit canonical sources and regenerate consumers. Check Android, LG and preview
@@ -43,6 +48,20 @@ the approved scope. Companion work belongs to its separate project/branch.
   Views; LG app/service must run on WebKit 538.2 and Node 0.10.25.
 
 ## Validation and delivery
+
+- Keep classes responsible for one coherent job. Split mixed rendering, device
+  transport and product policy at existing boundaries; avoid giant methods and
+  pass-through abstractions. Search callers before deleting or consolidating code.
+- Reuse canonical contracts and portable rules for features shared by phone/TV;
+  shells declare and implement their capabilities. Do not duplicate shared policy
+  or claim support from a catalog entry alone.
+- Tests must protect an observable feature, failure or edge case. Do not add
+  getter/constant/implementation-mirroring tests or blanket coverage targets.
+  Remove redundant tests only after identifying the behavior still protected.
+- Continue only the approved checklist. Update WORK.md and PHONE-WORK.md at a
+  milestone/compaction boundary; never label a partial journey complete or start
+  unrelated work after the handoff. Review touched code for dead paths,
+  duplication, swallowed failures and unnecessary abstractions before delivery.
 
 - Follow docs/TESTING.md for affected-consumer checks and focused regressions.
   Check prose-only edits for links, paths and claims; they need no device tests.

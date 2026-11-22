@@ -103,4 +103,18 @@ class ReminderRulesTest {
             }
         }
     }
+    @Test fun weekdayAndQuietHoursKeepExplicitBoundaries() {
+        fun mode(day:Int, minute:Int, start:Int=1320, end:Int=420, quietMode:Int=4) =
+            ReminderRules.alertMode(2.0,day.toDouble(),(1 shl 5).toDouble(),minute.toDouble(),true,start.toDouble(),end.toDouble(),quietMode.toDouble())
+        assertEquals(0,mode(4,800)); assertEquals(2,mode(5,420))
+        assertEquals(4,mode(5,1320)); assertEquals(4,mode(5,0))
+        assertEquals(3,mode(5,100,0,0,3)); assertEquals(0,mode(5,100,0,0,0))
+        assertEquals(2,mode(5,1000,60,120)); assertEquals(4,mode(5,60,60,120))
+        assertEquals(2,mode(5,120,60,120))
+        assertEquals(0,ReminderRules.alertMode(0.0,5.0,127.0,100.0,false,0.0,0.0,4.0))
+        assertFailsWith<IllegalArgumentException>{ReminderRules.alertMode(2.5,5.0,127.0,100.0,false,0.0,0.0,4.0)}
+        assertFailsWith<IllegalArgumentException>{ReminderRules.alertMode(2.0,Double.NaN,127.0,100.0,false,0.0,0.0,4.0)}
+
+    }
+
 }

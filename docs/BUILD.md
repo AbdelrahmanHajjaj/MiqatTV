@@ -47,7 +47,7 @@ because they generate the same shared JavaScript files.
 
 ## Audio assets
 
-The repository includes the reviewed 14 adhan recordings and 12 announcement
+The repository includes the reviewed 13 adhan recordings and 12 announcement
 clips under shared/media/. Android and LG package the same bytes. Run
 sha256sum --check shared/media/SHA256SUMS to check the complete set, then
 node tools/prepare-adhans.mjs --check to verify the approved prepared files.
@@ -55,7 +55,7 @@ node tools/prepare-adhans.mjs --check to verify the approved prepared files.
 The maintainer approved their inclusion in public builds on 18 November 2026.
 Media retains its own attribution and terms; see [notices](THIRD-PARTY.md).
 Originals and preparation stamps stay under ignored state/media-originals/.
-The 14 adhan voices received maintainer-approved mild cleanup on 21 November
+The 13 retained adhan voices received maintainer-approved mild cleanup on 21 November
 2026; the reminder clips are unchanged. Restore missing reviewed files from Git.
 The fetch scripts retrieve source material, not the exact cleaned outputs, and
 are not build prerequisites. Review changed recordings and update checksums

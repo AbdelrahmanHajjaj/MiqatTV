@@ -188,3 +188,14 @@ absolute 75% alpha, from `surface.next-prayer-opacity`. It does not compound Gla
 opacity. Labels and gold outline remain opaque; current/past cards and the
 independent Home mihrab opacity control are unchanged. Android, preview and LG
 use the same token and surface color. No blur or extra bitmap layer is required.
+
+## Phone signature portrait
+
+`shared/design/phone/portrait/miqat_signature.png` is the generated tall signature
+composition, derived from Miqat’s own canonical landscape artwork. It is project
+art under the repository’s MIT license. Android phone packaging includes this
+separate source root; TV/LG/browser asset sets are unchanged. PhoneBackdrop
+selects the portrait by actual drawable bounds and uses center-crop without sky
+extension for it. Landscape cards and media artwork retain the original wide
+scene. Setup, appearance/prayer previews and adhan reuse the same renderer and
+shared decoded artwork; a preview does not change the selected background ID.

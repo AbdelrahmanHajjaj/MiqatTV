@@ -44,6 +44,7 @@ final class CompanionDeviceCheck {
     }
     static Set<String> bindings(Instrumentation test)throws Exception {
         Set<String> bound=new LinkedHashSet<>();PairingActivity activity=launch(test);CompanionApplication app=(CompanionApplication)activity.getApplication();
+        SharedPreferences prefs=Prefs.of(activity);boolean hadScale=prefs.contains("ui_scale");int savedScale=Prefs.uiScale(activity);
         String clientId=null;
         try {
             click(test,activity,"pairing.open");bound.add("pairing.open");
@@ -90,6 +91,8 @@ final class CompanionDeviceCheck {
             return bound;
         } finally {
             if(clientId!=null){String id=clientId;for(Pairing.Client client:app.pairing.clients())if(client.id.equals(id))app.pairing.revoke(id);}
+            SharedPreferences.Editor restore=prefs.edit();if(hadScale)restore.putInt("ui_scale",savedScale);else restore.remove("ui_scale");
+            check(restore.commit(),"Restore original pairing size");
             test.runOnMainSync(activity::finish);test.waitForIdleSync();
         }
     }

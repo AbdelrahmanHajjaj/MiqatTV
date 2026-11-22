@@ -18,6 +18,12 @@ val testToolPatches = mapOf(
 kotlin {
     jvmToolchain(17)
     jvm()
+    // Opt-in keeps ordinary Android/ES5 builds independent of Apple toolchains.
+    if (providers.gradleProperty("miqatApple").orNull == "true") {
+        macosArm64()
+        iosArm64()
+        iosSimulatorArm64()
+    }
     js {
         outputModuleName = "Miqat-core"
         nodejs()
