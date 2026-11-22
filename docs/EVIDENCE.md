@@ -22,7 +22,7 @@ acceptance was performed; documented capability gaps remain.
 
 Latest review exports replace the existing files only. Phone's signer is unchanged
 (SHA-256 d5b22399…0784f02). Phone APK SHA-256 03030c21…8147c03;
-TV APK dbe1408d…2f3869d; LG IPK 216cc025…6287adc. Full hashes and captures are
+TV APK 311f9a7c…59b9325; LG IPK 216cc025…6287adc. Full hashes and captures are
 private; PR checks own remote validation status. Public release publication is
 separate from preparing a preview draft.
 

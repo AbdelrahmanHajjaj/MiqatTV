@@ -938,8 +938,9 @@ public class SettingsActivity extends Screen {
                     String theme = r.contract.getId().equals("appearance.theme") ? Appearance.PRESETS[i] : Appearance.PRESETS[themeChoice];
                     String background = r.contract.getId().equals("appearance.background") ? BACKGROUNDS[i] : "theme";
                     Appearance.Style candidate = Appearance.style(this, theme, background, -1);
-                    View art = new View(this);
-                    art.setBackground(Appearance.preview(this, candidate));
+                    android.widget.ImageView art = new android.widget.ImageView(this);
+                    art.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                    art.setImageDrawable(Appearance.preview(this, candidate));
                     card.addView(art, new LinearLayout.LayoutParams(-1, Ui.ipx(92)));
                     TextView label = text(ui400, Tokens.FONT_SIZE_CAPTION, i == selected ? Palette.GOLD_400 : Palette.PLASTER_100);
                     label.setText(names[i]);
