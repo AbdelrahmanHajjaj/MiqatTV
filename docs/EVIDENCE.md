@@ -1,5 +1,12 @@
 # Validation evidence
 
+## Signing runner tools — 22 November 2026
+
+The first hosted signing attempt stopped before decoding the key because
+sdkmanager was absent from PATH. The official Ubuntu runner inventory includes
+Build Tools 35.0.0 under ANDROID_HOME. The publisher now checks and uses those
+installed tools directly, with no SDK download or emulator setup.
+
 ## Persistent Android release signing — 22 November 2026
 
 Created separate RSA-3072 release keys for phone, Android TV and installer in an

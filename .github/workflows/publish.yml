@@ -65,8 +65,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Prepare Android signing tools
-        run: sdkmanager 'build-tools;35.0.0'
+      - name: Verify installed Android signing tools
+        run: |
+          test -x "$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/zipalign"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/aapt"
       - name: Sign release APKs with persistent keys
         env:
           MIQAT_SIGNING_KEYSTORE_BASE64: ${{ secrets.MIQAT_SIGNING_KEYSTORE_BASE64 }}

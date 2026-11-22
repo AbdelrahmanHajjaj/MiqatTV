@@ -10,8 +10,10 @@ the pinned public signing certificate before publication.
 Build and verify the three release APKs locally and through the release workflow.
 Exercise rejection of debug APKs, wrong packages and unexpected signers. Deliver
 through required checks and a normal merge. Preserve existing published binaries.
-Local release builds/signatures, release lint and focused checks pass. Next:
-required PR/main checks, then exercise the main-only signed-draft workflow.
+Local release builds/signatures, release lint and focused checks pass. PR #18 and
+main validation pass with no emulator runs. The first hosted signing attempt
+found a missing sdkmanager PATH entry; use preinstalled Build Tools 35.0.0 directly
+and rerun the signed-candidate workflow after the runner fix is merged.
 The owner explicitly removed automatic phone/TV emulator jobs from routine CI.
 Keep build/lint, portable/JVM/browser and package/signature gates; native device
 suites remain available for targeted manual checks. No further emulator runs.
