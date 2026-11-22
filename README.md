@@ -59,7 +59,7 @@ See the next prayer across the room, hear the Adhan and listen to Quran radio on
 
 ## Install
 
-[Download preview builds](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases) or [build from source](docs/BUILD.md). Choose the package for your device:
+[Download the signed preview](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.3-preview.1) or [build from source](docs/BUILD.md). Choose the package for your device:
 
 | Package | Purpose |
 | --- | --- |
@@ -69,6 +69,8 @@ See the next prayer across the room, hear the Adhan and listen to Quran radio on
 | `miqat-installer.apk` | Optional standalone Android TV setup/recovery tool; the phone app includes the same runtime. |
 
 In the phone app's TV setup, choose **Preview** to download a preview release.
+Android APKs use persistent release keys. Moving from an older debug-signed build
+requires one fresh install, which removes local settings and imported audio.
 
 ## Privacy
 
