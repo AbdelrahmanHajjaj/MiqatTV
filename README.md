@@ -14,8 +14,8 @@ Use Miqat on its own; a TV is optional.
 - Per-prayer Adhan, Short tone or Silent, independent vibration, weekdays, day overrides and minute adjustments.
 - Built-in voices and a named private library of recordings imported from your device; configurable level and recording length.
 - Qibla compass, an optional map, and resizable home-screen widgets starting at 1×1.
-- Miqat-first themes and portrait backgrounds, Arabic/English, clock/digit choices and accessible sizing.
-- Manual or detected location, with optional Android-scheduled location updates while the app is closed.
+- Themes and backgrounds to personalise the app, with Arabic/English and adjustable text sizes.
+- Prayer times for your city, with optional location updates when you travel.
 
 [Phone setup and controls](docs/PHONE.md).
 
@@ -44,7 +44,7 @@ Pairing uses encrypted connections with revocable phone access. [Pairing and con
 
 ## On the TV
 
-Both TV apps offer offline prayer times, Adhan, reminders, Qibla bearing, Quran radio and shared Miqat themes. Home keeps the Hijri date and city in its prayer card and highlights the next prayer. Ordinary settings save immediately.
+See the next prayer across the room, hear the Adhan and listen to Quran radio on your TV. Both apps include offline prayer times, reminders, Qibla direction and themes.
 
 | Platform | What it does |
 | --- | --- |

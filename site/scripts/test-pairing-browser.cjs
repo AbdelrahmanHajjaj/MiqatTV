@@ -37,6 +37,7 @@ const server=http.createServer((request,response)=>{
           const bounds=await hero.boundingBox();
           await page.screenshot({path:path.resolve(__dirname,'../public/branding/product-'+language+'.png'),clip:{x:Math.round(bounds.x),y:Math.round(bounds.y),width:1200,height:630}});
         }
+        await page.locator('#get-miqat').screenshot({path:path.resolve(__dirname,'../../state/website-downloads-'+language+'-'+width+'.png')});
       }
       const popup=page.waitForEvent('popup');await page.locator('.phone-image').first().click();
       const full=await popup;await full.waitForLoadState('load');

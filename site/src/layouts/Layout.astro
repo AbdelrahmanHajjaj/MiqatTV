@@ -1,7 +1,7 @@
 ---
 import '../styles/base.css';
 import ProductShowcase from '../components/ProductShowcase.astro';
-import { INSTALL, PAGES, REPO, BASE, href, type Page } from '../lib/site';
+import { PAGES, REPO, BASE, href, type Page } from '../lib/site';
 import type { Lang } from '../lib/text';
 import sacred from '../../../shared/data/sacred-text.json';
 
@@ -15,14 +15,14 @@ const canonical = abs(href(page.slug, lang));
 const ogImage = abs(`${BASE}branding/product-${lang}.png`);
 const name = ar ? 'ميقات' : 'Miqat';
 const L = ar ? {
-  phone: 'الهاتف', companion: 'رفيق التلفاز', tvs: 'التلفاز', install: 'احصل على ميقات',
+  phone: 'الهاتف', companion: 'التحكم بالتلفاز', tvs: 'التلفاز', install: 'نزّل ميقات',
   source: 'الكود على GitHub', screens: 'شاشات التلفاز', lang: 'English', skip: 'انتقل إلى المحتوى',
   tvLabel: 'معاينة ميقات التفاعلية للتلفاز', preview: 'جرّب واجهة التلفاز',
   intro: 'تصفّح المواقيت وجرّب الثيمات والإعدادات.',
   keys: 'الأسهم للتنقل · Enter موافق · Esc رجوع',
   foot: 'مفتوح المصدر · ترخيص MIT',
 } : {
-  phone: 'Phone', companion: 'TV companion', tvs: 'TV apps', install: 'Get Miqat',
+  phone: 'Phone', companion: 'TV controls', tvs: 'TV apps', install: 'Download Miqat',
   source: 'Source on GitHub', screens: 'TV screens', lang: 'العربية', skip: 'Skip to content',
   tvLabel: 'Interactive Miqat TV preview', preview: 'Try the TV interface',
   intro: 'Explore prayer times, themes and settings.',
@@ -89,7 +89,7 @@ const jsonLd = {
   </main>
   <footer class="foot">
     <p class="sacred" lang="ar" dir="rtl">{sacred.prayerVerse.join(' ')}</p>
-    <div class="foot-details"><p>{L.foot}</p><p><a href={`${REPO}/releases`}>{ar ? 'الإصدارات العامة' : 'Public releases'}</a> · <a href={INSTALL}>{ar ? 'البناء والتثبيت' : 'Build and install'}</a> · <a href={REPO}>{L.source}</a></p></div>
+    <div class="foot-details"><p>{L.foot}</p><p><a href={href('', lang) + '#get-miqat'}>{ar ? 'التنزيلات' : 'Downloads'}</a> · <a href={`${REPO}/blob/main/docs/PHONE.md`}>{ar ? 'المساعدة' : 'Help'}</a> · <a href={REPO}>{L.source}</a></p></div>
   </footer>
 </body>
 </html>
