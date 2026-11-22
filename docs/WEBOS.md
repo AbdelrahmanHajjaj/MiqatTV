@@ -77,7 +77,9 @@ Down from the last row reaches All apps. In All apps, Up from any first-row
 column reaches Back; Left/Right stays in the header. Back restores return focus.
 
 Settings follows the shared UI contract. Numeric values edit in their row with
-OK and Left/Right; OK saves, Back cancels. Appearance uses a draft and Apply.
+Left/Right and save immediately; Back retains them. Appearance saves each selection
+and previews the background across the page. Short choices use segments; only
+themes/backgrounds use filled artwork carousels, with Miqat first.
 One global size control covers 80–150% in steps of 10. Arabic/English, RTL/LTR,
 pointer input, row scrolling and focus remain part of rendering acceptance.
 See [declared gaps](UI-GAPS.md) for unavailable controls or choices.

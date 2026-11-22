@@ -41,7 +41,7 @@ final class Appearance {
 
     static String key(Context c) {
         return Prefs.of(c).getString("theme", "mihrab") + ":" + Prefs.of(c).getString("theme_json", "")
-            + ":" + Prefs.of(c).getString("background", "theme") + ":" + Prefs.of(c).getInt("lighting", -1) + ":" + Prefs.of(c).getBoolean("focus_lighting", false);
+            + ":" + Prefs.of(c).getString("background", ThemeCatalog.DEFAULT_BACKGROUND) + ":" + Prefs.of(c).getInt("lighting", -1) + ":" + Prefs.of(c).getBoolean("focus_lighting", false);
     }
     static int tint(int color, Map<Integer, Integer> colors) {
         return (color & 0xff000000) | (colors.getOrDefault(color | 0xff000000, color) & 0xffffff);
@@ -135,7 +135,7 @@ final class Appearance {
         String key = key(c);
         if (key.equals(loaded)) return;
         current = style(c, Prefs.of(c).getString("theme", "mihrab"),
-            Prefs.of(c).getString("background", "theme"), Prefs.of(c).getInt("lighting", -1));
+            Prefs.of(c).getString("background", ThemeCatalog.DEFAULT_BACKGROUND), Prefs.of(c).getInt("lighting", -1));
         Map<Integer, Integer> colors = new HashMap<>();
         for (int i = 0; i < BASE.length; i++) colors.put(BASE[i], current.colors[i]);
         Palette.apply(colors);

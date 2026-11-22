@@ -267,9 +267,9 @@ final class Prefs {
 
     // ---------------------------------------------------------------- display
 
-    /** "system" (the TV's own Date & time setting, the default), "12" or "24". */
+    /** New installations use 12-hour time; explicit system and 24-hour choices remain supported. */
     static String clock(Context c) {
-        return of(c).getString("clock", "system");
+        return of(c).getString("clock", "12");
     }
 
     static boolean clock24(Context c) {

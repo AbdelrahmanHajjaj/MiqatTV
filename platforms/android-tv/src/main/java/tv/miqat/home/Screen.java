@@ -225,6 +225,11 @@ abstract class Screen extends Activity {
         super.setContentView(viewport);
     }
 
+    /** Appearance changes keep artwork on the unscaled viewport. */
+    void setPageBackground(android.graphics.drawable.Drawable background) {
+        (viewport == null ? root : viewport).setBackground(background);
+    }
+
     /** Modal backdrops cover the viewport while their contents retain the global UI scale. */
     void fullOverlay(FrameLayout overlay) {
         float factor = Ui.factor(this);

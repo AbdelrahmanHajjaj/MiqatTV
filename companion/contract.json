@@ -22,7 +22,7 @@
     "prayer.offsets":"offsets", "prayer.today":"today", "prayer.online":"tv-step",
     "reminders.per-prayer":"prayer-day", "tests.open":"tests",
     "radio.play":"tv-action", "radio.stop":"tv-action", "display.open-bar":"tv-action", "display.open-clock":"tv-action",
-    "appearance.reset":"reset-appearance", "appearance.apply":"apply-appearance", "appearance.cancel":"cancel-appearance", "appearance.home":"overview",
+    "appearance.reset":"reset-appearance", "appearance.home":"overview",
     "network.settings":"tv-step", "device.settings":"tv-step", "device.home":"tv-step", "device.inputs":"inputs", "device.apps":"apps",
     "device.screensaver":"tv-step", "device.remote":"remote", "device.health":"health", "device.exit-input":"tv-action",
     "tests.banner":"tv-action", "tests.card":"tv-action", "tests.adhan-short":"tv-action", "tests.adhan-full":"tv-action",

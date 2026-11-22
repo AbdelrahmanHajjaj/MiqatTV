@@ -344,7 +344,7 @@ final class Text {
     String homePrayers() { return ar ? "معلومات الصلاة" : "Prayer information"; }
     String[] homePrayerModes() { return ar ? new String[] {"جميع المواقيت", "الحالية فقط", "القادمة فقط", "الحالية والقادمة", "مخفية"} : new String[] {"All times", "Current only", "Next only", "Current and next", "Hidden"}; }
     String homeReset() { return ar ? "استعادة التخطيط الافتراضي" : "Reset layout to default"; }
-    String homeHelp() { return ar ? "عاين التخطيط ثم طبّق. الرجوع يلغي التغييرات. لا تتغير إعدادات الأذان والتذكير." : "Preview, then apply. Back cancels changes. Adhan and reminders stay as set."; }
+    String homeHelp() { return ar ? "اختر التخطيط والمظهر. تُحفظ التغييرات فورًا." : "Choose your layout and style. Changes save immediately."; }
     String homeFavourites() { return ar ? "صفوف المفضلة" : "Favourite rows"; }
     String noCurrentPrayer() { return ar ? "لا توجد صلاة حالية" : "No current prayer"; }
     String[] homeLayouts() { return ar ? new String[] {"صفّان للمفضلة", "كلاسيكي — صف واحد"} : new String[] {"Two favourite rows", "Classic — one row"}; }

@@ -326,7 +326,7 @@
     "section": "appearance",
     "kind": "choice",
     "label": "homeCountdown",
-    "save": "appearance",
+    "save": "immediate",
     "choices": [
       "mihrab",
       "compact",
@@ -338,7 +338,7 @@
     "section": "appearance",
     "kind": "choice",
     "label": "homePosition",
-    "save": "appearance",
+    "save": "immediate",
     "choices": [
       "auto",
       "left",
@@ -352,7 +352,7 @@
     "section": "appearance",
     "kind": "choice",
     "label": "homePrayers",
-    "save": "appearance",
+    "save": "immediate",
     "choices": [
       "all",
       "current",
@@ -366,7 +366,7 @@
     "section": "appearance",
     "kind": "choice",
     "label": "homeFavourites",
-    "save": "appearance",
+    "save": "immediate",
     "choices": [
       "two_rows",
       "classic"
@@ -377,7 +377,7 @@
     "section": "appearance",
     "kind": "choice",
     "label": "themeRow",
-    "save": "appearance",
+    "save": "immediate",
     "choices": "themes"
   },
   {
@@ -385,7 +385,7 @@
     "section": "appearance",
     "kind": "choice",
     "label": "backgroundRow",
-    "save": "appearance",
+    "save": "immediate",
     "choices": "backgrounds"
   },
   {
@@ -393,7 +393,7 @@
     "section": "appearance",
     "kind": "number",
     "label": "mihrabOpacity",
-    "save": "appearance",
+    "save": "immediate",
     "range": "mihrab-opacity"
   },
   {
@@ -401,7 +401,7 @@
     "section": "appearance",
     "kind": "number",
     "label": "lightingRow",
-    "save": "appearance",
+    "save": "immediate",
     "range": "percent"
   },
   {
@@ -409,7 +409,7 @@
     "section": "appearance",
     "kind": "choice",
     "label": "appearanceCycle",
-    "save": "appearance",
+    "save": "immediate",
     "choices": [
       "0",
       "15",
@@ -421,34 +421,20 @@
     "section": "appearance",
     "kind": "toggle",
     "label": "focusLighting",
-    "save": "appearance"
+    "save": "immediate"
   },
   {
     "id": "appearance.reduce-motion",
     "section": "appearance",
     "kind": "toggle",
     "label": "reduceMotion",
-    "save": "appearance"
+    "save": "immediate"
   },
   {
     "id": "appearance.reset",
     "section": "appearance",
     "kind": "action",
     "label": "homeReset",
-    "save": "action"
-  },
-  {
-    "id": "appearance.apply",
-    "section": "appearance",
-    "kind": "action",
-    "label": "applyAppearance",
-    "save": "action"
-  },
-  {
-    "id": "appearance.cancel",
-    "section": "appearance",
-    "kind": "action",
-    "label": "cancel",
     "save": "action"
   },
   {
@@ -737,12 +723,48 @@
     "label": "cancel",
     "save": "action"
   },
-  {"id":"device.companion","section":"device","kind":"action","label":"companionPhones","save":"action"},
-  {"id":"pairing.open","section":"pairing","kind":"action","label":"pairPhone","save":"action"},
-  {"id":"pairing.cancel","section":"pairing","kind":"action","label":"cancel","save":"action"},
-  {"id":"pairing.approve","section":"pairing","kind":"action","label":"approvePhone","save":"action"},
-  {"id":"pairing.reject","section":"pairing","kind":"action","label":"rejectPhone","save":"action"},
-  {"id":"pairing.revoke","section":"pairing","kind":"action","label":"revokePhone","save":"action"},
+  {
+    "id": "device.companion",
+    "section": "device",
+    "kind": "action",
+    "label": "companionPhones",
+    "save": "action"
+  },
+  {
+    "id": "pairing.open",
+    "section": "pairing",
+    "kind": "action",
+    "label": "pairPhone",
+    "save": "action"
+  },
+  {
+    "id": "pairing.cancel",
+    "section": "pairing",
+    "kind": "action",
+    "label": "cancel",
+    "save": "action"
+  },
+  {
+    "id": "pairing.approve",
+    "section": "pairing",
+    "kind": "action",
+    "label": "approvePhone",
+    "save": "action"
+  },
+  {
+    "id": "pairing.reject",
+    "section": "pairing",
+    "kind": "action",
+    "label": "rejectPhone",
+    "save": "action"
+  },
+  {
+    "id": "pairing.revoke",
+    "section": "pairing",
+    "kind": "action",
+    "label": "revokePhone",
+    "save": "action"
+  },
   {
     "id": "apps.uninstall",
     "section": "apps",

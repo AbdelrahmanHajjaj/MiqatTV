@@ -107,7 +107,7 @@ final class UiContractDeviceCheck {
                     SettingsActivity.Row preset = (SettingsActivity.Row) ((java.util.List<?>) field(active[0], "rows")).get(0);
                     check(preset.contract.getId().equals("appearance.theme"), "Preset carousel is first");
                     preset.select(1);
-                    check((int) field(active[0], "backgroundChoice") == 0 && (int) field(active[0], "lightChoice") == -1,
+                    check((int) field(active[0], "backgroundChoice") == java.util.Arrays.asList(UiContract.INSTANCE.choices("appearance.background")).indexOf("theme") && (int) field(active[0], "lightChoice") == -1,
                         "Preset restores bundled background and lighting in the draft");
                     for (Object value : (Iterable<?>) field(active[0], "rows")) {
                         SettingsActivity.Row row = (SettingsActivity.Row) value;
@@ -143,12 +143,8 @@ final class UiContractDeviceCheck {
             result.putString("stream", trace + android.util.Log.getStackTraceString(error));
         } finally {
             if (active[0] != null) test.runOnMainSync(() -> active[0].finish());
-            SharedPreferences.Editor restore = prefs.edit();
-            for (String key : new String[] {"locale", "theme", "theme_json"}) {
-                if (saved.containsKey(key)) restore.putString(key, (String) saved.get(key));
-                else restore.remove(key);
-            }
-            if (!restore.commit() || !prefs.getAll().equals(saved)) {
+            UiScaleDeviceCheck.restore(prefs, saved);
+            if (!prefs.getAll().equals(saved)) {
                 code = Activity.RESULT_CANCELED;
                 Set<String> changed = new LinkedHashSet<>(prefs.getAll().keySet());changed.addAll(saved.keySet());
                 changed.removeIf(key -> java.util.Objects.equals(prefs.getAll().get(key), saved.get(key)));

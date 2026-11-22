@@ -45,11 +45,6 @@
     "reason": "Clock exists as a native screensaver; no standalone Settings action."
   },
   {
-    "id": "appearance.cancel",
-    "state": "unimplemented",
-    "reason": "Back discards the draft; no separate Cancel row."
-  },
-  {
     "id": "appearance.home",
     "state": "unimplemented",
     "reason": "Back returns Home; no separate appearance Home row."

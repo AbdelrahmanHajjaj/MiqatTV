@@ -35,7 +35,7 @@ import type { Prefs } from '../lib/data';
 const presets: Record<string, typeof aurora & { surface?: string }> = { aurora, ember, forest, midnight, rose, sand, slate, glass, frost, cinema, carbon, neon, blueprint, signal, arcade, dusk, oasis, brass, mosaic };
 export const mihrabOpacity = (value: unknown) => portable.tv.miqat.core.UiContract.mihrabOpacity(typeof value === 'number' ? value : NaN);
 export const THEMES = themes.filter(id => id !== 'custom');
-export const BACKGROUNDS = ['theme', ...design.proceduralBackgrounds, ...design.patterns, ...design.scenes];
+export const BACKGROUNDS: string[] = portable.tv.miqat.core.UiContract.choices('appearance.background');
 const rendered = new WeakMap<HTMLElement, string>();
 export const backgroundOf = (prefs: Prefs) => prefs.background && prefs.background !== 'theme' ? prefs.background : presets[prefs.theme ?? 'mihrab']?.background ?? design.defaultBackground;
 export function appearance(stage: HTMLElement, prefs: Prefs) {

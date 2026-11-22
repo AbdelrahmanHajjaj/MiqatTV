@@ -98,7 +98,7 @@ AlAdhan. This sends the fixed public Cairo test coordinates/date/method/school.
 Emulator proof does not validate a physical Android TV's firmware or network stack.
 
 Use `-e check opacity` with the same instrumentation runner for the focused Home
-mihrab control check. It verifies bilingual 50–100% limits, numeric Back, outer
-draft cancellation, Apply/re-entry and fill-only alpha, then restores the complete
+mihrab control check. It verifies bilingual 50–100% limits, immediate independent
+edits, Back/re-entry persistence and fill-only alpha, then restores the complete
 original preferences. Run only on an authorized target; the design review used a
 task-owned read-only emulator, not a physical TV.

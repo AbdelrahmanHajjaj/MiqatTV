@@ -8,7 +8,6 @@
   var tv = typeof window.PalmServiceBridge !== 'undefined';
   var prefs = A.prefs(), startup = false, loaded = false, busy = false;
   var splashStarted = Date.now(), splashPending = true;
-  var inlineDraft = null;
   var pointerDown = false;
   var settingsConflict = false;
   var companionBridge = null, companionSession = '', companionUi = '', companionTimer = null;
@@ -21,7 +20,7 @@
   var section = 'prayer', testPrayer = 0, dockTimer, overlayTimer, audioTimer, mediaTimer, media = null;
   var pendingLaunch = null, seenLaunch = null, radioBeforeCall = false, audioSerial = 0, volumeSerial = 0, country = null, dayViewMinute = -1, previewTestTimer;
   var returnContext = null, voicePreview = null, coldAlert = false;
-  var appearanceDraft = null, settingsParent = 'home', dayParent = 'home';
+  var settingsParent = 'home', dayParent = 'home';
   var homeNodes = [], homeAppCount = 0, lastHomeApp = homeNavigation.FIRST_APP;
   var appNodes = [];
   var pickerControl = null;
@@ -114,7 +113,7 @@
     catch (error) { finish({returnValue: false, errorText: error.message}); }
   }
   function report(name) { companionUiState(); request('report', {view: name || view, instance: instance, input: input ? input.id : null, error: lastError}); }
-  function tvEditing() { return !!(busy || inlineDraft || appearanceDraft || view === 'picker' || media || overlay.firstChild || settingsConflict); }
+  function tvEditing() { return !!(busy || view === 'picker' || media || overlay.firstChild || settingsConflict); }
   function companionUiState() {
     if (!companionSession || !companionBridge || companion.supported !== true) { return; }
     var value = {session: companionSession, editing: tvEditing(), pairingPage: view === 'pairing'};
@@ -264,7 +263,7 @@
   function prayers(now) {
     var day = schedule(now), selected = A.select(day, now), next = {index: selected.next, time: selected.nextTime}, labels = s('prayerNames');
     var times = day.times.slice();
-    if (view === 'home' && (prefs.prayerMode === 'next' || prefs.prayerMode === 'both')) { times[next.index] = next.time; }
+    if (view === 'home') { times[next.index] = next.time; }
     var current = selected.current;
     if (view === 'home' && prefs.prayerMode === 'current' && current < 0) { return '<p class="muted">' + t('لا توجد صلاة حالية', 'No current prayer') + '</p>'; }
     var indices = [0, 1, 2, 3, 4, 5];
@@ -309,19 +308,17 @@
     if (control.range === 'prayer-offset') { var index = D.prayerIcons.prayers.map(function (p) { return p.id; }).indexOf(id.slice(8)); label = '<span class="row-label">' + prayerLabel(index, controlLabel(control)) + '</span>'; }
     var help = id === 'appearance.mihrab-opacity' ? '<small class="opacity-help">' + escape(digits(s('mihrabOpacityHelp'))) + '</small>' : '';
     if (control.kind === 'number' && uiContract.numberEditor(id) === 'inline') {
-      var editing = inlineDraft && inlineDraft.key === action;
       var suffix = control.range === 'percent' || control.range === 'ui-scale' || control.range === 'mihrab-opacity' ? '%' : control.range === 'prayer-offset' ? ' ' + f('minuteUnit') : '';
       return button(action, label + '<span class="value inline-step"><span data-number-step="-1" aria-hidden="true">−</span><strong dir="ltr">' +
-        digits(editing ? inlineDraft.value : inlineValue(action)) + escape(suffix) + '</strong><span data-number-step="1" aria-hidden="true">+</span></span>' + help, '', editing ? 'editing' : '', '', control);
+        digits(inlineValue(action)) + escape(suffix) + '</strong><span data-number-step="1" aria-hidden="true">+</span></span>' + help, '', '', '', control);
     }
     var values = control.kind === 'choice' ? choiceValues(id, choices(action, true)) : null;
     if (control.kind === 'choice' && uiContract.choiceEditor(id) === 'segments') {
-      var editingChoice = inlineDraft && inlineDraft.key === action;
-      var selected = editingChoice ? inlineDraft.value : inlineValue(action);
+      var selected = inlineValue(action);
       var segments = choices(action).map(function (item, index) {
         return '<span data-choice-index="' + index + '" class="segment' + (String(item.value) === String(selected) ? ' selected' : '') + '">' + escape(action === 'digits' ? item.label : digits(item.label)) + '</span>';
       }).join('');
-      return button(action, label + '<span class="value segments">' + segments + '</span>', '', editingChoice ? 'editing' : '', '', control, values);
+      return button(action, label + '<span class="value segments">' + segments + '</span>', '', 'choice-row', '', control, values);
     }
     if (control.kind === 'toggle') {
       var checked = action === 'startup' ? startup : !!prefs[action];
@@ -343,23 +340,33 @@
   function carousel(id, key) {
     var control = uiContract.bind(id, 'choice'), label = controlLabel(control);
     var list = choices(key), index = 0, rtl = prefs.lang === 'ar';
-    list.forEach(function (item, i) { if (item.value === appearanceDraft[key]) { index = i; } });
+    list.forEach(function (item, i) { if (item.value === prefs[key]) { index = i; } });
     function arrow(delta, disabled) {
       return '<button tabindex="-1" data-action="carousel-step" data-value="' + key + ':' + delta + '" class="carousel-arrow ' + (delta < 0 ? 'previous' : 'next') + '"' +
         (disabled ? ' disabled' : '') + ' aria-label="' + escape(label + ': ' + (delta < 0 ? t('السابق', 'Previous') : t('التالي', 'Next'))) + '">' + ((delta < 0) !== rtl ? '‹' : '›') + '</button>';
     }
-    return '<div class="carousel-row">' + button('carousel', escape(label) + '<span class="carousel-choice">' + escape(list[index].label) + '</span>', key, 'carousel-main', '', control, choiceValues(id, list)) +
+    var cards = '';
+    for (var i = Math.max(0,index-1); i <= Math.min(list.length-1,index+1); i++) {
+      var theme = key === 'theme' ? list[i].value : prefs.theme;
+      var background = key === 'background' ? list[i].value : D.presetBackgrounds[theme];
+      var image = D.scenes.indexOf(background) >= 0 ? 'backgrounds/' + background + '.jpg' : background === 'plain' ? '' : 'patterns/' + theme + '-' + background + '.svg';
+      cards += '<span class="carousel-card' + (i === index ? ' selected' : '') + '"><span class="carousel-art" style="background-color:' + D.palettes[theme]['lapis-900'] + ';' + (image ? 'background-image:url(' + image + ');' : '') + '"></span><span class="' + (i === index ? 'carousel-choice' : 'carousel-neighbor') + '">' + escape(list[i].label) + '</span></span>';
+    }
+    return '<div class="carousel-row">' + button('carousel', '<span class="row-label">' + escape(label) + '</span><span class="carousel-cards">' + cards + '</span>', key, 'carousel-main', '', control, choiceValues(id, list)) +
       arrow(-1, index === 0) + arrow(1, index === list.length - 1) + '</div>';
   }
+
   function changeAppearance(key, delta) {
-    var list = choices(key), index = 0, scroll = screen.querySelector('.settings-rows').scrollTop;
-    list.forEach(function (item, i) { if (item.value === appearanceDraft[key]) { index = i; } });
+    var list = choices(key), index = 0;
+    list.forEach(function (item, i) { if (item.value === prefs[key]) { index = i; } });
     var next = list[Math.max(0, Math.min(list.length - 1, index + delta))].value;
-    if (key === 'theme' && next !== appearanceDraft.theme) { appearanceDraft.background = D.presetBackgrounds[next]; appearanceDraft.mihrabOpacity = A.defaults.mihrabOpacity; }
-    appearanceDraft[key] = next;
-    render('[data-action=carousel][data-value=' + key + ']');
-    screen.querySelector('.settings-rows').scrollTop = scroll;
+    if (next === prefs[key]) { return; }
+    var changed = A.prefs(prefs);
+    if (key === 'theme' && next !== prefs.theme) { changed.background = D.presetBackgrounds[next]; changed.mihrabOpacity = A.defaults.mihrabOpacity; }
+    changed[key] = next;
+    savePrefs(changed, '[data-action=carousel][data-value=' + key + ']');
   }
+
   function methodName(id) { return D.methodNames[id][prefs.lang]; }
   function onOff(value) { return value ? t('مفعّل', 'On') : t('متوقف', 'Off'); }
   function settingRows() {
@@ -397,15 +404,14 @@
         row('display.bar-timeout', 'dockAutoHide', prefs.dockAutoHide ? digits(prefs.dockAutoHide) + t(' ثانية', ' sec') : t('يدويًا', 'Manually'), 'choice') +
         row('display.open-bar', 'bar', '') + row('display.open-clock', 'clock-view', '');
     } else if (section === 'appearance') {
-      var draft = appearanceDraft;
+      var draft = prefs;
       result = carousel('appearance.theme', 'theme') + '<h3 class="appearance-group">' + escape(s('customizeAppearance')) + '</h3>' +
         carousel('appearance.background', 'background') + row('appearance.mihrab-opacity', 'mihrabOpacity', '', 'number') +
-        carousel('appearance.countdown', 'homeLayout') +
-        (draft.homeLayout === 'compact' ? carousel('appearance.position', 'homeBar') :
-          draft.homeLayout === 'mihrab' ? carousel('appearance.position', 'archSide') : '') +
-        carousel('appearance.prayers', 'prayerMode') +
+        row('appearance.countdown', 'homeLayout', '', 'choice') +
+        (draft.homeLayout === 'compact' ? row('appearance.position', 'homeBar', '', 'choice') :
+          draft.homeLayout === 'mihrab' ? row('appearance.position', 'archSide', '', 'choice') : '') +
+        row('appearance.prayers', 'prayerMode', '', 'choice') +
         row('appearance.reset', 'reset-layout', '') +
-        row('appearance.apply', 'apply-appearance', '') + row('appearance.cancel', 'cancel-appearance', '') +
         row('appearance.home', 'home', '');
     } else if (section === 'device') {
       result = row('device.startup', 'startup', onOff(startup), 'toggle') +
@@ -430,11 +436,10 @@
     return result;
   }
   function settingsMarkup() {
-    if (section === 'appearance' && !appearanceDraft) { appearanceDraft = A.prefs(prefs); }
     return '<section class="page settings-page' + (section === 'appearance' ? ' appearance-settings' : '') + '"><div class="settings-sidebar" aria-hidden="true"></div><div class="settings-heading">' + button('settings-back', icon('back'), '', 'round-back', t('رجوع', 'Back')) + '<h1>' + t('الإعدادات', 'Settings') + '</h1></div>' +
       '<nav class="settings-nav" aria-label="' + t('الأقسام', 'Sections') + '">' + sections.map(function (id) {
         return button('section', sectionName(id), id, id === section || section === 'offsets' && id === 'prayer' ? 'selected' : '');
-      }).join('') + '</nav>' + (section === 'appearance' ? '<div class="appearance-preview">' + appearancePreview(appearanceDraft) + '</div>' : '') + '<div class="settings-rows"><h2>' + (section === 'offsets' ? t('تعديل المواقيت', 'Time adjustments') : sectionName(section)) +
+      }).join('') + '</nav>' + (section === 'appearance' ? '<div class="appearance-preview">' + appearancePreview(prefs) + '</div>' : '') + '<div class="settings-rows"><h2>' + (section === 'offsets' ? t('تعديل المواقيت', 'Time adjustments') : sectionName(section)) +
       '</h2>' + (settingsConflict ? '<p role="status">' + t('تغيرت الإعدادات على التلفاز.', 'Settings changed on the TV.') + '</p>' +
         button('reload-settings', t('تحديث وإلغاء التعديل', 'Reload and discard draft')) : '') + settingRows() + '</div></section>';
   }
@@ -492,7 +497,7 @@
       background += 'background-image:url(patterns/' + p.theme + '-' + p.background + '.svg);background-size:100% 100%;';
     }
     if (mihrab) {
-      svg += '<path transform="translate(' + archX + ' 124) scale(' + archWidth / D.homeMihrab.width + ' 1)" d="' + D.mihrab.outer + '" fill="' + surface.archFill + '" fill-opacity="' + ((inlineDraft && inlineDraft.key === 'mihrabOpacity' ? inlineDraft.value : p.mihrabOpacity) / 100) + '" stroke="' + surface.archEdge + '" stroke-width="' + surface.archStroke + '"/>' +
+      svg += '<path transform="translate(' + archX + ' 124) scale(' + archWidth / D.homeMihrab.width + ' 1)" d="' + D.mihrab.outer + '" fill="' + surface.archFill + '" fill-opacity="' + (p.mihrabOpacity / 100) + '" stroke="' + surface.archEdge + '" stroke-width="' + surface.archStroke + '"/>' +
         '<text x="' + (archX + archWidth / 2) + '" y="570" text-anchor="middle" font-size="76" fill="' + c['gold-400'] + '">' + escape(s('nextPrayer')) + '</text>';
     } else if (compact) { svg += rect(96, p.homeBar === 'bottom' ? 916 : p.quickLabels ? 342 : 242, 1728, 100, c['lapis-800'], c['gold-400']); }
     svg += '<text x="' + (rtl ? x + width : x) + '" y="150" text-anchor="' + (rtl ? 'end' : 'start') + '" direction="ltr" font-size="88" fill="' + c['plaster-100'] + '">' + digits(A.clock(new Date(), prefs)) + '</text>';
@@ -526,6 +531,7 @@
     Object.keys(appNodes).forEach(function (id) { appNodes[id].setAttribute('data-app-focus', id); });
   }
   function render(focusAction) {
+    var previousRows = screen.querySelector('.settings-rows'), savedScroll = previousRows ? previousRows.scrollTop : 0;
     if (splashPending) {
       splashPending = false;
       setTimeout(function () { document.getElementById("splash").style.display = "none"; }, Math.max(0, 600 - (Date.now() - splashStarted)));
@@ -547,10 +553,10 @@
           '<path class="outer" style="fill:' + D.surfaces[prefs.theme].archFill + ';fill-opacity:' + prefs.mihrabOpacity / 100 + '" d="' + D.mihrab.outer + '"/>' +
           '<path class="inner" d="' + D.mihrab.inner + '"/></svg>' +
           '<div class="verse" lang="ar" dir="rtl">' + D.sacred.prayerVerse.map(escape).join('<br>') + '</div>' +
-          '<div class="verse-ref">' + digits(s('ref')) + '</div><div class="arch-info"><p class="eyebrow">' + s('nextPrayer') +
+          '<div class="arch-info"><div class="card-metadata"><div class="card-hijri" data-hijri></div><p class="city-name">' + escape(city[prefs.lang]) + '</p></div><p class="eyebrow">' + s('nextPrayer') +
           '</p><div class="prayer-name" dir="' + (prefs.lang === 'ar' ? 'rtl' : 'ltr') + '" data-next-label></div>' +
-          '<p class="prayer-time" data-next-time></p><div class="countdown" data-countdown></div><p class="city-name">' + escape(city[prefs.lang]) + '</p></div></div>' +
-          '<div class="home-clock courtyard"><div class="clock" data-clock></div><div class="muted" data-hijri></div><div class="muted" data-gregorian></div></div>' + homeControls() +
+          '<p class="prayer-time" data-next-time></p><div class="countdown" data-countdown></div></div></div>' +
+          '<div class="home-clock courtyard"><div class="clock" data-clock></div><div class="muted header-hijri" data-hijri></div><div class="muted" data-gregorian></div></div>' + homeControls() +
           '<div class="home-prayers courtyard" data-prayers>' + prayers(now) + '</div><div class="home-actions courtyard"><p class="eyebrow">' +
           t('تطبيقات التلفاز', 'TV apps') + '</p><div class="home-apps">' + D.apps.slice(0, 3).map(appTile).join('') + '</div><div class="home-links">' +
           button('input', icon('input') + '<span>' + t('متابعة ', 'Watch ') + escape(inputName()) + '</span>') +
@@ -566,7 +572,7 @@
         html = '<section class="page">' + header(t('اليوم والقبلة', 'Today & Qibla')) + '<div class="day-times">' + today.times.map(function (time, i) {
           var state = i === daySelection.next && time === daySelection.nextTime ? 'next' : i === daySelection.current ? 'current' : time < +now ? 'past' : 'up';
           return '<div class="day-row ' + state + '"><span>' + prayerLabel(i, s('prayerNames')[i]) + '</span><strong>' + digits(A.clock(time, prefs)) + '</strong>' +
-            (!prayerRules.isPrayer(i) ? '<span class="muted">' + t('لا أذان للشروق', 'No adhan') + '</span>' : button('bell', onOff(prefs.bells[i]), i, '', t('أذان ', 'Adhan for ') + s('prayerNames')[i], uiContract.bind(uiContract.prayerAdhanId(i), 'toggle'))) + '</div>';
+            (!prayerRules.isPrayer(i) ? '<span class="muted">' + t('لا أذان للشروق', 'No adhan') + '</span>' : button('bell', '<span class="switch' + (prefs.bells[i] ? ' on' : '') + '" aria-hidden="true"><span></span></span>', i, '', t('أذان ', 'Adhan for ') + s('prayerNames')[i], uiContract.bind(uiContract.prayerAdhanId(i), 'toggle'), null, prefs.bells[i])) + '</div>';
         }).join('') + '</div><div class="day-details"><h2>' + escape(city[prefs.lang]) + '</h2><p>' +
           (h ? digits(h.day + ' ' + s('hijriMonths')[h.month] + ' ' + h.year) : t('التاريخ الهجري غير متاح', 'Hijri date unavailable')) +
           '</p><div class="qibla-arrow" style="-webkit-transform:rotate(' + bearing + 'deg);transform:rotate(' + bearing + 'deg)">↑</div><h2>' +
@@ -626,6 +632,8 @@
         view === 'home' ? homeNodes[homeNavigation.initial(homeAppCount, 0)] :
         view === 'apps' ? screen.querySelector('.app-tile') : screen.querySelector('button')); if (target) { focusControl(target); }
     }
+    var currentRows = screen.querySelector('.settings-rows');
+    if (currentRows && previousRows && focusAction && focusAction.indexOf('section') < 0) { currentRows.scrollTop = savedScroll; }
     if (view !== 'home') { updateClock(); } report();
   }
   function armDock() { clearTimeout(dockTimer); if (view === 'bar' && prefs.dockAutoHide) { dockTimer = setTimeout(function () { show('input'); }, prefs.dockAutoHide * 1000); } }
@@ -701,7 +709,6 @@
       }
       arch.querySelector('svg').setAttribute('preserveAspectRatio', 'none');
       arch.querySelector('.arch-info').style.width = (archWidth - 80) + 'px';
-      arch.querySelector('.verse-ref').style.width = (archWidth - 80) + 'px';
       arch.querySelector('.verse').style.width = (archWidth - 140) + 'px';
       var courts = content.querySelectorAll('.courtyard'), side = homeInset + archWidth + D.homeMihrab.gap;
       for (var i = 0; i < courts.length; i++) {
@@ -726,10 +733,8 @@
     zoomUi(notice, factor, '50% 0');
   }
   function show(nextView, focusAction) {
-    inlineDraft = null;
     if (nextView !== 'online-prayer') { cancelOnline(); }
     clearTimeout(noticeTimer); document.getElementById('notice').style.display = 'none';
-    if (nextView !== 'picker' && (nextView !== 'settings' || section !== 'appearance')) { appearanceDraft = null; }
     view = nextView; render(focusAction); armDock();
   }
   function updateClock() {
@@ -817,6 +822,7 @@
         return [id, s('backgroundNames')[9 + ids.indexOf(id)]];
       })).concat(D.scenes.map(function (id, i) { return [id, s('backgroundNames')[17 + i]]; }))
     };
+    if (key === 'background') { options.background = options.background.filter(function (a) { return a[0] === D.defaultBackground; }).concat(options.background.filter(function (a) { return a[0] !== D.defaultBackground; })); }
     if (options[key]) { return options[key].map(function (v) { return {value: v[0], label: v[1]}; }); }
     return uiContract.choices('prayer.zone').map(function (value) {
       if (value === 'system') { return {value: '', label: t('توقيت التلفاز', 'TV time zone')}; }
@@ -832,7 +838,7 @@
     if (/^offset-/.test(picker)) { return s('prayerNames')[Number(picker.slice(7))]; }
     return sectionName(section) || t('اختر', 'Choose');
   }
-  function inlineValue(key) { if (key === 'mihrabOpacity') return (appearanceDraft || prefs).mihrabOpacity; return /^offset-/.test(key) ? prefs.offsets[Number(key.slice(7))] : prefs[key === 'language' ? 'lang' : key]; }
+  function inlineValue(key) { if (key === 'mihrabOpacity') return prefs.mihrabOpacity; return /^offset-/.test(key) ? prefs.offsets[Number(key.slice(7))] : prefs[key === 'language' ? 'lang' : key]; }
   function inlineControl(key) {
     var row = screen.querySelector('.settings-rows [data-action="' + key + '"][data-ui]');
     var id = row && row.getAttribute('data-ui');
@@ -845,7 +851,7 @@
     if (source) { pickerControl = source.getAttribute('data-ui'); }
     else if (!((key === 'country' || key === 'city') && pickerControl === 'prayer.location')) { throw new Error('Missing UI editor binding: ' + key); }
     uiContract.bind(pickerControl, 'choice');
-    var selected = key === 'country' ? A.city(prefs.city).countryEn : key === 'zone' ? prefs.utcOffset : key === 'testPrayer' ? testPrayer : (appearanceDraft || prefs)[key];
+    var selected = key === 'country' ? A.city(prefs.city).countryEn : key === 'zone' ? prefs.utcOffset : key === 'testPrayer' ? testPrayer : prefs[key];
     var list = choices();
     if (key !== 'country') { choiceValues(pickerControl, list); }
     for (var i = 0; i < list.length; i++) { if (String(list[i].value) === String(selected === null ? '' : selected)) { page = Math.floor(i / 6); } }
@@ -853,23 +859,28 @@
   }
   function changeInlineNumber(key, delta) {
     var id = inlineControl(key); if (!id) { return; }
-    if (!inlineDraft || inlineDraft.key !== key) { inlineDraft = {key: key, value: inlineValue(key)}; }
-    if (uiContract.control(id).kind === 'number') { inlineDraft.value = uiContract.adjustNumber(id, inlineDraft.value, delta); }
+    var current = inlineValue(key), value;
+    if (uiContract.control(id).kind === 'number') { value = uiContract.adjustNumber(id, current, delta); }
     else {
       var list = choices(key), index = 0;
-      list.forEach(function (item, i) { if (String(item.value) === String(inlineDraft.value)) { index = i; } });
-      inlineDraft.value = list[Math.max(0, Math.min(list.length - 1, index + delta))].value;
+      list.forEach(function (item, i) { if (String(item.value) === String(current)) { index = i; } });
+      value = list[Math.max(0, Math.min(list.length - 1, index + delta))].value;
     }
-    render(key);
+    if (String(value) !== String(current)) { saveInline(key, value); }
+  }
+  function saveInline(key, value) {
+    var changed = A.prefs(prefs);
+    if (/^offset-/.test(key)) { changed.offsets[Number(key.slice(7))] = value; }
+    else { changed[key === 'language' ? 'lang' : key] = value; }
+    savePrefs(changed, key);
   }
   function savePrefs(next, focusAction, returnView) {
     if (!loaded || busy || settingsConflict) { return; } busy = true;
+    screen.setAttribute('aria-busy', 'true'); companionUiState();
     request('savePrefs', {expected: prefs, prefs: next}, function (reply) {
-      busy = false;
+      busy = false; screen.setAttribute('aria-busy', 'false');
       if (reply.returnValue) {
-        inlineDraft = null;
-        if (focusAction === 'apply-appearance') { appearanceDraft = null; }
-        prefs = A.prefs(reply.prefs); cacheKey = ''; view = returnView || 'settings'; render(focusAction);
+            prefs = A.prefs(reply.prefs); cacheKey = ''; view = returnView || 'settings'; render(focusAction);
         notify(reply.scheduleResult && !reply.scheduleResult.returnValue ? t('تم الحفظ لكن تعذر جدولة التنبيهات. راجع حالة الخدمة.', 'Saved, but alert scheduling failed. Check service status.') : t('تم الحفظ', 'Saved'));
       }
       else if (reply.conflicts && reply.conflicts.length) {
@@ -1090,22 +1101,11 @@
       busy = true; request('status', {}, function (reply) {
         busy = false;
         if (!reply.returnValue) { notify(t('تعذر تحميل الإعدادات.', 'Could not load settings.'), reply.errorText); return; }
-        prefs = A.prefs(reply.state.prefs); settingsConflict = false; inlineDraft = null; appearanceDraft = null; cacheKey = ''; view = 'settings'; render();
+        prefs = A.prefs(reply.state.prefs); settingsConflict = false; cacheKey = ''; view = 'settings'; render();
       });
       return;
     }
-    if (inlineControl(action)) {
-      if (!inlineDraft || inlineDraft.key !== action) { inlineDraft = {key: action, value: inlineValue(action)}; render(action); }
-      else {
-        if (uiContract.control(inlineControl(action)).save === 'appearance') { appearanceDraft[action] = inlineDraft.value; inlineDraft = null; render(action); return; }
-        var changed = A.prefs(prefs);
-        if (/^offset-/.test(action)) { changed.offsets[Number(action.slice(7))] = inlineDraft.value; }
-        else { changed[action === 'language' ? 'lang' : action] = inlineDraft.value; }
-        savePrefs(changed, action);
-      }
-      return;
-    }
-    inlineDraft = null;
+    if (inlineControl(action)) { return; }
     if (action === 'online-prayer' || action === 'online-retry') { checkOnline(); return; }
     if (action === 'online-back') { show('settings', 'online-prayer'); return; }
     if (voicePreview && action !== 'preview-voice') { stopAudio('stopped', true); }
@@ -1117,15 +1117,10 @@
     }
     if (action === 'carousel') { return; }
     if (action === 'carousel-step') { var step = value.split(':'); changeAppearance(step[0], Number(step[1])); return; }
-    if (action === 'apply-appearance') {
-      var appearance = A.prefs(prefs);
-      appearanceKeys.forEach(function (key) { appearance[key] = appearanceDraft[key]; });
-      savePrefs(appearance, 'apply-appearance'); return;
-    }
-    if (action === 'cancel-appearance') { appearanceDraft = A.prefs(prefs); render('[data-action=carousel][data-value=theme]'); return; }
     if (action === 'reset-layout') {
-      ['homeLayout', 'archSide', 'homeBar', 'prayerMode'].forEach(function (key) { appearanceDraft[key] = A.defaults[key]; });
-      render('reset-layout'); return;
+      var layout = A.prefs(prefs);
+      ['homeLayout', 'archSide', 'homeBar', 'prayerMode'].forEach(function (key) { layout[key] = A.defaults[key]; });
+      savePrefs(layout, 'reset-layout'); return;
     }
     if (action === 'dismiss-alert') { if (media && media.kind !== 'radio') { stopAudio('stopped', true); } else { finishOverlay(); } return; }
     if (action === 'preview-voice') {
@@ -1160,7 +1155,7 @@
       if (action === 'inputs') { discover(false); } return;
     }
     var next = A.prefs(prefs);
-    if (action === 'section') { if (section !== value) { appearanceDraft = null; inlineDraft = null; } section = value; render('[data-action=section][data-value=' + value + ']'); return; }
+    if (action === 'section') { section = value; render('[data-action=section][data-value=' + value + ']'); return; }
     if (action === 'tests') { section = 'tests'; show('settings'); return; }
     if (action === 'offsets') { section = 'offsets'; render(); return; }
     if (action === 'reset-offsets') { next.offsets = [0, 0, 0, 0, 0, 0]; savePrefs(next, action); return; }
@@ -1247,7 +1242,7 @@
         while (stepTarget && stepTarget.tagName !== 'BUTTON') { stepTarget = stepTarget.parentNode; }
         var choiceKey = stepTarget && stepTarget.getAttribute('data-action');
         if (choiceKey && inlineControl(choiceKey)) {
-          inlineDraft = {key: choiceKey, value: choices(choiceKey)[Number(choiceIndex)].value}; render(choiceKey);
+          saveInline(choiceKey, choices(choiceKey)[Number(choiceIndex)].value);
         }
         return;
       }
@@ -1277,7 +1272,7 @@
       if (focusedSection !== section) { activate('section', focusedSection); return; }
     }
     var factor = window['tv.miqat:core'].tv.miqat.core.UiScale.percent(prefs.uiScale) / 100;
-    if (factor <= 1.1) { return; }
+    if (factor <= 1.1 && view !== 'settings') { return; }
     var page = screen.firstElementChild;
     if (view === 'home' && event.target.getAttribute('data-action') === 'apps') { page.scrollTop = page.scrollHeight; }
     if (view === 'home' && String(event.target.parentNode.className).indexOf('home-quick') >= 0) { page.scrollTop = 0; }
@@ -1343,12 +1338,9 @@
       }
       return;
     }
-    if (view === 'settings' && inlineDraft !== null) {
-      var editKey = inlineDraft.key;
-      if (key === 27 || key === 461) { inlineDraft = null; render(editKey); }
-      else if (key === 37 || key === 39) { changeInlineNumber(editKey, (key === 37) !== (prefs.lang === 'ar') ? -1 : 1); }
-      else if (key === 13) { activate(editKey); }
-      return;
+    var inlineKey = document.activeElement && document.activeElement.getAttribute('data-action');
+    if (view === 'settings' && inlineKey && inlineControl(inlineKey) && (key === 37 || key === 39)) {
+      changeInlineNumber(inlineKey, (key === 37) !== (prefs.lang === 'ar') ? -1 : 1); return;
     }
     if (view === 'settings' && document.activeElement && document.activeElement.getAttribute('data-action') === 'carousel' && (key === 37 || key === 39)) {
       changeAppearance(document.activeElement.getAttribute('data-value'), (key === 37) !== (prefs.lang === 'ar') ? -1 : 1); return;
@@ -1358,7 +1350,7 @@
       if (view === 'picker' && picker === 'city') { openPicker('country'); }
       else if (view === 'picker') { activate('settings'); }
       else if (view === 'settings' && section === 'offsets') { section = 'prayer'; render('offsets'); }
-      else if (view === 'settings' && document.activeElement && ['section', 'settings-back'].indexOf(document.activeElement.getAttribute('data-action')) < 0) { appearanceDraft = null; render('[data-action=section][data-value=' + section + ']'); }
+      else if (view === 'settings' && document.activeElement && ['section', 'settings-back'].indexOf(document.activeElement.getAttribute('data-action')) < 0) { render('[data-action=section][data-value=' + section + ']'); }
       else if (view === 'apps') { show('home', 'apps'); }
       else if (view === 'settings') { show(settingsParent, 'settings'); }
       else if (view === 'prayer-day') { show(dayParent, 'prayer-day'); }

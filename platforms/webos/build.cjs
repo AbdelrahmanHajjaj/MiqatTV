@@ -149,17 +149,18 @@ for (const theme of data.themes) {
   });
   const c = data.palettes[theme];
   const patternOpacity = (Math.round(255 * tokens.background['pattern-opacity'].$value) + Math.floor((preset.lighting ?? 35) / 6)) / 255;
-  const scenes = data.scenes.map(id => '[data-pattern=' + id + '] .home { background-image:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.2)),url("backgrounds/' + id + '.jpg");background-size:1920px 1080px; }').join('\n');
+  const scenes = data.scenes.map(id => '[data-pattern=' + id + '] .home, [data-pattern=' + id + '] .appearance-settings { background-image:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.2)),url("backgrounds/' + id + '.jpg");background-size:1920px 1080px; }').join('\n');
   const patterns = data.patterns.map(name => {
     const filename = theme + '-' + name + '.svg';
     const svg = read('shared/design/mihrab/patterns/' + name + '.svg')
       .replace('stroke="white"', 'stroke="' + c['gold-400'] + '" stroke-opacity="' + patternOpacity + '"');
     write(path.join(out, 'app/patterns', filename), svg);
-    return '[data-pattern=' + name + '] .home { background-image: url("patterns/' + filename + '"); background-size:' + tokens.background['max-width'].$value + ' ' + tokens.background['max-height'].$value + '; }';
+    return '[data-pattern=' + name + '] .home, [data-pattern=' + name + '] .appearance-settings { background-image: url("patterns/' + filename + '"); background-size:' + tokens.background['max-width'].$value + ' ' + tokens.background['max-height'].$value + '; }';
   }).join('\n');
   const surface = data.surfaces[theme];
   const surfaceCss = ['.settings-rows button,.app-tile,.prayer,.day-row { background:' + surface.fill + ';border:' + surface.stroke + 'px solid ' + surface.edge + '; }',
     ...[['.settings-rows button', 'row'], ['.app-tile', 'tile'], ['.prayer', 'cell'], ['.day-row', 'row']].map(([selector, radius]) => selector + ' { border-radius:' + (selector === '.prayer' ? surface.prayerRadius + 'px' : surface.radius === null ? tokens.radius[radius].$value : surface.radius + 'px') + '; }'),
+    '.home-prayers .prayer.current,.day-row.current { background:' + surface.fill + ';color:' + c['mist-400'] + '; }',
     '.home-prayers .prayer.next { background:rgba(' + [1, 3, 5].map(at => parseInt(surface.archFill.slice(at, at + 2), 16)).join(',') + ',' + tokens.surface['next-prayer-opacity'].$value + ');color:' + c['gold-400'] + '; }',
     '.prayer.next,.day-row.next { border:' + tokens.border['next-prayer'].width.$value + ' solid ' + c['gold-400'] + '; }',
     '.settings-rows button:focus,.app-tile:focus { background:' + c['gold-400'] + ';color:' + c['lapis-900'] + ';border-color:transparent; }',

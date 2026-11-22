@@ -20,8 +20,8 @@ android {
         applicationId 'tv.miqat.companion'
         minSdk 26
         targetSdk 34
-        versionCode 33
-        versionName '0.5.17'
+        versionCode 34
+        versionName '0.5.18'
         testInstrumentationRunner 'tv.miqat.companion.CompanionCheck'
     }
     compileOptions {

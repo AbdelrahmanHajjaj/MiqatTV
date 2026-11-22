@@ -23,7 +23,7 @@ Android uses Java Views. Shipped LG app/service code must parse as ES5 and work
 on WebKit 538.2 / Node 0.10.25. Build tools use JDK 17 and Node 24.
 
 Keep Arabic/English, RTL/LTR, joined Arabic, focus and clipping correct at supported
-sizes. Ordinary numbers edit inline with shared save/cancel semantics. Use the
+sizes. Ordinary numbers edit inline with shared immediate-save semantics. Use the
 shared choice policy and design tokens. Declare missing platform capabilities.
 
 Preserve exact religious text and complete adhan wording. Cite surah/ayah and a

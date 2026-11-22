@@ -18,7 +18,8 @@ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'service/companion-settin
 });
 require('./test-companion-settings.cjs')(companionModule.exports,A);
 require('./test-companion-settings.cjs')(require('./build/service/companion-settings'),require('./build/service/core'));
-const prefs = A.prefs({utcOffset: 120});
+assert.equal(A.prefs().clock,'12','new installations match the phone clock default');
+const prefs = A.prefs({utcOffset: 120, clock:'24'});
 const now = new Date('2026-11-10T10:00:00Z');
 const day = A.day(now, prefs);
 const expectedParams = original.CalculationMethod.Egyptian();

@@ -51,7 +51,7 @@ export function cellsHtml(c: Ctx) {
     let tag = i === day.nowIndex ? t.s('nowTag') : i === day.nextIndex ? t.s('nextTag') : '';
     if (day.ramadan && i === FAJR) tag = t.s('suhoorTag');
     if (day.ramadan && i === MAGHRIB) tag = t.s('iftarTag');
-    const state = i === day.nowIndex ? 'now' : i === day.nextIndex ? 'next' : time <= now ? 'past' : 'up';
+    const state = i === day.nextIndex ? 'next' : time <= now ? 'past' : 'up';
     return `<div class="cell" data-state="${state}"><div class="prayer-head"><span class="prayer-symbol" aria-hidden="true">${prayerLabel(i, '')}</span><span class="tag caps">${tag}</span></div><span class="name">${names[i]}</span><span class="time num">${clock(t, time, h24, 0.55)}</span></div>`;
   }).join('');
 }

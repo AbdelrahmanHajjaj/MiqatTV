@@ -222,13 +222,13 @@ public class MainActivity extends Screen {
         clock.setIncludeFontPadding(false);
         clock.setTextDirection(rtl ? View.TEXT_DIRECTION_RTL : View.TEXT_DIRECTION_LTR);
         clock.setFontFeatureSettings("tnum");
-        // Dates stay beside the Mihrab; location belongs under its countdown.
-        hdate = text(ui400, 26, Palette.PLASTER_100);
+        // The full prayer card owns its Hijri date; other layouts keep it in the header.
+        if (home.mode != HomeLayout.MIHRAB) hdate = text(ui400, 26, Palette.PLASTER_100);
         gdate = text(ui400, 24, Palette.MIST_400);
         when.addView(clock);
-        when.addView(hdate);
+        if (home.mode != HomeLayout.MIHRAB) when.addView(hdate);
         when.addView(gdate);
-        ((LinearLayout.LayoutParams) hdate.getLayoutParams()).topMargin = Ui.ipx(6);
+        if (home.mode != HomeLayout.MIHRAB) ((LinearLayout.LayoutParams) hdate.getLayoutParams()).topMargin = Ui.ipx(6);
         ((LinearLayout.LayoutParams) gdate.getLayoutParams()).topMargin = Ui.ipx(6);
         lineHeight(clock, 1f);
         when.setClipChildren(false);
@@ -512,10 +512,6 @@ public class MainActivity extends Screen {
             lineHeightPixels(verse, Ui.ipx(Tokens.FONT_SIZE_SACRED * 1.55f));
             place(verse, home.panelX + inset, home.panelY + Tokens.LAYOUT_HOME_VERSE_TOP,
                 home.panelWidth - 2 * inset, -2);
-            TextView ref = text(ui400, Tokens.FONT_SIZE_CAPTION, Palette.MIST_400);
-            ref.setText(t.ref()); ref.setGravity(Gravity.CENTER);
-            place(ref, home.panelX + inset, home.panelY + Tokens.LAYOUT_HOME_REFERENCE_TOP,
-                home.panelWidth - 2 * inset, -2);
         }
         LinearLayout info = new LinearLayout(this);
         countdownPanel = info;
@@ -536,9 +532,23 @@ public class MainActivity extends Screen {
         LinearLayout name = new LinearLayout(this), detail = new LinearLayout(this);
         name.setOrientation(LinearLayout.VERTICAL); detail.setOrientation(LinearLayout.VERTICAL);
         name.setGravity(Gravity.CENTER); detail.setGravity(Gravity.CENTER);
+        if (!compact) {
+            hdate = text(ui400, Tokens.FONT_SIZE_BODY, Palette.PLASTER_100);
+            hdate.setGravity(Gravity.CENTER);
+            hdate.setTag("home.hijri");
+            LinearLayout metadata = new LinearLayout(this);
+            metadata.setGravity(Gravity.CENTER_VERTICAL);
+            hdate.setMaxLines(2);
+            hdate.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, Ui.px(Tokens.FONT_SIZE_CAPTION));
+            metadata.addView(hdate, new LinearLayout.LayoutParams(0, -2, 2));
+            archSub.setMaxLines(2);
+            metadata.addView(archSub, new LinearLayout.LayoutParams(0, -2, 1));
+            info.addView(metadata, new LinearLayout.LayoutParams(-1, -2));
+            ((LinearLayout.LayoutParams) metadata.getLayoutParams()).bottomMargin = Ui.ipx(Tokens.SPACE_3);
+        }
         name.addView(archLabel); name.addView(archName);
         if (compact) detail.addView(homePrayerTime);
-        detail.addView(archSub); detail.addView(archSub2);
+        if (compact) detail.addView(archSub); detail.addView(archSub2);
         for (TextView v : new TextView[] {archLabel, archName, homePrayerTime, archCount, archSub, archSub2}) {
             v.setGravity(Gravity.CENTER); v.setIncludeFontPadding(false);
         }
@@ -750,8 +760,7 @@ public class MainActivity extends Screen {
             boolean past = i != day.nextIndex && !day.times[i].after(now);
             int bg, fg, ring = 0;
             boolean bold;
-            if (i == day.nowIndex) { bg = Palette.PLASTER_100; fg = Palette.LAPIS_900; bold = true; }
-            else if (i == day.nextIndex) { bg = 0; fg = Palette.GOLD_400; ring = Palette.GOLD_400; bold = true; }
+            if (i == day.nextIndex) { bg = 0; fg = Palette.GOLD_400; ring = Palette.GOLD_400; bold = true; }
             else if (past) { bg = Palette.LAPIS_800_60; fg = Palette.MIST_400; bold = false; }
             else { bg = Palette.LAPIS_800; fg = Palette.PLASTER_100; bold = false; }
             GradientDrawable g = Appearance.prayerPanel(bg);

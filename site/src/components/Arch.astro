@@ -20,6 +20,7 @@ const m = model ?? archModel(ctx);
 <p class="ref">{ctx.t.s('ref')}</p>
 <div class="rule" aria-hidden="true"></div>
 <div class="info" style={`top:${infoTop}px`}>
+  <slot name="metadata" />
   <div class="label caps" data-k="archLabel" set:html={m.html.archLabel} />
   <div class="name display-bold" data-k="archName" set:html={m.html.archName} />
   <slot name="time" />

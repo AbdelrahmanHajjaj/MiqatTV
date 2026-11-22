@@ -10,7 +10,7 @@ const choiceSources = {
   voices: data('data/voices.json').map(c => c.id),
   stations: data('data/stations.json').map(c => c.id),
   themes: data('design/themes.json'),
-  backgrounds: ['theme', ...appearance.proceduralBackgrounds, ...appearance.patterns, ...appearance.scenes],
+  backgrounds: [appearance.defaultBackground, 'theme', ...appearance.proceduralBackgrounds, ...appearance.patterns, ...appearance.scenes.filter(id => id !== appearance.defaultBackground)],
   zones: ['system', ...Array.from({length: 105}, (_, i) => String(-720 + i * 15))],
 };
 const sections = ['prayer', 'reminders', 'radio', 'display', 'appearance', 'network', 'device', 'tests', 'offsets', 'prayer-day', 'favourites', 'apps', 'pairing'];
@@ -30,7 +30,7 @@ export function validateUiContract(controls, strings) {
     const text = strings[key];
     if (typeof id !== 'string' || !/^[a-z]+(?:\.[a-z][a-z0-9-]*)+$/.test(id) || ids.has(id) ||
         !sections.includes(section) || !kinds.includes(kind) ||
-        !['immediate', 'appearance', 'action'].includes(save) || (kind === 'action') !== (save === 'action') ||
+        !['immediate', 'action'].includes(save) || (kind === 'action') !== (save === 'action') ||
         (kind === 'number' ? !['prayer-offset', 'hijri-offset', 'percent', 'bearing', 'ui-scale', 'mihrab-opacity'].includes(range) : range !== undefined) ||
         (kind === 'choice' ? !uiChoices(control).length ||
           uiChoices(control).some(value => typeof value !== 'string' || !/^-?[a-zA-Z0-9_][a-zA-Z0-9_-]*$/.test(value)) ||

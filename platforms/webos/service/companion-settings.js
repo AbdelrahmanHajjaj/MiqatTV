@@ -63,7 +63,7 @@ function patch(state, expected, changes) {
   edits = Object.keys(request);
   if (edits.indexOf('device.startup') >= 0 && edits.length !== 1) { throw new Error('Save startup separately'); }
   var current = snapshot(state), ids = Object.keys(specs);
-  var conflicts = portable.SettingChanges.conflicts(ids, ids.map(function (id) { return specs[id].save === 'appearance' ? 'appearance' : ''; }),
+  var conflicts = portable.SettingChanges.conflicts(ids, ids.map(function (id) { return specs[id].section === 'appearance' ? 'appearance' : ''; }),
     ids.map(function (id) { return current.values[id]; }), ids.map(function (id) { return expected[id] === undefined ? null : expected[id]; }), edits);
   if (conflicts.length) { return {prefs: next, conflicts: conflicts}; }
   edits.forEach(function (id) {

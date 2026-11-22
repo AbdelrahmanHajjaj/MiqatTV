@@ -81,7 +81,10 @@ export function generate(platforms = ['android','lg']) {
       return pair(item.ar + (item.whereAr ? ' · ' + item.whereAr : ''), item.en + (item.whereEn ? ' · ' + item.whereEn : ''));
     }
     if (c.choices === 'themes') return indexed('themeNames', index);
-    if (c.choices === 'backgrounds') return indexed('backgroundNames', index);
+    if (c.choices === 'backgrounds') {
+      const a=read('shared/design/appearance.json');
+      return indexed('backgroundNames', ['theme',...a.proceduralBackgrounds,...a.patterns,...a.scenes].indexOf(value));
+    }
     if (choiceArrays[c.id]) return indexed(choiceArrays[c.id], index);
     if (c.id === 'appearance.position') return index < 3 ? indexed('homeSides', index) : indexed('homeBars', index - 3);
     if (c.id === 'display.language') return [pair('لغة التلفاز','TV language'),pair('العربية','Arabic'),pair('الإنجليزية','English')][index];
@@ -98,13 +101,13 @@ export function generate(platforms = ['android','lg']) {
   const all = controls.map(c => ({...c, title:label(c.label), options:uiChoices(c).map((value,i) => ({value,...option(c,value,i)})), route:contract.actionRoutes[c.id] || ''}));
   const defaults = {'prayer.location':'cairo','prayer.method':'EGYPTIAN','prayer.asr':'shafi','prayer.zone':'system',
     'reminders.before':'15','reminders.close':'0','reminders.voice':'almalki','reminders.fajr-voice':'chebae_fajr','reminders.volume':'60',
-    'radio.station':'cairo','radio.screen-off':'0','display.language':'system','display.digits':'western','display.clock':'24',
+    'radio.station':'cairo','radio.screen-off':'0','display.language':'system','display.digits':'western','display.clock':'12',
     'display.size':'100','display.bar-mode':'hidden','display.bar-position':'top','display.bar-timeout':'20',
     'appearance.countdown':'mihrab','appearance.position':'auto','appearance.prayers':'all','appearance.favourites':'two_rows',
-    'appearance.mihrab-opacity':'85','appearance.theme':'mihrab','appearance.background':'theme','appearance.lighting':'35','appearance.cycle':'0','tests.prayer':'0'};
+    'appearance.mihrab-opacity':'85','appearance.theme':'mihrab','appearance.background':'miqat_signature','appearance.lighting':'35','appearance.cycle':'0','tests.prayer':'0'};
   const trueIds = ['reminders.adhan','reminders.announce','radio.resume',...controls.filter(c=>c.section==='prayer-day').map(c=>c.id)];
   const appOptions = [pair('القرآن','Quran'),pair('الفيديو','Video'),pair('الموسيقى','Music'),pair('المتصفح','Browser')].map((x,i)=>({value:['quran','video','music','browser'][i],...x}));
-  const extras = contract.extraSettings.map(c=>({...c, title:pair(c.ar,c.en), save:c.section === 'appearance' ? 'appearance':'immediate',
+  const extras = contract.extraSettings.map(c=>({...c, title:pair(c.ar,c.en), save:'immediate',
     options:c.choiceSource ? all.find(x=>x.id===c.choiceSource).options.filter(x=>c.values.includes(x.value)) : c.kind === 'list' ? appOptions:[], route:''}));
   const buttons = contract.remoteButtons.map(c=>({id:'remote.'+c.id,section:'remote',kind:'choice',save:'immediate',title:pair(c.ar,c.en),default:'@default',route:'',
     options:['@default','@home','@apps','@inputs','@settings','@dock'].map((value,i)=>({value,...indexed('buttonActions',i)})).concat(appOptions)}));

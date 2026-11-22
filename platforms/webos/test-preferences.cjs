@@ -5,7 +5,7 @@ module.exports = function checkPreferences(core) {
   assert.equal(retired.voice, 'almalki');
   assert.equal(retired.fajrVoice, 'chebae_fajr');
   assert.equal(retired.volume, 25, 'retired voice migration preserves other settings');
-  const baseline = core.prefs(), current = core.prefs(baseline), edit = core.prefs(baseline);
+  const baseline = core.prefs({clock:'24'}), current = core.prefs(baseline), edit = core.prefs(baseline);
   current.volume = 25; edit.clock = '12';
   const merged = core.mergePrefs(current, baseline, edit);
   assert.equal(merged.prefs.volume, 25, 'a full local draft preserves an unrelated later phone edit');

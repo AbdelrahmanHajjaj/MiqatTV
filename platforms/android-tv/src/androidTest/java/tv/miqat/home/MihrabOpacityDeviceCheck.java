@@ -10,7 +10,7 @@ import android.view.KeyEvent;
 import java.util.List;
 import java.util.Map;
 
-/** Real inline editor, outer draft and Home-fill boundaries; restores test preferences. */
+/** Real immediate editor and Home-fill boundaries; restores test preferences. */
 final class MihrabOpacityDeviceCheck {
     static void run(Instrumentation test) {
         SharedPreferences prefs = Prefs.of(test.getTargetContext());
@@ -28,24 +28,19 @@ final class MihrabOpacityDeviceCheck {
                 int back = language.equals("ar") ? KeyEvent.KEYCODE_DPAD_RIGHT : KeyEvent.KEYCODE_DPAD_LEFT;
                 int next = language.equals("ar") ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT;
                 enter(test, active[0]);
-                key(test,active[0],KeyEvent.KEYCODE_DPAD_CENTER);
                 repeat(test,active[0],back,20);
-                check((int) UiContractDeviceCheck.field(active[0], "draft") == 50, "Inline lower bound");
-                key(test,active[0],KeyEvent.KEYCODE_BACK);
-                check(row(active[0],"appearance.mihrab-opacity").amount() == 85, "Back cancels numeric draft");
-                key(test,active[0],KeyEvent.KEYCODE_DPAD_CENTER);
-                repeat(test,active[0],next,20);key(test,active[0],KeyEvent.KEYCODE_DPAD_CENTER);
-                check(row(active[0],"appearance.mihrab-opacity").amount() == 100, "Upper bound and outer draft");
-                check(Prefs.mihrabOpacity(test.getTargetContext()) == 85, "OK waits for Apply");
+                check(Prefs.mihrabOpacity(test.getTargetContext()) == 50, "Each decrement persists and clamps at 50");
+                key(test,active[0],KeyEvent.KEYCODE_DPAD_DOWN);
+                check(Prefs.mihrabOpacity(test.getTargetContext()) == 50, "Leaving a number for another control retains it");
+                key(test,active[0],KeyEvent.KEYCODE_DPAD_UP);
+                repeat(test,active[0],next,20);
+                check(Prefs.mihrabOpacity(test.getTargetContext()) == 100, "Each increment persists and clamps at 100");
                 key(test,active[0],KeyEvent.KEYCODE_BACK);key(test,active[0],KeyEvent.KEYCODE_BACK);
                 test.waitForIdleSync();active[0]=start(test);enter(test,active[0]);
-                check(row(active[0],"appearance.mihrab-opacity").amount() == 85, "Leaving page discards unsaved change");
-                key(test,active[0],KeyEvent.KEYCODE_DPAD_CENTER);repeat(test,active[0],back,20);key(test,active[0],KeyEvent.KEYCODE_DPAD_CENTER);
-                int distance=index(active[0],"appearance.apply")-(int)UiContractDeviceCheck.field(active[0],"rowIndex");
-                repeat(test,active[0],KeyEvent.KEYCODE_DPAD_DOWN,distance);key(test,active[0],KeyEvent.KEYCODE_DPAD_CENTER);
-                check(Prefs.mihrabOpacity(test.getTargetContext()) == 50, "Apply persists opacity");
+                check(row(active[0],"appearance.mihrab-opacity").amount() == 100, "Back and re-entry preserve immediate changes");
+                repeat(test,active[0],back,20);
                 test.runOnMainSync(()->active[0].finish());test.waitForIdleSync();active[0]=start(test);enter(test,active[0]);
-                check(row(active[0],"appearance.mihrab-opacity").amount() == 50, "Saved opacity survives re-entry");
+                check(row(active[0],"appearance.mihrab-opacity").amount() == 50, "Saved opacity survives re-entry without Apply");
                 UiContractDeviceCheck.onMain(test,()->{
                     for(int percent:new int[]{50,85,100}) {
                         ArchView arch=new ArchView(active[0],percent);
@@ -56,7 +51,7 @@ final class MihrabOpacityDeviceCheck {
                 });
                 test.runOnMainSync(()->active[0].finish());test.waitForIdleSync();active[0]=null;
             }
-            code=Activity.RESULT_OK;result.putString("stream","Native opacity passed: bilingual 50–100 bounds, numeric Back, outer draft cancellation, Apply/re-entry and fill-only alpha.\n");
+            code=Activity.RESULT_OK;result.putString("stream","Native opacity passed: bilingual 50–100 bounds, immediate independent edits, Back/re-entry and fill-only alpha.\n");
         } catch(Throwable error) {result.putString("stream",android.util.Log.getStackTraceString(error));}
         finally {
             if(active[0]!=null)test.runOnMainSync(()->active[0].finish());

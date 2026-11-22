@@ -19,7 +19,6 @@ Migration scope/status live in WORK.md; verification facts live in EVIDENCE.md.
 | `radio.stop` | unimplemented | The station row uses one playback toggle instead of separate Play/Stop actions. |
 | `display.bar-timeout` | unimplemented | No configurable bar timeout row. |
 | `display.open-clock` | unimplemented | Clock exists as a native screensaver; no standalone Settings action. |
-| `appearance.cancel` | unimplemented | Back discards the draft; no separate Cancel row. |
 | `appearance.home` | unimplemented | Back returns Home; no separate appearance Home row. |
 | `device.apps` | unimplemented | All apps opens from Home; no Device shortcut. |
 | `device.startup` | unimplemented | Uses Android default Home and accessibility lifecycle; no LG-style once-per-boot switch. |
