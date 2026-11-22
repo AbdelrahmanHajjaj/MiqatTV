@@ -17,13 +17,14 @@ class UiContractTest {
 
     @Test fun choiceEditorsKeepShortInlineControlsAndCatalogPickersDistinct() {
         for (id in listOf("prayer.asr", "reminders.close", "radio.screen-off", "display.language",
-            "display.digits", "display.clock", "display.bar-position", "display.bar-timeout")) {
+            "display.digits", "display.clock", "display.bar-position", "display.bar-timeout",
+            "appearance.countdown", "appearance.position", "appearance.prayers", "appearance.favourites", "appearance.cycle")) {
             assertEquals("segments", UiContract.choiceEditor(id))
         }
         for (id in listOf("prayer.location", "prayer.method", "prayer.zone", "reminders.voice",
             "radio.station", "display.bar-mode")) assertEquals("list", UiContract.choiceEditor(id))
-        for (control in UiContract.controls().filter { it.kind == "choice" && it.section == "appearance" }) {
-            assertEquals("carousel", UiContract.choiceEditor(control.id))
+        for (id in listOf("appearance.theme", "appearance.background")) {
+            assertEquals("carousel", UiContract.choiceEditor(id))
         }
         assertFailsWith<IllegalArgumentException> { UiContract.choiceEditor("reminders.adhan") }
     }
@@ -96,7 +97,11 @@ class UiContractTest {
     @Test fun bindingsUseSemanticTypesAndSeparateStorageConcepts() {
         assertEquals("choice", UiContract.bind("appearance.favourites", "choice").kind)
         assertNotEquals(UiContract.control("appearance.favourites").id, UiContract.control("appearance.countdown").id)
-        assertEquals("appearance", UiContract.control("appearance.countdown").save)
+        assertEquals("immediate", UiContract.control("appearance.countdown").save)
+        assertEquals("miqat_signature", UiContract.choices("appearance.background")[0])
+        assertEquals("mihrab", UiContract.choices("appearance.theme")[0])
+        for (control in UiContract.controls().filter { it.kind != "action" })
+            assertEquals("immediate", control.save)
         assertEquals("immediate", UiContract.control("display.language").save)
         assertFailsWith<IllegalArgumentException> { UiContract.bind("appearance.favourites", "toggle") }
         assertFailsWith<IllegalArgumentException> { UiContract.control("unknown.control") }

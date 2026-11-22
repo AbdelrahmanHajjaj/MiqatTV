@@ -74,7 +74,8 @@ function verifyIslamicTVCore(core) {
   check(home.initial(0, 0) === home.ALL_APPS && home.move(home.SETTINGS, 0, 2, 1, home.FIRST_APP, 0, 1, false) === home.FIRST_RECENT, 'empty Home rows');
   var ui = core.tv.miqat.core.UiContract, controls = ui.controls(), ids = [];
   for (i = 0; i < controls.length; i++) { ids.push(controls[i].id); }
-  check(ui.bind('appearance.countdown', 'choice').save === 'appearance', 'shared UI appearance draft');
+  check(ui.bind('appearance.countdown', 'choice').save === 'immediate', 'shared UI immediate appearance');
+  check(ui.choices('appearance.background')[0] === 'miqat_signature' && ui.choiceEditor('appearance.countdown') === 'segments', 'Miqat-first backgrounds and short appearance choices');
   check(ui.control('appearance.favourites').id !== ui.control('appearance.countdown').id, 'distinct Home concepts');
   ui.validateCoverage(ids.slice(0, 3), ids.slice(3)); check(true, 'UI binding and gap coverage');
   var rejected = false;

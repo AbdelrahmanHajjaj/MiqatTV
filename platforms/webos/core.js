@@ -9,7 +9,7 @@
   var defaults = {lang: 'ar', city: 'cairo', method: null, hanafi: false, utcOffset: null,
     automatic: false, adhan: true, remind: 15, remindVoice: false, announce: true, callClose: 0,
     voice: 'almalki', fajrVoice: 'chebae_fajr', volume: 60, bells: [true, false, true, true, true, true],
-    offsets: [0, 0, 0, 0, 0, 0], hijriOffset: 0, digits: 'auto', clock: '24', uiScale: portable.tv.miqat.core.UiScale.DEFAULT_PERCENT,
+    offsets: [0, 0, 0, 0, 0, 0], hijriOffset: 0, digits: 'auto', clock: '12', uiScale: portable.tv.miqat.core.UiScale.DEFAULT_PERCENT,
     dockPosition: 'top', dockAutoHide: 20, theme: 'mihrab', mihrabOpacity: portable.tv.miqat.core.UiContract.MIHRAB_OPACITY_DEFAULT, background: data.defaultBackground,
     homeLayout: 'mihrab', archSide: 'auto', homeBar: 'top', prayerMode: 'all', quickLabels: false,
     station: 'cairo', radioResume: true};

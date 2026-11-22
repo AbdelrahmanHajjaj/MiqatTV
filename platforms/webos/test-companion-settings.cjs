@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 
 module.exports = function checkCompanionSettings(adapter, core) {
-  const state = {prefs:core.prefs({volume:25}), input:'HDMI_3', startup:{enabled:true, launches:3}, audioVolume:{id:'fixture'}};
+  const state = {prefs:core.prefs({volume:25,clock:'24'}), input:'HDMI_3', startup:{enabled:true, launches:3}, audioVolume:{id:'fixture'}};
   const snapshot = adapter.snapshot(state), baseline = snapshot.values;
   const editable = snapshot.controls.filter(c => c.available && c.kind !== 'action' && c.section !== 'tests');
   assert.equal(Object.keys(baseline).length, editable.length, 'every offered setting reads actual state');

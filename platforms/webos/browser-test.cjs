@@ -24,6 +24,10 @@ const server = http.createServer((req, res) => {
   try {
     browser = await chromium.launch({channel: 'msedge', headless: true});
     page = await browser.newPage({viewport: {width: 1920, height: 1080}});
+    const originalPress = page.keyboard.press.bind(page.keyboard);
+    page.keyboard.press = async (...args) => { await originalPress(...args); await page.waitForFunction(() => document.querySelector('#screen')?.getAttribute('aria-busy') !== 'true'); };
+    const locatorPrototype=Object.getPrototypeOf(page.locator('body')), originalClick=locatorPrototype.click;
+    locatorPrototype.click=async function(...args) { await originalClick.apply(this,args); await page.waitForFunction(() => document.querySelector('#screen')?.getAttribute('aria-busy') !== 'true'); };
     const identity=await new Promise((resolve,reject)=>require('./build/service/companion-identity').load({read:()=>null,write(){}},(error,value)=>error?reject(error):resolve(value)));
     const qrFixture={type:'miqat-tv-pair',version:3,url:'https://192.168.1.5:45761',pin:identity.pin,token:require('./service/companion-pairing').token()};
     await page.addInitScript(qrFixture => {
@@ -200,52 +204,66 @@ const server = http.createServer((req, res) => {
     async function preservingSettings() {
       const original = await page.evaluate(() => localStorage.getItem('fixture'));
       for (const lang of ['ar', 'en']) {
-        await page.evaluate(lang => localStorage.setItem('fixture', JSON.stringify({prefs: window.Miqat.prefs({lang}), input:'HDMI_1', startup:{enabled:false, launches:7}, audioVolume:{fixture:true}})), lang);
+        const next = lang === 'ar' ? 'ArrowLeft' : 'ArrowRight';
+        await page.evaluate(lang => localStorage.setItem('fixture', JSON.stringify({prefs: window.Miqat.prefs({lang,clock:'24',volume:25}), input:'HDMI_1', startup:{enabled:false, launches:7}, audioVolume:{fixture:true}})), lang);
         await page.reload(); await inputRestored(); await page.keyboard.press('Enter');
         await page.locator('[data-action=home]').click(); await page.locator('[data-action=settings]').click();
         await page.locator('[data-action=section][data-value=display]').click();
-        const size = page.locator('[data-action=uiScale]');
-        await size.click(); await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
-        await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.volume=25; localStorage.setItem('fixture',JSON.stringify(state)); });
-        await page.keyboard.press('Enter'); await page.locator('[data-action=uiScale]:not(.editing)').waitFor();
-        assert.deepEqual(await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); return [state.prefs.uiScale,state.prefs.volume,state.startup.launches,state.input,state.audioVolume]; }), [110,25,7,'HDMI_1',{fixture:true}], 'local save preserves newer unrelated preferences and outer state');
+        await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.volume=30; localStorage.setItem('fixture',JSON.stringify(state)); });
+        await page.locator('[data-action=uiScale]').focus(); await page.keyboard.press(next);
+        assert.deepEqual(await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); return [state.prefs.uiScale,state.prefs.volume,state.startup.launches,state.input,state.audioVolume]; }), [110,30,7,'HDMI_1',{fixture:true}], 'immediate save preserves newer unrelated preferences and outer state');
         await page.locator('[data-action=section][data-value=reminders]').click();
-        const volume = page.locator('[data-action=volume]');
-        await volume.click(); await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
         await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.volume=40; localStorage.setItem('fixture',JSON.stringify(state)); });
-        await page.keyboard.press('Enter'); await page.locator('[data-action=reload-settings]').waitFor();
-        assert.equal(await volume.locator('strong').innerText(), lang === 'ar' ? '٣٠%' : '30%', 'conflict retains the unsaved inline draft');
-        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.volume),40);
+        await page.locator('[data-action=volume]').focus(); await page.keyboard.press(next);
+        await page.locator('[data-action=reload-settings]').waitFor();
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.volume),40,'a conflicting immediate edit cannot overwrite the newer value');
         await page.locator('[data-action=reload-settings]').click();
-        await page.locator('[data-action=volume]:not(.editing)').waitFor();
-        assert.equal(await volume.locator('strong').innerText(),lang === 'ar' ? '٤٠%' : '40%', 'explicit reload discards draft and reads actual values');
+        await page.waitForFunction(() => !document.querySelector('[data-action=reload-settings]'));
+        assert.equal(await page.locator('[data-action=volume] strong').innerText(),lang === 'ar' ? '٤٠%' : '40%', 'reload reads the actual value');
         await page.locator('[data-action=section][data-value=appearance]').click();
-        await page.locator('[data-action=carousel-step][data-value="theme:1"]').click();
-        const choice=await page.locator('[data-action=carousel][data-value=theme] .carousel-choice').innerText();
         await page.evaluate(() => { const state=JSON.parse(localStorage.getItem('fixture')); state.prefs.homeLayout='compact'; localStorage.setItem('fixture',JSON.stringify(state)); });
-        await page.locator('[data-action=apply-appearance]').click(); await page.locator('[data-action=reload-settings]').waitFor();
-        assert.equal(await page.locator('[data-action=carousel][data-value=theme] .carousel-choice').innerText(),choice,'appearance conflict retains the local preview');
-        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.theme),'mihrab');
+        await page.locator('[data-action=carousel-step][data-value="theme:1"]').click();
+        await page.locator('[data-action=reload-settings]').waitFor();
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.theme),'mihrab','a conflicting theme edit preserves the current appearance group');
         await page.locator('[data-action=reload-settings]').click(); await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
         assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.homeLayout),'compact');
         await page.locator('[data-action=section][data-value=display]').click();await page.locator('[data-action=uiScale]').focus();
-        await page.evaluate(()=>{const state=JSON.parse(localStorage.getItem('fixture'));state.prefs.clock='12';localStorage.setItem('fixture',JSON.stringify(state));window.publishCompanion({current:{prefs:state.prefs,startup:false}});});
-        await page.waitForFunction(()=>document.querySelector('[data-action=clock] .segment.selected')?.getAttribute('data-choice-index')==='0');
-        assert.equal(await page.locator(':focus').getAttribute('data-action'),'uiScale','a phone save preserves TV browsing focus');
-        await page.locator('[data-action=uiScale]').click();await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
         await page.evaluate(()=>{const state=JSON.parse(localStorage.getItem('fixture'));state.prefs.uiScale=130;localStorage.setItem('fixture',JSON.stringify(state));window.publishCompanion({current:{prefs:state.prefs,startup:false}});});
-        await page.locator('[data-action=reload-settings]').waitFor();assert.equal(await page.locator('[data-action=uiScale] strong').innerText(),lang==='ar'?'١٢٠%':'120%','an accepted race never discards the active TV draft');
-        await page.locator('[data-action=reload-settings]').click();await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
-        await page.locator('[data-action=uiScale]').click();await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
+        await page.waitForFunction(()=>document.querySelector('[data-action=uiScale] strong').textContent.match(/130|١٣٠/));
+        assert.equal(await page.locator(':focus').getAttribute('data-action'),'uiScale','a phone save preserves TV browsing focus without an abandoned draft');
         await page.evaluate(()=>window.publishCompanion({currentUnavailable:true}));await page.locator('[data-action=reload-settings]').waitFor();
-        assert.equal(await page.locator('[data-action=uiScale] strong').innerText(),lang==='ar'?'١٤٠%':'140%','notification failure keeps the draft');
-        assert.equal(await page.evaluate(()=>window.companionEditing),true);
+        assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.uiScale),130,'notification failure cannot alter the saved value');
         await page.locator('[data-action=reload-settings]').click();await page.locator('[data-action=reload-settings]').waitFor({state:'detached'});
       }
       await page.evaluate(original => { if(original===null)localStorage.removeItem('fixture'); else localStorage.setItem('fixture',original); }, original);
       await page.reload(); await inputRestored();
     }
     await preservingSettings();
+    if (process.argv.includes('--alignment-only')) {
+      for (const lang of ['en','ar']) {
+        await page.evaluate(lang=>localStorage.setItem('fixture',JSON.stringify({prefs:window.Miqat.prefs({lang}),input:'HDMI_1'})),lang);
+        await page.reload();await inputRestored();await page.keyboard.press('Enter');await page.locator('[data-action=home]').click();
+        assert.equal(await page.locator('.arch [data-hijri]:visible').count(),1,'Hijri date belongs to the full prayer card');
+        assert.ok((await page.locator('.arch [data-hijri]').innerText()).length>5,'Hijri date is populated');
+        assert.equal(await page.locator('.verse-ref').count(),0,'Home verse has no extra caption');
+        assert.equal(await page.locator('.home-prayers .prayer.next').count(),1,'one next prayer is outlined');
+        assert.equal(await page.locator('.card-metadata .city-name').count(),1,'city and date share card metadata');
+        if(capture)await page.screenshot({path:path.join(shots,'aligned-home-'+lang+'.png')});
+        await page.locator('[data-action=settings]').click();await page.locator('[data-action=section][data-value=appearance]').click();
+        assert.equal(JSON.parse(await page.locator('[data-ui="appearance.theme"]').getAttribute('data-ui-values'))[0],'mihrab');
+        assert.equal(JSON.parse(await page.locator('[data-ui="appearance.background"]').getAttribute('data-ui-values'))[0],'miqat_signature');
+        assert.equal(await page.locator('[data-action=apply-appearance],[data-action=cancel-appearance]').count(),0);
+        assert.equal(await page.locator('[data-action=homeLayout] .segment').count(),3,'short choices are segmented');
+        assert.equal(await page.locator('[data-action=prayerMode] .segment').count(),5);
+        await page.locator('[data-action=prayerMode]').focus();await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
+        assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.prayerMode),'current','segment saves immediately');
+        await page.keyboard.press('Escape');
+        assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.prayerMode),'current','Back retains the value');
+        if(capture)await page.screenshot({path:path.join(shots,'aligned-appearance-'+lang+'.png')});
+      }
+      assert.deepEqual(errors,[]);console.log('PASS: bilingual phone-aligned Home metadata, next-prayer border, Miqat-first filled carousels and immediate segmented settings. Browser/Luna mock.');return;
+    }
+
     if (process.argv.includes('--preferences-only')) {
       assert.deepEqual(errors, []);
       console.log('PASS: bilingual LG settings merge, unrelated/outer-state preservation, inline and appearance conflicts, retained drafts and explicit reload. Luna and media are mocked.'); return;
@@ -339,7 +357,7 @@ const server = http.createServer((req, res) => {
         assert.equal(await command('device.home'),'accepted');await page.locator('.home').waitFor();
         const oldPrefs=await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs);
         await page.locator('[data-action=settings]').click();await page.locator('[data-action=section][data-value=appearance]').click();
-        assert.equal(await command('device.home'),'busy');assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs),oldPrefs);
+        assert.equal(await command('device.home'),'accepted','browsing immediate settings holds no unsaved draft');assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs),oldPrefs);
         console.log('PASS: authenticated-command frontend dispatch '+lang+' Home/input validation/radio/adhan preview/Stop and local draft/media guards; native boundaries mocked');
       }
       assert.deepEqual(errors,[]);return;
@@ -537,7 +555,7 @@ const server = http.createServer((req, res) => {
         }
       });
       await page.locator('[data-action=section][data-value=appearance]').click();
-      const countdown = page.locator('[data-action=carousel][data-value=homeLayout]');
+      const countdown = page.locator('[data-action=homeLayout]');
       const rtl = await page.locator('html').getAttribute('dir') === 'rtl';
       await countdown.focus();
       await page.keyboard.press(rtl ? 'ArrowRight' : 'ArrowLeft');
@@ -546,7 +564,7 @@ const server = http.createServer((req, res) => {
         await collect('appearance');
         if (mode < 2) await page.keyboard.press(rtl ? 'ArrowLeft' : 'ArrowRight');
       }
-      await page.locator('[data-action=cancel-appearance]').click();
+      await page.locator('[data-action=reset-layout]').click();
       await page.locator('[data-action=section][data-value=prayer]').click();
       await page.locator('[data-action=offsets]').click();
       await collect('offsets');
@@ -800,7 +818,7 @@ const server = http.createServer((req, res) => {
     await page.locator('[data-action=offset-0]').click();
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('Escape');
-    assert.match(await page.locator('[data-action=offset-0]').innerText(), /2 min/, 'Back cancels an unsaved stepper draft');
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.offsets[0]),3,'Back preserves the direct stepper adjustment');
     const numericBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs);
     const numberCases = [
       ['prayer', 'hijriOffset', -2, 2, 1, numericBefore.hijriOffset],
@@ -808,9 +826,7 @@ const server = http.createServer((req, res) => {
       ...numericBefore.offsets.map((value, i) => ['offsets', 'offset-' + i, -30, 30, 1, value])
     ];
     async function numberArrows(code, times) {
-      await page.evaluate(({code, times}) => {
-        for (let i = 0; i < times; i++) document.dispatchEvent(new KeyboardEvent('keydown', {keyCode: code, bubbles: true}));
-      }, {code, times});
+      for (let i=0;i<times;i++) await page.keyboard.press(code===37?'ArrowLeft':'ArrowRight');
     }
     for (const [section, action, low, high, step, original] of numberCases) {
       await page.locator('[data-action=section][data-value=' + (section === 'offsets' ? 'prayer' : section) + ']').click();
@@ -824,10 +840,11 @@ const server = http.createServer((req, res) => {
         await page.locator('[data-action=' + action + ']:not(.editing)').waitFor();
       }
       await row.click(); await numberArrows(37, 100); await page.keyboard.press('Escape');
+      if(section==='offsets') await page.locator('[data-action=offsets]').click();
       await row.click();
-      assert.equal(await row.locator('.inline-step strong').innerText(), high + (action === 'volume' ? '%' : action.startsWith('offset-') ? ' min' : ''), 'Back preserves saved amount');
+      assert.equal(await row.locator('.inline-step strong').innerText(), low + (action === 'volume' ? '%' : action.startsWith('offset-') ? ' min' : ''), 'Back preserves the last immediate adjustment');
       assert.ok(Number.isInteger((high - original) / step));
-      await numberArrows(37, (high - original) / step);
+      await numberArrows(39, (original - low) / step);
       await page.keyboard.press('Enter'); await page.locator('[data-action=' + action + ']:not(.editing)').waitFor();
     }
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), numericBefore, 'all numeric save/cancel round trips restore original preferences');
@@ -837,7 +854,7 @@ const server = http.createServer((req, res) => {
     await page.locator('[data-action=prayer-day]').click();
     assert.equal(await page.locator('[data-action=bell]').count(), 5, 'no sunrise bell');
     await page.locator('[data-action=bell][data-value="0"]').click();
-    await page.waitForFunction(() => document.querySelector('[data-action=bell][data-value="0"]').textContent === 'Off');
+    await page.waitForFunction(() => document.querySelector('[data-action=bell][data-value="0"]').getAttribute('aria-checked') === 'false');
     if(capture)await page.screenshot({path: path.join(shots, 'prayer-day-en.png')});
     await page.locator('[data-action=tests]').click();
     await page.locator('[data-action=section][data-value=reminders]').click();
@@ -938,32 +955,34 @@ const server = http.createServer((req, res) => {
     await page.waitForSelector('#notice', {state: 'hidden'});
     assert.equal(await page.locator('.appearance-preview svg').count(), 1);
     assert.equal((await page.locator('.appearance-preview svg').boundingBox()).height, 396, 'larger preview stays within the reserved panel');
-    const carousel = key => page.locator('[data-action=carousel][data-value=' + key + ']');
+    const carousel = key => page.locator(['theme','background'].includes(key) ? '[data-action=carousel][data-value=' + key + ']' : '[data-action=' + key + ']');
     await carousel('theme').focus();
     for (let i = 0; i < 19; i++) await page.keyboard.press('ArrowRight');
     assert.equal(await carousel('theme').locator('.carousel-choice').innerText(), 'Mosaic', 'remote reaches all 20 themes inline');
     assert.match(await page.locator('.appearance-preview').innerText(), /Mosaic/);
     await page.keyboard.press('ArrowRight');
     assert.equal(await carousel('theme').locator('.carousel-choice').innerText(), 'Mosaic', 'carousel clamps at the end');
-    assert.equal(await page.locator('#theme-style').getAttribute('href'), 'style.css', 'preview does not save the draft');
+    assert.equal(await page.locator('#theme-style').getAttribute('href'), 'theme-mosaic.css', 'theme saves immediately and styles the whole page');
     if(capture)await page.screenshot({path: path.join(shots, 'themes-en.png')});
     await page.keyboard.press('ArrowDown');
     assert.equal(await page.locator(':focus').getAttribute('data-value'), 'background', 'Down moves between carousel rows');
     await page.keyboard.press('Escape');
-    assert.equal(await carousel('theme').locator('.carousel-choice').innerText(), 'Miqat', 'Back discards the unsaved appearance draft');
+    assert.equal(await carousel('theme').locator('.carousel-choice').innerText(), 'Mosaic', 'Back retains the selected theme');
+    await carousel('theme').focus(); for(let i=0;i<19;i++) await page.keyboard.press('ArrowLeft');
     await page.locator('[data-action=carousel-step][data-value="theme:1"]').click();
     assert.notEqual(await carousel('theme').locator('.carousel-choice').innerText(), 'Miqat', 'pointer arrow updates the preview inline');
-    await page.locator('[data-action=cancel-appearance]').click();
-    assert.equal(await carousel('theme').locator('.carousel-choice').innerText(), 'Miqat');
+    await page.locator('[data-action=reset-layout]').click();
+    assert.equal(await carousel('theme').locator('.carousel-choice').innerText(), await page.evaluate(()=>window.MiqatData.strings.themeNames.en[1]));
+    await carousel('theme').focus(); await page.keyboard.press('ArrowLeft');
     const backgroundBeforePreset = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.background);
     const forestIndex = await page.evaluate(() => window.MiqatData.themes.indexOf('forest'));
     await carousel('theme').focus();
     for (let i = 0; i < forestIndex; i++) await page.keyboard.press('ArrowRight');
     assert.match(await page.locator('.appearance-model svg').evaluate(el => getComputedStyle(el).backgroundImage), /backgrounds\/tea_hills.jpg/, 'scenic theme chooses its paired landscape in the draft');
-    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.background), backgroundBeforePreset, 'theme preview does not change saved background');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.background), 'tea_hills', 'theme selection saves its paired background');
     await carousel('background').focus();
-    for (let i = 0; i < 14; i++) await page.keyboard.press('ArrowLeft');
-    await page.keyboard.press('ArrowRight');
+    for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
     for (const layout of ['mihrab', 'compact', 'hidden']) {
       const svg = page.locator('.appearance-model svg');
       assert.equal(await svg.locator('pattern, image').count(), 0, 'old WebKit preview must not clip controls through an SVG image paint server');
@@ -987,9 +1006,8 @@ const server = http.createServer((req, res) => {
     for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
     await carousel('theme').focus();
     if(capture)await page.screenshot({path: path.join(shots, 'appearance-en.png')});
-    await page.locator('[data-action=apply-appearance]').click();
     await page.waitForFunction(() => document.getElementById('theme-style').getAttribute('href') === 'theme-forest.css');
-    assert.equal(await page.locator('.settings-page').evaluate(el => getComputedStyle(el).backgroundImage), 'none', 'Home patterns do not leak onto Settings');
+    assert.match(await page.locator('.settings-page').evaluate(el => getComputedStyle(el).backgroundImage), /eight_point_stars/, 'the whole appearance page previews its saved background');
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.prayerMode), 'both');
     await page.waitForSelector('[data-action=home]');
     await page.locator('[data-action=home]').click();
@@ -1014,7 +1032,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('audio').count(), 0);
     await page.reload(); await inputRestored();
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs);
-    assert.equal(saved.offsets[0], 2); assert.equal(saved.bells[0], false); assert.equal(saved.theme, 'forest');
+    assert.equal(saved.offsets[0], 3); assert.equal(saved.bells[0], false); assert.equal(saved.theme, 'forest');
     assert.equal(saved.automatic, false, 'test buttons do not enable real alarms');
     await tests();
     await page.locator('[data-action=section][data-value=display]').click();
@@ -1224,7 +1242,7 @@ const server = http.createServer((req, res) => {
       for(const item of items)(await item.evaluate(el=>!!el.closest('.settings-nav'))?sidebarItems:contentItems).push(item);
       // Sidebar focus now replaces the content, so check its rows before browsing other sections.
       for (const item of [...contentItems,...sidebarItems]) {
-        await item.evaluate(el => { if (el.matches('button')) { el.focus(); document.getElementById('screen').scrollLeft = document.getElementById('screen').scrollTop = 0; document.getElementById('overlay').scrollLeft = document.getElementById('overlay').scrollTop = 0; } else if (document.getElementById('stage').getAttribute('data-large-ui') === 'true') el.scrollIntoView({block:'center', inline:'nearest'}); });
+        await item.evaluate(el => { if (el.closest('button')) { el.closest('button').focus(); document.getElementById('screen').scrollLeft = document.getElementById('screen').scrollTop = 0; document.getElementById('overlay').scrollLeft = document.getElementById('overlay').scrollTop = 0; } else if (document.getElementById('stage').getAttribute('data-large-ui') === 'true') el.scrollIntoView({block:'center', inline:'nearest'}); });
         const b = await item.boundingBox();
         assert.ok(b && b.x >= -0.1 && b.y >= -0.1 && b.x + b.width <= 1920.1 && b.y + b.height <= 1080.1, selector + ' stays on screen: ' + JSON.stringify(b));
         const ring = await item.evaluate(el => {
@@ -1251,16 +1269,14 @@ const server = http.createServer((req, res) => {
       await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
       assert.equal(await page.locator('[data-ui="display.size"] strong').innerText(), lang === 'ar' ? '١١٠%' : '110%');
       await page.keyboard.press('Escape');
-      assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'display.size', 'cancel size picker restores its row');
-      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), beforeSize.prefs, 'Back does not save');
-      await page.locator('[data-ui="display.size"]').click();
-      await page.locator('[data-number-step="1"]').click();
+      assert.equal(await page.locator(':focus').getAttribute('data-action'),'section','Back returns to the sidebar');
+      assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.uiScale),110,'Back retains the immediate size');
       await page.locator('[data-action=settings-back]').click();
-      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), beforeSize.prefs, 'leaving cancels the inline draft');
+      assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.uiScale),110,'leaving keeps the size');
       await page.locator('[data-action=settings]').click();
       await page.locator('[data-action=section][data-value=display]').click();
       await page.locator('[data-ui="display.size"]').click();
-      for (let i = 0; i < 4; i++) await page.locator('[data-number-step="-1"]').click();
+      for (let i = 0; i < 6; i++) await page.locator('[data-number-step="-1"]').click();
       assert.equal(await page.locator('[data-ui="display.size"] strong').innerText(), lang === 'ar' ? '٨٠%' : '80%');
       for (let i = 0; i < 9; i++) await page.locator('[data-number-step="1"]').click();
       assert.equal(await page.locator('[data-ui="display.size"] strong').innerText(), lang === 'ar' ? '١٥٠%' : '150%');
@@ -1278,15 +1294,15 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('.picker,.stepper').count(), 0, 'no separate numeric editor page');
       await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
       assert.equal(await volumeRow.locator('strong').innerText(), lang === 'ar' ? '٣٥%' : '35%', 'shared 5% step follows RTL once');
-      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), saved.prefs, 'numeric draft stays unsaved');
+      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), {...saved.prefs,volume:35}, 'numeric adjustment saves immediately');
       await page.keyboard.press('Escape');
-      assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'reminders.volume', 'numeric cancellation restores its row');
-      assert.equal(await volumeRow.locator('strong').innerText(), lang === 'ar' ? '٣٠%' : '30%');
+      assert.equal(await page.locator(':focus').getAttribute('data-action'), 'section', 'Back returns to the sidebar');
+      assert.equal(await volumeRow.locator('strong').innerText(), lang === 'ar' ? '٣٥%' : '35%');
       await volumeRow.locator('[data-number-step="1"]').click();
       await page.locator('[data-action=section][data-value=display]').click();
-      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), saved.prefs, 'leaving cancels volume draft');
+      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), {...saved.prefs,volume:40}, 'leaving retains both immediate steps');
       await page.locator('[data-action=section][data-value=reminders]').click();
-      await volumeRow.click(); await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+      await volumeRow.click(); await page.keyboard.press(lang === 'ar' ? 'ArrowRight' : 'ArrowLeft');
       await page.keyboard.press('Enter');
       await page.locator('[data-ui="reminders.volume"]:not(.editing)').waitFor();
       assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), {...saved.prefs, volume:35}, 'saving changes only the bound number');
@@ -1301,9 +1317,9 @@ const server = http.createServer((req, res) => {
       await positionRow.locator('[data-choice-index="0"]').click();
       await page.keyboard.press(lang === 'ar' ? 'ArrowLeft' : 'ArrowRight');
       assert.equal(await positionRow.locator('.segment.selected').getAttribute('data-choice-index'), '1', 'inline choice translates RTL once');
-      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), saved.prefs, 'segmented choice stays unsaved');
+      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs), {...saved.prefs,dockPosition:'bottom'}, 'segment saves immediately');
       await page.keyboard.press('Escape');
-      assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'display.bar-position', 'choice cancellation restores its row');
+      assert.equal(await page.locator(':focus').getAttribute('data-action'), 'section', 'Back leaves the saved segment');
       assert.equal(await page.locator('.picker').count(), 0, 'short choices stay in their settings card');
       await fits('[data-ui="display.language"] .segments,[data-ui="display.clock"] .segments,[data-ui="display.bar-position"] .segments');
       assert.ok(await page.locator('[data-ui="display.quick-labels"] .switch').evaluate(el => {
@@ -1348,7 +1364,6 @@ const server = http.createServer((req, res) => {
       await page.locator('[data-action=method]').click(); await fits('.picker button'); await page.keyboard.press('Escape');
       await page.locator('[data-action=offsets]').click(); await page.locator('[data-action=offset-0]').click();
       await fits('[data-ui="offsets.fajr"]'); await page.keyboard.press('Escape');
-      await page.locator('[data-action=settings-back]').click();
       await page.locator('[data-action=online-prayer]').click(); await page.waitForSelector('.online-check table');
       await fits('.online-check .header,.online-check table,.online-note,[data-action=online-retry]');
       await page.locator('[data-action=online-back]').click();
@@ -1477,20 +1492,19 @@ const server = http.createServer((req, res) => {
       await page.locator('[data-action=section][data-value=appearance]').click();
       const scenes = await page.evaluate(() => window.MiqatData.scenes);
       const choice = page.locator('[data-action=carousel][data-value=background]');
-      // Plain, eight masks, then the canonical scenes in the existing carousel.
-      const forward = lang === 'ar' ? 'ArrowLeft' : 'ArrowRight';
-      await choice.focus();
-      for (let step = 0; step < 9; step++) await page.keyboard.press(forward);
-      for (let i = 0; i < scenes.length; i++) {
+      const forward = lang === 'ar' ? 'ArrowLeft' : 'ArrowRight', back = lang === 'ar' ? 'ArrowRight' : 'ArrowLeft';
+      const values = JSON.parse(await choice.getAttribute('data-ui-values'));
+      assert.equal(values[0],'miqat_signature','Signature is the first background');
+      for (const scene of scenes) {
+        await choice.focus(); for(let i=0;i<values.length;i++) await page.keyboard.press(back);
+        for(let i=0;i<values.indexOf(scene);i++) await page.keyboard.press(forward);
         const image = await page.locator('.appearance-model svg').evaluate(el => getComputedStyle(el).backgroundImage);
-        assert.ok(image.includes('backgrounds/' + scenes[i] + '.jpg'), 'scenic draft follows carousel: ' + lang + ' ' + scenes[i] + ' ' + image);
+        assert.ok(image.includes('backgrounds/' + scene + '.jpg'), 'scenic selection follows its ID: ' + lang + ' ' + scene);
         assert.ok(await page.evaluate(id => new Promise(resolve => {
           const image = new Image(); image.onload = () => resolve(image.naturalWidth === 1920 && image.naturalHeight === 1080);
           image.onerror = () => resolve(false); image.src = 'backgrounds/' + id + '.jpg';
-        }), scenes[i]), 'full landscape decodes');
-        if (i < scenes.length - 1) { await choice.focus(); await page.keyboard.press(forward); }
+        }), scene), 'full landscape decodes');
       }
-      await page.locator('[data-action=apply-appearance]').click();
       assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).prefs.background), scenes.at(-1));
       await page.locator('[data-action=home]').click();
       assert.ok((await page.locator('.home').evaluate(el => getComputedStyle(el).backgroundImage)).includes('backgrounds/' + scenes.at(-1) + '.jpg'));
@@ -1510,14 +1524,14 @@ const server = http.createServer((req, res) => {
       assert.equal(await alpha(),'0.85');
       await opacity.focus();await page.keyboard.press('Enter');for(let i=0;i<20;i++)await page.keyboard.press(previous);
       assert.equal(await alpha(),'0.5','draft reaches and clamps at 50%');
-      assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),85,'numeric draft stays unsaved');
-      await page.keyboard.press('Escape');assert.equal(await alpha(),'0.85','Back cancels only numeric draft');
+      assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),50,'numeric adjustment saves immediately');
+      await page.keyboard.press('Escape');assert.equal(await alpha(),'0.5','Back preserves the saved number');
       await opacity.focus();await page.keyboard.press('Enter');for(let i=0;i<20;i++)await page.keyboard.press(next);await page.keyboard.press('Enter');
       assert.equal(await alpha(),'1','100% is fully solid');
-      assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),85,'OK waits for Apply');
-      await page.locator('[data-action=cancel-appearance]').click();assert.equal(await alpha(),'0.85','outer Cancel restores saved fill');
+      assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),100,'no Apply is needed');
+      assert.equal(await page.locator('[data-action=apply-appearance],[data-action=cancel-appearance]').count(),0,'immediate appearance has no Apply or Cancel');
       await opacity.focus();await page.keyboard.press('Enter');for(let i=0;i<20;i++)await page.keyboard.press(previous);await page.keyboard.press('Enter');
-      await page.locator('[data-action=apply-appearance]').click();assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),50);
+      assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fixture')).prefs.mihrabOpacity),50);
       await page.locator('[data-action=home]').click();assert.equal(await page.locator('.arch-shape .outer').evaluate(el=>getComputedStyle(el).fillOpacity),'0.5');
       assert.equal(await page.locator('.arch-shape .outer').evaluate(el=>getComputedStyle(el).strokeOpacity),'1');
       await page.reload();await page.waitForSelector('#input-video source',{state:'attached'});await page.keyboard.press('Enter');await page.locator('[data-action=home]').click();
@@ -1545,8 +1559,8 @@ const server = http.createServer((req, res) => {
       }
       const currentRow = dayRows.find(row => row.expected === 'current');
       const otherRow = dayRows.find(row => row.expected === 'up' || row.expected === 'past');
-      if (currentRow && otherRow) assert.notEqual(currentRow.fill, otherRow.fill,
-        'Today current prayer is visibly distinct from other times');
+      if (currentRow && otherRow) assert.equal(currentRow.fill, otherRow.fill,
+        'ordinary prayer rows share a surface; next keeps the highlight');
 
     }
     assert.deepEqual(errors, []);

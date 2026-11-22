@@ -1,6 +1,6 @@
 import { onScreen, navigate } from '../../scripts/lifecycle';
 import { homePreview } from '../../lib/home-layout';
-import { appearance, THEMES }  from '../../scripts/appearance';
+import { THEMES }  from '../../scripts/appearance';
 import { armCycle } from '../../lib/appearance-cycle';
 import { live } from '../../scripts/live';
 import { href } from '../../lib/site';
@@ -12,7 +12,7 @@ import {pairingDemo, pairingHtml, pairingStep, type PairingAction} from '../pair
 import {fetchComparison, onlineRequest} from '../../lib/online-prayer';
 import {
   APPEARANCE, DEVICE, DOCK_MODES, REMIND, VOICES, chooserHtml, citiesOf, commit, countries, methodItems, regionOf, moveDraft, pick, rowsFor, rowsHtml,
-  savedDraft, sectionName, stationChoice, stationsOf, onlineHtml, type Edit, type SPrefs,
+  savedDraft, sectionName, stationChoice, stationsOf, onlineHtml, type SPrefs,
 } from '../settings';
 
 onScreen('settings', (stage, signal) => {
@@ -30,9 +30,7 @@ onScreen('settings', (stage, signal) => {
   let section = 0;
   let offsetsPage = false;
   let offsetsParentRow = 0;
-  let appearanceDraft: SPrefs | null = null;
-  const rowCtx = () => appearanceDraft && section === APPEARANCE ? { ...ctx, prefs: appearanceDraft } : ctx;
-  let edit: Edit | null = null;
+  const rowCtx = () => ctx;
   let lastRows = rowsEl.innerHTML;
   let radioOn = false;
   let ctx!: Ctx;
@@ -67,22 +65,18 @@ onScreen('settings', (stage, signal) => {
     }
   };
   const focusedRow = () => { const a = document.activeElement as HTMLElement | null; return a && rowsEl.contains(a) ? +(a.dataset.row ?? -1) : -1; };
-  const focusNav = () => { if (section === APPEARANCE) { appearanceDraft = { ...ctx.prefs }; edit = null; rerender(); } navs[section].focus({ preventScroll: true }); };
+  const focusNav = () => navs[section].focus({ preventScroll: true });
 
   // The rows are re-rendered only when their HTML changes (a pref, the date), keeping focus on the same row.
   const rerender = () => {
     $('[data-appearance-preview]').hidden = section !== APPEARANCE;
-    if (appearanceDraft) {
-      const preview = edit && rowsFor(rowCtx(), section, radioOn, offsetsPage)[edit.row]?.id === 'mihrabOpacity'
-        ? {...appearanceDraft, mihrabOpacity:edit.draft} : appearanceDraft;
-      appearance($('[data-appearance-preview]'), preview);
-    }
+    root.classList.toggle('live-appearance', section === APPEARANCE);
     $('[data-theme-name]').textContent = ctx.t.list('themeNames')[Math.max(0, THEMES.indexOf(rowCtx().prefs.theme ?? 'mihrab'))];
-    rowsEl.classList.toggle('scrolling', section === APPEARANCE || section === DEVICE || (ctx.prefs.uiScale ?? 100) > 110);
+    rowsEl.classList.toggle('scrolling', true);
     rowsEl.classList.toggle('appearance', section === APPEARANCE);
-    if (appearanceDraft) $('[data-home-plan]').innerHTML = homePreview(appearanceDraft, rtl);
+    if (section === APPEARANCE) $('[data-home-plan]').innerHTML = homePreview(ctx.prefs, rtl);
     $('[data-label]').textContent = offsetsPage ? ctx.t.s('prayerOffsets') : sectionName(ctx.t, section);
-    const h = rowsHtml(rowCtx(), section, radioOn, edit, offsetsPage);
+    const h = rowsHtml(rowCtx(), section, radioOn, null, offsetsPage);
     if (h === lastRows) return;
     const fi = focusedRow();
     rowsEl.innerHTML = h;
@@ -101,8 +95,8 @@ onScreen('settings', (stage, signal) => {
   };
   const save = (p: SPrefs | null) => {
     if (!p) return;
-    if (section === APPEARANCE) { appearanceDraft = p; rerender(); }
-    else { update(p); showSaved(); }
+    update(p.appearanceCycle !== ctx.prefs.appearanceCycle ? armCycle(p, Date.now()) : p);
+    showSaved();
   };
 
   const setSection = (n: number) => {
@@ -110,8 +104,6 @@ onScreen('settings', (stage, signal) => {
     offsetsPage = false;
     rowsEl.scrollTop = 0;
     section = n;
-    appearanceDraft = n === APPEARANCE ? { ...ctx.prefs } : null;
-    edit = null;
     navs.forEach((b, i) => {
       b.classList.toggle('open', i === n);
       b.toggleAttribute('data-focus-start', i === n);
@@ -275,15 +267,11 @@ onScreen('settings', (stage, signal) => {
     try { sessionStorage.setItem(FOCUS, JSON.stringify({ section, row: focusedRow() })); } catch { /* fine */ }
     navigate(href('settings', to) + '#tv');
   };
-  // Editing a seg or step row: OK starts it, ◀▶ move the draft, OK saves, Back cancels.
-  const setEdit = (e: Edit | null) => { edit = e; rerender(); };
-  const endEdit = (keep: boolean) => {
-    if (!edit) return;
-    const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[edit.row], draft = edit.draft;
-    setEdit(null);
-    if (!keep) return;
-    if (r.id === 'lang') { if (draft !== r.selected) goLang(draft); }
-    else save(commit(rowCtx(), r, draft));
+  const adjust = (i: number, direction: number) => {
+    const row = rowsFor(ctx, section, radioOn, offsetsPage)[i];
+    const next = moveDraft(row, savedDraft(ctx, row), direction);
+    if (row.id === 'lang') goLang(next);
+    else save(commit(ctx, row, next));
   };
 
   /** OK opens or edits a row; carousels preview directly with Left/Right. */
@@ -292,10 +280,9 @@ onScreen('settings', (stage, signal) => {
     if (!r) return;
     if(r.id==='device.companion'){pairingRow=i;pairingEl.hidden=false;pairingBackground.forEach(el=>el.inert=true);renderPairing();return;}
     if (r.id === 'prayer.online') { void checkOnline(i); return; }
-    if (r.id === 'homeReset' && appearanceDraft) save({ ...appearanceDraft, homeCountdown: 0, homeSide: 0, homeBar: 0, homePrayers: 0, homeLayout: 'two_rows' });
-    else if (r.id === 'apply' && appearanceDraft) { appearanceDraft = armCycle(appearanceDraft, Date.now()); update(appearanceDraft); showSaved(); }
+    if (r.id === 'homeReset') save({ ...ctx.prefs, homeCountdown: 0, homeSide: 0, homeBar: 0, homePrayers: 0, homeLayout: 'two_rows' });
     else if (r.kind === 'carousel') return;
-    else if (r.kind === 'seg' || r.kind === 'step') setEdit({ row: i, draft: savedDraft(rowCtx(), r) });
+    else if (r.kind === 'seg' || r.kind === 'step') return;
     else if (r.id === 'radio') setRadio(!radioOn);
     else if (r.id === 'resume') save({ ...p(), radioResume: p().radioResume === false });
     else if (r.id === 'quickLabels') save({ ...p(), quickLabels: !p().quickLabels });
@@ -374,16 +361,6 @@ onScreen('settings', (stage, signal) => {
     const row = a?.dataset.row;
     if (row == null) return;
     handled();
-    if (edit) {
-      // Up/Down stay on the row being edited.
-      if (back) endEdit(false);
-      else if (ok) endEdit(true);
-      else if (horiz) {
-        const draft = moveDraft(rowsFor(rowCtx(), section, radioOn, offsetsPage)[edit.row], edit.draft, toEnd);
-        if (draft !== edit.draft) setEdit({ ...edit, draft });
-      }
-      return;
-    }
     // Carousels consume Left/Right; other rows return to sections toward the start.
     if (back && offsetsPage) { offsetsPage = false; rerender(); focusRow(offsetsParentRow); }
     else if (back) focusNav();
@@ -391,6 +368,7 @@ onScreen('settings', (stage, signal) => {
     else if (horiz) {
       const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[+row];
       if (r.kind === 'carousel') save(pick(rowCtx(), r.id, Math.max(0, Math.min(r.segs!.length - 1, r.selected! + toEnd))));
+      else if (r.kind === 'seg' || r.kind === 'step') adjust(+row, toEnd);
       else if (toEnd < 0) focusNav();
     }
     else act(+row);
@@ -431,7 +409,6 @@ onScreen('settings', (stage, signal) => {
     const nav = el.closest<HTMLElement>('[data-nav]');
     if (nav) { setSection(+nav.dataset.nav!); focusRow(0); return; }
     const rowEl = el.closest<HTMLElement>('[data-row]');
-    if (edit) setEdit(null);
     if (!rowEl) return;
     const i = +rowEl.dataset.row!;
     const seg = el.closest<HTMLElement>('[data-seg]');

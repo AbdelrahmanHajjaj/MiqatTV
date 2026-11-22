@@ -1,5 +1,31 @@
 # Validation evidence
 
+## Shared TV UI alignment — 22 November 2026
+
+Android TV 0.7.2/code 13, LG 0.2.30 and phone 0.5.18/code 34 align common
+Home/appearance/choice behaviour with the approved phone design. Shared contract,
+canonical generators (12/12 companion tests), JVM/Java/JS and ES5 legacy proof
+pass, as do all 50 root Python/Java regressions. TV and phone debug builds,
+test compilation and lint pass. Both APKs contain all 25 exact approved clips.
+
+Native Android control coverage passes in Arabic/English. Native layouts pass
+all 80–150% sizes, including the corrected small-scale scroll viewport. Phone's
+bilingual TV-settings demo journey passes with the new segmented controls and
+independent immediate saves. These are owned Android 14 Google APIs emulator
+checks in landscape, not physical Android TV acceptance. LG ES5/service and full
+mocked-browser journeys pass both languages, every size, theme surfaces, actual
+control/choice coverage, persistence/conflicts and input/audio recovery. Preview
+unit/build/browser checks pass immediate settings, independent prayer edits,
+bilingual 80/100/150% flows and fixed viewport focus. Private captures/logs stay
+under ignored state/. No physical deployment or new TV picture/sound/remote/power
+acceptance was performed; documented capability gaps remain.
+
+Latest review exports replace the existing files only. Phone's signer is unchanged
+(SHA-256 d5b22399…0784f02). Phone APK SHA-256 03030c21…8147c03;
+TV APK 311f9a7c…59b9325; LG IPK 216cc025…6287adc. Full hashes and captures are
+private; PR checks own remote validation status. Public release publication is
+separate from preparing a preview draft.
+
 ## Release candidate and TV contracts — 22 November 2026
 
 Phone 0.5.17/code 33: the native multi-widget journey reproduced Add on an

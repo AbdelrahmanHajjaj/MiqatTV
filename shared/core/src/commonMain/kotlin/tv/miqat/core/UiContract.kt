@@ -92,8 +92,11 @@ object UiContract {
         bind(id, "choice")
         return when (id) {
             "prayer.asr", "reminders.close", "radio.screen-off", "display.language",
-            "display.digits", "display.clock", "display.bar-position", "display.bar-timeout" -> "segments"
-            else -> if (id.startsWith("appearance.")) "carousel" else "list"
+            "display.digits", "display.clock", "display.bar-position", "display.bar-timeout",
+            "appearance.countdown", "appearance.position", "appearance.prayers",
+            "appearance.favourites", "appearance.cycle" -> "segments"
+            "appearance.theme", "appearance.background" -> "carousel"
+            else -> "list"
         }
     }
 

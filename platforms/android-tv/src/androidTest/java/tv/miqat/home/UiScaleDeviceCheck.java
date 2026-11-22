@@ -52,12 +52,13 @@ final class UiScaleDeviceCheck {
                 for (int i = 0; i < 12 && settings.getCurrentFocus() != bound; i++) key(test, settings, KeyEvent.KEYCODE_DPAD_DOWN);
                 check(settings.getCurrentFocus() == bound, "D-pad reaches the actual global size row");
                 Map<String, ?> before = prefs.getAll();
-                key(test, settings, KeyEvent.KEYCODE_DPAD_CENTER);
                 key(test, settings, language.equals("ar") ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT);
+                check(Prefs.uiScale(settings) == 110, "Size saves on the first adjustment");
                 key(test, settings, KeyEvent.KEYCODE_BACK);
-                check(prefs.getAll().equals(before), "Back cancels the size draft");
-                check(settings.getCurrentFocus() == binding(settings.root, "display.size"), "Cancel retains the size row");
+                check(Prefs.uiScale(settings) == 110, "Back preserves the size");
                 key(test, settings, KeyEvent.KEYCODE_DPAD_CENTER);
+                for (int i = 0; i < 12 && settings.getCurrentFocus() != binding(settings.root, "display.size"); i++) key(test, settings, KeyEvent.KEYCODE_DPAD_DOWN);
+                key(test, settings, language.equals("ar") ? KeyEvent.KEYCODE_DPAD_RIGHT : KeyEvent.KEYCODE_DPAD_LEFT);
                 int delta = size / 10 - 10;
                 for (int i = 0; i < Math.abs(delta); i++) key(test, settings,
                     (delta > 0) != language.equals("ar") ? KeyEvent.KEYCODE_DPAD_RIGHT : KeyEvent.KEYCODE_DPAD_LEFT);

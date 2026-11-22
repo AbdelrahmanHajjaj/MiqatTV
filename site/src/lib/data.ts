@@ -38,7 +38,7 @@ export type Prefs = {
 };
 
 export const DEFAULT_PREFS: Prefs = {
-  city: 'cairo', method: null, hanafi: false, hijriOffset: 0, clock: 'system', digits: 'auto',
+  city: 'cairo', method: null, hanafi: false, hijriOffset: 0, clock: '12', digits: 'auto',
   remind: 15, adhan: true, station: 'cairo',
 };
 

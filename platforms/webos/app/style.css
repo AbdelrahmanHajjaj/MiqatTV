@@ -153,17 +153,17 @@ button:disabled { color: {{color.disabled-text}}; }
 .settings-rows button:focus .value { color: {{color.lapis-900}}; }
 .chevron { display: inline-block; margin: 0 0 0 16px; font-size: 30px; }
 [dir=rtl] .chevron { margin: 0 16px 0 0; -webkit-transform: rotate(180deg); transform: rotate(180deg); }
-.settings-rows .switch { display: block; width: {{layout.settings.toggle-width}}; height: {{layout.settings.toggle-height}}; border-radius: {{radius.pill}}; background: {{color.lapis-700}}; position: relative; }
+.switch { display: block; width: {{layout.settings.toggle-width}}; height: {{layout.settings.toggle-height}}; border-radius: {{radius.pill}}; background: {{color.lapis-700}}; position: relative; }
 .switch > span { position: absolute; width: {{layout.settings.toggle-knob}}; height: {{layout.settings.toggle-knob}}; top: {{layout.settings.toggle-inset}}; left: {{layout.settings.toggle-inset}}; border-radius: {{radius.pill}}; background: {{color.mist-400}}; }
-.settings-rows .switch.on { background: {{color.gold-400}}; }
-.switch.on > span { left: auto; right: {{layout.settings.toggle-inset}}; background: {{color.lapis-900}}; }
+.switch.on { background: {{color.lapis-700}}; }
+.switch.on > span { left: auto; right: {{layout.settings.toggle-inset}}; background: {{color.gold-400}}; }
 [dir=rtl] .switch > span { left: auto; right: {{layout.settings.toggle-inset}}; }
 [dir=rtl] .switch.on > span { right: auto; left: {{layout.settings.toggle-inset}}; }
 button:focus .switch.on { background: {{color.lapis-900}}; }
 button:focus .switch.on > span { background: {{color.gold-400}}; }
-.settings-rows .segments { max-width: none; border-radius: {{radius.pill}}; padding: 6px; background: {{color.lapis-900}}; font-size: 24px; }
-.segment { display: inline-block; text-align: center; padding: 10px 18px; margin: 0 3px; border: 3px solid transparent; border-radius: {{radius.pill}}; color: {{color.mist-400}}; cursor: pointer; }
-.segment.selected { color: {{color.lapis-900}}; background: {{color.plaster-100}}; }
+.settings-rows .segments { max-width: none; border-radius: {{radius.row}}; padding: 6px; background: {{color.lapis-900}}; font-size: 24px; }
+.segment { display: inline-block; text-align: center; padding: 10px 18px; margin: 0 3px; border: 2px solid {{color.line-soft}}; border-radius: {{radius.row}}; color: {{color.mist-400}}; cursor: pointer; }
+.segment.selected { color: {{color.gold-400}}; background: {{color.lapis-800}}; border-color: {{color.gold-400}}; box-shadow: 0 2px 4px rgba(0,0,0,.25); }
 button:focus .segments { background: {{color.seg-track-focused}}; }
 button:focus .segment { color: {{color.lapis-900}}; }
 button:focus .segment.selected { background: {{color.lapis-900}}; color: {{color.plaster-100}}; border-color: {{color.plaster-100}}; }
@@ -343,3 +343,42 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 
 /* Keep the canonical launch artwork visible while the first screen loads. */
 #splash { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 100; background: url("splash.png") center center / cover no-repeat; }
+
+/* Short choices share the phone's inset track and raised selected surface. */
+.settings-rows button.choice-row { min-height:148px; }
+.settings-rows .segments { display:block; float:none; margin-top:12px; text-align:start; }
+.settings-rows .segment { white-space:normal; }
+[data-layout=mihrab] .home .header-hijri { display:none; }
+.card-hijri { color:{{color.plaster-100}}; font-size:{{font.size.body}}; margin-bottom:24px; }
+[data-layout=compact] .card-hijri { display:none; }
+
+[data-layout=mihrab] .arch-info { top:300px; }
+[data-layout=mihrab] .countdown { margin-top:48px; }
+[data-layout=mihrab] .city-name { margin-top:24px; }
+.choice-row .segments { width:100%;display:table;table-layout:fixed;border-spacing:6px; }
+.choice-row .segment { display:table-cell;padding:10px 8px;vertical-align:middle;font-size:22px; }
+
+.card-metadata { display:table;table-layout:fixed;width:100%;margin-bottom:24px; }
+.card-metadata .card-hijri, .card-metadata .city-name { display:table-cell;vertical-align:middle;margin:0;font-size:24px; }
+.card-metadata .card-hijri { width:65%;text-align:start; }
+.card-metadata .city-name { width:35%;text-align:end; }
+[data-layout=compact] .card-metadata { display:none; }
+
+.day-row button .switch { margin:auto; }
+
+/* Filled artwork cards use the same selection family as the phone. */
+.settings-rows .carousel-main, #stage[data-large-ui=true] .settings-rows .carousel-main { padding:16px 72px; }
+.carousel-cards { display:table;table-layout:fixed;width:100%;border-spacing:12px 0;margin-top:16px; }
+.carousel-card { display:table-cell;background:{{color.lapis-800}};border:1px solid {{color.line-soft}};border-radius:{{radius.row}};padding:8px;vertical-align:top;text-align:center;color:{{color.plaster-100}}; }
+.carousel-card.selected { border:3px solid {{color.gold-400}};color:{{color.gold-400}}; }
+.carousel-art { display:block;height:92px;background-size:cover;background-position:center; }
+.carousel-choice, [dir=rtl] .carousel-choice, #stage[data-large-ui=true] .carousel-choice { position:static;display:block;width:auto;white-space:normal;line-height:1.5;font-size:22px;margin-top:8px; }
+.carousel-neighbor { display:block;font-size:22px;line-height:1.5;margin-top:8px; }
+.carousel-main:focus .carousel-choice { color:{{color.gold-400}}; }
+.settings-rows .carousel-arrow, #stage[data-large-ui=true] .settings-rows .carousel-arrow { top:88px;bottom:auto; }
+.carousel-arrow.previous, #stage[data-large-ui=true] .carousel-arrow.previous { left:8px;right:auto; }
+.carousel-arrow.next, #stage[data-large-ui=true] .carousel-arrow.next { right:8px;left:auto; }
+[dir=rtl] .carousel-arrow.previous, [dir=rtl] #stage[data-large-ui=true] .carousel-arrow.previous { right:8px;left:auto; }
+[dir=rtl] .carousel-arrow.next, [dir=rtl] #stage[data-large-ui=true] .carousel-arrow.next { left:8px;right:auto; }
+
+[dir=rtl] .settings-rows .carousel-main { padding-left:72px;padding-right:72px; }

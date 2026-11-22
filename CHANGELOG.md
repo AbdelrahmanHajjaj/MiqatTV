@@ -1,5 +1,13 @@
 # Changelog
 
+## TV UI alignment — Android TV 0.7.2 / LG 0.2.30 / phone 0.5.18
+
+- Bring the phone’s immediate settings saving to both TVs. Adjust numbers and short choices directly; remove Appearance Apply/Cancel. Preserve saved values and paired-phone conflict protection.
+- Put Miqat and Miqat signature first in appearance choices, keep selected artwork cards filled and readable, and preview backgrounds across the Appearance page.
+- Use raised selected choices and inset inactive choices; share the same switch style between settings and individual prayer alerts.
+- Place the Hijri date and city inside Home’s prayer card, remove the verse caption, and reserve the highlight border for the next prayer. LG’s Home Fajr slot now follows tomorrow’s next prayer overnight like Android TV.
+- Use 12-hour time for new installations; retain existing explicit clock selections.
+
 ## 0.5.17 release preparation
 
 - Show **Update prayer widget** when reopening an existing widget's settings; keep **Add prayer widget** for a new widget. Settings still save immediately and remain independent per widget.

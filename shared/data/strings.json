@@ -913,8 +913,8 @@
     "en": "Reset layout to default"
   },
   "homeHelp": {
-    "ar": "عاين التخطيط ثم طبّق. الرجوع يلغي التغييرات. لا تتغير إعدادات الأذان والتذكير.",
-    "en": "Preview, then apply. Back cancels changes. Adhan and reminders stay as set."
+    "ar": "اختر التخطيط والمظهر. تُحفظ التغييرات فورًا.",
+    "en": "Choose your layout and style. Changes save immediately."
   },
   "homeFavourites": {
     "ar": "صفوف المفضلة",

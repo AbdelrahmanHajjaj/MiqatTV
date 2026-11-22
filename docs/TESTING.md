@@ -64,8 +64,9 @@ Use [UI-CONTRACT.md](UI-CONTRACT.md) and the generated
 [gap report](UI-GAPS.md). Tests must inspect actual bound views/DOM controls,
 including choice values, rather than asserting only a support manifest.
 
-For changed controls, exercise Arabic/RTL and English/LTR, draft versus saved
-state, OK/Apply, Back cancellation, re-entry and return focus. Numeric controls use
+For changed controls, exercise Arabic/RTL and English/LTR, immediate
+persistence, Back/re-entry and return focus. Picker cancellation must retain the
+last valid saved choice; there are no ordinary row/page Apply steps. Numeric controls use
 core editor kinds, steps and bounds; ordinary numbers stay inline in their row.
 Choice widgets follow `choiceEditor`; toggles use switches. Check shared theme
 surfaces, the next-prayer outline and prayer-cell corner limits in rendered UI.

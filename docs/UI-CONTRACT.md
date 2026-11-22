@@ -2,7 +2,7 @@
 
 This specifies product behavior shared by native shells. Implementation status
 and priority live in [WORK.md](WORK.md); verification
-facts live in [EVIDENCE.md](EVIDENCE.md). Android is the initial parity
+facts live in [EVIDENCE.md](EVIDENCE.md). The approved Android phone design is the common presentation and editing
 reference; platform renderers, OS APIs and saved preference keys remain separate.
 
 ## Shared responsibilities
@@ -28,8 +28,9 @@ It never writes preferences or replaces calculated schedules/reminders. Shells
 which have not implemented it must declare a gap and hide the action.
 
 `display.size` is one global numeric control: 80–150 percent in steps of 10, default 100.
-The − / + editor stays in its settings row: OK starts/saves, Left/Right adjust the
-unsaved draft (RTL translated once), and Back cancels without leaving the row.
+The − / + editor stays in its settings row: Left/Right adjust and save immediately
+(RTL translated once). OK is not a required confirmation; Back returns to the sidebar
+and retains the last valid value.
 It scales app-owned text and controls together on every screen, including prayer
 bars, alerts and pickers. Video content stays unscaled. Bars retain their screen
 edge and fit the available width; larger sizes must keep controls and focus rings
@@ -49,7 +50,7 @@ compact HDMI prayer bar.
 Up/Down loads the focused sidebar section immediately, retaining focus in the
 sidebar. No OK press is required to preview its controls. The arrow toward the
 content enters the section (Right in LTR, Left in RTL). Focus alone never saves
-settings or launches an OS settings panel; existing draft cancellation applies.
+settings or launches an OS settings panel. Only explicit adjustments save.
 
 ## Home focus
 
@@ -101,26 +102,31 @@ Android, LG and the browser preview bind this rule and translate RTL once.
 
 `choiceEditor` distinguishes segmented inline choices, appearance carousels and
 catalog lists. Android validates its actual Row kind against it; LG renders and
-edits short choices inline, while long lists retain pickers. OK starts/commits a
-draft, horizontal keys change it with RTL translated once, and Back/leaving
-cancels. Pointer choices update the same draft; they do not bypass confirmation.
+edits short choices inline, while long lists retain pickers. Explicit horizontal
+adjustments and pointer selections save immediately, with RTL translated once.
+Back/leaving retains valid changes. Only themes and backgrounds use carousels;
+short Home/layout choices use the same segmented family as other short choices.
 Declared missing options remain missing rather than becoming placeholder segments.
 
 Switches and segments use canonical design dimensions, typefaces, focus colors
-and rings. Theme surface names/tokens govern corners, panel fill, edges and
+and rings. Segments use an inset track, outlined inactive surfaces and a raised,
+accent-outlined selected surface; remote focus remains distinct from selection.
+Miqat is the first theme, and Miqat signature is the first/default background.
+Filled artwork cards and the entire Appearance page reflect saved selections.
+There is no Appearance Apply/Cancel footer. Theme surface names/tokens govern corners, panel fill, edges and
 typographic hierarchy; the next-prayer outline remains semantic across themes.
 Visual conformance needs rendered bilingual/size/theme checks in addition to ID
 coverage. Core owns editor policy, while shared design owns appearance and shells
 perform native drawing. Remaining feature gaps do not justify a second design.
 
 `shared/core` is the root contract for every control's ID, kind, label reference,
-range, choices, save scope and declared platform gaps. A renderer translates this
+range, choices, save policy and declared platform gaps. A renderer translates this
 contract into native widgets; it must not invent its own setting definition.
 For numeric controls, `numberEditor`, `numberStep` and `adjustNumber` also own the
 editor style, increment and validated/clamped draft transition. Android, LG and
 the preview call these same rules. Standard numbers edit inline with −/+,
-OK saves the row and Back/leaving cancels; appearance rows retain their page-wide
-Apply scope. Focus returns to the originating row. Size steps by 10%, volume by
+each valid adjustment saves immediately, including appearance. Back/leaving
+preserves it; independent controls cannot reset one another. Focus returns to the originating row. Size steps by 10%, volume by
 5%, and Hijri/prayer offsets/lighting by 1. The specialized room-bearing card
 retains its compass behavior and shared 5° horizontal increment.
 
@@ -165,8 +171,8 @@ them through its actual binding. Semantic choice values resolve canonical catalo
 references during generation. Both renderers validate actual option models; native
 popup lists also check their IDs/counts and LG validates the chosen offered value
 before saving. Coverage aggregates countdown-position and imported-theme variants,
-then requires explicit partial-option gaps. Stored keys, aliases and choice ordering
-remain platform-owned. The actual five switches are exercised in both languages
+then requires explicit partial-option gaps. Stored keys remain platform-owned; choice IDs retain existing saved values.
+Presentation ordering follows the common Miqat-first policy. The actual five switches are exercised in both languages
 in each shell, including persisted values and return focus. Native room-direction
 checks cover physical compass directions in RTL/LTR, wraparound, save/cancel and
 return to the originating control. Clockwise remains physical Right in either
@@ -190,7 +196,7 @@ per-shell bindings. Conformance checks must:
 1. Fail on unknown/duplicate IDs and any required supported setting/action without
    a binding. Enumerate the actual registered/rendered controls, not a second
    hand-maintained list claiming those controls exist.
-2. Exercise value kinds/choices/bounds and save/cancel round trips without changing
+2. Exercise value kinds/choices/bounds and immediate-save and picker-cancellation round trips without changing
    established storage keys. Preserve deliberate platform defaults.
 3. Run the same focus vectors through the JVM and ES5 rules, including empty and
    partial rows, RTL mapping, optional controls and return focus.
@@ -202,3 +208,11 @@ per-shell bindings. Conformance checks must:
 
 Build/host tests complement physical TV checks. None alone proves native key
 interception, screen overscan, Arabic glyph painting, decoder/audio or power behavior.
+
+Home’s full prayer card contains the Hijri date and city, alongside the existing
+next-prayer name, time and remaining time. Keep the exact Quran verse without
+an additional caption or divider. Other Home layouts retain a visible header
+date. The next prayer has the single accent outline; past/current entries retain
+readable ordinary surfaces. TV launcher controls remain reachable by the shared
+remote focus map. Calendar/GPS/widgets and OS-specific notification delivery are
+not inferred from visual contract conformance; see the platform guides and gaps.

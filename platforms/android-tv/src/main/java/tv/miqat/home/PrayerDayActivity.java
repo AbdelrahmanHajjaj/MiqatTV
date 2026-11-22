@@ -31,7 +31,6 @@ public class PrayerDayActivity extends Screen {
     private final FocusTile[] row = new FocusTile[ROWS];
     private final TextView[] rowName = new TextView[ROWS], rowStatus = new TextView[ROWS], rowTime = new TextView[ROWS];
     private final FrameLayout[] bell = new FrameLayout[ROWS];
-    private final Icon[] bellIcon = new Icon[ROWS];
     /** 0 past, 1 now, 2 upcoming; the row's resting look. */
     private final int[] state = new int[ROWS];
     private FocusTile homePill;
@@ -132,13 +131,11 @@ public class PrayerDayActivity extends Screen {
         rowTime[i].setSingleLine(true);
         bell[i] = new FrameLayout(this);
         if (!prayer) bell[i].setVisibility(View.INVISIBLE);
-        bellIcon[i] = new Icon(this, Icon.BELL, 2f);
-        bell[i].addView(bellIcon[i], new FrameLayout.LayoutParams(Ui.ipx(26), Ui.ipx(26), Gravity.CENTER));
 
         r.addView(rowName[i], new LinearLayout.LayoutParams(0, -2, 1));
         r.addView(rowStatus[i], gap(new LinearLayout.LayoutParams(-2, -2)));
         r.addView(rowTime[i], gap(new LinearLayout.LayoutParams(-2, -2)));
-        r.addView(bell[i], gap(new LinearLayout.LayoutParams(Ui.ipx(56), Ui.ipx(56))));
+        r.addView(bell[i], gap(new LinearLayout.LayoutParams(Ui.ipx(Tokens.LAYOUT_SETTINGS_TOGGLE_WIDTH), Ui.ipx(Tokens.LAYOUT_SETTINGS_TOGGLE_HEIGHT))));
         b.addView(r, new FrameLayout.LayoutParams(-1, -1));
         b.setLook(f -> paintRow(i));
         if (prayer) b.setOnClickListener(v -> {
@@ -369,27 +366,17 @@ public class PrayerDayActivity extends Screen {
         if (rowName[i] == null || bell[i] == null) return;
         boolean focused = row[i] != null && row[i].isFocused();
         int s = state[i];
-        int fill = s == 1 ? Palette.PLASTER_100 : (s == 0 ? Palette.LAPIS_800_60 : Palette.LAPIS_800);
-        if (row[i] != null) row[i].setRest(fill, 0, 0);
-        boolean dark = focused || s == 1;
+        int fill = s == 0 ? Palette.LAPIS_800_60 : Palette.LAPIS_800;
+        boolean next = day != null && i == day.nextIndex;
+        if (row[i] != null) row[i].setRest(fill, next ? Palette.GOLD_400 : 0, next ? 3 : 0);
+        boolean dark = focused;
         int fg = dark ? Palette.LAPIS_900 : (s == 0 ? Palette.MIST_400 : Palette.PLASTER_100);
         for (TextView v : new TextView[] {rowName[i], rowStatus[i], rowTime[i]}) v.setTextColor(fg);
         rowName[i].setTypeface(dark ? ui600 : ui400);
 
         boolean on = bellOn(i);
-        GradientDrawable g = new GradientDrawable();
-        g.setShape(GradientDrawable.OVAL);
-        if (on) {
-            g.setColor(dark ? Palette.LAPIS_900 : Palette.LAPIS_700);
-            bellIcon[i].setColor(Palette.GOLD_400);
-            bell[i].setAlpha(1f);
-        } else {
-            g.setColor(0);
-            g.setStroke(Ui.ipx(2), Palette.BELL_OFF_BORDER);
-            bellIcon[i].setColor(dark ? Palette.LAPIS_900 : Palette.MIST_400);
-            bell[i].setAlpha(0.7f);
-        }
-        bell[i].setBackground(g);
+        bell[i].removeAllViews();
+        bell[i].addView(new ToggleView(this, on, dark), new FrameLayout.LayoutParams(-1, -1));
         bell[i].setContentDescription(t.bell(on));
     }
 

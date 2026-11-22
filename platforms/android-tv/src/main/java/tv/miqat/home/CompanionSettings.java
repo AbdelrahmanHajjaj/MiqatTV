@@ -192,7 +192,7 @@ final class CompanionSettings implements PairingRoutes.Settings {
         }
         for(Iterator<String> it=expected.keys();it.hasNext();)if(!specs.containsKey(it.next()))throw new IllegalArgumentException("Unknown baseline");
         String[] ids=specs.keySet().toArray(new String[0]),groups=new String[ids.length],before=new String[ids.length],base=new String[ids.length];
-        for(int i=0;i<ids.length;i++){groups[i]=specs.get(ids[i]).optString("save").equals("appearance")?"appearance":"";before[i]=values.getString(ids[i]);base[i]=expected.has(ids[i])?Json.string(expected,ids[i]):null;}
+        for(int i=0;i<ids.length;i++){groups[i]=specs.get(ids[i]).optString("section").equals("appearance")?"appearance":"";before[i]=values.getString(ids[i]);base[i]=expected.has(ids[i])?Json.string(expected,ids[i]):null;}
         String[] conflicts=SettingChanges.INSTANCE.conflicts(ids,groups,before,base,patch.keySet().toArray(new String[0]));
         if(conflicts.length>0)return current.put("status","conflict").put("conflicts",new JSONArray(conflicts));
         String theme=patch.getOrDefault("appearance.theme",values.optString("appearance.theme"));

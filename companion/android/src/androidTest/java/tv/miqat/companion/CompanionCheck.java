@@ -535,7 +535,7 @@ public final class CompanionCheck extends Instrumentation {
                 check(a.tv().read().getValues().get(opacity.getId()).equals(opacity.adjust(current, direction)),
                         "Appearance numeric step did not save immediately");
             }
-            a.body.findViewWithTag("appearance.countdown.next").performClick();
+            a.body.findViewWithTag("appearance.countdown.option.compact").performClick();
             a.body.findViewWithTag("appearance.reset.activate").performClick();
             check(a.tv().read().getValues().get("appearance.theme").equals(savedTheme),
                     "Layout reset discarded the saved theme");

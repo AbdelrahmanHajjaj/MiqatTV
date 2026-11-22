@@ -51,8 +51,8 @@ Shared IDs alone do not prove matching appearance or behavior.
   and supported remote-key handling. LG does not replace Home or wake from standby.
 - LG embeds HDMI within the app. Adhan uses video-only input while local audio
   plays, then restores input and volume through ownership-aware handlers.
-- Android/preview replace the Fajr slot with tomorrow's after Isha. LG keeps
-  today's row and exposes tomorrow's Fajr separately.
+- Home on Android, LG and preview replaces the Fajr slot with tomorrow's after
+  Isha. Read-only prayer comparison retains civil-day times.
 - Native alert eligibility is [0, 120000) ms late. LG accepts [0, 90000] ms,
   with persisted claims, deduplication and expiry. Shells own callback lifecycle.
 - Prayer calculations remain offline and round down to whole minutes. Manual

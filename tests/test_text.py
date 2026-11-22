@@ -65,7 +65,7 @@ class TextChecks(unittest.TestCase):
         self.assertEqual(webos["title"], "Miqat")
         self.assertEqual(webos["id"], "tv.miqat.webos")
 
-    # Miqat deliberately changes only theme/background display labels in this snapshot.
+    # Includes the approved theme labels and immediate-save appearance help.
     def test_catalog_preserves_both_languages_digits_and_array_independence(self):
         expected = json.loads((ROOT / "tests/fixtures/text-output-hashes.json").read_text())
         self.assertEqual(text_hashes(), expected)

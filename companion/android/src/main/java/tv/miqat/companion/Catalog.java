@@ -67,7 +67,7 @@ final class Catalog {
                     new SettingSpec(
                             id,
                             kind,
-                            c.optString("save").equals("appearance") ? "appearance" : "",
+                            c.optString("section").equals("appearance") ? "appearance" : "",
                             options,
                             min,
                             max,

@@ -3,6 +3,7 @@
 import { homeChoice } from '../lib/home-layout';
 import { CYCLE_MINUTES, cycleMinutes } from '../lib/appearance-cycle';
 import { THEMES, BACKGROUNDS, mihrabOpacity } from '../scripts/appearance';
+import design from '../../../shared/design/appearance.json';
 import voicesJson from '../../../shared/data/voices.json';
 import F from '../../../shared/data/format-text.json';
 import { makeCtx, type Ctx } from '../lib/ctx';
@@ -121,17 +122,16 @@ export function rowsFor(c: Ctx, section: number, radioOn = false, offsetsPage = 
     ];
     case APPEARANCE: return [
       { id: 'theme', kind: 'carousel', label: t.s('themeRow'), help: '', segs: t.list('themeNames').slice(0, THEMES.length), selected: Math.max(0, THEMES.indexOf(p.theme ?? 'mihrab')) },
-      { id: 'homeCountdown', kind: 'carousel', label: t.s('homeCountdown'), help: '', segs: t.list('homeCountdowns'), selected: mode },
-      { id: 'homePosition', kind: 'carousel', label: t.s('homePosition'), help: '', segs: mode === 2 ? ['—'] : t.list(mode === 1 ? 'homeBars' : 'homeSides'), selected: mode === 2 ? 0 : homeChoice(mode === 1 ? p.homeBar : p.homeSide, mode === 1 ? 1 : 2) },
-      { id: 'homePrayers', kind: 'carousel', label: t.s('homePrayers'), help: '', segs: t.list('homePrayerModes'), selected: homeChoice(p.homePrayers, 4) },
-      { id: 'homeFavourites', kind: 'carousel', label: t.s('homeFavourites'), help: '', segs: t.list('homeLayouts'), selected: p.homeLayout === 'classic' ? 1 : 0 },
-      { id: 'background', kind: 'carousel', label: t.s('backgroundRow'), help: '', segs: t.list('backgroundNames'), selected: Math.max(0, BACKGROUNDS.indexOf(p.background ?? 'theme')) },
+      { id: 'homeCountdown', kind: 'seg', label: t.s('homeCountdown'), help: '', segs: t.list('homeCountdowns'), selected: mode },
+      { id: 'homePosition', kind: 'seg', label: t.s('homePosition'), help: '', segs: mode === 2 ? ['—'] : t.list(mode === 1 ? 'homeBars' : 'homeSides'), selected: mode === 2 ? 0 : homeChoice(mode === 1 ? p.homeBar : p.homeSide, mode === 1 ? 1 : 2) },
+      { id: 'homePrayers', kind: 'seg', label: t.s('homePrayers'), help: '', segs: t.list('homePrayerModes'), selected: homeChoice(p.homePrayers, 4) },
+      { id: 'homeFavourites', kind: 'seg', label: t.s('homeFavourites'), help: '', segs: t.list('homeLayouts'), selected: p.homeLayout === 'classic' ? 1 : 0 },
+      { id: 'background', kind: 'carousel', label: t.s('backgroundRow'), help: '', segs: BACKGROUNDS.map(id => t.list('backgroundNames')[['theme', ...design.proceduralBackgrounds, ...design.patterns, ...design.scenes].indexOf(id)]), selected: Math.max(0, BACKGROUNDS.indexOf(p.background ?? 'theme')) },
       { id: 'mihrabOpacity', kind:'step', label:t.s('mihrabOpacity'), help:t.d(t.s('mihrabOpacityHelp')), value:t.d(mihrabOpacity(p.mihrabOpacity)+'%') },
       { id: 'lighting', kind: 'step', label: t.s('lightingRow'), help: '', value: t.d(`${p.lighting ?? 35}%`) },
-      { id: 'appearanceCycle', kind: 'carousel', label: t.s('appearanceCycle'), help: t.s('appearanceCycleHelp'), segs: t.list('appearanceCycleChoices'), selected: CYCLE_MINUTES.indexOf(cycleMinutes(p.appearanceCycle)) },
+      { id: 'appearanceCycle', kind: 'seg', label: t.s('appearanceCycle'), help: t.s('appearanceCycleHelp'), segs: t.list('appearanceCycleChoices'), selected: CYCLE_MINUTES.indexOf(cycleMinutes(p.appearanceCycle)) },
       { id: 'reduceMotion', kind: 'toggle', label: t.s('reduceMotion'), help: '', on: p.reduceMotion ?? false },
       { id: 'homeReset', kind: 'value', label: t.s('homeReset'), help: '' },
-      { id: 'apply', kind: 'value', label: t.s('applyAppearance'), help: '' },
     ];
     case NETWORK: return [{ id: 'network', kind: 'value', label: t.s('networkRow'), help: t.s('networkHelp'), value: '' }];
     default: return [
@@ -203,7 +203,8 @@ const chevron = '<svg class="chev" width="22" height="22" viewBox="0 0 24 24" fi
 
 export function rowHtml(t: Text, r: Row, i: number, editing = false, top = 'var(--layout-settings-rows-top)') {
   const choiceId = ({ school: 'prayer.asr', dark: 'radio.screen-off', lang: 'display.language',
-    digits: 'display.digits', clock: 'display.clock', dockPosition: 'display.bar-position' } as Record<string, string>)[r.id];
+    digits: 'display.digits', clock: 'display.clock', dockPosition: 'display.bar-position',
+    homeCountdown: 'appearance.countdown', homePosition: 'appearance.position', homePrayers: 'appearance.prayers', homeFavourites: 'appearance.favourites', appearanceCycle: 'appearance.cycle' } as Record<string, string>)[r.id];
   const contract = r.id === 'mihrabOpacity' ? uiContract.bind('appearance.mihrab-opacity','number') : r.id === onlineControl.id ? onlineControl : r.id === sizeControl.id ? sizeControl : r.id === companionControl.id ? companionControl : choiceId ? uiContract.bind(choiceId, 'choice') : null;
   if (choiceId && (r.kind !== 'seg' || uiContract.choiceEditor(choiceId) !== 'segments')) throw new Error('Wrong choice editor: ' + choiceId);
   const binding = contract ? ` data-ui="${contract.id}" data-ui-kind="${contract.kind}"` : '';

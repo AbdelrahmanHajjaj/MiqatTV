@@ -1,7 +1,16 @@
 # Miqat phone app delivery ledger
 
 Updated: 2026-11-22. PR #9 merged normally after full Validate and Apple core passed.
-Latest scope: release preparation and widget Add/Update labeling; WORK.md owns next action.
+Latest scope: common TV UI alignment; WORK.md owns next action.
+
+## TV UI alignment — 0.5.18/code 34
+
+TV settings metadata now saves immediately, keeps appearance conflict grouping
+independent of save policy, puts Miqat signature first, and defaults new clocks
+to 12-hour time. Shared choice policy also renders short Home choices as phone
+segments. The bilingual native TV-settings journey, generators and build/lint
+pass. The fixed latest APK retains the existing signer. Phone prayers, widgets,
+notification delivery and stored choices retain their established behaviour.
 
 ## Release candidate — 0.5.17/code 33
 

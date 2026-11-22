@@ -67,12 +67,14 @@ test('companion copy is bilingual and compact/mihrab positions remain independen
   assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','ACCESS_BACKGROUND_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','USE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','MODIFY_AUDIO_SETTINGS','USE_FULL_SCREEN_INTENT','VIBRATE'].map(x=>'android.permission.'+x));
 });
 
-test('new branding settings reach both profiles with canonical scenes and opacity drafts',()=>{
+test('new branding settings reach both profiles with canonical scenes and immediate opacity',()=>{
   for(const profile of Object.values(data.profiles)) {
     const opacity=profile.find(c=>c.id==='appearance.mihrab-opacity');
-    assert.ok(opacity.available);assert.equal(opacity.save,'appearance');assert.equal(opacity.default,'85');
+    assert.ok(opacity.available);assert.equal(opacity.save,'immediate');assert.equal(opacity.default,'85');
     const choices=profile.find(c=>c.id==='appearance.background').options.map(c=>c.value);
-    assert.ok(choices.includes('miqat_signature')&&choices.includes('miqat_quiet'));
+    assert.equal(choices[0],'miqat_signature');
+    assert.equal(profile.find(c=>c.id==='appearance.background').options[0].en,'Miqat signature');
+    assert.ok(choices.includes('miqat_quiet'));
   }
 });
 

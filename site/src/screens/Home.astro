@@ -35,7 +35,7 @@ const W = { site: ar ? 'على التلفاز يفتح هذا' : 'On the TV this
 <div class="home-scroll"><div class="home-canvas" dir={ar ? 'rtl' : 'ltr'}>
 <div class="home-header"><div class="when">
   <div class="clock display num" data-k="clock" set:html={m.html.clock} />
-  <div class="hdate" data-k="hdate" set:html={m.html.hdate} />
+  <div class="hdate header-hijri" data-k="hdate" set:html={m.html.hdate} />
   <div class="gdate" data-k="gdate" set:html={m.html.gdate} />
 </div>
 <div class="home-controls">
@@ -59,6 +59,10 @@ const W = { site: ar ? 'على التلفاز يفتح هذا' : 'On the TV this
 </div>
 <div class="home-body"><div class="home-countdown">
   <Arch ctx={ctx} model={arch} infoTop={340} subSize={20} subGap={0} sub2Color="var(--color-gold-200)" sub2Gap={0}>
+    <div slot="metadata" class="card-metadata">
+      <div class="hdate card-hijri" data-k="hdate" set:html={m.html.hdate} />
+      <div class="card-city" data-k="archSub" set:html={m.html.archSub} />
+    </div>
     <div slot="time" class="prayer-time num" data-k="homePrayerTime" set:html={m.html.homePrayerTime} />
   </Arch>
 </div>
@@ -177,7 +181,13 @@ const W = { site: ar ? 'على التلفاز يفتح هذا' : 'On the TV this
   .home-countdown :global(.verse), .home-countdown :global(.ref), .home-countdown :global(.info) { inset-inline-start:var(--layout-home-panel-inset); width:calc(100% - 2 * var(--layout-home-panel-inset)); }
   .home-countdown :global(.verse) { top:var(--layout-home-verse-top); }
   .home-countdown :global(.ref) { top:var(--layout-home-reference-top); }
-  .home-countdown :global(.rule) { display:none; }
+  .home-countdown :global(.rule), .home-countdown :global(.ref) { display:none; }
+  .card-metadata { display:flex;align-items:center;width:100%;gap:12px;margin-bottom:24px; }
+  .card-hijri { flex:2;text-align:start;color:var(--color-plaster-100);font-size:var(--font-size-caption); }
+  .card-city { flex:1;text-align:end;color:var(--color-mist-400);font-size:var(--font-size-caption); }
+  :global(.tv[data-countdown="0"]) .home-countdown :global(.sub) { display:none; }
+  :global(.tv[data-countdown="0"]) .header-hijri { display:none; }
+  :global(.tv[data-countdown="1"]) .card-metadata { display:none; }
   .home-countdown :global(.info) { top:var(--layout-home-info-top) !important; height:calc(100% - var(--layout-home-info-top) - var(--layout-home-panel-inset)); }
   .home-countdown :global(.label), .home-countdown :global(.sub2) { font-size:var(--font-size-caption); }
   .home-countdown :global(.name) { font-size:var(--layout-home-prayer-name-size); }
