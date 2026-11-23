@@ -60,7 +60,7 @@ See the next prayer across the room, hear the Adhan and listen to Quran radio on
 
 ## Install
 
-[Download Miqat](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.4) or [build from source](docs/BUILD.md). Choose the package for your device:
+[Download Miqat](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.5) or [build from source](docs/BUILD.md). Choose the package for your device:
 
 | Package | Purpose |
 | --- | --- |

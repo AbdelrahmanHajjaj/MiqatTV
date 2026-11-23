@@ -1,5 +1,20 @@
 # Validation evidence
 
+## Stable v0.7.5 — 23 November 2026
+
+[Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45207954747)
+and [hosted signing](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45209251852)
+passed. The published tag resolves to 7748c93ed0cb2c6a22e9e94ae6080e250e1ff84f.
+The downloaded phone APK, Android TV APK and LG IPK match SHA256SUMS. Both
+APKs match the pinned certificates, package IDs and expected versions, are
+non-debuggable, and contain all 25 approved recordings. A real debug phone
+APK is rejected. The phone release manifest retains its private TV setup
+activity. The LG package identifies itself as tv.miqat.webos 0.2.30.
+
+The site data check, build and preview tests pass. Local Edge checks cover
+Arabic and English at 390, 900 and 1440 pixels. Both language builds link
+to the three v0.7.5 packages and the release page.
+
 ## Standalone installer retirement — 23 November 2026
 
 Miqat Phone and Android TV debug/release APKs build. Phone debug/release lint
