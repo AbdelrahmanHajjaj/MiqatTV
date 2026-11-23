@@ -1,16 +1,9 @@
 # Current work
 
-Updated: 2026-11-23. Stable v0.7.4 includes phone 0.5.20/code 36,
-Android TV 0.7.3/code 14, installer 1.1.5/code 8 and LG 0.2.30.
-The phone adds Quran Radio, numbered Ramadan days and wider Eid and Hajj
-coverage, and optional day-before, suhoor and iftar reminders. The signed
-bundle passed download and package verification. The bilingual website
-links to v0.7.4 and documents the new phone features.
-
-The standalone Android TV installer has been retired from the build and release
-workflow. Miqat Phone hosts TV setup and recovery. Next: publish v0.7.5 with phone 0.5.21/code 37 from successful main validation,
-then update the bilingual website and current download guides. See EVIDENCE.md and
-the release and PR records.
+Updated: 2026-11-23. Stable v0.7.5 contains phone 0.5.21/code 37,
+Android TV 0.7.3/code 14 and LG 0.2.30. TV setup and recovery are in
+Miqat Phone. The three published packages passed checksum and identity
+verification. The website uses the v0.7.5 download links. See EVIDENCE.md.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Routine CI has no phone/TV emulator jobs; retain
