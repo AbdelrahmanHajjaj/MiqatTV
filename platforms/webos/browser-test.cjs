@@ -49,7 +49,9 @@ const server = http.createServer((req, res) => {
       HTMLMediaElement.prototype.load = function () { window.mediaCalls.push({op: 'load', tag: this.tagName, src: this.getAttribute('src'), children: this.children.length}); };
       HTMLMediaElement.prototype.pause = function () { window.mediaCalls.push({op: 'pause', tag: this.tagName}); };
       HTMLMediaElement.prototype.play = function () {
-        window.mediaCalls.push({op: 'play', tag: this.tagName, src: this.getAttribute('src'), masterVolume: window.mockMasterVolume === undefined ? 50 : window.mockMasterVolume, elementVolume: this.volume});
+        const inputVideo = document.getElementById('input-video');
+        window.mediaCalls.push({op: 'play', tag: this.tagName, src: this.getAttribute('src'), masterVolume: window.mockMasterVolume === undefined ? 50 : window.mockMasterVolume, elementVolume: this.volume,
+          inputSource: inputVideo.querySelector('source')?.getAttribute('src')});
         setTimeout(() => this.dispatchEvent(new Event('playing')), 0); return Promise.resolve();
       };
       window.PalmServiceBridge = function () {
@@ -138,8 +140,8 @@ const server = http.createServer((req, res) => {
     },qrFixture);
     async function inputRestored() {
       await page.waitForFunction(() => {
-        const source = document.querySelector('#input-video source');
-        return source && !source.type.includes('mediaOption=') && !document.querySelector('audio');
+        const video = document.getElementById('input-video'), source = video.querySelector('source');
+        return source && !video.muted && !source.type.includes('mediaOption=') && !document.querySelector('audio');
       });
     }
     const errors = []; page.on('pageerror', e => errors.push(e.message));
@@ -901,7 +903,8 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#input-video source').count(), 1, 'adhan retains HDMI while audio plays');
     assert.equal(await page.locator('#input-video source').getAttribute('src'), 'ext://hdmi:2', 'adhan retains the selected HDMI picture');
     assert.deepEqual(await page.locator('#input-video source').evaluate(el => JSON.parse(decodeURI(el.type.split(';mediaOption=')[1]))),
-      {option: {mediaFormat: {type: 'video_only'}}}, 'adhan suppresses programme audio while keeping HDMI video');
+      {option: {mediaFormat: {type: 'video_only'}}}, 'adhan requests video-only HDMI');
+    assert.equal(await page.locator('#input-video').evaluate(el => el.muted), true, 'adhan mutes the HDMI element even if the decoder ignores video_only');
     if(capture)await page.screenshot({path: path.join(shots, 'adhan-test-en.png')});
     assert.equal(await page.locator('.call-frame').count(), 1, 'adhan uses the Android mihrab layout');
     assert.equal(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'only the adhan mihrab has a background');
@@ -1146,9 +1149,11 @@ const server = http.createServer((req, res) => {
     const legacyPlayback = await page.evaluate(() => window.mediaCalls.find(c => c.op === 'play' && c.tag === 'AUDIO'));
     assert.equal(legacyPlayback.masterVolume, 15, 'old LG applies 15/100 independently of the captured TV level before adhan playback');
     assert.equal(legacyPlayback.elementVolume, 1, 'native volume fallback does not apply attenuation twice');
+    assert.equal(legacyPlayback.inputSource, undefined, 'old LG releases HDMI before starting adhan because it ignores element mute');
     await page.locator('[data-action=toggle-adhan]').click();
     await page.waitForFunction(() => window.mockMasterVolume === 50);
     assert.equal(await page.locator('.call-frame').count(), 1, 'Stop restores volume while keeping the replay screen');
+    assert.equal(await page.locator('#input-video source').count(), 0, 'old LG keeps HDMI released until the call screen closes');
     await page.locator('[data-action=toggle-adhan]').click();
     await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
     const owners = await page.evaluate(() => window.volumeCalls.filter(call => call.action === 'prepare').map(call => call.id));

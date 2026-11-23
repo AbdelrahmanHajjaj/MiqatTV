@@ -48,8 +48,9 @@ save scopes. Unsupported controls/options have explicit [gaps](UI-GAPS.md).
 
 - Android can be the system Home. Its accessibility service hosts prayer checks
   and supported remote-key handling. LG does not replace Home or wake from standby.
-- LG embeds HDMI within the app. Adhan uses video-only input while local audio
-  plays, then restores input and volume through ownership-aware handlers.
+- LG embeds HDMI within the app. Adhan mutes video-only HDMI where per-element
+  mute is supported and releases the input on older TVs. Popup cleanup restores
+  input and volume through ownership-aware handlers.
 - Home on Android, LG and preview replaces the Fajr slot with tomorrow's after
   Isha. Read-only prayer comparison retains civil-day times.
 - Native alert eligibility is [0, 120000) ms late. LG accepts [0, 90000] ms,
