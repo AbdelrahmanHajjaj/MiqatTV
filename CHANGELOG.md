@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Miqat Phone shows download and transfer percentages during Android TV and LG
+  setup, with separate status messages for installation and verification.
+- LG setup can remember the TV address and encrypt its Developer Mode
+  passphrase on the phone. Approving a new TV identity continues the connection
+  with the passphrase already entered.
+
 - LG webOS silences Miqat's HDMI input during the adhan popup. Older TVs
   also hide the HDMI picture until the popup closes.
 

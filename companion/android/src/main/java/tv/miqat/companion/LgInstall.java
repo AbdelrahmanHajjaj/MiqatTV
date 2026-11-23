@@ -10,6 +10,15 @@ import java.util.*;
 
 /** Foreground Developer Mode transport. No root, arbitrary commands or saved SSH private keys. */
 final class LgInstall implements AutoCloseable {
+    enum Stage {
+        SEND("lg_sending"), CHECK_TRANSFER("lg_checking_transfer"),
+        INSTALL("lg_installing"), CHECK_VERSION("lg_verifying_install");
+
+        final String label;
+        Stage(String label) { this.label = label; }
+    }
+
+    interface Progress { void on(Stage stage, int percent); }
     private final JSch ssh=new JSch();
     private volatile Session session;
     private volatile boolean closed;
@@ -74,7 +83,7 @@ final class LgInstall implements AutoCloseable {
         for(int i=0;i<apps.length();i++){JSONObject app=apps.getJSONObject(i);if(LgPackage.ID.equals(app.optString("id")))return app.getString("version");}return "";
     }
     void launch()throws Exception {luna("com.webos.applicationManager/launch",new JSONObject().put("id",LgPackage.ID),false);}
-    void install(LgPackage pkg)throws Exception {
+    void install(LgPackage pkg, Progress progress)throws Exception {
         LgPackage checked=LgPackage.read(pkg.file);
         if(!checked.version.equals(pkg.version))throw new IOException("Selected IPK changed");
         String current=installedVersion();
@@ -82,13 +91,35 @@ final class LgInstall implements AutoCloseable {
         String remote="/media/developer/temp/miqat-"+UUID.randomUUID()+".ipk";boolean finished=false;
         command("mkdir -p /media/developer/temp",null,false);
         try {
-            command("cat > "+remote,pkg.file,false);
+            long size = pkg.file.length();
+            progress.on(Stage.SEND, 0);
+            try (InputStream file = new FileInputStream(pkg.file) {
+                private long read;
+                private int percent;
+
+                @Override public int read(byte[] bytes, int offset, int length) throws IOException {
+                    int count = super.read(bytes, offset, length);
+                    if (count > 0) {
+                        read += count;
+                        int next = (int) Math.min(99, 100 * read / size);
+                        if (next != percent) progress.on(Stage.SEND, next);
+                        percent = next;
+                    }
+                    return count;
+                }
+            }) {
+                command("cat > "+remote,file,false);
+            }
+            progress.on(Stage.SEND, 100);
+            progress.on(Stage.CHECK_TRANSFER, -1);
             String md5=command("md5sum "+remote,null,false).trim().split("\\s+",2)[0];
             MessageDigest digest=MessageDigest.getInstance("MD5");
             try(InputStream in=new FileInputStream(pkg.file)){byte[] b=new byte[65536];int n;while((n=in.read(b))!=-1)digest.update(b,0,n);}
             StringBuilder hash=new StringBuilder();for(byte b:digest.digest())hash.append(String.format(Locale.ROOT,"%02x",b&255));
             if(!hash.toString().equals(md5))throw new IOException("LG package transfer did not match");
+            progress.on(Stage.INSTALL, -1);
             luna("com.webos.appInstallService/dev/install",new JSONObject().put("id",LgPackage.ID).put("ipkUrl",remote).put("subscribe",true),true);
+            progress.on(Stage.CHECK_VERSION, -1);
             if(!pkg.version.equals(installedVersion()))throw new IOException("LG has not confirmed the selected version; check status before retrying");
             finished=true;
         } finally {if(finished)try{command("rm -f "+remote,null,false);}catch(Exception ignored){/* Installed app is verified; only our temporary package remains. */}}
@@ -98,11 +129,11 @@ final class LgInstall implements AutoCloseable {
         List<JSONObject> frames=frames(raw);if(frames.isEmpty())throw new IOException("LG returned no complete response");
         JSONObject result=frames.get(frames.size()-1);if(!result.optBoolean("returnValue",false))throw new IOException("LG refused the operation");return result;
     }
-    private String command(String command,File input,boolean installation)throws Exception {
+    private String command(String command,InputStream input,boolean installation)throws Exception {
         Session s=session;if(closed||s==null||!s.isConnected())throw new IOException("Reconnect to LG Developer Mode");
         ChannelExec channel=(ChannelExec)s.openChannel("exec");
-        try(InputStream file=input==null?null:new FileInputStream(input)) {
-            channel.setCommand(command);channel.setInputStream(file);
+        try {
+            channel.setCommand(command);channel.setInputStream(input);
             InputStream in=channel.getInputStream();InputStream errors=channel.getErrStream();
             channel.connect(15000);ByteArrayOutputStream out=new ByteArrayOutputStream(),err=new ByteArrayOutputStream();
             long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(180);

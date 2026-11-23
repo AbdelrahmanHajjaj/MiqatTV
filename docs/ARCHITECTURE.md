@@ -76,7 +76,9 @@ and [companion delivery history](COMPANION-WORK.md).
 The Android companion also hosts `installer/runtime` through a private setup
 activity. Installation credentials and recovery records live in the phone
 app’s private storage, separately from ordinary companion LAN credentials. LG phone setup uses its own foreground SSH transport, explicit
-host-key approval and local IPK verification; keys/passphrases remain session-only.
+host-key approval and local IPK verification. The SSH private key stays in
+memory. An opted-in passphrase is encrypted with Android Keystore and bound to
+the TV address and approved SSH host key.
 Current approved work is sequenced in [WORK.md](WORK.md).
 
 ### Independent phone prayer runtime

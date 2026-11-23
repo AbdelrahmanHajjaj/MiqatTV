@@ -25,7 +25,9 @@ there is no public audio upload or cloud sync.
 Pairing requires physical remote approval, pinned HTTPS and individually revocable
 credentials. Reconnect must never upload cached settings or replay uncertain commands.
 Installation separately uses guarded ADB or LG SSH and verified package downloads;
-LG credentials remain session-only. Unrequested traffic, trust bypasses or remotely
+LG private keys stay in memory. Remembered passphrases are opt-in and encrypted
+with Android Keystore, bound to the saved TV address and SSH identity, and
+excluded from backup and transfer. Unrequested traffic, trust bypasses or remotely
 supplied setup commands are bugs. Provider servers and TV firmware fall outside
 the repository's control. The website has no analytics or live TV connection;
 preview settings remain in its browser.

@@ -54,7 +54,8 @@ with optional reviewed cleanup/recovery and the phone's selected theme/language.
 LG uses Developer Mode, explicit SSH host-key approval and verified public/local
 IPKs. Unsupported platforms are omitted. Successful setup
 offers ordinary pairing; installation never grants everyday remote access.
-SSH credentials are session-only and separate from normal LAN pairing.
+Setup shows download and transfer percentages. LG setup can remember the TV
+address and encrypt the Developer Mode passphrase separately from LAN pairing.
 See [LG setup](../docs/WEBOS.md).
 See [setup and recovery](../docs/ANDROID-SETUP.md).
 

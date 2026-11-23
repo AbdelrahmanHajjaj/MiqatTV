@@ -13,14 +13,20 @@ new TV**) → **LG webOS**. Follow the preparation guide to enable LG Developer
 Mode and Key Server. Select Latest (default), Stable or Preview, or choose a
 local IPK through the Advanced icon. Enter the TV's private IPv4 address; public
 IPK download follows the approved Developer Mode connection, with size/SHA-256
-verification. Confirm the SSH identity on your trusted home network, then enter
-LG's case-sensitive passphrase and connect.
+verification. Enter LG's case-sensitive passphrase and connect. Confirm the SSH
+identity on your trusted home network to continue the connection.
 Review the installed/selected version before explicitly installing or updating.
 The phone verifies transfer bytes and the installed version, refuses downgrades,
 and can launch Miqat before ordinary phone pairing. It does not uninstall apps.
 
-Only the accepted SSH public host key persists. The private key and passphrase
-are session-memory only; leaving setup closes SSH. LG's key server uses local
+Miqat shows the percentage downloaded or sent to the TV. It names the install
+and verification stages while it waits for the TV.
+
+Enable **Remember address and passphrase** before connecting to reuse them in
+future sessions. The passphrase is encrypted on the phone and tied to the
+approved TV identity. **Forget installation identity** removes the saved
+passphrase and SSH identity. If LG shows a new passphrase, enter it again.
+The SSH private key stays in memory. Leaving setup closes SSH. LG's key server uses local
 HTTP for the encrypted private-key file; SSH identity checking remains strict.
 Old Developer Mode servers may require legacy RSA/SHA-1 SSH algorithms, confined
 to this installer. Ordinary companion pairing remains pinned HTTPS.

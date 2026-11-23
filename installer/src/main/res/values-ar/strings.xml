@@ -60,6 +60,13 @@
     <string name="install_lead">أبقِ هذه الشاشة مفتوحة. يستغرق ذلك دقيقة أو اثنتين.</string>
     <string name="t_download">التنزيل من GitHub</string>
     <string name="t_send">الإرسال إلى التلفاز</string>
+    <string name="install_check_tv">جارٍ فحص التلفاز…</string>
+    <string name="install_find_release">جارٍ البحث عن الإصدار المختار…</string>
+    <string name="install_check_package">جارٍ التحقّق من ملف APK…</string>
+    <string name="install_wait_tv">جارٍ تثبيت ميقات على التلفاز…</string>
+    <string name="install_check_version">جارٍ التحقّق من الإصدار المثبّت…</string>
+    <string name="install_apply_setup">تطبيق خطوات إعداد التلفاز</string>
+    <string name="install_setup_checked">تم التحقّق من إعداد التلفاز</string>
     <string name="mb_of">%1$s من %2$s ميغابايت</string>
     <string name="cancel">إلغاء</string>
 
