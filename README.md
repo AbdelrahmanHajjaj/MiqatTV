@@ -49,7 +49,7 @@ See the next prayer across the room, hear the Adhan and listen to Quran radio on
 
 | Platform | What it does |
 | --- | --- |
-| Android phone, Android 8+ | Standalone prayers, alerts, calendar, Qibla, widgets and optional TV setup/control. |
+| Android phone, Android 8+ | Prayer times, Adhan, Hijri calendar, fasting reminders, Quran radio, Qibla, widgets and optional TV controls. |
 | Android TV / Google TV | Home launcher with favourite apps and remote navigation. |
 | LG webOS | Prayer times, Adhan and radio alongside embedded HDMI. |
 | Website | Product screenshots and an interactive TV preview with simulated device integration. |
@@ -60,7 +60,7 @@ See the next prayer across the room, hear the Adhan and listen to Quran radio on
 
 ## Install
 
-[Download Miqat](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.3) or [build from source](docs/BUILD.md). Choose the package for your device:
+[Download Miqat](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.4) or [build from source](docs/BUILD.md). Choose the package for your device:
 
 | Package | Purpose |
 | --- | --- |
