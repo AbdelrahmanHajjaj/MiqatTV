@@ -41,11 +41,14 @@ public final class PhoneRadio extends Service {
             .setUsage(AudioAttributes.USAGE_MEDIA)
             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build();
     private static final long TIMEOUT = 12000;
+    private static final int MAX_RETRIES = 4;
+    private static final long STABLE_PLAYBACK = 30000;
     private static PhoneRadio active;
 
     private enum State {
         CONNECTING("phone_radio_connecting", PlaybackState.STATE_BUFFERING, true),
         LIVE("phone_radio_live", PlaybackState.STATE_PLAYING, true),
+        BUFFERING("phone_radio_buffering", PlaybackState.STATE_BUFFERING, true),
         RETRYING("phone_radio_retrying", PlaybackState.STATE_BUFFERING, true),
         PAUSED("phone_radio_paused", PlaybackState.STATE_PAUSED, false),
         ADHAN("phone_radio_adhan", PlaybackState.STATE_PAUSED, false),
@@ -65,6 +68,7 @@ public final class PhoneRadio extends Service {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable timeout = this::retry;
     private final Runnable reconnect = this::connect;
+    private final Runnable resetRetries = () -> retries = 0;
     private final Runnable updateNotice = this::postNotification;
     private State state = State.PAUSED;
     private JSONObject station;
@@ -237,11 +241,9 @@ public final class PhoneRadio extends Service {
             next.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
             next.setOnPreparedListener(ready -> {
                 if (player != ready || !state.engaged || PhonePlayback.playing()) return;
-                handler.removeCallbacks(timeout);
                 try {
                     ready.start();
-                    state = State.LIVE;
-                    publish();
+                    onAir();
                 } catch (IllegalStateException unavailable) {
                     retry();
                 }
@@ -252,11 +254,15 @@ public final class PhoneRadio extends Service {
             });
             next.setOnCompletionListener(ended -> { if (player == ended) retry(); });
             next.setOnInfoListener((current, what, extra) -> {
-                if (current == player && what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
-                    handler.removeCallbacks(timeout);
+                if (current != player) return false;
+                if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START && state == State.LIVE) {
+                    handler.removeCallbacks(resetRetries);
+                    state = State.BUFFERING;
                     handler.postDelayed(timeout, TIMEOUT);
-                } else if (current == player && what == MediaPlayer.MEDIA_INFO_BUFFERING_END
-                        && state == State.LIVE) handler.removeCallbacks(timeout);
+                    publish();
+                } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END && state == State.BUFFERING) {
+                    onAir();
+                }
                 return false;
             });
             next.setDataSource(station.optString("url"));
@@ -267,13 +273,20 @@ public final class PhoneRadio extends Service {
         }
     }
 
+    private void onAir() {
+        handler.removeCallbacks(timeout);
+        state = State.LIVE;
+        if (retries > 0) handler.postDelayed(resetRetries, STABLE_PLAYBACK);
+        publish();
+    }
+
     private void retry() {
         if (!state.engaged) return;
-        releaseStream();
-        if (retries == 2) {
+        if (retries >= MAX_RETRIES) {
             suspend(State.FAILED);
             return;
         }
+        releaseStream();
         state = State.RETRYING;
         publish();
         handler.postDelayed(reconnect, 1500L * ++retries);
@@ -293,6 +306,7 @@ public final class PhoneRadio extends Service {
     private void releaseStream() {
         handler.removeCallbacks(timeout);
         handler.removeCallbacks(reconnect);
+        handler.removeCallbacks(resetRetries);
         MediaPlayer old = player;
         player = null;
         if (old != null) old.release();

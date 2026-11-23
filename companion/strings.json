@@ -33,6 +33,7 @@
   "phone_radio_paused":{"en":"Paused","ar":"متوقفة مؤقتًا"},
   "phone_radio_adhan":{"en":"Paused for Adhan","ar":"متوقفة للأذان"},
   "phone_radio_connecting":{"en":"Connecting…","ar":"جارٍ الاتصال…"},
+  "phone_radio_buffering":{"en":"Buffering…","ar":"جارٍ تحميل البث…"},
   "phone_radio_retrying":{"en":"Signal lost · retrying","ar":"انقطع البث · نعيد المحاولة"},
   "phone_radio_live":{"en":"On air","ar":"على الهواء"},
   "phone_radio_failed":{"en":"Station unavailable","ar":"المحطة غير متاحة"},

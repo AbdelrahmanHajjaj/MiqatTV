@@ -18,6 +18,11 @@ and Stop clears the failed session. English and Arabic portrait captures show
 the popup, station and compact playback icons in the expected direction.
 Earlier Android versions and physical phones remain unverified.
 
+The unavailable-stream fixture fails on the old two-retry APK and passes
+with four reconnects. The exhausted player leaves the foreground, reports
+an error to Android media controls, and restores Play on Home and in the popup.
+One tap reconnects to the same station after the fixture server recovers.
+
 ## Stable promotion — 23 November 2026
 
 The owner approved stable promotion of the verified signed preview. Stable

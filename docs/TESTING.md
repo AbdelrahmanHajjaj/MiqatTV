@@ -195,7 +195,8 @@ prayer notification access for the cases that schedule Adhan. The loopback
 fixture covers the Home popup and shortcut, locked-screen playback,
 scheduled Adhan interruption, and Android system media controls.
 Use `-e case alarm-route` for Arabic and the alarm audio route,
-`-e case offline` to verify bounded retries and cleanup after failure, or
+`-e case offline` to verify bounded retries, failed-state controls and a
+single-tap restart after the server recovers, or
 `-e case dismiss` for paused media-card dismissal in Android Quick Settings.
 Run `-e case cairo` and `-e case qatar` separately for live MP3 and HLS
 playback. These two checks depend on the broadcasters and internet access.

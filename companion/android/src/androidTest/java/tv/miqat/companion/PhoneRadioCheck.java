@@ -9,9 +9,12 @@ import android.content.SharedPreferences;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.TextView;
 
 import org.json.JSONObject;
 
@@ -26,6 +29,10 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import tv.miqat.core.ReminderEvent;
 
@@ -53,6 +60,8 @@ final class PhoneRadioCheck {
         SharedPreferences prayers = PhoneStore.preferences(c);
         boolean seen = prayers.getBoolean("onboarding-seen", false);
         PhoneStore previous = PhoneStore.read(c);
+        AtomicBoolean available = new AtomicBoolean(!offline);
+        CountDownLatch respond = new CountDownLatch(offline ? 1 : 0);
         MainActivity a = null;
         try (ServerSocket server = fixture ? new ServerSocket(0, 8, InetAddress.getByName("127.0.0.1")) : null) {
             if (fixture) {
@@ -62,11 +71,10 @@ final class PhoneRadioCheck {
                     for (int size; (size = input.read(buffer)) != -1;) bytes.write(buffer, 0, size);
                 }
                 byte[] recording = bytes.toByteArray();
-                Thread stream = new Thread(() -> serve(server, recording), "radio fixture");
+                Thread stream = new Thread(() -> serve(server, recording, available, respond), "radio fixture");
                 stream.setDaemon(true);
                 stream.start();
                 station.put("url", "http://127.0.0.1:" + server.getLocalPort() + "/live.mp3");
-                if (offline) server.close();
             }
             prayers.edit().putBoolean("onboarding-seen", true).commit();
             boolean arabic = scenario.equals("alarm-route");
@@ -85,13 +93,7 @@ final class PhoneRadioCheck {
                 click(home, "radio.play");
             });
             if (offline) {
-                await(test, () -> PhoneRadio.status().equals("phone_radio_retrying"), 16000,
-                        "Unavailable connection did not enter bounded retry");
-                await(test, () -> PhoneRadio.status().equals("phone_radio_failed"), 35000,
-                        "Radio kept retrying an unavailable stream");
-                on(test, () -> click(home, "radio.stop"));
-                await(test, () -> !PhoneRadio.hasSession() && radioNotice(c) == null, 5000,
-                        "Stop left the failed notification visible");
+                recoverFromFailure(test, c, home, available, respond);
                 return;
             }
             await(test, () -> PhoneRadio.status().equals("phone_radio_live"), 24000,
@@ -151,6 +153,7 @@ final class PhoneRadioCheck {
             await(test, () -> !PhoneRadio.hasSession() && radioNotice(c) == null, 5000,
                     "Stop left the radio session or media notification active");
         } finally {
+            respond.countDown();
             on(test, PhoneRadio::stop);
             PhonePlayback.stop(c);
             if (a != null) {
@@ -166,6 +169,51 @@ final class PhoneRadioCheck {
             shell(test, "cmd statusbar collapse");
             shell(test, "input keyevent KEYCODE_WAKEUP");
             shell(test, "wm dismiss-keyguard");
+        }
+    }
+
+    private static void recoverFromFailure(Instrumentation test, Context c, MainActivity home,
+            AtomicBoolean available, CountDownLatch respond) throws Exception {
+        MediaController media = mediaPlayer(test, c);
+        AtomicInteger reconnects = new AtomicInteger();
+        MediaController.Callback callback = new MediaController.Callback() {
+            @Override public void onPlaybackStateChanged(PlaybackState playback) {
+                if (playback != null && playback.getState() == PlaybackState.STATE_BUFFERING)
+                    reconnects.incrementAndGet();
+            }
+        };
+        media.registerCallback(callback, new Handler(Looper.getMainLooper()));
+        try {
+            respond.countDown();
+            await(test, () -> PhoneRadio.status().equals("phone_radio_retrying"), 16000,
+                    "Unavailable connection did not enter bounded retry");
+            await(test, () -> PhoneRadio.status().equals("phone_radio_failed"), 85000,
+                    "Radio kept retrying an unavailable stream");
+            check(reconnects.get() >= 4, "Radio gave up before four automatic reconnects");
+            await(test, () -> {
+                Notification notice = radioNotice(c);
+                PlaybackState playback = media.getPlaybackState();
+                return notice != null && (notice.flags & Notification.FLAG_FOREGROUND_SERVICE) == 0
+                        && playback != null && playback.getState() == PlaybackState.STATE_ERROR
+                        && (playback.getActions() & PlaybackState.ACTION_PLAY) != 0;
+            }, 5000, "Failed radio still appeared to be playing in Android media controls");
+            on(test, () -> {
+                TextView status = (TextView) popup(home, "radio.status");
+                View quick = home.findViewById(android.R.id.content).findViewWithTag("phone.radio.quick");
+                check("Station unavailable".contentEquals(status.getText())
+                                && popup(home, "radio.pause") == null
+                                && quick.isEnabled() && "Play".contentEquals(quick.getContentDescription()),
+                        "Radio failure did not restore Play and explain why playback stopped");
+            });
+            available.set(true);
+            on(test, () -> click(home, "radio.play"));
+            await(test, () -> PhoneRadio.status().equals("phone_radio_live"), 15000,
+                    "A single Play did not reconnect the failed stream");
+            on(test, () -> click(home, "radio.stop"));
+            await(test, () -> !PhoneRadio.hasSession() && radioNotice(c) == null, 5000,
+                    "Stop left the recovered radio session active");
+        } finally {
+            media.unregisterCallback(callback);
         }
     }
 
@@ -292,7 +340,8 @@ final class PhoneRadioCheck {
         }
     }
 
-    private static void serve(ServerSocket server, byte[] recording) {
+    private static void serve(ServerSocket server, byte[] recording,
+            AtomicBoolean available, CountDownLatch respond) {
         while (!server.isClosed()) {
             try (Socket client = server.accept()) {
                 client.setSoTimeout(3000);
@@ -303,6 +352,11 @@ final class PhoneRadioCheck {
                         offset = Integer.parseInt(line.substring(13, line.indexOf('-', 13)));
                 }
                 OutputStream response = client.getOutputStream();
+                if (!respond.await(12, TimeUnit.SECONDS) || !available.get()) {
+                    response.write("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                            .getBytes(StandardCharsets.US_ASCII));
+                    continue;
+                }
                 if (offset >= recording.length) {
                     response.write("HTTP/1.1 416 Range Not Satisfiable\r\nContent-Length: 0\r\n\r\n"
                             .getBytes(StandardCharsets.US_ASCII));
@@ -315,6 +369,9 @@ final class PhoneRadioCheck {
                 response.write(recording, offset, recording.length - offset);
             } catch (IOException closedOrPaused) {
                 // Pausing or stopping may close the reader while serving a response.
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }

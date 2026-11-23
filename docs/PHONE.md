@@ -143,6 +143,9 @@ selected. Play reconnects to the live broadcast. Android may keep the
 player pinned while it is playing. Use **Stop radio** to end the session,
 or pause and dismiss the player where Android offers that action.
 
+Radio tries to reconnect after a stall. If the popup shows **Station unavailable**,
+the stream is closed. Tap **Play** to try the same station again.
+
 Adhan pauses the stream, including during reconnection. Tap **Play** after Adhan
 ends to listen again. The phone station is independent of any paired TV.
 

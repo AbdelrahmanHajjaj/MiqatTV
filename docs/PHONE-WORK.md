@@ -3,6 +3,7 @@
 Updated: 2026-11-23. Latest scope: standalone phone Quran Radio. The Home
 popup and shortcut use compact playback icons. Android's media player offers
 Play/Pause and Stop, and Adhan interrupts radio until the listener resumes.
+Radio retries up to four times and restores Play after a terminal failure.
 WORK.md owns the next action.
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.
