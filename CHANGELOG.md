@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Android phone and Android TV show the installed version, developer credit and
+  GitHub feedback in About Miqat. Email feedback is disabled until a public address is set.
 - LG webOS silences Miqat's HDMI input during the adhan popup. Older TVs
   also hide the HDMI picture until the popup closes.
 

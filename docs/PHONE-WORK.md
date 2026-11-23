@@ -9,6 +9,10 @@ and Mondays and Thursdays. Quran Radio was approved and merged in PR #22.
 Android's radio media card uses the active phone theme and background.
 The v0.7.5 bundle is the first without the separate installer APK.
 WORK.md owns the next action.
+
+Unreleased About Miqat shows the installed phone app version, developer credit
+and GitHub feedback. Email feedback stays disabled pending a public address.
+
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.
 

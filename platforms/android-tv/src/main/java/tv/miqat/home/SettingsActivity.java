@@ -755,6 +755,10 @@ public class SettingsActivity extends Screen {
                     String help() { return t.repairHelp(); }
                     boolean on() { return prefs().getBoolean("repair_service", false); }
                     void set(boolean on) { prefs().edit().putBoolean("repair_service", on).apply(); }
+                },
+                new Row("device.about", VALUE) {
+                    String label() { return t.aboutMiqat(); }
+                    void open() { startSafely(new Intent(c, AboutActivity.class)); }
                 });
         }
     }

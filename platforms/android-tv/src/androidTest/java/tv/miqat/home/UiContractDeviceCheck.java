@@ -96,6 +96,8 @@ final class UiContractDeviceCheck {
                     }
                     if (section < 6) key(test, active[0], KeyEvent.KEYCODE_DPAD_DOWN);
                 }
+                checkAbout(test, active[0]);
+                key(test, active[0], KeyEvent.KEYCODE_BACK);
                 // Rebuild Appearance with a valid imported-theme prerequisite, then visit all position modes.
                 check(prefs.edit().putString("theme_json", "{\"version\":1}").commit(), "Set custom-theme prerequisite");
                 key(test, active[0], KeyEvent.KEYCODE_DPAD_UP);
@@ -152,6 +154,37 @@ final class UiContractDeviceCheck {
             }
         }
         test.finish(code, result);
+    }
+
+    private static void checkAbout(Instrumentation test, SettingsActivity settings) throws Exception {
+        Instrumentation.ActivityMonitor monitor = test.addMonitor(AboutActivity.class.getName(), null, false);
+        AboutActivity about = null;
+        try {
+            onMain(test, () -> {
+                for (Object item : (Iterable<?>) field(settings, "rows")) {
+                    SettingsActivity.Row row = (SettingsActivity.Row) item;
+                    if (row.contract.getId().equals("device.about")) {
+                        row.tile.performClick();
+                        return;
+                    }
+                }
+                throw new AssertionError("Device settings must contain an About row");
+            });
+            about = (AboutActivity) test.waitForMonitorWithTimeout(monitor, 5000);
+            check(about != null, "Device settings opens About");
+            AboutActivity opened = about;
+            String version = settings.getPackageManager().getPackageInfo(settings.getPackageName(), 0).versionName;
+            onMain(test, () -> {
+                TextView name = opened.root.findViewWithTag("about.version");
+                check(name.getText().toString().contains(version), "About must show the installed TV version");
+                check(opened.root.findViewWithTag("about.github") != null, "About shows the GitHub feedback QR");
+                check(!opened.root.findViewWithTag("about.email").isEnabled(), "Email feedback must be disabled");
+            });
+        } finally {
+            if (about != null) onMain(test, about::finish);
+            test.removeMonitor(monitor);
+        }
+        waitFocus(settings);
     }
 
     static void key(Instrumentation test, Activity settings, int key) {
