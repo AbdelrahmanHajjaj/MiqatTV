@@ -4,6 +4,14 @@
     "en": "An-Nisa 4:103",
     "d": true
   },
+  "adhanMuteInput": {
+    "ar": "كتم صوت HDMI",
+    "en": "Mute HDMI"
+  },
+  "adhanHideInput": {
+    "ar": "إخفاء مدخل HDMI",
+    "en": "Hide HDMI"
+  },
   "nextPrayer": {
     "ar": "الصلاة القادمة",
     "en": "NEXT PRAYER"

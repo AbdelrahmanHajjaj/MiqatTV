@@ -722,6 +722,7 @@
       content.querySelector('.dock-prayers').style.width = (width - 432) + 'px';
     }
     zoomUi(overlay.querySelector('.alert-content'), factor);
+    zoomUi(overlay.querySelector('.call-input-sound'), factor, prefs.lang === 'ar' ? '0 100%' : '100% 100%');
     var banner = overlay.querySelector('.banner-box');
     if (banner) {
       banner.style.width = 1792 / factor + 'px'; banner.style.right = 'auto';
@@ -890,18 +891,31 @@
       else { notify(t('لم تُحفظ الإعدادات. حاول مرة أخرى.', 'Settings were not saved. Please try again.'), reply.errorText); }
     });
   }
-  function play(target, videoOnly) {
+  function play(target, adhanInputMode) {
     if (!target) { show('inputs'); return; }
     input = target; lastError = null;
-    if (tv && (!media || videoOnly) && !(document.hidden || document.webkitHidden)) {
+    var showVideo = tv && (!media || adhanInputMode) && !(document.hidden || document.webkitHidden);
+    if (showVideo) {
       video.style.display = 'block';
       video.pause(); while (video.firstChild) { video.removeChild(video.firstChild); }
-      video.muted = !!videoOnly;
+      video.muted = false;
+      if (adhanInputMode) {
+        if (adhanInputMode === 'lower') { video.volume = 0.15; }
+        if (adhanInputMode === 'mute' || video.volume !== 0.15) {
+          video.muted = true;
+          if (!video.muted) { releaseVideo(); return false; }
+        }
+      } else if (video.volume < 1) { video.volume = 1; }
       var source = document.createElement('source'); source.type = target.type; source.src = target.url;
-      if (videoOnly) { source.type += ';mediaOption=' + encodeURI(JSON.stringify({option: {mediaFormat: {type: 'video_only'}}})); }
-      video.appendChild(source); video.load(); video.play();
+      if (video.muted) { source.type += ';mediaOption=' + encodeURI(JSON.stringify({option: {mediaFormat: {type: 'video_only'}}})); }
+      video.appendChild(source); video.load();
+      var started = video.play();
+      if (adhanInputMode && started && started.catch) {
+        started.catch(function () { if (media && media.kind === 'adhan' && video.firstChild === source) { hideAdhanInput(); } });
+      }
     }
     report();
+    return showVideo;
   }
   function discover(initial, retry) {
     request('inputs', {}, function (reply) {
@@ -922,6 +936,12 @@
     video.pause();
     while (video.firstChild) { video.removeChild(video.firstChild); }
     video.removeAttribute('src'); if (tv) { video.load(); } video.style.display = 'none';
+  }
+  function hideAdhanInput() {
+    releaseVideo();
+    var action = overlay.querySelector('.call-input-sound');
+    if (action && document.activeElement === action) { focusControl(overlay.querySelector('[data-action=dismiss-alert]')); }
+    overlay.className = overlay.className.replace(' over-input', '');
   }
   function rememberContext() {
     var focused = document.activeElement, list = screen.querySelector('.voice-list') || screen.querySelector('.settings-rows');
@@ -998,9 +1018,16 @@
         }
         if (!reply.returnValue || ['tv', 'element'].indexOf(reply.mode) < 0) { failed(reply.errorText || 'Audio level unavailable'); return; }
         if (adhanInput && reply.mode === 'element') {
-          play(adhanInput, true);
+          var action = overlay.querySelector('.call-input-sound');
+          if (play(adhanInput, action ? 'lower' : 'mute')) {
+            if (action) {
+              // shortcut: readback cannot confirm HDMI sound, automate escalation if webOS exposes actual output.
+              if (video.muted) { action.textContent = s('adhanHideInput'); }
+              overlay.className += ' over-input';
+            }
+            decoderReadyAt = Date.now() + 450;
+          }
           adhanInput = null;
-          decoderReadyAt = Date.now() + 450;
         }
         audio.volume = reply.mode === 'tv' ? 1 : prefs.volume / 100;
         if (kind !== 'radio' && !item.deadline) {
@@ -1079,7 +1106,8 @@
         '<div class="call-verse" lang="ar" dir="rtl">' + escape(D.sacred.adhanCall) + '</div><p class="call-label">' + (alert.test ? t('اختبار الأذان', 'Adhan test') : t('حان وقت الصلاة', 'Time for prayer')) +
         '</p><div class="call-name">' + escape(label) + '</div><div class="call-time">' + digits(A.clock(alert.prayerTime || new Date(), prefs)) + '</div>' +
         button('toggle-adhan', t('إيقاف', 'Stop'), '', 'call-play') + button('dismiss-alert', t('إغلاق', 'Dismiss'), '', 'call-dismiss') +
-        '<p class="call-status" data-audio-status>' + t('جارٍ تحميل الصوت…', 'Loading audio…') + '</p></section></div>';
+        '<p class="call-status" data-audio-status>' + t('جارٍ تحميل الصوت…', 'Loading audio…') + '</p></section></div>' +
+        button('quiet-input', s('adhanMuteInput'), '', 'call-input-sound', '', uiContract.bind('adhan.quiet-input', 'action'));
     } else {
       overlay.innerHTML = '<div class="alert-content"><section class="alert-box' + (alert.mode === 'banner' ? ' banner-box' : '') + '"><p class="eyebrow">' + (alert.test ? t('اختبار · ميقات', 'Test · Miqat') : t('تذكير بالصلاة', 'Prayer reminder')) +
       '</p><h1>' + title + prayerLabel(alert.prayer, label) + '</h1><p>' + escape(A.city(prefs.city)[prefs.lang]) + ' · ' + digits(A.clock(alert.prayerTime || new Date(), prefs)) +
@@ -1130,6 +1158,14 @@
       savePrefs(layout, 'reset-layout'); return;
     }
     if (action === 'dismiss-alert') { if (media && media.kind !== 'radio') { stopAudio('stopped', true); } else { finishOverlay(); } return; }
+    if (action === 'quiet-input' && video.firstChild) {
+      if (!video.muted) {
+        video.muted = true;
+        if (video.muted) { overlay.querySelector('.call-input-sound').textContent = s('adhanHideInput'); return; }
+      }
+      hideAdhanInput();
+      return;
+    }
     if (action === 'preview-voice') {
       if (!A.voice(value)) { return; }
       if (voicePreview === value) { stopAudio('stopped', true); return; }
@@ -1341,7 +1377,9 @@
       if (key === 461 || key === 27) { activate('dismiss-alert'); }
       else if (key === 13) { var focusedOverlay = document.activeElement; if (focusedOverlay && overlay.contains(focusedOverlay) && focusedOverlay.tagName === 'BUTTON') { focusedOverlay.click(); } }
       else if (key === 38 || key === 40) {
-        var overlayButtons = overlay.querySelectorAll('button'); if (overlayButtons.length) { focusControl(overlayButtons[key === 38 ? 0 : overlayButtons.length - 1]); }
+        var overlayButtons = Array.prototype.filter.call(overlay.querySelectorAll('button'), function (button) { return button.offsetWidth > 0; });
+        var index = overlayButtons.indexOf(document.activeElement) + (key === 38 ? -1 : 1);
+        if (overlayButtons.length) { focusControl(overlayButtons[Math.max(0, Math.min(index, overlayButtons.length - 1))]); }
       }
       return;
     }
@@ -1373,6 +1411,7 @@
     else { move(key); }
   });
   video.addEventListener('error', function () {
+    if (media && media.kind === 'adhan' && video.firstChild) { hideAdhanInput(); }
     if (media || !video.firstChild || document.hidden || document.webkitHidden) { return; }
     notify(t('تعذر عرض المدخل. اضغط OK لاختيار مدخل آخر.', 'Input playback failed. Press OK to choose another input.'), 'Media error ' + (video.error ? video.error.code : 'unknown'));
   });

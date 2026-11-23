@@ -53,6 +53,8 @@ final class Text {
     String all(int n) { return d(allTitle() + "\n" + n); }
     String ampm(boolean am) { return ar ? (am ? "ص" : "م") : (am ? "AM" : "PM"); }
     String adhanAt() { return ar ? "الأذان" : "Adhan at"; }
+    String adhanMuteInput() { return ar ? "كتم صوت HDMI" : "Mute HDMI"; }
+    String adhanHideInput() { return ar ? "إخفاء مدخل HDMI" : "Hide HDMI"; }
     String nowTag() { return ar ? "الآن" : "NOW"; }
     String nextTag() { return ar ? "التالية" : "NEXT"; }
     String jumuahLabel() { return ar ? "صلاة الجمعة" : "JUMU'AH"; }

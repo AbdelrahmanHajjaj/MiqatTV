@@ -33,6 +33,7 @@ Migration scope/status live in WORK.md; verification facts live in EVIDENCE.md.
 | `tests.background` | unimplemented | Uses the native Test reminders/adhan chooser and PrayerWatch; this separate LG test control is not ported. |
 | `tests.cancel` | unimplemented | Uses the native Test reminders/adhan chooser and PrayerWatch; this separate LG test control is not ported. |
 | `offsets.reset` | unimplemented | Each prayer has a stepper; no Reset adjustments action. |
+| `adhan.quiet-input` | os-unsupported | Android TV does not own the playing app or HDMI decoder. The adhan uses native audio focus. |
 
 ### Choice values
 

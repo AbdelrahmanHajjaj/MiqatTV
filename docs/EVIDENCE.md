@@ -1,5 +1,13 @@
 # Validation evidence
 
+## LG adhan full-screen fallback — 23 November 2026
+
+The owner observed HDMI stop and return on legacy hardware with the preceding
+audio-isolation build. Browser regressions exercise the new opaque page, HDMI
+attenuation, mute and release, restored picture and volume settings, and the
+English and Arabic remote action. The browser mocks the decoder and Luna.
+The new presentation and newer-TV speaker output remain pending on hardware.
+
 ## LG adhan HDMI isolation — 23 November 2026
 
 The Edge browser regression reproduced unmuted HDMI with the previous LG app

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- LG webOS uses a solid full-screen adhan page when HDMI is released. Where
+  per-player audio is available, Miqat lowers HDMI volume and offers Mute HDMI
+  and Hide HDMI during the call.
+
 - LG webOS silences Miqat's HDMI input during the adhan popup. Older TVs
   also hide the HDMI picture until the popup closes.
 

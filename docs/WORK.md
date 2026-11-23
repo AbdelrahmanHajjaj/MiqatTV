@@ -5,8 +5,9 @@ Android TV 0.7.3/code 14 and LG 0.2.30. TV setup and recovery are in
 Miqat Phone. The three published packages passed checksum and identity
 verification. The website uses the v0.7.5 download links. See EVIDENCE.md.
 
-LG adhan HDMI isolation is unreleased. Physical acceptance is pending for
-programme sound, picture behavior and HDMI restoration after dismissal.
+LG adhan HDMI isolation is unreleased. On legacy hardware the owner observed
+the HDMI picture cut and return. Physical acceptance of the opaque page and
+separate-stream behavior on newer TVs is pending.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Routine CI has no phone/TV emulator jobs; retain
