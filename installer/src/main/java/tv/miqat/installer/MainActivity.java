@@ -536,6 +536,7 @@ public abstract class MainActivity extends Activity {
     // Install
 
     private Timeline timeline;
+    private TextView installStatus;
     TextView titleView, leadView;
     /** Bundled setup steps, mirrored in tools/setup-steps.txt. */
     private List<Setup.Step> steps;
@@ -551,6 +552,9 @@ public abstract class MainActivity extends Activity {
         stopFinders();
         if (host != null) getPreferences(MODE_PRIVATE).edit().putString("last_tv", host).apply();
         frame(INSTALL, Hero.Mode.PROGRESS, getString(R.string.install_title), getString(R.string.install_lead));
+        installStatus = Ui.small(this, getString(R.string.install_check_tv));
+        installStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        add(installStatus, 12);
         back = null;
         int g = gen;
         work.execute(() -> {
@@ -566,10 +570,19 @@ public abstract class MainActivity extends Activity {
                 }
                 tv.recovery = new Recovery(a, getFilesDir(), host, tv);
                 steps = Setup.steps(null);
-                post(g, () -> {timeline=timeline();add(timeline,20);add(Timeline.legend(this),12);timeline.set(0,Timeline.State.WORKING);});
+                post(g, () -> {
+                    timeline = timeline();
+                    add(timeline, 20);
+                    add(Timeline.legend(this), 12);
+                    timeline.set(0, Timeline.State.WORKING);
+                    installPhase(localApk == null ? R.string.install_find_release : R.string.install_check_package, -1);
+                });
                 PublicRelease.Asset release=localApk==null?PublicRelease.latest(false,getIntent().getStringExtra("release-channel")==null?"latest":getIntent().getStringExtra("release-channel")):null;
+                if (release != null) post(g, () -> installPhase(R.string.t_download, 0));
                 File apk=localApk!=null?localApk:release.download(getCacheDir(),(done,total)->post(g,()->{
-                    hero.progress(0.45f*done/total);timeline.note(0,getString(R.string.mb_of,mb(done),mb(total)));
+                    installPhase(R.string.t_download, (float) done / total);
+                    timeline.note(0, getString(R.string.mb_of, mb(done), mb(total)));
+                    if (done == total) installPhase(R.string.install_check_package, -1);
                 }));
                 android.content.pm.PackageInfo archive=getPackageManager().getPackageArchiveInfo(apk.getPath(),0);
                 if(archive==null||!Setup.PACKAGE.equals(archive.packageName)||archive.versionName==null)throw new IOException("Choose a Miqat APK");
@@ -581,7 +594,7 @@ public abstract class MainActivity extends Activity {
                 post(g, () -> {
                     leadView.setText(release!=null&&release.preview?getString(R.string.install_preview_version,version):getString(R.string.install_lead_version,version));
                     if (current) {
-                        timeline.set(0, Timeline.State.CHECKED);
+                        timeline.set(0, release == null ? Timeline.State.SKIPPED : Timeline.State.CHECKED);
                         timeline.set(1, Timeline.State.CHECKED);
                         timeline.note(1, getString(R.string.already_on_tv, version));
                     } else {
@@ -592,11 +605,17 @@ public abstract class MainActivity extends Activity {
                     runSteps(g, a);
                     return;
                 }
-                send(g, a, apk);
+                send(g, a, apk, release != null);
             } catch (Exception e) {
                 fail(g, e instanceof PublicRelease.Unavailable?getString(R.string.public_unavailable):getString(R.string.error_install,message(e)));
             }
         });
+    }
+
+    private void installPhase(int label, float progress) {
+        String text = getString(label);
+        if (!text.contentEquals(installStatus.getText())) installStatus.setText(text);
+        hero.progress(progress);
     }
 
     private Timeline timeline() {
@@ -610,15 +629,17 @@ public abstract class MainActivity extends Activity {
     }
 
     /** On the worker thread: the APK into the TV, then the setup steps. */
-    private void send(int g, Adb a, File apk) throws IOException, InterruptedException {
+    private void send(int g, Adb a, File apk, boolean downloaded) throws IOException, InterruptedException {
         post(g, () -> {
-            timeline.set(0, Timeline.State.CHECKED);
+            timeline.set(0, downloaded ? Timeline.State.CHECKED : Timeline.State.SKIPPED);
             timeline.set(1, Timeline.State.WORKING);
+            installPhase(R.string.t_send, 0);
         });
         long size = apk.length();
         String result = a.install(apk, f -> post(g, () -> {
-            hero.progress(0.45f + 0.45f * f);
+            installPhase(R.string.t_send, f);
             timeline.note(1, getString(R.string.mb_of, mb((long) (f * size)), mb(size)));
+            if (f >= 1) installPhase(R.string.install_wait_tv, -1);
         }));
         if (result.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE")) {
             // Keep the installed Home and its data when signatures differ.
@@ -630,6 +651,7 @@ public abstract class MainActivity extends Activity {
             return;
         }
         // Checked: the TV now reports the version just sent.
+        post(g, () -> installPhase(R.string.install_check_version, -1));
         String now = tv.miqatVersion();
         post(g, () -> timeline.set(1, version.equals(now) ? Timeline.State.CHECKED : Timeline.State.DONE));
         runSteps(g, a);
@@ -640,6 +662,7 @@ public abstract class MainActivity extends Activity {
      * as it stands; otherwise its command runs (done) and the check runs again (checked, or failed / not on this TV).
      */
     private void runSteps(int g, Adb a) throws IOException, InterruptedException {
+        post(g, () -> installPhase(R.string.install_apply_setup, 0));
         tv.startHome("tv.miqat.home/.MainActivity");
         for (String p : tv.enabledPackages()) if (p.startsWith("com.cvte."))
             throw new IOException("CVTE: select Home and verify a reboot with PC setup before enabling remote helpers.");
@@ -647,7 +670,7 @@ public abstract class MainActivity extends Activity {
         for (int i = 0; i < steps.size(); i++) {
             Setup.Step s = steps.get(i);
             int row = i + 2;
-            float at = 0.9f + 0.1f * (i + 1) / steps.size();
+            float at = (float) (i + 1) / (steps.size() + 1);
             post(g, () -> timeline.set(row, Timeline.State.WORKING));
             Timeline.State end;
             if (s.check != null && a.shell(s.check).ok()) {
@@ -669,6 +692,7 @@ public abstract class MainActivity extends Activity {
                     timeline.set(row, Timeline.State.FAILED);
                     timeline.note(row, getString(R.string.state_failed));
                     hero.set(Hero.Mode.PROBLEM);
+                    installStatus.setVisibility(View.GONE);
                     titleView.setText(R.string.done_partly_title);
                     leadView.setText(R.string.steps_failed_lead);
                     foot(Ui.primary(this, getString(R.string.try_again), v -> go(this::install)));
@@ -687,6 +711,7 @@ public abstract class MainActivity extends Activity {
         }
         tv.requireHome();
         installedOk = true;
+        post(g, () -> installPhase(R.string.install_setup_checked, 1));
         // A moment on the finished list, then the next stage.
         Thread.sleep(900);
         post(g, () -> new Personalise(this, tv).start());

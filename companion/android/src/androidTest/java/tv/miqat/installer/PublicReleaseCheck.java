@@ -62,7 +62,17 @@ public final class PublicReleaseCheck {
             rejects(()->PublicRelease.save(new ByteArrayInputStream(Arrays.copyOf(bytes,1000)),directory,"miqat.apk",bytes.length,digest.toString(),(done,total)->{}));
             check(Arrays.equals(previous,Files.readAllBytes(target.toPath())),"Truncation destroyed previous file");
             rejects(()->PublicRelease.save(new ByteArrayInputStream(bytes),directory,"../escape",bytes.length,digest.toString(),(done,total)->{}));
-            PublicRelease.save(new ByteArrayInputStream(bytes),directory,"miqat.apk",bytes.length,digest.toString(),(done,total)->{});
+            List<Long> progress = new ArrayList<>();
+            InputStream chunks = new ByteArrayInputStream(bytes) {
+                @Override public synchronized int read(byte[] buffer, int offset, int length) {
+                    return super.read(buffer, offset, Math.min(length, 512));
+                }
+            };
+            PublicRelease.save(chunks,directory,"miqat.apk",bytes.length,digest.toString(),(done,total)->{
+                check(total == bytes.length, "Progress must use the release size");
+                progress.add(done);
+            });
+            check(progress.equals(Arrays.asList(512L, 1024L, 1536L, 2048L)), "Download progress must track bytes copied");
             check(Arrays.equals(bytes,Files.readAllBytes(target.toPath())),"Verified bytes did not replace file");
             check(directory.list().length==1,"Partial download leaked");
         }finally{for(File file:Objects.requireNonNull(directory.listFiles()))Files.delete(file.toPath());Files.delete(directory.toPath());}

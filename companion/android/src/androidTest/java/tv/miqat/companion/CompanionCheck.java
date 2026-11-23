@@ -326,12 +326,17 @@ public final class CompanionCheck extends Instrumentation {
                     EditText phrase = activity.body.findViewWithTag("lg.passphrase");
                     check(phrase != null && !phrase.isSaveEnabled(), "LG passphrase must remain private");
                     address.setText("127.0.0.1");
+                    android.widget.Switch remember = activity.body.findViewWithTag("lg.remember");
+                    check(remember != null && !remember.isChecked(), "LG passphrase storage needs opt-in");
+                    remember.performClick();
                     phrase.setText("fixture-private");
                     activity.getWindow().getDecorView().findViewWithTag("lg.connect").performClick();
                     check(!activity.networkBusy && activity.body.findViewWithTag("lg.host") != null,
                             "Invalid LG address must be rejected before networking");
                     check(((EditText) activity.body.findViewWithTag("lg.passphrase")).getText().toString().equals("fixture-private"),
                             "Correcting an invalid host must preserve the session-only passphrase");
+                    check(((android.widget.Switch) activity.body.findViewWithTag("lg.remember")).isChecked(),
+                            "Correcting an invalid host lost the explicit opt-in");
                 });
                 waitForIdleSync();
                 capture(activity, lang + "-lg-setup.png");

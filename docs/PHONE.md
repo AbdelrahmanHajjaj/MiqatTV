@@ -233,7 +233,9 @@ Choose Stable for the current release, Preview for previews, or Advanced for a l
 
 Android reuses the guarded ADB installer/recovery runtime. LG uses Developer Mode,
 explicit SSH host-key approval, package size/SHA-256 checks and downgrade refusal;
-its passphrase/keys remain session-only. Installation and everyday remote pairing
+it can remember the address and encrypt the passphrase on the phone. Setup shows
+download and transfer percentages and the current install or verification stage.
+Installation and everyday remote pairing
 are separate. LG sessions need renewal; it has no Android debloat, Home replacement
 or standby wake. [Android setup](ANDROID-SETUP.md) · [LG setup](WEBOS.md).
 

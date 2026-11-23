@@ -5,6 +5,8 @@ The PC tools install your locally built Miqat; they never fetch or push Git. Pyt
 In Miqat Phone, choose **Your TVs → Set up my TV** (or **Pair a
 new TV**) → **Android / Google TV**. Read the preparation guide, then choose
 Latest (default), Stable or Preview; the Advanced icon selects a local APK.
+Setup shows separate percentages for downloading the APK, sending it to the TV
+and applying setup steps. Installation and verification have their own status.
 Setup includes optional reviewed cleanup and recovery in the phone's selected
 language and theme. After successful setup,
 **Pair TV** opens ordinary pairing; confirm access using the TV's remote. Cancelling

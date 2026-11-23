@@ -62,6 +62,13 @@
     <string name="install_lead">Keep this screen open. It takes a minute or two.</string>
     <string name="t_download">Download from GitHub</string>
     <string name="t_send">Send to the TV</string>
+    <string name="install_check_tv">Checking the TV…</string>
+    <string name="install_find_release">Finding the selected release…</string>
+    <string name="install_check_package">Verifying the APK…</string>
+    <string name="install_wait_tv">Installing Miqat on the TV…</string>
+    <string name="install_check_version">Checking the installed version…</string>
+    <string name="install_apply_setup">Applying TV setup steps</string>
+    <string name="install_setup_checked">TV setup checked</string>
     <string name="mb_of">%1$s of %2$s MB</string>
     <string name="cancel">Cancel</string>
 

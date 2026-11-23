@@ -1,12 +1,19 @@
 # Validation evidence
 
-## LG adhan full-screen fallback — 23 November 2026
+## Phone TV setup progress and LG reconnect — 23 November 2026
 
-The owner observed HDMI stop and return on legacy hardware with the preceding
-audio-isolation build. Browser regressions exercise the new opaque page, HDMI
-attenuation, mute and release, restored picture and volume settings, and the
-English and Arabic remote action. The browser mocks the decoder and Luna.
-The new presentation and newer-TV speaker output remain pending on hardware.
+Android TV and phone debug builds, phone lint, instrumentation compilation and
+51 host regressions pass at phone development version 0.5.21. An API 37 phone
+emulator verifies exact download byte callbacks and atomic checksum handling.
+With a local LG Developer Mode fixture and the Miqat 0.2.30 IPK, transfer progress
+increases to 100%, a refused install never reaches version confirmation, and
+explicit retry verifies the installed version. The native phone verifies that
+one trust approval continues the connection, saves only opted-in credentials
+and reconnects with the saved address and blank passphrase field. Encrypted
+storage rejects a different host key. The bilingual phone suite checks LG form
+validation and Android installer entry. English and Arabic captures show the
+remember switch and a masked passphrase. Physical Android TV and LG setup, and
+live public release installation, remain pending.
 
 ## Android About Miqat — 23 November 2026
 
@@ -25,6 +32,14 @@ and restoration in element-volume mode, and decoder release during playback
 and Stop in legacy TV-volume mode. LG ES5 build and service tests pass,
 including the existing master-volume ownership checks. Physical sound and
 picture acceptance is pending.
+
+## LG adhan full-screen fallback — 23 November 2026
+
+The owner observed HDMI stop and return on legacy hardware with the preceding
+audio-isolation build. Browser regressions exercise the new opaque page, HDMI
+attenuation, mute and release, restored picture and volume settings, and the
+English and Arabic remote action. The browser mocks the decoder and Luna.
+The new presentation and newer-TV speaker output remain pending on hardware.
 
 ## Stable v0.7.5 — 23 November 2026
 
