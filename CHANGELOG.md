@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.7.5 — Android phone 0.5.21
+
 - Use Miqat Phone for TV setup and recovery. New releases no longer include a
   separate installer APK.
 

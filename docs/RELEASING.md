@@ -28,7 +28,7 @@ failed, PR/fork or other-workflow runs. It creates an unpublished draft prerelea
 ## Promote a verified preview to stable
 
 With owner approval, create a clean stable tag at the preview's source commit and
-copy its four verified packages and SHA256SUMS to a new draft. Compare every
+copy its verified packages and SHA256SUMS to a new draft. Compare every
 uploaded asset's size and SHA-256 digest with the published preview before
 publishing without prerelease status and marking it Latest. Preserve the preview
 tag and assets. Promotion reuses the signed bytes; no rebuild, new version code

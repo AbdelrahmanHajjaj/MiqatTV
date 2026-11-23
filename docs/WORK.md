@@ -8,8 +8,8 @@ bundle passed download and package verification. The bilingual website
 links to v0.7.4 and documents the new phone features.
 
 The standalone Android TV installer has been retired from the build and release
-workflow. Miqat Phone hosts TV setup and recovery. The next release from
-successful main validation will omit the separate APK. See EVIDENCE.md and
+workflow. Miqat Phone hosts TV setup and recovery. Next: publish v0.7.5 with phone 0.5.21/code 37 from successful main validation,
+then update the bilingual website and current download guides. See EVIDENCE.md and
 the release and PR records.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
