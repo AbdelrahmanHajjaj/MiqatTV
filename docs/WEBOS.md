@@ -67,7 +67,7 @@ new per-task evidence folders or duplicate exports; summarize checks concisely.
 
 ## Controls and settings
 
-Open **Settings → Device settings → About Miqat** for the installed version and
+Open **Settings → TV & startup → About Miqat** for the installed version and
 developer credit. Scan the feedback QR code to open the public GitHub form on
 your phone. GitHub sign-in is required. Email feedback is currently disabled.
 
@@ -98,7 +98,8 @@ accept a property change without changing audible output. Use **Mute HDMI**
 if the programme is still too loud and **Hide HDMI** if the sound continues.
 
 Older TVs, other input types and any released HDMI source use an opaque
-full-screen adhan page. Closing the popup restores the input at normal volume.
+full-screen adhan page. **Close** stops the adhan and restores the input at
+normal volume.
 Other audio modes release the decoder before playing.
 
 On SDKs below 4, adhan volume is an absolute TV level: 30% means 30/100, then the

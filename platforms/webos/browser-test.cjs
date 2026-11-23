@@ -176,6 +176,9 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('.settings-nav .selected').getAttribute('data-value'),'reminders','Down previews the focused sidebar section without OK');
       assert.equal(await page.locator(':focus').getAttribute('data-value'),'reminders','preview retains sidebar focus');
       assert.ok(await page.locator('.settings-rows [data-ui^="reminders."]').count()>0,'previewed section renders real reminder controls');
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'reminders.enabled', 'OK enters the first Reminders control');
+      await page.keyboard.press('Escape');
       await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
       assert.equal(await page.locator(':focus').evaluate(el=>!!el.closest('.settings-rows')),true,'content-direction arrow enters the previewed section');
       await page.keyboard.press('Escape');
@@ -210,6 +213,15 @@ const server = http.createServer((req, res) => {
       await page.keyboard.press('Escape');
       assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'device.about');
       assert.equal(await page.locator('.settings-rows').evaluate(el => el.scrollTop), beforeAbout);
+      if (uiScale === 110) {
+        await page.locator('.settings-nav [data-value=reminders]').click();
+        assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'reminders.enabled', 'activating Reminders moves focus into content');
+        await page.locator('.settings-rows [data-action=tests]').click();
+        assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'tests.prayer', 'opening Adhan Tests focuses its first control');
+        await page.keyboard.press('Escape');
+        await page.keyboard.press('Enter');
+        assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'tests.prayer', 'OK on the Tests sidebar enters its first control');
+      }
       await page.locator('[data-action=section][data-value=appearance]').click();
       assert.ok(await page.locator('.appearance-preview').evaluate(el => {
         const preview=el.getBoundingClientRect(), rows=document.querySelector('.settings-rows').getBoundingClientRect();
@@ -934,12 +946,8 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'only the adhan mihrab has a background');
     assert.equal(await page.locator('#screen').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'adhan hides the originating page outside its mihrab');
     assert.equal(await page.locator('.call-verse').innerText(), 'حَيَّ عَلَى الصَّلَاةِ');
-    await page.locator('[data-action=toggle-adhan]').click();
-    assert.equal(await page.locator('[data-action=toggle-adhan]').innerText(), 'Play');
-    assert.equal(await page.locator('.call-frame').count(), 1, 'Stop preserves the call screen for replay');
-    await page.locator('[data-action=toggle-adhan]').click();
-    await page.waitForFunction(() => document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
-    await page.keyboard.press('Escape');
+    assert.deepEqual(await page.locator('.call-column button').allTextContents(), ['Close'], 'Close is the only adhan control');
+    await page.locator('[data-action=dismiss-alert]').click();
     await inputRestored();
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'test-adhan', 'adhan returns to the original test row');
     assert.equal(await page.locator('#screen').evaluate(el => getComputedStyle(el).visibility), 'visible', 'dismissing adhan restores the originating page');
@@ -955,7 +963,6 @@ const server = http.createServer((req, res) => {
     await tests();
     await page.locator('[data-action=test-adhan]').click();
     await page.locator('[data-action=quiet-input]').waitFor();
-    await page.keyboard.press('ArrowDown');
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'dismiss-alert');
     await page.keyboard.press('ArrowDown');
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'quiet-input');
@@ -1109,6 +1116,7 @@ const server = http.createServer((req, res) => {
     await page.waitForFunction(() => document.querySelector('audio') && document.querySelector('audio').getAttribute('src'));
     assert.equal(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Arabic adhan keeps the same transparent outer area');
     assert.equal(await page.locator('#screen').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'Arabic adhan hides the originating page');
+    assert.deepEqual(await page.locator('.call-column button').allTextContents(), ['إغلاق']);
     if(capture)await page.screenshot({path: path.join(shots, 'adhan-test-ar.png')});
     await page.keyboard.press('Escape');
     await inputRestored();
@@ -1218,29 +1226,19 @@ const server = http.createServer((req, res) => {
     assert.equal(legacyPlayback.inputSource, undefined, 'old LG releases HDMI before starting adhan because it ignores element mute');
     assert.match(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), /^rgb\(/, 'legacy LG uses an opaque call page');
     assert.equal(await page.locator('[data-action=quiet-input]').isVisible(), false, 'released HDMI has no sound action');
-    await page.locator('[data-action=toggle-adhan]').click();
+    await page.locator('[data-action=dismiss-alert]').click();
     await page.waitForFunction(() => window.mockMasterVolume === 50);
-    assert.equal(await page.locator('.call-frame').count(), 1, 'Stop restores volume while keeping the replay screen');
-    assert.equal(await page.locator('#input-video source').count(), 0, 'old LG keeps HDMI released until the call screen closes');
-    await page.locator('[data-action=toggle-adhan]').click();
-    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
-    const owners = await page.evaluate(() => window.volumeCalls.filter(call => call.action === 'prepare').map(call => call.id));
-    assert.equal(new Set(owners).size, owners.length, 'each replay has a distinct volume owner');
-    await page.keyboard.press('Escape');
-    await page.waitForFunction(() => window.mockMasterVolume === 50);
+    assert.equal(await page.locator('.call-frame').count(), 0, 'Close stops and dismisses the adhan');
     await inputRestored();
-    await page.evaluate(() => { window.mediaCalls = []; });
+    await page.evaluate(() => { window.mediaCalls = []; window.deferVolume = true; });
     await tests(); await page.locator('[data-action=test-adhan]').click();
-    await page.waitForFunction(() => window.mockMasterVolume === 15);
-    await page.locator('[data-action=toggle-adhan]').click();
-    await page.waitForFunction(() => window.mockMasterVolume === 50);
-    await page.evaluate(() => { window.deferVolume = true; });
-    await page.locator('[data-action=toggle-adhan]').click();
     await page.waitForFunction(() => window.volumeReplies && window.volumeReplies.length === 1);
-    await page.waitForTimeout(700); // Cross the original 450 ms decoder-release delay while replay preparation is pending.
-    assert.equal(await page.evaluate(() => window.mediaCalls.filter(c => c.op === 'play' && c.tag === 'AUDIO').length), 0, 'an old play timer cannot bypass replay volume preparation');
+    const owners = await page.evaluate(() => window.volumeCalls.filter(call => call.action === 'prepare').map(call => call.id));
+    assert.equal(new Set(owners).size, owners.length, 'each alert has a distinct volume owner');
+    await page.waitForTimeout(700); // Cross the 450 ms decoder-release delay while preparation is pending.
+    assert.equal(await page.evaluate(() => window.mediaCalls.filter(c => c.op === 'play' && c.tag === 'AUDIO').length), 0, 'the decoder delay cannot bypass volume preparation');
     await page.evaluate(() => { window.deferVolume = false; window.volumeReplies.shift()(); });
-    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
+    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('audio')?.getAttribute('src'));
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => window.mockMasterVolume === 50);
     await inputRestored();
@@ -1287,8 +1285,10 @@ const server = http.createServer((req, res) => {
     await page.evaluate(() => document.querySelector('audio').dispatchEvent(new Event('ended')));
     await page.waitForFunction(() => window.mockMasterVolume === 50);
     assert.equal(await page.locator('.call-frame').count(), 1, 'completed full adhan restores level while keeping its timed call screen');
-    await page.locator('[data-action=toggle-adhan]').click();
-    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
+    await page.locator('[data-action=dismiss-alert]').click();
+    await inputRestored();
+    await tests(); await page.locator('[data-action=test-adhan]').click();
+    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('audio')?.getAttribute('src'));
     await page.evaluate(() => {
       const audio = document.querySelector('audio');
       Object.defineProperty(audio, 'error', {value: {code: 4}}); audio.dispatchEvent(new Event('error'));
@@ -1463,6 +1463,16 @@ const server = http.createServer((req, res) => {
         quietBounds.x + quietBounds.width <= 1920 && quietBounds.y + quietBounds.height <= 1080, 'HDMI sound action stays on screen');
       await fits('.call-column button,.call-verse,.call-name,.call-time,.call-status');
       assert.equal(await page.locator('.call-verse').innerText(), sacred.adhanCall);
+      const insideArch = await page.locator('.call-frame .inner').evaluate(async arch => {
+        await document.fonts.ready;
+        const inverse = arch.getScreenCTM().inverse();
+        const call = document.createRange();
+        call.selectNodeContents(document.querySelector('.call-verse'));
+        const {left, right, top, bottom} = call.getBoundingClientRect();
+        return [left + 2, right - 2].every(x => [top + 1, bottom - 1].every(y =>
+          arch.isPointInFill(new DOMPoint(x, y).matrixTransform(inverse))));
+      });
+      assert.ok(insideArch, 'the Arabic call and its diacritics fit inside the inner mihrab border');
       if (size === 80 || size === 110 || size === 150) if(capture)await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-call.png')});
       await page.keyboard.press('Escape'); await inputRestored();
       await tests(); await page.locator('[data-action=settings-back]').click();
