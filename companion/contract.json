@@ -28,6 +28,7 @@
     "tests.banner":"tv-action", "tests.card":"tv-action", "tests.adhan-short":"tv-action", "tests.adhan-full":"tv-action",
     "tests.spoken":"tv-action", "tests.announcement":"tv-action", "tests.background":"tv-action", "tests.cancel":"tv-action",
     "offsets.reset":"reset-offsets", "favourites.add":"favourites", "favourites.remove":"favourites", "favourites.move-earlier":"favourites",
-    "favourites.move-later":"favourites", "favourites.replace":"favourites", "favourites.cancel":"settings", "apps.uninstall":"tv-step"
+    "favourites.move-later":"favourites", "favourites.replace":"favourites", "favourites.cancel":"settings", "apps.uninstall":"tv-step",
+    "adhan.quiet-input":"tv-step"
   }
 }

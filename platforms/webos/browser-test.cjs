@@ -962,6 +962,18 @@ const server = http.createServer((req, res) => {
     await page.locator('#input-video').evaluate(video => delete video.volume);
     await page.keyboard.press('Escape');
     await inputRestored();
+    await page.locator('#input-video').evaluate(video => {
+      Object.defineProperty(video, 'volume', {configurable: true, get: () => 1, set() {}});
+      Object.defineProperty(video, 'muted', {configurable: true, get: () => false, set() {}});
+    });
+    await tests();
+    await page.locator('[data-action=test-adhan]').click();
+    await page.waitForFunction(() => document.querySelector('audio')?.getAttribute('src'));
+    assert.equal(await page.locator('#input-video source').count(), 0, 'rejected volume and mute release HDMI before adhan');
+    assert.match(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), /^rgb\(/);
+    await page.locator('#input-video').evaluate(video => { delete video.volume; delete video.muted; });
+    await page.keyboard.press('Escape');
+    await inputRestored();
     await tests();
     await page.locator('[data-action=test-adhan]').click();
     await page.waitForFunction(() => document.querySelector('audio') && document.querySelector('audio').getAttribute('src'));
