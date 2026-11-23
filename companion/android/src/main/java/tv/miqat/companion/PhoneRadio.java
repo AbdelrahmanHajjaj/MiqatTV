@@ -117,11 +117,13 @@ public final class PhoneRadio extends Service {
     }
 
     static boolean notifications(Context context) {
+        NotificationManager manager = context.getSystemService(NotificationManager.class);
         NotificationChannel channel = new NotificationChannel(CHANNEL,
                 PhoneAlarms.text(context, "phone_radio"), NotificationManager.IMPORTANCE_LOW);
         channel.setSound(null, null);
-        context.getSystemService(NotificationManager.class).createNotificationChannel(channel);
-        return PhoneAlarms.channel(context, CHANNEL);
+        manager.createNotificationChannel(channel);
+        NotificationChannel current = manager.getNotificationChannel(CHANNEL);
+        return current != null && current.getImportance() != NotificationManager.IMPORTANCE_NONE;
     }
 
     static String stationName(JSONObject station, boolean ar) {
@@ -189,6 +191,9 @@ public final class PhoneRadio extends Service {
                 @Override public void onPlay() { if (media == owner) play(); }
                 @Override public void onPause() { if (media == owner) pause(); }
                 @Override public void onStop() { if (media == owner) stop(); }
+                @Override public void onCustomAction(String action, Bundle extras) {
+                    if (media == owner && STOP.equals(action)) stop();
+                }
             }, handler);
             active = this;
         }
@@ -318,14 +323,18 @@ public final class PhoneRadio extends Service {
                 : PhonePlayback.playing() ? 0 : PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PLAY_PAUSE);
         media.setPlaybackState(new PlaybackState.Builder()
                 .setActions(actions)
+                .addCustomAction(STOP, PhoneAlarms.text(this, "phone_radio_stop"),
+                        R.drawable.companion_icon_stop)
                 .setState(state.playback, PlaybackState.PLAYBACK_POSITION_UNKNOWN, state == State.LIVE ? 1 : 0)
                 .build());
         media.setActive(true);
     }
 
     private Notification notification() {
-        Bundle extras = new Bundle();
-        extras.putParcelable(Notification.EXTRA_MEDIA_SESSION, media.getSessionToken());
+        boolean transport = state.engaged || !PhonePlayback.playing();
+        Notification.MediaStyle style = new Notification.MediaStyle()
+                .setMediaSession(media.getSessionToken())
+                .setShowActionsInCompactView(transport ? new int[] {0, 1} : new int[] {0});
         Notification.Builder notice = new Notification.Builder(this, CHANNEL)
                 .setSmallIcon(R.drawable.companion_icon_mihrab)
                 .setContentTitle(stationName(station, PhoneAlarms.arabic(this)))
@@ -335,11 +344,10 @@ public final class PhoneRadio extends Service {
                 .setOnlyAlertOnce(true)
                 .setShowWhen(false)
                 .setCategory(Notification.CATEGORY_TRANSPORT)
-                .addExtras(extras);
+                .setStyle(style);
         if (Build.VERSION.SDK_INT >= 31)
             notice.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE);
-        // A regular notification permits swipe-to-stop where Android allows it.
-        if (state.engaged || !PhonePlayback.playing())
+        if (transport)
             notice.addAction(new Notification.Action.Builder(
                         state.engaged ? R.drawable.companion_icon_pause : R.drawable.companion_icon_play,
                         PhoneAlarms.text(this, state.engaged ? "phone_pause" : "phone_resume"),

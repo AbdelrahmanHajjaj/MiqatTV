@@ -6,6 +6,9 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.session.MediaController;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.os.PowerManager;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -35,9 +38,11 @@ import static tv.miqat.companion.PhoneUiCheck.on;
 final class PhoneRadioCheck {
     static void run(Instrumentation test, String scenario, boolean capture) throws Exception {
         Context c = test.getTargetContext();
-        check(PhoneAlarms.notifications(c), "Grant notification access before the radio suite");
         boolean offline = scenario.equals("offline");
-        boolean fixture = offline || scenario.equals("fixture") || scenario.equals("alarm-route");
+        boolean dismiss = scenario.equals("dismiss");
+        boolean fixture = offline || dismiss || scenario.equals("fixture") || scenario.equals("alarm-route");
+        if (fixture && !offline && !dismiss)
+            check(PhoneAlarms.notifications(c), "Grant prayer notification access before scheduling Adhan");
         String id = fixture ? "cairo" : scenario;
         JSONObject station = PhoneData.get(c).station(id);
         check(station != null, "Unknown radio test station");
@@ -73,8 +78,10 @@ final class PhoneRadioCheck {
                 check(home.findViewById(android.R.id.content).findViewWithTag("phone.radio.open").performClick(),
                         "Radio is missing from the prayer home toolbar");
                 check(!PhoneRadio.hasSession(), "Opening Radio started a connection");
-                check(home.body.getLayoutDirection() == (arabic ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR),
-                        "Radio screen has the wrong language direction");
+                check(home.page.equals("prayers") && home.radio.popup.isShowing(),
+                        "Radio replaced the prayer Home instead of opening a popup");
+                check(popup(home, "radio.popup").getLayoutDirection() == (arabic ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR),
+                        "Radio popup has the wrong language direction");
                 click(home, "radio.play");
             });
             if (offline) {
@@ -90,29 +97,59 @@ final class PhoneRadioCheck {
             await(test, () -> PhoneRadio.status().equals("phone_radio_live"), 24000,
                     "Station did not become audible: " + id);
             PhoneUiCheck.capture(test, home, arabic ? "radio-ar" : "radio-en", capture);
+            MediaController player = mediaPlayer(test, c);
             if (!fixture) return;
+            on(test, () -> click(home, "radio.close"));
+            if (!arabic && !dismiss) {
+                on(test, () -> {
+                    View quick = home.findViewById(android.R.id.content).findViewWithTag("phone.radio.quick");
+                    check(quick.isShown() && "Pause".contentEquals(quick.getContentDescription())
+                            && quick.performClick(), "Home shortcut did not pause Radio");
+                });
+                await(test, () -> PhoneRadio.status().equals("phone_radio_paused"), 5000, "Home shortcut did not pause playback");
+                radioNotice(c).contentIntent.send();
+                await(test, () -> home.page.equals("prayers") && home.radio.popup != null
+                        && home.radio.popup.isShowing(), 5000, "Media notification did not open the Home popup");
+                on(test, () -> click(home, "radio.play"));
+                await(test, () -> PhoneRadio.status().equals("phone_radio_live"), 15000, "Popup Play did not reconnect");
+                on(test, () -> click(home, "radio.close"));
+            }
             on(test, () -> home.startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)));
             await(test, () -> !home.phoneForeground, 5000, "Radio fixture did not background Miqat");
+            if (dismiss) {
+                shell(test, "cmd statusbar expand-settings");
+                AccessibilityNodeInfo control = mediaNode(test, "Pause");
+                try {
+                    PhoneUiCheck.capture(test, c, "radio-system-media", capture);
+                    check(control.performAction(AccessibilityNodeInfo.ACTION_CLICK), "System media Pause is unavailable");
+                } finally {
+                    control.recycle();
+                }
+                await(test, () -> PhoneRadio.status().equals("phone_radio_paused"), 5000,
+                        "The media notification did not pause before dismissing");
+                await(test, () -> radioNotice(c) != null
+                                && (radioNotice(c).flags & Notification.FLAG_FOREGROUND_SERVICE) == 0,
+                        5000, "Paused radio still has a foreground notification");
+                dismissMedia(test, PhoneRadio.stationName(station, false));
+                await(test, () -> !PhoneRadio.hasSession() && radioNotice(c) == null, 5000,
+                        "Dismissing the paused media card left a radio session active");
+                return;
+            }
             audioAndAdhan(test, c, previous, arabic);
             if (arabic) return;
-            actionCount(test, c, 2);
-            radioNotice(c).actions[0].actionIntent.send();
+            player.getTransportControls().play();
             await(test, () -> PhoneRadio.status().equals("phone_radio_live"), 15000,
-                    "Notification Play did not reconnect");
-            await(test, () -> radioNotice(c) != null
-                    && containsLabel(radioNotice(c), "Pause"), 5000, "Missing notification Pause");
-            radioNotice(c).actions[0].actionIntent.send();
+                    "Media Play did not reconnect");
+            clickSystemMedia(test, "Pause");
             await(test, () -> PhoneRadio.status().equals("phone_radio_paused"), 5000,
-                    "Notification Pause did not release playback");
-            await(test, () -> radioNotice(c) != null
-                    && containsLabel(radioNotice(c), "Play"), 5000, "Missing notification Play");
-            radioNotice(c).actions[0].actionIntent.send();
+                    "System media Pause did not release playback");
+            clickSystemMedia(test, "Play");
             await(test, () -> PhoneRadio.status().equals("phone_radio_live"), 15000,
-                    "Notification Play did not resume paused radio");
-            if (android.os.Build.VERSION.SDK_INT >= 34) dismiss(test, c, station);
+                    "System media Play did not resume paused radio");
+            if (android.os.Build.VERSION.SDK_INT >= 33) clickSystemMedia(test, "Stop radio");
             else radioNotice(c).actions[1].actionIntent.send();
             await(test, () -> !PhoneRadio.hasSession() && radioNotice(c) == null, 5000,
-                    "Dismiss or Stop left the radio session or notice active");
+                    "Stop left the radio session or media notification active");
         } finally {
             on(test, PhoneRadio::stop);
             PhonePlayback.stop(c);
@@ -158,11 +195,13 @@ final class PhoneRadioCheck {
                 15000, "The scheduled Adhan did not start");
         await(test, () -> PhoneRadio.status().equals("phone_radio_adhan") && !PhoneRadio.engaged(),
                 1000, "Radio was still active during Adhan");
-        actionCount(test, c, 1);
+        MediaController player = mediaPlayer(test, c);
+        check((player.getPlaybackState().getActions() & PlaybackState.ACTION_PLAY) == 0,
+                "The radio media session offered Play during Adhan");
         shell(test, "input keyevent KEYCODE_WAKEUP");
         shell(test, "wm dismiss-keyguard");
         if (alarm) {
-            radioNotice(c).actions[0].actionIntent.send();
+            stopMedia(player);
             await(test, () -> !PhoneRadio.hasSession() && PhonePlayback.playing(),
                     5000, "Stop radio did not end the paused session independently of Adhan");
         }
@@ -172,8 +211,12 @@ final class PhoneRadioCheck {
     }
 
     private static void click(MainActivity a, String tag) {
-        View view = a.body.findViewWithTag(tag);
-        check(view != null && view.isEnabled() && view.performClick(), "Missing radio action " + tag);
+        View view = popup(a, tag);
+        check(view != null && view.isShown() && view.isEnabled() && view.performClick(), "Missing radio action " + tag);
+    }
+
+    private static View popup(MainActivity a, String tag) {
+        return a.radio.popup.getWindow().getDecorView().findViewWithTag(tag);
     }
 
     private static Notification radioNotice(Context c) {
@@ -182,38 +225,70 @@ final class PhoneRadioCheck {
         return null;
     }
 
-    private static void actionCount(Instrumentation test, Context c, int count) {
-        await(test, () -> {
-            Notification notice = radioNotice(c);
-            return notice != null && notice.actions != null && notice.actions.length == count;
-        }, 5000, "Expected " + count + " radio notification actions");
+    private static MediaController mediaPlayer(Instrumentation test, Context context) {
+        await(test, () -> radioNotice(context) != null, 5000, "Radio has no notification");
+        Notification notice = radioNotice(context);
+        check(notice.extras.getString(Notification.EXTRA_TEMPLATE, "").endsWith("$MediaStyle")
+                && notice.deleteIntent != null, "Radio is missing its dismissible MediaStyle card");
+        MediaSession.Token token = notice.extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
+        check(token != null, "Radio media notification is missing its session");
+        return new MediaController(context, token);
     }
 
-    private static boolean containsLabel(Notification notice, String label) {
-        return notice != null && notice.actions != null && notice.actions.length > 0
-                && label.contentEquals(notice.actions[0].title);
+    private static void stopMedia(MediaController player) {
+        PlaybackState.CustomAction stop = player.getPlaybackState().getCustomActions().stream()
+                .filter(action -> "tv.miqat.companion.STOP_RADIO".equals(action.getAction()))
+                .findFirst().orElseThrow(() -> new AssertionError("Radio media session has no Stop action"));
+        player.getTransportControls().sendCustomAction(stop, null);
     }
 
-    private static void dismiss(Instrumentation test, Context c, JSONObject station) throws Exception {
-        shell(test, "cmd statusbar expand-notifications");
-        String title = PhoneRadio.stationName(station, PhoneAlarms.arabic(c));
+    private static void clickSystemMedia(Instrumentation test, String label) throws Exception {
+        if (android.os.Build.VERSION.SDK_INT >= 33) shell(test, "cmd statusbar expand-settings");
+        else shell(test, "cmd statusbar expand-notifications");
+        AccessibilityNodeInfo control = mediaNode(test, label);
+        try {
+            check(control.performAction(AccessibilityNodeInfo.ACTION_CLICK),
+                    "SystemUI did not offer media action " + label);
+        } finally {
+            control.recycle();
+        }
+    }
+
+    private static AccessibilityNodeInfo mediaNode(Instrumentation test, String label) throws Exception {
+        return mediaNode(test, label, false);
+    }
+
+    private static AccessibilityNodeInfo mediaNode(Instrumentation test, String value, boolean id) throws Exception {
         LiveUiCheck.until(() -> {
-            AccessibilityNodeInfo found = PhonePresentationCheck.notificationText(test, title);
+            AccessibilityNodeInfo found = PhonePresentationCheck.systemUiNode(test, value, id);
             if (found == null) return false;
             found.recycle();
             return true;
         });
-        AccessibilityNodeInfo row = PhonePresentationCheck.notificationText(test, title);
+        AccessibilityNodeInfo found = PhonePresentationCheck.systemUiNode(test, value, id);
+        check(found != null, "Missing system media control " + value);
+        return found;
+    }
+
+    private static void dismissMedia(Instrumentation test, String station) throws Exception {
+        AccessibilityNodeInfo card = mediaNode(test, station);
         try {
-            while (row != null && !String.valueOf(row.getViewIdResourceName()).endsWith("/expandableNotificationRow")) {
-                AccessibilityNodeInfo parent = row.getParent();
-                row.recycle();
-                row = parent;
+            while (card != null && !card.isLongClickable()) {
+                AccessibilityNodeInfo parent = card.getParent();
+                card.recycle();
+                card = parent;
             }
-            check(row != null && row.performAction(AccessibilityNodeInfo.ACTION_DISMISS),
-                    "SystemUI did not offer radio notification dismissal");
+            check(card != null && card.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK),
+                    "SystemUI did not open the paused media card's dismissal options");
         } finally {
-            if (row != null) row.recycle();
+            if (card != null) card.recycle();
+        }
+        AccessibilityNodeInfo dismiss = mediaNode(test, "com.android.systemui:id/dismiss", true);
+        try {
+            check(dismiss.isEnabled() && dismiss.performAction(AccessibilityNodeInfo.ACTION_CLICK),
+                    "Paused media card cannot be dismissed");
+        } finally {
+            dismiss.recycle();
         }
     }
 

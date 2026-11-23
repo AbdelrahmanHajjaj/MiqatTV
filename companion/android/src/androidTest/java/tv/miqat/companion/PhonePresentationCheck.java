@@ -24,6 +24,9 @@ final class PhonePresentationCheck {
         return null;
     }
     static AccessibilityNodeInfo notificationText(Instrumentation test,String text) {
+        return systemUiNode(test, text, false);
+    }
+    static AccessibilityNodeInfo systemUiNode(Instrumentation test, String value, boolean id) {
         android.accessibilityservice.AccessibilityServiceInfo info=test.getUiAutomation().getServiceInfo();
         info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
                 |android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
@@ -32,7 +35,7 @@ final class PhonePresentationCheck {
             AccessibilityNodeInfo root=window.getRoot();
             try {
                 if(root!=null && "com.android.systemui".contentEquals(root.getPackageName())) {
-                    AccessibilityNodeInfo found=find(root,text,false);if(found!=null)return found;
+                    AccessibilityNodeInfo found=find(root,value,id);if(found!=null)return found;
                 }
             } finally {if(root!=null)root.recycle();window.recycle();}
         }

@@ -1,8 +1,9 @@
 # Current work
 
 Updated: 2026-11-23. Approved scope: add standalone phone Quran Radio in
-`feat/phone-radio`. The phone uses the shared stations and its own foreground
-player notification. Adhan pauses radio, and resuming requires Play.
+`feat/phone-radio`. The phone uses the shared stations in a Home popup with
+quick playback icons and Android's system media player. Adhan pauses radio,
+and resuming requires Play.
 
 Next: review the radio change and check notification behavior on an older
 supported Android version. Keep the website download copy aligned with the

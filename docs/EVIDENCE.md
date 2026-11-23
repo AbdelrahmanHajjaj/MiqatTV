@@ -9,13 +9,14 @@ phone generator tests pass. The APK contains the 25 exact approved recordings.
 On the owned, muted API 37 emulator, Cairo MP3 and Qatar HLS each reach playback.
 Loopback cases exercise playback with the screen off, a real scheduled Adhan
 on both media and alarm routes, and retention of the paused state afterward.
-Notification Play/Pause, SystemUI dismissal while playing, and the separate
-Stop action during Adhan pass. The unreachable stream case reaches its retry
-limit and Stop clears the failed session. English and Arabic captures in
-portrait and landscape show the station, status and controls in the expected
-direction. The Adhan notification check now selects the playing notification
-by prayer and time after a run expanded an older Fajr reminder instead. Earlier
-Android versions and physical phones remain unverified.
+The Home shortcut pauses playback and tapping the MediaStyle notification opens
+the Home popup. Android Quick Settings Play/Pause and Stop pass, and using Hide
+on the paused card ends the session. The separate Stop action during Adhan
+passes. Cairo playback exposes a media notification even with permission for
+ordinary notifications revoked. The unreachable stream reaches its retry limit
+and Stop clears the failed session. English and Arabic portrait captures show
+the popup, station and compact playback icons in the expected direction.
+Earlier Android versions and physical phones remain unverified.
 
 ## Stable promotion — 23 November 2026
 

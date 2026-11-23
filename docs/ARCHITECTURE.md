@@ -128,8 +128,9 @@ an independent elapsed-time/boot-scoped one-shot claim; explicit delivery tests
 never replace the real schedule. PhoneTestUi owns its countdown/cancel actions.
 
 PhoneRadio owns user-started live playback from the canonical station catalog.
-Its foreground service and notification are separate from Adhan. It releases the
-stream and audio focus when paused, and cancels pending retries on pause or Stop.
+PhoneRadio publishes a MediaStyle notification backed by its own MediaSession.
+It releases the stream and audio focus when paused, and cancels pending retries
+on pause or Stop. PhoneRadioUi owns the Home shortcut and station popup.
 PhonePlayback pauses radio before acquiring Adhan audio focus. The radio
 selection is local to the phone and reconnecting after Adhan requires Play.
 

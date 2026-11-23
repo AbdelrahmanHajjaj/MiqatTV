@@ -132,14 +132,16 @@ background TV connection runs.
 
 ## Quran Radio
 
-Open **Quran Radio** from the prayer home toolbar, choose a station and tap
-**Play**. The stream uses the internet and continues while you use other apps or
-lock the screen. Enable radio notifications to start playback.
+Tap the radio icon on the prayer home toolbar to open the **Quran Radio**
+popup. Choose a station and use the **Play** icon. While a radio session is
+active, Home also shows a Play/Pause shortcut. The stream uses the internet
+and continues while you use other apps or lock the screen.
 
-The player notification opens Radio and offers Play/Pause and **Stop radio**.
-Pause closes the stream and keeps the station selected. Play reconnects to the
-live broadcast. Dismissing the notification stops playback where Android allows
-the gesture. **Stop radio** also closes the session on devices that keep it pinned.
+Android's media player offers Play/Pause and **Stop radio**. Tap the player
+to reopen the Home popup. Pause closes the stream and keeps the station
+selected. Play reconnects to the live broadcast. Android may keep the
+player pinned while it is playing. Use **Stop radio** to end the session,
+or pause and dismiss the player where Android offers that action.
 
 Adhan pauses the stream, including during reconnection. Tap **Play** after Adhan
 ends to listen again. The phone station is independent of any paired TV.
