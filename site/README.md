@@ -24,8 +24,9 @@ Research reviewed on 22 November 2026:
 
 Miqat applies these patterns to its own features and screenshots. Do not copy
 competitor wording, ratings, awards or unimplemented features.
-`src/lib/site.ts` owns `RELEASE_TAG`; update it when publishing a new release and
-check the three device download links.
+`src/lib/stable-release.json` owns the public release tag and Android version
+codes used by the download links and manual update checks. Update it from the
+published artifacts and verify the three device links and `/updates.json`.
 
 ## Content and assets
 

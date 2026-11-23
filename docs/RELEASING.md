@@ -37,6 +37,8 @@ uploaded asset's size and SHA-256 digest with the published preview before
 publishing without prerelease status and marking it Latest. Preserve the preview
 tag and assets. Promotion reuses the signed bytes; no rebuild, new version code
 or signing-key access is needed. Update website download links and current guides.
+Set the tag and both APK version names/codes in `site/src/lib/stable-release.json`
+from the verified published artifacts. GitHub Pages serves this as `updates.json`.
 An installed copy of the same signed preview needs no reinstall.
 
 ## Persistent Android signing

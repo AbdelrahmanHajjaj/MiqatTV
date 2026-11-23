@@ -19,6 +19,9 @@ developer credit and GitHub feedback. The LG About page is unreleased. It uses
 a feedback QR code, and the browser preview mirrors it. Email stays disabled
 until a public address is chosen.
 
+Sideloaded Android phone and TV builds can explicitly check the stable update
+metadata on GitHub Pages from About. Installation remains user-driven.
+
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Routine CI has no phone/TV emulator jobs; retain
 build/lint, portable/JVM/browser and package/signature gates. Native device suites

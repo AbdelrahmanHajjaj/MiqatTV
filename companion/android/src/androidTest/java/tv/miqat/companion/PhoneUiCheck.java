@@ -12,6 +12,7 @@ import org.json.JSONObject;
 /** Real bound phone views and persistence; no network or TV is needed. */
 final class PhoneUiCheck {
     static void run(Instrumentation test,boolean capture)throws Exception {
+        tv.miqat.companion.about.UpdateMetadataCheck.run();
         Context context=test.getTargetContext();SharedPreferences prefs=PhoneStore.preferences(context);
         Map<String,?> original=new LinkedHashMap<>(prefs.getAll());String language=context.getSharedPreferences("companion",0).getString("language","system");
         MainActivity[] current={null};
@@ -35,6 +36,7 @@ final class PhoneUiCheck {
                     TextView version = a.body.findViewWithTag("phone.about.version");
                     check(version.getText().toString().contains(installedVersion), "About must show the installed phone version");
                     check(a.body.findViewWithTag("phone.about.github").isEnabled(), "GitHub feedback must be available");
+                    check(a.body.findViewWithTag("phone.about.check-updates").isEnabled(), "Sideloaded phone has a manual update check");
                     check(!a.body.findViewWithTag("phone.about.email").isEnabled(), "Email feedback must be disabled");
                     check(a.phoneUi.back() && a.body.findViewWithTag("phone.section.about") != null, "Back must return to settings");
                     a.tab("prayers");

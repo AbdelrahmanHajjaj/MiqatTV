@@ -41,7 +41,7 @@ read-only repository access.
 | Core | Canonical projections, complete media hashes, JVM/Java/JS and legacy ES5 tests |
 | Android build | Full-audio TV APK, test APK, lint and local regressions |
 | LG build and tests | Complete app/service, ES5, volume/scheduling/HTTPS mocks, browser suite and full-audio IPK |
-| Preview | Data/token freshness, regressions and 18-route static build |
+| Preview | Data/token freshness, regressions and static website build |
 | Companion | Portable settings, QR/LAN host-JVM checks, debug/release builds and lint |
 
 PRs compile and validate packages without publishing review-build artifacts.

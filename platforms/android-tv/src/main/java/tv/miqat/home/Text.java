@@ -42,6 +42,12 @@ final class Text {
     String aboutGithub() { return ar ? "الملاحظات عبر GitHub" : "Feedback on GitHub"; }
     String aboutEmail() { return ar ? "الملاحظات عبر البريد الإلكتروني" : "Feedback by email"; }
     String aboutBrowserUnavailable() { return ar ? "لا يوجد متصفح لفتح GitHub" : "No browser available to open GitHub"; }
+    String aboutCheckUpdates() { return ar ? "التحقق من التحديثات" : "Check for updates"; }
+    String aboutCheckingUpdates() { return ar ? "جارٍ التحقق من التحديثات…" : "Checking for updates…"; }
+    String aboutNoUpdate() { return ar ? "لا يوجد إصدار مستقر أحدث." : "No newer stable version is available."; }
+    String aboutNewUpdate() { return ar ? "يتوفر تحديث" : "Update available"; }
+    String aboutUpdateFailed() { return ar ? "تعذر التحقق من التحديثات. حاول مرة أخرى." : "Couldn’t check for updates. Try again."; }
+    String aboutViewRelease() { return ar ? "عرض الإصدار" : "View release"; }
     /** The saved city in this language; set by {@link Screen#loadText}. */
     String cityName = "";
     String city() { return cityName; }

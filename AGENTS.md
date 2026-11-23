@@ -47,8 +47,9 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
 - Preserve Arabic/English, RTL/LTR, joined Arabic and exact religious text.
   Mirror horizontal physical input once at the shell boundary.
 - Keep runtime networking limited to selected radio, manual advisory prayer
-  comparison, explicitly loaded phone Qibla maps and the authorized foreground
-  household-LAN companion protocol. Phone location uses Android APIs with explicit
+  comparison, explicit stable update checks, explicitly loaded phone Qibla maps
+  and the authorized foreground household-LAN companion protocol.
+  Phone location uses Android APIs with explicit
   optional background consent. Installer ADB/SSH/downloads are separate.
   No ads, analytics or feeds.
 - Keep keys, local device configuration, private state, outputs, unreviewed audio

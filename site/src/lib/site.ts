@@ -1,7 +1,8 @@
 // Every page of the preview: one per TV screen or mode, in Arabic (default, at the root) and English (/en/).
 import type { Lang } from './text';
+import updates from './stable-release.json';
 export const REPO = 'https://github.com/AbdelrahmanHajjaj/MiqatTV';
-export const RELEASE_TAG = 'v0.7.6';
+export const RELEASE_TAG = updates.tag;
 
 type L = Record<Lang, string>;
 export type Page = {
