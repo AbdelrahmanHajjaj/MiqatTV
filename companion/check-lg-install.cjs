@@ -62,6 +62,6 @@ const listen=(server,port)=>new Promise((resolve,reject)=>{server.once('error',r
   await listen(api,9991);await listen(ssh,9922);
   const result=await exec(adb,['-s',serial,'shell','am','instrument','-r','-w','-e','suite','lg-install','tv.miqat.companion.test/tv.miqat.companion.CompanionCheck'],{timeout:240000,maxBuffer:1024*1024});
   process.stdout.write(result.stdout);assert.match(result.stdout,/INSTRUMENTATION_CODE: -1/);assert.match(result.stdout,/PASS: LG SSH identity/);
-  assert.equal(authenticated,1);assert.equal(installs,2);assert.equal(launches,1);assert.equal(files.size,1);
+  assert.equal(authenticated,3);assert.equal(installs,2);assert.equal(launches,1);assert.equal(files.size,1);
   console.log('PASS: local SSH fixture observed only explicit Miqat operations; no arbitrary commands or automatic retry');
 })().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>{for(const c of clients)c.destroy();ssh.close();api.close();api.closeAllConnections();privateKey.fill?.(0);});

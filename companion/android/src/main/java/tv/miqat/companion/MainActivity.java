@@ -710,16 +710,18 @@ public final class MainActivity extends Activity {
         if (networkBusy && !page.equals("pair")) {
             views.disableContent(body);
             if (editorActions) views.disableContent(shell);
-            ProgressBar progress =
-                    new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-            progress.setIndeterminate(views.motionEnabled());
-            if (!views.motionEnabled()) progress.setProgress(50);
-            progress.setIndeterminateTintList(ColorStateList.valueOf(accent));
-            progress.setContentDescription(t(networkMessage));
-            progress.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-            shell.addView(progress, new LinearLayout.LayoutParams(-1, views.dp(3)));
+            if (page.equals("lg-setup") && lgSetup != null) lgSetup.progress(shell);
+            else {
+                ProgressBar progress =
+                        new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+                progress.setIndeterminate(views.motionEnabled());
+                if (!views.motionEnabled()) progress.setProgress(50);
+                progress.setIndeterminateTintList(ColorStateList.valueOf(accent));
+                progress.setContentDescription(t(networkMessage));
+                progress.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+                shell.addView(progress, new LinearLayout.LayoutParams(-1, views.dp(3)));
+            }
         }
-        if (networkBusy && lgSetup != null) lgSetup.cancellation(shell);
         if (editorActions) return;
         if (page.equals("onboarding")) onboarding.footer(shell);
         else if (page.equals("tv-setup")) tvSetup.footer(shell);
@@ -907,7 +909,7 @@ public final class MainActivity extends Activity {
         if (qibla != null) qibla.stop();
         pairingUi.pause();
         stopAudio();
-        if (lgSetup != null) lgSetup.close();
+        if (lgSetup != null) lgSetup.stop();
         if (toast != null) toast.cancel();
         super.onStop();
     }

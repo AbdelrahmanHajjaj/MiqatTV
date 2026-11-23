@@ -1,6 +1,7 @@
 package tv.miqat.companion;
 
 import android.net.Uri;
+import android.content.res.ColorStateList;
 import android.text.InputType;
 import android.view.View;
 import android.widget.*;
@@ -11,13 +12,16 @@ import tv.miqat.installer.PublicRelease;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.text.NumberFormat;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /** Uses the companion's native surfaces/controls; all privileged work is explicit. */
 final class LgSetup {
     private final MainActivity a;
+    private final LgCredentials credentials;
     private volatile LgInstall client;
     private boolean connected;
     private String address = "";
@@ -26,7 +30,11 @@ final class LgSetup {
     private boolean preview, local, downloading;
     private String channel;
     private String passphrase = "";
-    private volatile boolean destroyed;
+    private boolean remember, credentialSaveFailed;
+    private String stage;
+    private int percent;
+    private TextView stageLabel;
+    private ProgressBar stageBar;
 
     LgSetup(MainActivity activity) {
         this(activity, "latest");
@@ -38,6 +46,9 @@ final class LgSetup {
 
     LgSetup(MainActivity activity, String channel, boolean local) {
         a = activity;
+        credentials = new LgCredentials(a.prefs());
+        address = a.prefs().getString("lg-host", "");
+        remember = credentials.has(address);
         this.channel = channel;
         this.local = local;
         a.tvSetup.channel = channel;
@@ -58,7 +69,8 @@ final class LgSetup {
 
     void restore(android.os.Bundle state) {
         local = state.getBoolean("lg-local", local);
-        address = state.getString("lg-address", "");
+        address = state.getString("lg-address", address);
+        remember = credentials.has(address.trim());
         String version = state.getString("lg-selected-version", "");
         if (!version.isEmpty())
             try {
@@ -75,19 +87,34 @@ final class LgSetup {
     void render(LinearLayout parent) {
         if (!connected) {
             a.tvSetup.lgGuide();
-            if (address.isEmpty()) address = a.prefs().getString("lg-host", "");
             EditText host = field(parent, a.t("lg_address"), address, false);
             host.setTag("lg.host");
-            host.addTextChangedListener(MainActivity.watcher(value -> address = value));
             EditText phrase = field(parent, a.t("lg_passphrase"), passphrase, true);
             phrase.setTag("lg.passphrase");
             phrase.addTextChangedListener(MainActivity.watcher(value -> passphrase = value));
+            Switch keep = a.views.toggle(parent, a.t("lg_remember"), remember, value -> remember = value);
+            keep.setTag("lg.remember");
+            if (credentials.has(address.trim())) phrase.setHint(a.t("lg_saved_passphrase"));
+            host.addTextChangedListener(MainActivity.watcher(value -> {
+                boolean changed = !value.trim().equals(address.trim());
+                address = value;
+                if (changed) {
+                    boolean saved = credentials.has(value.trim());
+                    keep.setChecked(saved);
+                    phrase.setHint(saved ? a.t("lg_saved_passphrase") : "");
+                }
+            }));
             if (!message.equals("lg_intro"))
                 parent.addView(a.views.text(a.t(message), 14, a.accent));
+            String hostToForget = a.prefs().getString("lg-host", "");
+            if (!a.prefs().getString("lg-key-" + hostToForget, "").isEmpty())
+                forgetButton(parent, hostToForget);
             return;
         }
         LinearLayout connect = parent;
         connect.addView(a.views.text(a.t(message), 14, a.accent));
+        if (credentialSaveFailed)
+            connect.addView(a.views.text(a.t("lg_save_failed"), 14, a.accent));
         if (selected != null)
             connect.addView(a.views.text("Miqat " + selected.version + " · IPK", 16, a.ink));
         if (preview) connect.addView(a.views.text(a.t("tv_public_preview"), 13, a.muted));
@@ -126,16 +153,19 @@ final class LgSetup {
                         .button(
                                 connect,
                                 a.t("lg_launch"),
-                                () ->
-                                        run(
+                                () -> {
+                                    setStage("lg_launch", -1);
+                                    LgInstall transport = client;
+                                    run(
                                                 () -> {
-                                                    client.launch();
+                                                    transport.launch();
                                                     return true;
                                                 },
                                                 ignored -> {
                                                     message = "lg_launched";
                                                     a.render();
-                                                }))
+                                                });
+                                })
                         .setTag("lg.launch");
             if (!version.isEmpty())
                 a.views.button(
@@ -146,19 +176,24 @@ final class LgSetup {
                             a.navigate("pair");
                         });
         }
+        forgetButton(parent, address);
+    }
+
+    private void forgetButton(LinearLayout parent, String host) {
         a.views.button(
                 parent,
                 a.t("lg_forget_key"),
                 () ->
                         a.views
                                 .dialog()
-                                .setMessage(a.t("lg_forget_key_info"))
+                                .setMessage(a.t("lg_forget_key_info") + "\n\n" + host)
                                 .setNegativeButton(a.t("cancel"), null)
                                 .setPositiveButton(
                                         a.t("lg_forget_key"),
                                         (d, w) -> {
                                             close();
-                                            a.prefs().edit().remove("lg-key-" + address).apply();
+                                            credentials.forget(host);
+                                            remember = credentials.has(address.trim());
                                             message = "lg_intro";
                                             a.render();
                                         })
@@ -171,7 +206,7 @@ final class LgSetup {
                 a.views.primaryAction(
                         a.views.actionBar(shell),
                         a.t("lg_connect"),
-                        () -> connect(address.trim(), passphrase));
+                        this::connect);
         next.setTag("lg.connect");
         next.setEnabled(!local || selected != null);
         next.setAlpha(next.isEnabled() ? 1f : .45f);
@@ -205,35 +240,53 @@ final class LgSetup {
         return field;
     }
 
-    private void connect(String address, String phrase) {
+    private void connect() {
+        if (a.networkBusy) return;
         final String host;
         try {
-            host = LgInstall.host(address);
+            host = LgInstall.host(address.trim());
         } catch (IOException invalid) {
             message = "lg_invalid_host";
             a.render();
             return;
         }
-        passphrase = "";
-        EditText input = a.body.findViewWithTag("lg.passphrase");
-        if (input != null) input.setText("");
+        address = host;
         a.prefs().edit().putString("lg-host", host).apply();
         String pinned = a.prefs().getString("lg-key-" + host, "");
-        close();
-        destroyed = false;
-        final byte[] pass = phrase.getBytes(StandardCharsets.UTF_8);
-        run(
+        String phrase = passphrase;
+        boolean keep = remember;
+        if (client != null) client.close();
+        LgInstall transport = new LgInstall();
+        client = transport;
+        credentialSaveFailed = false;
+        message = "lg_intro";
+        setStage("lg_connecting", -1);
+        a.network(
                 () -> {
-                    LgInstall transport = new LgInstall();
-                    client = transport;
+                    byte[] pass = pinned.isEmpty() ? new byte[0] : phrase.isEmpty()
+                            ? credentials.read(host, pinned) : phrase.getBytes(StandardCharsets.UTF_8);
+                    byte[] attempt = pass.clone();
                     try {
-                        if (destroyed) throw new IOException("Setup closed");
-                        transport.connect(host, pinned, pass);
-                        return new String[] {"", transport.installedVersion()};
-                    } catch (LgInstall.Trust trust) {
-                        transport.close();
-                        return new String[] {trust.key, ""};
+                        if (client != transport) throw new IOException("Setup closed");
+                        try {
+                            transport.connect(host, pinned, attempt);
+                        } catch (LgInstall.Trust trust) {
+                            transport.close();
+                            return new String[] {trust.key, ""};
+                        }
+                        String installed = transport.installedVersion();
+                        if (client != transport || Thread.currentThread().isInterrupted())
+                            throw new IOException("Setup closed");
+                        boolean saved = true;
+                        try {
+                            if (keep && !phrase.isEmpty()) credentials.save(host, pinned, pass);
+                            else if (!keep) credentials.clearPassphrase(host);
+                        } catch (Exception unavailable) {
+                            saved = false;
+                        }
+                        return new String[] {"", installed, Boolean.toString(saved)};
                     } finally {
+                        Arrays.fill(attempt, (byte) 0);
                         Arrays.fill(pass, (byte) 0);
                     }
                 },
@@ -256,31 +309,68 @@ final class LgSetup {
                                 .setPositiveButton(
                                         a.t("lg_trust"),
                                         (d, w) -> {
+                                            if (client != transport) return;
                                             a.prefs()
                                                     .edit()
                                                     .putString("lg-key-" + host, result[0])
                                                     .apply();
-                                            message = "lg_enter_passphrase";
-                                            a.render();
+                                            connect();
                                         })
                                 .show();
                     } else {
                         connected = true;
                         version = result[1];
+                        credentialSaveFailed = !Boolean.parseBoolean(result[2]);
+                        passphrase = "";
                         message = "lg_connected";
                     }
                     a.render();
                     if (connected && selected == null && !local) download();
+                },
+                () -> {
+                    if (client != null) client.close();
+                    client = null;
+                    message = "lg_failed";
+                    a.render();
                 });
     }
 
-    void cancellation(LinearLayout shell) {
+    void progress(LinearLayout shell) {
+        stageLabel = a.views.text("", 14, a.accent);
+        stageLabel.setTag("lg.progress");
+        stageLabel.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        shell.addView(stageLabel);
+        stageBar = new ProgressBar(a, null, android.R.attr.progressBarStyleHorizontal);
+        stageBar.setIndeterminateTintList(ColorStateList.valueOf(a.accent));
+        stageBar.setProgressTintList(ColorStateList.valueOf(a.accent));
+        shell.addView(stageBar, new LinearLayout.LayoutParams(-1, a.views.dp(4)));
+        setStage(stage, percent);
         if (!downloading) return;
         LinearLayout actions = a.views.horizontal(shell);
         actions.setPadding(a.views.dp(20), 0, a.views.dp(20), 0);
         a.views
                 .secondaryAction(actions, a.t("cancel"), this::cancelDownload)
                 .setTag("lg.download.cancel");
+    }
+
+    private void setStage(String stage, int percent) {
+        this.stage = stage;
+        this.percent = percent;
+        if (!a.networkBusy || stageLabel == null) return;
+        String label = a.t(stage == null ? "working" : stage);
+        String fraction = NumberFormat.getPercentInstance(a.ar ? Locale.forLanguageTag("ar") : Locale.ENGLISH)
+                .format(percent / 100d);
+        stageLabel.setText(percent < 0 ? label : label + " · " + fraction);
+        stageBar.setVisibility(percent >= 0 || a.views.motionEnabled() ? View.VISIBLE : View.GONE);
+        stageBar.setIndeterminate(percent < 0 && a.views.motionEnabled());
+        stageBar.setProgress(Math.max(0, percent));
+    }
+
+    private void postStage(int generation, String stage, int percent) {
+        a.runOnUiThread(() -> {
+            if (a.networkBusy && generation == a.networkGeneration && !a.isDestroyed())
+                setStage(stage, percent);
+        });
     }
 
     private void cancelDownload() {
@@ -296,13 +386,24 @@ final class LgSetup {
     private void download() {
         if (a.networkBusy) return;
         downloading = true;
-        a.networkMessage = "tv_public_download";
-        message = "tv_public_downloading";
+        setStage("tv_public_lookup", -1);
+        int generation = a.networkGeneration + 1;
+        String selectedChannel = channel;
         a.network(
                 () -> {
                     try {
-                        PublicRelease.Asset asset = PublicRelease.latest(true, channel);
-                        File file = asset.download(a.getCacheDir(), (done, total) -> {});
+                        PublicRelease.Asset asset = PublicRelease.latest(true, selectedChannel);
+                        postStage(generation, "tv_public_downloading", 0);
+                        File file = asset.download(a.getCacheDir(), new PublicRelease.Progress() {
+                            private int last;
+
+                            @Override public void on(long done, long total) {
+                                int next = (int) (100 * done / total);
+                                if (next != last) postStage(generation, "tv_public_downloading", next);
+                                last = next;
+                                if (done == total) postStage(generation, "tv_public_verifying", -1);
+                            }
+                        });
                         LgPackage.read(file);
                         File cached = new File(a.getCacheDir(), "lg-selected.ipk");
                         Files.move(
@@ -321,7 +422,7 @@ final class LgSetup {
                     else {
                         selected = (LgPackage) result[0];
                         preview = (Boolean) result[1];
-                        message = "lg_package_ready";
+                        message = "lg_release_ready";
                     }
                     a.render();
                 },
@@ -334,6 +435,7 @@ final class LgSetup {
 
     void select(Uri uri) {
         close();
+        setStage("tv_public_verifying", -1);
         run(
                 () -> {
                     File file =
@@ -367,12 +469,13 @@ final class LgSetup {
             a.render();
             return;
         }
-        message = "lg_installing";
+        setStage("tv_public_verifying", -1);
+        int generation = a.networkGeneration + 1;
         LgInstall transport = client;
         run(
                 () -> {
-                    transport.install(pkg);
-                    return transport.installedVersion();
+                    transport.install(pkg, (stage, percent) -> postStage(generation, stage.label, percent));
+                    return pkg.version;
                 },
                 installed -> {
                     version = installed;
@@ -394,11 +497,20 @@ final class LgSetup {
 
     void close() {
         passphrase = "";
-        destroyed = true;
         if (connected) message = a.networkBusy ? "lg_failed" : "lg_reconnect";
         connected = false;
         LgInstall transport = client;
-        if (transport != null) transport.close();
         client = null;
+        if (transport != null) transport.close();
+    }
+
+    void stop() {
+        if (a.networkBusy && a.page.equals("lg-setup")) {
+            a.cancelNetwork();
+            message = downloading ? "tv_public_cancelled" : "lg_failed";
+            downloading = false;
+            connected = false;
+        }
+        close();
     }
 }

@@ -8,6 +8,10 @@ verification. The website uses the v0.7.5 download links. See EVIDENCE.md.
 LG adhan HDMI isolation is unreleased. Physical acceptance is pending for
 programme sound, picture behavior and HDMI restoration after dismissal.
 
+Miqat Phone TV setup exposes package download and transfer progress, and LG
+setup supports remembering the Developer Mode passphrase. Physical TV setup
+validation remains pending.
+
 About Miqat on Android phone and TV shows the installed app version, developer
 credit and a GitHub feedback form. Email stays disabled until a public address
 is chosen. No network client is added to either app.

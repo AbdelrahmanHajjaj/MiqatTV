@@ -10,6 +10,8 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 /**
  * The arch at the top of every screen: Miqat’s mihrab (the TV app's ArchView shape), with what is
@@ -34,6 +36,8 @@ final class Hero extends View {
 
     /** 0..1, or below 0 for "working, amount unknown". */
     private float progress = -1;
+    private final NumberFormat percent;
+    private String progressLabel = "";
 
     private float t;
     private final ValueAnimator clock = ValueAnimator.ofFloat(0, 1);
@@ -50,6 +54,7 @@ final class Hero extends View {
 
     Hero(Context c) {
         super(c);
+        percent = NumberFormat.getPercentInstance(Ui.arabic(c) ? Locale.forLanguageTag("ar") : Locale.ENGLISH);
         fill.setColor(Ui.palette(getContext()).surface);
         stroke.setStyle(Paint.Style.STROKE);
         stroke.setColor(Ui.palette(getContext()).accent);
@@ -72,12 +77,15 @@ final class Hero extends View {
     void set(Mode m) {
         mode = m;
         progress = -1;
+        setContentDescription(null);
         animateIfNeeded();
         invalidate();
     }
 
     void progress(float p) {
         progress = p;
+        progressLabel = p < 0 ? "" : percent.format(p < 1 ? Math.min(p, .99f) : p);
+        setContentDescription(p < 0 ? null : progressLabel);
         animateIfNeeded();
         invalidate();
     }
@@ -306,7 +314,7 @@ final class Hero extends View {
             c.drawArc(r, -90, 360 * progress, false, ink);
             label.setTextSize(72 * k);
             label.setColor(Ui.palette(getContext()).ink);
-            c.drawText(Math.round(progress * 100) + "%", cx, cy + 26 * k, label);
+            c.drawText(progressLabel, cx, cy + 26 * k, label);
         }
     }
 
