@@ -1,24 +1,20 @@
 # Changelog
 
-## Unreleased
+## v0.7.7
 
 - Miqat Phone shows seconds in the next-prayer countdown and previews adjusted
   times beside prayer and reminder controls.
-- Add a fixed circular home-screen widget with a countdown ring, next prayer and date.
+- The Circle home-screen widget shows the next prayer's icon, name and scheduled
+  time above the countdown and date. The ring refreshes automatically and the
+  120% setting enlarges the text. Home-screen widgets show countdown seconds.
 - Swipe the Hijri grid to change months and the timetable to change days.
-- The Qibla map opens zoomed in on your prayer location and supports pinch zoom,
-  panning and recentering.
+- The Qibla map loads on selection, opens at the phone's precise location and
+  supports pinch zoom, panning and recentering. Qibla uses the phone's location
+  independently of the saved prayer city.
 
 - Sideloaded Android phone and Android TV builds can check for stable updates
   from About Miqat and open the matching GitHub release.
 - Miqat Phone uses its themed sheet for update checks.
-- Phone widgets show seconds and count down on the launcher.
-- The countdown circle shows the next prayer's icon, name and time, with a
-  smaller countdown underneath. Its outer ring advances automatically.
-- The Circle widget's 120% setting enlarges the text in its preview and on the
-  home screen.
-- Selecting the Qibla Map tab loads it from the phone's precise location.
-  The compass uses the same reading independently of the prayer city.
 
 - LG webOS shows the installed version, developer credit and a GitHub feedback
   QR code under About Miqat. Email feedback is currently disabled.
