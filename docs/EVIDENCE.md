@@ -1,5 +1,59 @@
 # Validation evidence
 
+## Circle text scaling — 23 November 2026
+
+On the owned API 37 emulator, selecting 120% in the Circle editor enlarged
+the prayer name immediately in the preview and the hosted widget. English and
+Arabic captures at 160 dp show growth in the name, time, countdown and date.
+At 112 and 160 dp, both language layouts kept the date and name inside the
+ring with default and doubled system text. The hosted ring still redrew.
+The debug and instrumentation packages, lint, and bilingual website built.
+The review APK retains its signer and all 25 approved recordings.
+SHA-256 prefix `50041F83E9A9BA37`.
+Physical launcher acceptance remains pending.
+
+## Circular prayer widget — 23 November 2026
+
+The owned API 37 emulator checked the prayer name and icon above the scheduled
+time and live countdown. At 112 and 160 dp, English and Arabic checks covered
+100% and 120% widget text and default and doubled system text. The heading and
+date pixels stayed inside the ring with Hijri alone and both dates enabled.
+The hosted ring redrew at the next minute while awake with prayer alerts off.
+The bilingual phone journey, picker previews, debug app and instrumentation
+builds, lint, catalog checks and website build passed. The review APK retains
+its signer and all 25 approved recordings. SHA-256 prefix `F4D0A5DCCB8B603E`.
+Physical launcher acceptance remains pending.
+
+## Phone update sheet, widget seconds and Qibla location — 23 November 2026
+
+An owned API 37 emulator verified the themed update result in English and
+Arabic, live seconds on all four hosted widget presentations, and redraws at
+small bounds and enlarged text. The bilingual Qibla check loaded live Cairo
+tiles directly from the Map tab using a precise mock device fix while London
+remained saved for prayer times. Both maps finished drawing before capture.
+
+Phone and Android TV debug builds and lint passed, along with the phone
+instrumentation build, companion catalog checks and bilingual website build.
+The review APK retains its signer and all 25 approved recordings.
+SHA-256 prefix `422D4BB001831186`. Physical launcher behavior remains pending.
+
+## Miqat Phone prayer usability — 23 November 2026
+
+Phone 0.5.22/code 38 passed debug app and instrumentation builds, lint,
+companion generator, canonical catalog and bilingual website checks.
+On an owned API 37 emulator,
+the bilingual phone UI, fresh-use/hosted-widget journey, one-cell widget checks
+and 80–150% sizing passed. Native checks exercised countdown seconds, inline
+adjusted times, calendar swipes, fixed widget binding and a shrinking ring at two
+real prayer timestamps. Portrait captures use the Cairo fixture.
+
+The bilingual WebView loaded live OpenStreetMap tiles after explicit Load map.
+Playwright verified pinch, pan, recenter, nearby initial tiles, zoom controls and
+visible attribution with mocked tiles. Physical launcher acceptance is pending.
+
+The latest review APK retains the review signer and matches the built bytes.
+It contains all 25 approved recordings. SHA-256 prefix `26350C577D04939F`.
+
 ## Manual Android update check — 23 November 2026
 
 Android phone and TV debug builds, lint, instrumentation builds, TV size and

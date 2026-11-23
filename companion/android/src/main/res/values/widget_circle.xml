@@ -1,0 +1,25 @@
+<resources>
+    <attr name="circlePrayerSize" format="dimension" />
+    <attr name="circleTimeSize" format="dimension" />
+    <attr name="circleDetailSize" format="dimension" />
+    <attr name="circleHeaderOffset" format="dimension" />
+    <attr name="circleDateGravity">
+        <flag name="topCenter" value="49" />
+        <flag name="center" value="17" />
+    </attr>
+
+    <style name="MiqatWidgetCircle">
+        <item name="circlePrayerSize">22sp</item>
+        <item name="circleTimeSize">18sp</item>
+        <item name="circleDetailSize">12sp</item>
+        <item name="circleHeaderOffset">0dp</item>
+        <item name="circleDateGravity">center</item>
+    </style>
+    <style name="MiqatWidgetCircleLarge" parent="MiqatWidgetCircle">
+        <item name="circlePrayerSize">28sp</item>
+        <item name="circleTimeSize">22sp</item>
+        <item name="circleDetailSize">14sp</item>
+        <item name="circleHeaderOffset">4dp</item>
+        <item name="circleDateGravity">topCenter</item>
+    </style>
+</resources>

@@ -6,7 +6,9 @@ import android.icu.util.IslamicCalendar;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.*;
 
 import java.text.DateFormatSymbols;
@@ -100,14 +102,17 @@ final class PhoneCalendar {
 
     private void render() {
         content.removeAllViews();
-        monthHeader();
-        monthDays();
+        LinearLayout grid = new SwipePanel(this::moveMonth);
+        grid.setTag("calendar.grid");
+        content.addView(grid, new LinearLayout.LayoutParams(-1, -2));
+        monthHeader(grid);
+        monthDays(grid);
         selectedDay();
         monthEvents();
     }
 
-    private void monthHeader() {
-        LinearLayout header = a.views.horizontal(content);
+    private void monthHeader(LinearLayout grid) {
+        LinearLayout header = a.views.horizontal(grid);
         Button previous =
                 a.views.iconButton(
                         header, "back", a.t("phone_previous_month"), () -> moveMonth(-1));
@@ -125,23 +130,27 @@ final class PhoneCalendar {
                 a.views.iconButton(header, "back", a.t("phone_next_month"), () -> moveMonth(1));
         next.setRotation(180);
         next.setTag("calendar.next");
-        IslamicCalendar before = (IslamicCalendar) month.clone();
-        before.add(android.icu.util.Calendar.DATE, -1);
-        IslamicCalendar after = (IslamicCalendar) month.clone();
-        after.add(android.icu.util.Calendar.MONTH, 1);
-        previous.setEnabled(offset(settings, openedAt, civilStamp(settings, before)) >= -366);
-        next.setEnabled(offset(settings, openedAt, civilStamp(settings, after)) <= 366);
+        previous.setEnabled(canMoveMonth(-1));
+        next.setEnabled(canMoveMonth(1));
+    }
+
+    private boolean canMoveMonth(int direction) {
+        IslamicCalendar boundary = (IslamicCalendar) month.clone();
+        boundary.add(direction < 0 ? android.icu.util.Calendar.DATE : android.icu.util.Calendar.MONTH,
+                direction);
+        return Math.abs(offset(settings, openedAt, civilStamp(settings, boundary))) <= 366;
     }
 
     private void moveMonth(int direction) {
+        if (!canMoveMonth(direction)) return;
         month.add(android.icu.util.Calendar.MONTH, direction);
         render();
     }
 
-    private void monthDays() {
+    private void monthDays(LinearLayout grid) {
         String[] weekdays = new DateFormatSymbols(ui.locale()).getShortWeekdays();
         int weekStart = a.ar ? Calendar.SATURDAY : Calendar.SUNDAY;
-        LinearLayout labels = a.views.horizontal(content);
+        LinearLayout labels = a.views.horizontal(grid);
         for (int i = 0; i < 7; i++) {
             TextView label = a.views.text(weekdays[(weekStart - 1 + i) % 7 + 1], 10, a.muted);
             label.setGravity(Gravity.CENTER);
@@ -153,7 +162,7 @@ final class PhoneCalendar {
         int count = month.getActualMaximum(android.icu.util.Calendar.DATE);
         LinearLayout row = null;
         for (int slot = 0; slot < ((leading + count + 6) / 7) * 7; slot++) {
-            if (slot % 7 == 0) row = a.views.horizontal(content);
+            if (slot % 7 == 0) row = a.views.horizontal(grid);
             int day = slot - leading + 1;
             if (day < 1 || day > count) {
                 row.addView(new View(a), new LinearLayout.LayoutParams(0, a.views.dp(48), 1));
@@ -215,7 +224,7 @@ final class PhoneCalendar {
     private void selectedDay() {
         int delta = offset(settings, openedAt, selectedStamp);
         PhoneSchedule.Day day = settings.day(openedAt, delta);
-        LinearLayout timetable = a.views.column();
+        LinearLayout timetable = new SwipePanel(this::moveDay);
         timetable.setTag("calendar.selected-day");
         content.addView(timetable, new LinearLayout.LayoutParams(-1, -2));
         LinearLayout heading = a.views.horizontal(timetable);
@@ -224,7 +233,7 @@ final class PhoneCalendar {
                         heading,
                         "back",
                         a.t("phone_previous_day"),
-                        () -> choose(settings.day(openedAt, delta - 1).start, true));
+                        () -> moveDay(-1));
         previous.setTag("calendar.selected.previous-day");
         previous.setEnabled(delta > -366);
         TextView label =
@@ -237,7 +246,7 @@ final class PhoneCalendar {
                         heading,
                         "back",
                         a.t("phone_next_day"),
-                        () -> choose(settings.day(openedAt, delta + 1).start, true));
+                        () -> moveDay(1));
         next.setRotation(180);
         next.setTag("calendar.selected.next-day");
         next.setEnabled(delta < 366);
@@ -287,6 +296,58 @@ final class PhoneCalendar {
                 row.addView(time, new LinearLayout.LayoutParams(-2, -2));
             }
 
+    }
+
+    private void moveDay(int direction) {
+        int delta = offset(settings, openedAt, selectedStamp) + direction;
+        if (Math.abs(delta) <= 366) choose(settings.day(openedAt, delta).start, true);
+    }
+
+    private final class SwipePanel extends LinearLayout {
+        private final java.util.function.IntConsumer move;
+        private final int slop;
+        private float startX, startY;
+        private boolean singleFinger;
+
+        SwipePanel(java.util.function.IntConsumer move) {
+            super(a);
+            this.move = move;
+            slop = ViewConfiguration.get(a).getScaledTouchSlop();
+            setOrientation(VERTICAL);
+        }
+
+        @Override
+        public boolean onInterceptTouchEvent(MotionEvent event) {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                startX = event.getX();
+                startY = event.getY();
+                singleFinger = true;
+            }
+            if (event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN) singleFinger = false;
+            if (event.getActionMasked() == MotionEvent.ACTION_MOVE && horizontal(event, slop)) {
+                getParent().requestDisallowInterceptTouchEvent(true);
+                return true;
+            }
+            return false;
+        }
+
+        @android.annotation.SuppressLint("ClickableViewAccessibility") // The arrow buttons provide the same actions.
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            if (event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN) singleFinger = false;
+            if (event.getActionMasked() == MotionEvent.ACTION_MOVE && horizontal(event, slop))
+                getParent().requestDisallowInterceptTouchEvent(true);
+            if (event.getActionMasked() == MotionEvent.ACTION_UP
+                    && horizontal(event, Math.max(2 * slop, a.views.dp(32))))
+                move.accept((event.getX() < startX ? 1 : -1) * (a.ar ? -1 : 1));
+            return true;
+        }
+
+        private boolean horizontal(MotionEvent event, int threshold) {
+            float distance = Math.abs(event.getX() - startX);
+            return singleFinger && distance > threshold
+                    && distance > 1.5f * Math.abs(event.getY() - startY);
+        }
     }
     private void monthEvents() {
         boolean heading = false;

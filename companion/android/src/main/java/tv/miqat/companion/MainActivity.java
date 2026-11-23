@@ -883,6 +883,7 @@ public final class MainActivity extends Activity {
             render();
         }
         if (request == 78 && phoneUi != null) phoneUi.locationUi.locationPermissionResult();
+        if (request == QiblaUi.LOCATION_PERMISSION && qibla != null) qibla.locationPermissionResult();
         if ((request == 80 || request == 81) && phoneUi != null)
             phoneUi.locationUi.background.result(request);
     }

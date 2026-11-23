@@ -1,0 +1,46 @@
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <ImageView android:id="@+id/widget_backdrop" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:scaleType="fitCenter" android:importantForAccessibility="no" />
+    <ImageView android:id="@+id/widget_circle_ring" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:scaleType="fitCenter"
+        android:src="@drawable/widget_circle_preview" android:importantForAccessibility="no" />
+    <LinearLayout android:id="@+id/widget_content" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:gravity="center" android:orientation="vertical"
+        android:paddingStart="21dp" android:paddingEnd="21dp"
+        android:paddingTop="35dp" android:paddingBottom="29dp">
+        <!-- RemoteViews needs a separate image to tint the prayer icon. -->
+        <LinearLayout tools:ignore="UseCompoundDrawables" android:layout_width="wrap_content" android:layout_height="0dp"
+            android:layout_weight="1.35" android:gravity="center" android:orientation="horizontal"
+            android:translationY="?attr/circleHeaderOffset">
+            <ImageView android:id="@+id/widget_next_icon" android:layout_width="21dp"
+                android:layout_height="21dp" android:layout_marginEnd="4dp"
+                android:tint="@color/companion_gold_400" android:importantForAccessibility="no" android:visibility="gone" />
+            <TextView android:id="@+id/widget_next_label" style="@style/MiqatWidgetValue"
+                android:layout_width="wrap_content" android:layout_height="match_parent"
+                android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
+                android:textColor="@color/companion_gold_400" android:text="@string/widget_preview_prayer_0"
+                android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
+                android:textSize="?attr/circlePrayerSize" android:autoSizeMaxTextSize="?attr/circlePrayerSize" android:autoSizeStepGranularity="1sp" />
+        </LinearLayout>
+        <TextView android:id="@+id/widget_next_time" style="@style/MiqatWidgetHero"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.95"
+            android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
+            android:visibility="gone"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
+            android:autoSizeMaxTextSize="?attr/circleTimeSize" android:autoSizeStepGranularity="1sp" />
+        <Chronometer android:id="@+id/widget_next_remaining" style="@style/MiqatWidgetMuted"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.59"
+            android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
+            android:visibility="gone"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
+            android:autoSizeMaxTextSize="?attr/circleDetailSize" android:autoSizeStepGranularity="1sp" />
+        <TextView android:id="@+id/widget_title" style="@style/MiqatWidgetText"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.25"
+            android:paddingStart="17dp" android:paddingEnd="17dp" android:gravity="?attr/circleDateGravity"
+            android:maxLines="2" android:includeFontPadding="false"
+            android:text="@string/widget_preview_hijri"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
+            android:autoSizeMaxTextSize="?attr/circleDetailSize" android:autoSizeStepGranularity="1sp" />
+    </LinearLayout>
+</merge>

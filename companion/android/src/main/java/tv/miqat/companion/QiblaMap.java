@@ -1,6 +1,9 @@
 package tv.miqat.companion;
 
-import java.util.*;
+import android.content.Context;
+
+import java.util.Scanner;
+import org.json.JSONArray;
 
 /** A bounded north-up viewport of the actual great-circle path; no network or device access. */
 final class QiblaMap {
@@ -32,7 +35,7 @@ final class QiblaMap {
         double[][] result = new double[65][2];
         double previous = (longitude + 180) / 360;
         for (int i = 0; i < result.length; i++) {
-            double t = i / (double) (result.length - 1);
+            double t = (1 - Math.cos(Math.PI * i / (result.length - 1))) / 2;
             double[] v = new double[3];
             for (int j = 0; j < 3; j++)
                 v[j] =
@@ -62,99 +65,26 @@ final class QiblaMap {
         };
     }
 
-    static String html(
-            double latitude, double longitude, int background, int foreground, String kaaba) {
-        double[][] points = route(latitude, longitude);
-        double minX = Double.POSITIVE_INFINITY, minY = minX, maxX = -minX, maxY = -minX;
-        for (double[] p : points) {
-            minX = Math.min(minX, p[0]);
-            maxX = Math.max(maxX, p[0]);
-            minY = Math.min(minY, p[1]);
-            maxY = Math.max(maxY, p[1]);
+    static String html(Context context, double latitude, double longitude,
+            String kaaba, String zoomIn, String zoomOut, String recenter) {
+        try (Scanner input = new Scanner(context.getResources().openRawResource(R.raw.qibla_map),
+                "UTF-8")) {
+            JSONArray points = new JSONArray();
+            for (double[] point : route(latitude, longitude))
+                points.put(new JSONArray().put(point[0]).put(point[1]));
+            return input.useDelimiter("\\A").next()
+                    .replace("%%ROUTE%%", points.toString())
+                    .replace("%%KAABA%%", escape(kaaba))
+                    .replace("%%ZOOM_IN%%", escape(zoomIn))
+                    .replace("%%ZOOM_OUT%%", escape(zoomOut))
+                    .replace("%%RECENTER%%", escape(recenter));
+        } catch (org.json.JSONException invalid) {
+            throw new IllegalArgumentException("Invalid Qibla route", invalid);
         }
-        int zoom = 18;
-        while (zoom > 0 && Math.max(maxX - minX, maxY - minY) * (256 << zoom) > 400) zoom--;
-        int world = 256 << zoom, count = 1 << zoom;
-        double left = (minX + maxX) / 2 * world - 256;
-        double top = (minY + maxY) / 2 * world - 256;
-        StringBuilder html =
-                new StringBuilder(
-                        "<!doctype html><html><head><meta name='viewport' content='width=512'><meta"
-                            + " http-equiv='Content-Security-Policy' content=\"default-src 'none';"
-                            + " img-src https://tile.openstreetmap.org; style-src"
-                            + " 'unsafe-inline'\"><style>html,body{padding:0;margin:0;background:"
-                                + color(background)
-                                + ";color:"
-                                + color(foreground)
-                                + ";font:16px"
-                                + " sans-serif}#map{position:relative;width:512px;height:512px;overflow:hidden;background:#e9e8df}"
-                                + "img,svg{position:absolute}a{color:#173b3e;background:white;padding:4px;text-decoration:underline}#credit{position:absolute;bottom:0;right:0;font-size:15px}#north{position:absolute;top:12px;left:12px;background:white;color:#173b3e;padding:5px}</style></head><body><div"
-                                + " id='map'>");
-        int firstX = (int) Math.floor(left / 256), lastX = (int) Math.floor((left + 511) / 256);
-        int firstY = Math.max(0, (int) Math.floor(top / 256));
-        int lastY = Math.min(count - 1, (int) Math.floor((top + 511) / 256));
-        for (int y = firstY; y <= lastY; y++)
-            for (int x = firstX; x <= lastX; x++) {
-                int tileX = (x % count + count) % count;
-                html.append(
-                                "<img alt='' width='256' height='256'"
-                                    + " src='https://tile.openstreetmap.org/")
-                        .append(zoom)
-                        .append('/')
-                        .append(tileX)
-                        .append('/')
-                        .append(y)
-                        .append(".png' style='left:")
-                        .append(number(x * 256 - left))
-                        .append("px;top:")
-                        .append(number(y * 256 - top))
-                        .append("px'>");
-            }
-        StringBuilder path = new StringBuilder();
-        for (double[] p : points)
-            path.append(number(p[0] * world - left))
-                    .append(',')
-                    .append(number(p[1] * world - top))
-                    .append(' ');
-        html.append(
-                        "<svg width='512' height='512' viewBox='0 0 512 512'"
-                                + " aria-label='Qibla'><polyline points='")
-                .append(path)
-                .append(
-                        "' fill='none' stroke='white' stroke-width='9'></polyline><polyline"
-                            + " points='")
-                .append(path)
-                .append("' fill='none' stroke='#0A6060' stroke-width='5'></polyline>");
-        for (int index : new int[] {0, points.length - 1}) {
-            double[] p = points[index];
-            html.append("<circle cx='")
-                    .append(number(p[0] * world - left))
-                    .append("' cy='")
-                    .append(number(p[1] * world - top))
-                    .append("' r='9' fill='#173b3e' stroke='white' stroke-width='3'></circle>");
-        }
-        double[] destination = points[points.length - 1];
-        html.append("<text x='")
-                .append(number(destination[0] * world - left))
-                .append("' y='")
-                .append(number(destination[1] * world - top + 30))
-                .append(
-                        "' text-anchor='middle' fill='#173b3e' stroke='white' stroke-width='3'"
-                                + " paint-order='stroke' font-size='20'>")
-                .append(kaaba.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
-                .append("</text>");
-        return html.append(
-                        "</svg><span id='north'>N ↑</span><a id='credit'"
-                                + " href='https://www.openstreetmap.org/copyright'>© OpenStreetMap"
-                                + " contributors</a></div></body></html>")
-                .toString();
     }
 
-    private static String number(double value) {
-        return String.format(Locale.US, "%.2f", value);
-    }
-
-    private static String color(int value) {
-        return String.format(Locale.US, "#%06x", value & 0xffffff);
+    private static String escape(String value) {
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(
+                ">", "&gt;").replace("\"", "&quot;");
     }
 }

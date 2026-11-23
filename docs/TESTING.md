@@ -255,7 +255,7 @@ from filtered results as well as unchanged Cancel/Apply behavior.
 
 Widget picker XML layouts are the source for static fallback images. When changing
 those layouts/styles, run the owned-emulator phone journey with `-e capture true`.
-It renders `en-picker-{day,next,strip}.png` and Arabic counterparts under the app’s
+It renders `en-picker-{day,next,strip,circle}.png` and Arabic counterparts under the app’s
 external files directory. Inspect them, then copy English images to native
 `res/drawable-nodpi/widget_preview_*.png` and Arabic to `res/drawable-ar-nodpi/`.
 These images are native renders, not separately authored preview designs.
@@ -276,11 +276,12 @@ and Hijri month/day selection against actual calculated times. The runtime
 suite checks the selected recording's ending preview, including retained legacy
 seconds caps. Short-tone/vibration channels preserve Android-owned user edits.
 
-The optional `-e suite phone-ui -e map-network true -e capture true` check loads
-real OSM tiles only after a simulated explicit Load map tap, using public Cairo
-fixture coordinates. It checks native square geometry, restricted WebView access
-and provider failures; inspect the resulting map capture for route/markers and
-attribution. Ordinary CI phone UI uses no map network request.
+The optional `-e suite phone-ui -e map-network true -e capture true` check needs
+precise location permission and the test-only mock-location app-op on an owned
+emulator. It keeps London as the prayer city while seeding a precise Cairo fix.
+It checks the Cairo bearing, native square Map tab, restricted WebView and live
+tiles. Inspect the route, attribution and About update sheet captures.
+Ordinary phone UI uses no map or update network request.
 
 Phone settings redraw checks retain the window container and inspect scroll on
 its first drawn frame during repeated number edits and saving. Keep weekdays
@@ -312,6 +313,8 @@ closing by Done, actual Android Back or cancellation. Each path must expose toda
 full hero/countdown/tools and actual prayer times. The bilingual phone UI suite
 runs the same regression alongside calendar month/event/timezone tests. Calendar
 browsing stays inside the popup and no longer persists another date on Home.
+The full phone UI suite also swipes the grid and timetable in both languages
+and observes Home's seconds countdown advancing.
 
 `phone-fasting` checks Hijri observance ranges and bilingual Settings controls on
 an owned emulator. It verifies that a day-before reminder arms on its own, follows
@@ -434,7 +437,14 @@ outline for every shape. Reapply successive square/wide RemoteViews to the same
 host view so resizing cannot retain the previous prayer layout. Inspect native
 English/Arabic renders; these checks do not replace Samsung launcher acceptance.
 
+For the circle, `widget-small` checks the adjacent prayer icon and name,
+scheduled time, smaller countdown and date at 112 and 160 dp. Run it with exact
+timing available on the awake emulator so it can also compare the hosted ring
+pixels across an automatic minute refresh with prayer alerts disabled.
+
 The hosted multi-widget journey distinguishes Add during first configuration
 from Update on re-entry, retaining immediate saves and independent instances.
+For Circle, it checks that selecting 120% enlarges the configuration preview
+and the hosted widget.
 The CI runtime verifies SystemUI dismissibility and actual dismissal cleanup;
 it does not prescribe a touch gesture for different Android/OEM implementations.

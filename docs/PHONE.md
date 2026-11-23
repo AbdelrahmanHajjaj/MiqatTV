@@ -49,10 +49,12 @@ reopening. Earlier foreground refresh does not grant background consent.
 ## Home and Hijri calendar
 
 Home includes the greeting, exact Quran verse and prayer card, with its Hijri
-date, one city action, next prayer/countdown and daily timetable. The city action
+date, one city action, next prayer with a seconds countdown, and the daily timetable. The city action
 refreshes an already permitted location or opens Location settings. There is no
-extra tomorrow-Fajr row. The date opens a Hijri month popup; selecting a day shows
-its calculated prayer times directly beneath the calendar. Done, Back and
+extra tomorrow-Fajr row. Tap the date to open the Hijri month. Selecting a day shows
+its calculated prayer times directly beneath the calendar. Swipe the month grid
+to change months or the timetable to change days. Both sections also have
+previous and next buttons. Done, Back and
 cancellation return to the complete live Home. Browsing does not change alerts.
 
 Events have calendar markers and a month list. Home shows today's observances or
@@ -93,7 +95,9 @@ permission, Android channel settings and Do Not Disturb remain authoritative.
 
 Weekdays are circular, accessible toggles on one row, scrolling at enlarged sizes
 when needed. Offsets and before/after reminders use inline −/number/+ controls.
-Steps and valid typed values save immediately. A prayer/weekday override expands
+Steps and valid typed values save immediately. Each control previews today's
+adjusted prayer or reminder time. Location settings also show adjusted sunrise.
+A prayer/weekday override expands
 in place and changes only sound/vibration. Excluded weekdays and disabled prayers
 stay off, including reminders crossing midnight. A retained legacy quiet-hours
 rule takes precedence; review/disable it explicitly rather than silently
@@ -184,39 +188,50 @@ ends to listen again. The phone station is independent of any paired TV.
 
 ## Qibla
 
-The offline compass uses the confirmed location and a foreground orientation
-sensor. Bearing is clockwise from true north; location accuracy does not measure
-phone orientation. Keep the phone level, calibrate it and avoid magnets/metal.
+Allow precise Android location to use Qibla. The compass and map use a fresh
+device location independently of the city set for prayer times. The compass works
+offline and uses a foreground orientation sensor. Bearing is clockwise from true
+north. Keep the phone level, calibrate it and avoid magnets/metal.
 Without a suitable sensor, use its numeric bearing with another compass. A bearing
 at the destination is unavailable.
 
-**Load map** is explicit. It loads a bounded OpenStreetMap area and draws the
-great-circle route to the Kaaba with attribution. The provider receives your IP
-and viewed area. There is no map prefetch, IP-geolocation service or background
-map listener; offline compass/bearing and manual location remain usable.
+Select **Map** to open OpenStreetMap zoomed in on your current location.
+Drag to pan and pinch or use + and − to zoom. The location button restores the
+starting view. The map draws the great-circle route to the Kaaba and loads tiles
+only for the area in view. OpenStreetMap receives your IP and viewed area.
 
 ## Home-screen widgets
 
 **Phone settings → Home-screen widgets** customizes and adds widgets using
 Android's pin flow or the launcher's Widgets menu. Next prayer starts at **1×1**;
-all providers allow one-cell resize bounds on compatible launchers. Each widget
-adapts to its allocated dimensions: next prayer when narrow, a timetable strip
+the adaptive widgets allow one-cell resize bounds on compatible launchers. They
+adapt to their allocated dimensions: next prayer when narrow, a timetable strip
 when wide/short, and a daily list when tall enough. Android 12+ supports exact size
 variants; older launchers use their resize bounds. Some launchers need a widget
 removed/re-added to refresh changed minimum limits.
 
-Each instance retains its own theme/background/opacity, corner shape, text size,
+Choose **Circle** in Miqat or **Countdown circle** in the launcher. It starts in a
+fixed **2×2** slot on compatible launchers. The prayer name and icon are the
+largest row, followed by the scheduled time and a smaller countdown. The
+selected dates sit inside the ring, which shows the fraction of the prayer
+interval remaining. Select **120%** under **Text size** for larger Circle text.
+
+Each instance retains its own theme/background/opacity, text size,
 Hijri/Gregorian date choices and initial presentation. Changes update that widget
-immediately. **Add prayer widget** completes new placement; reopening uses
+immediately. Adaptive widgets also offer corner shapes.
+**Add prayer widget** completes new placement; reopening uses
 **Update prayer widget**. Back keeps changes. Prayer data follows the phone's
 location/calculation/language/clock, independently of TV settings.
 
 Small tiles prioritize prayer/time and restore details as they grow. Wide one-row
 cards retain the enabled Hijri date, more prominent than the countdown. The strip
 can show both dates, fills its height and outlines the next prayer; after Isha its
-Fajr slot uses tomorrow's timestamp. Text/icons/colors follow the app. Remaining
-time is a snapshot at the existing refresh, not a background ticker. Periodic
-launcher refresh can be delayed while idle. Tap a widget to open Prayer.
+Fajr slot uses tomorrow's timestamp. Text, icons and colors follow the app.
+Android ticks the visible countdown each second using the system's digit style.
+The circle's ring refreshes about once a minute while the phone is awake.
+Android can delay ring updates and prayer rollover while idle or when exact
+timing access is unavailable.
+Tap a widget to open Prayer.
 
 ## Appearance
 

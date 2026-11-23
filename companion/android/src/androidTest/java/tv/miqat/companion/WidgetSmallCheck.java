@@ -25,13 +25,30 @@ final class WidgetSmallCheck {
             changes.put("prayer.location-ready","true");changes.put("prayer.background-location","false");
             changes.put("prayer.location","cairo");changes.put("prayer.latitude","30.0444");changes.put("prayer.longitude","31.2357");
             changes.put("reminders.enabled","false");changes.put("display.clock","12");
+            changes.put("display.digits", "auto");
             PhoneStore settings=PhoneStore.read(c).changed(changes);settings.save(c);
             a=LiveUiCheck.launch(test);MainActivity shown=a;
             test.getUiAutomation().adoptShellPermissionIdentity(Manifest.permission.BIND_APPWIDGET);
             host=new AppWidgetHost(a,41940);AppWidgetHost owned=host;
             PhoneUiCheck.on(test,()->{shown.body.removeAllViews();owned.startListening();});
             AppWidgetManager manager=AppWidgetManager.getInstance(c);
-            for(String preset:WidgetOptions.LAYOUTS) {
+            AppWidgetHostView[] circle = {null};
+            int circleId = owned.allocateAppWidgetId();
+            PhoneUiCheck.check(manager.bindAppWidgetIdIfAllowed(circleId, PrayerWidget.component(c, "circle")),
+                    "Cannot bind the countdown circle");
+            PhoneUiCheck.on(test, () -> {
+                circle[0] = owned.createView(shown, circleId, manager.getAppWidgetInfo(circleId));
+                int edge = shown.views.dp(WidgetOptions.CIRCLE_SIZE);
+                shown.body.addView(circle[0], new LinearLayout.LayoutParams(edge, edge));
+            });
+            manager.updateAppWidgetOptions(circleId, bounds(160, 160, true));
+            PrayerWidget.update(c, circleId);
+            LiveUiCheck.untilUi(test, () -> ring(circle[0]) != null);
+            Bitmap[] firstRing = {null};
+            PhoneUiCheck.on(test, () -> firstRing[0] = ring(circle[0]));
+            long firstMinute = (System.currentTimeMillis() / 60_000 + 1) * 60_000;
+            String[] resizable = {"next", "day", "strip"};
+            for(String preset:resizable) {
                 int id=host.allocateAppWidgetId();
                 PhoneUiCheck.check(manager.bindAppWidgetIdIfAllowed(id,PrayerWidget.component(c,preset)),"Cannot bind one-cell widget");
                 AppWidgetProviderInfo info=manager.getAppWidgetInfo(id);
@@ -51,13 +68,16 @@ final class WidgetSmallCheck {
             for(String lang:new String[]{"en","ar"}) {
                 ui.edit().putString("language",lang).commit();
                 String widestPrayer=settings.data.prayerName(4,lang.equals("ar"));
-                String hijri=PhoneTime.hijri(settings,now,lang.equals("ar"));
+                String hijri = tv.miqat.core.DisplayText.INSTANCE.digits(
+                        PhoneTime.hijri(settings, now, lang.equals("ar")), lang.equals("ar"));
                 PhoneUiCheck.on(test,()->spacing(c,shown,now,lang,hijri,captures));
+                PhoneUiCheck.on(test, () -> countdownCircle(c, shown, settings, now, lang, captures));
                 for(float font:new float[]{1f,2f}) for(int size:new int[]{100,120}) {
                     Configuration config=new Configuration(c.getResources().getConfiguration());config.fontScale=font;
                     Context scaled=c.createConfigurationContext(config);
                     PhoneUiCheck.on(test,()->{
-                        for(String preset:WidgetOptions.LAYOUTS) for(int edge:new int[]{40,56,80}) for(boolean modern:new boolean[]{false,true}) {
+                        circleLayout(scaled, shown, settings, now, lang, font, size, captures);
+                        for(String preset:resizable) for(int edge:new int[]{40,56,80}) for(boolean modern:new boolean[]{false,true}) {
                             WidgetOptions options=new WidgetOptions();options.layout=preset;options.size=size;options.date=true;
                             String original=options.encode();
                             RemoteViews content=PrayerWidget.responsive(scaled,options,bounds(edge,edge,modern));
@@ -96,6 +116,12 @@ final class WidgetSmallCheck {
                 String full=PhoneTime.at(settings,settings.day(now,0).times[4],PhoneAlarms.arabic(c));
                 PhoneUiCheck.check(accessible.getContentDescription().toString().contains(full),"One-cell accessibility lost the full prayer time");
             });
+            PhoneUiCheck.check(PhoneAlarms.exact(c), "Enable exact timing for the live ring check");
+            PhoneRuntimeCheck.await(test, () -> {
+                if (System.currentTimeMillis() < firstMinute) return false;
+                Bitmap current = ring(circle[0]);
+                return current != null && !firstRing[0].sameAs(current);
+            }, 75_000, "The hosted ring did not redraw on its next automatic refresh");
             settings.changed(Collections.singletonMap("prayer.location-ready","false")).save(c);
             PhoneUiCheck.on(test,()->{
                 View missing=WidgetRenderer.create(c,new WidgetOptions(),40,40,now).apply(c,new FrameLayout(shown));measure(missing,shown,40,40);
@@ -110,6 +136,99 @@ final class WidgetSmallCheck {
             PhoneUiCheck.check(ui.edit().putString("language",language).commit(),"Cannot restore widget language fixture");
             PhoneAlarms.rebuild(c);PhoneBackgroundLocation.sync(c);
         }
+    }
+
+    private static Bitmap ring(View host) {
+        ImageView image = host.findViewById(R.id.widget_circle_ring);
+        return image != null && image.getDrawable() instanceof android.graphics.drawable.BitmapDrawable
+                ? ((android.graphics.drawable.BitmapDrawable) image.getDrawable()).getBitmap() : null;
+    }
+
+    private static void circleLayout(Context c, MainActivity a, PhoneStore settings, long now,
+            String language, float font, int size, boolean captures) {
+        WidgetOptions options = new WidgetOptions();
+        options.layout = "circle";
+        options.size = size;
+        for (int edge : new int[] {112, WidgetOptions.CIRCLE_SIZE}) for (boolean bothDates : new boolean[] {false, true}) {
+            options.date = bothDates;
+            View view = WidgetRenderer.create(c, options, edge, edge, now).apply(c, new FrameLayout(c));
+            measure(view, a, edge, edge);
+            TextView time = view.findViewById(R.id.widget_next_time);
+            TextView countdown = view.findViewById(R.id.widget_next_remaining);
+            ImageView icon = view.findViewById(R.id.widget_next_icon);
+            TextView label = view.findViewById(R.id.widget_next_label);
+            PhoneUiCheck.check(time.getText().toString().equals(
+                            PhoneTime.at(settings, settings.day(now, 0).times[4], language.equals("ar"))),
+                    "Circle must show the next prayer's scheduled time");
+            PhoneUiCheck.check(label.getTextSize() >= time.getTextSize()
+                            && countdown.getTop() >= time.getBottom() && countdown.getTextSize() < time.getTextSize(),
+                    "Circle hierarchy at " + edge + " dp " + language + " font=" + font + " size=" + size
+                            + ": name=" + label.getTextSize() + ", time=" + time.getTextSize()
+                            + ", countdown=" + countdown.getTextSize());
+            PhoneUiCheck.check(icon.getVisibility() == View.VISIBLE && icon.getDrawable() != null
+                            && icon.getParent() == label.getParent(),
+                    "The next-prayer icon must appear beside its name");
+            for (int id : new int[] {R.id.widget_next_label, R.id.widget_next_time,
+                    R.id.widget_next_remaining, R.id.widget_title}) text(view, id, edge, language, font);
+            String variant = edge + " dp " + language + " font=" + font + " size=" + size
+                    + " bothDates=" + bothDates;
+            insideRing(view, view.findViewById(R.id.widget_title), variant);
+            insideRing(view, (View) label.getParent(), variant);
+            if (captures && edge == WidgetOptions.CIRCLE_SIZE && font == 1 && !bothDates)
+                capture(c, view, language + "-circle-" + size);
+        }
+    }
+
+    private static void insideRing(View root, View content, String variant) {
+        Rect bounds = new Rect();
+        content.getDrawingRect(bounds);
+        ((ViewGroup) root).offsetDescendantRectToMyCoords(content, bounds);
+        Bitmap pixels = Bitmap.createBitmap(content.getWidth(), content.getHeight(), Bitmap.Config.ARGB_8888);
+        try {
+            content.draw(new Canvas(pixels));
+            double center = root.getWidth() / 2.0;
+            double limit = root.getWidth() * .421;
+            for (int y = 0; y < pixels.getHeight(); y++) for (int x = 0; x < pixels.getWidth(); x++) {
+                if (Color.alpha(pixels.getPixel(x, y)) > 32)
+                    PhoneUiCheck.check(Math.hypot(bounds.left + x - center,
+                                    bounds.top + content.getTranslationY() + y - center) < limit,
+                            "Circle content intersects the ring: " + variant + " " + content.getClass().getSimpleName());
+            }
+        } finally {
+            pixels.recycle();
+        }
+    }
+
+    private static void countdownCircle(Context c, MainActivity a, PhoneStore settings, long now,
+            String language, boolean captures) {
+        WidgetOptions options = new WidgetOptions();
+        options.layout = "circle";
+        int size = WidgetOptions.CIRCLE_SIZE;
+        long maghrib = (long) settings.day(now, 0).times[4];
+        int[] arc = new int[2];
+        for (int i = 0; i < arc.length; i++) {
+            View view = WidgetRenderer.create(c, options, size, size, i == 0 ? now : maghrib - 60_000)
+                    .apply(c, new FrameLayout(a));
+            measure(view, a, size, size);
+            boolean arabic = language.equals("ar");
+            try {
+                PhoneUiCheck.check(((TextView) view.findViewById(R.id.widget_next_label)).getText()
+                                .toString().equals(settings.data.prayerName(4, arabic)),
+                        "Circle did not show the next prayer");
+            } catch (Exception invalid) {
+                throw new AssertionError(invalid);
+            }
+            text(view, R.id.widget_title, size, language, 1);
+            text(view, R.id.widget_next_remaining, size, language, 1);
+            Bitmap ring = ((android.graphics.drawable.BitmapDrawable)
+                    ((ImageView) view.findViewById(R.id.widget_circle_ring)).getDrawable()).getBitmap();
+            for (int x = 0; x < ring.getWidth(); x++)
+                for (int y = 0; y < ring.getHeight(); y++)
+                    if (Color.alpha(ring.getPixel(x, y)) == 255) arc[i]++;
+            if (i == 0 && captures) capture(c, view, language + "-widget-countdown-circle");
+        }
+        PhoneUiCheck.check(arc[1] > 0 && arc[0] > 3 * arc[1],
+                "Circle did not lose progress as the next prayer approached");
     }
     private static void spacing(Context c,MainActivity a,long now,String lang,String hijri,boolean captures) {
         for(float font:new float[]{1f,2f}) for(String shape:WidgetOptions.SHAPES) {
@@ -168,10 +287,17 @@ final class WidgetSmallCheck {
     private static void text(View view,int id,int edge,String lang,float font) {
         TextView text=view.findViewById(id);
         PhoneUiCheck.check(text.getVisibility()==View.VISIBLE && text.getLayout()!=null && !text.getText().toString().isEmpty(),"Empty small widget text");
-        PhoneUiCheck.check(text.getLayout().getHeight()<=text.getHeight()-text.getCompoundPaddingTop()-text.getCompoundPaddingBottom(),"Clipped widget height: "+edge+" "+lang+" font="+font);
+        PhoneUiCheck.check(text.getLayout().getHeight()<=text.getHeight()-text.getCompoundPaddingTop()-text.getCompoundPaddingBottom(),
+                "Clipped widget height: " + text.getResources().getResourceEntryName(id) + " " + edge
+                        + " " + lang + " font=" + font + " text=" + text.getText()
+                        + " layout=" + text.getLayout().getHeight() + " view=" + text.getHeight());
         PhoneUiCheck.check(text.getLayout().getLineEnd(text.getLayout().getLineCount()-1)>=text.getText().length(),"Widget cut off its last text line");
         for(int line=0;line<text.getLayout().getLineCount();line++)
-            PhoneUiCheck.check(text.getLayout().getEllipsisCount(line)==0 && text.getLayout().getLineWidth(line)<=text.getWidth()-text.getCompoundPaddingLeft()-text.getCompoundPaddingRight()+1,"Clipped widget width: "+edge+" "+lang+" font="+font);
+            PhoneUiCheck.check(text.getLayout().getEllipsisCount(line)==0
+                            && text.getLayout().getLineMax(line)<=text.getWidth()-text.getCompoundPaddingLeft()-text.getCompoundPaddingRight()+1,
+                    "Clipped widget width: " + text.getResources().getResourceEntryName(id) + " " + edge
+                            + " " + lang + " font=" + font + " text=" + text.getText()
+                            + " line=" + text.getLayout().getLineMax(line) + " view=" + text.getWidth());
     }
     private static void capture(Context c,View view,String name) {
         Bitmap image=Bitmap.createBitmap(view.getWidth(),view.getHeight(),Bitmap.Config.ARGB_8888);view.draw(new Canvas(image));

@@ -39,7 +39,9 @@ final class WidgetBackground {
                         / context.getResources().getDisplayMetrics().density;
         radius = Math.min(radius, Math.min(width, height) / 4f);
         Path outline = new Path();
-        outline.addRoundRect(0, 0, width, height, radius, radius, Path.Direction.CW);
+        if (options.layout.equals("circle")) outline.addCircle(width / 2f, height / 2f,
+                Math.min(width, height) / 2f, Path.Direction.CW);
+        else outline.addRoundRect(0, 0, width, height, radius, radius, Path.Direction.CW);
         canvas.clipPath(outline);
         canvas.drawColor(Color.parseColor(colors.getString("lapis-800")));
         String scene =

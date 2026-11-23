@@ -38,6 +38,10 @@ final class PhoneUiCheck {
                     check(a.body.findViewWithTag("phone.about.github").isEnabled(), "GitHub feedback must be available");
                     check(a.body.findViewWithTag("phone.about.check-updates").isEnabled(), "Sideloaded phone has a manual update check");
                     check(!a.body.findViewWithTag("phone.about.email").isEnabled(), "Email feedback must be disabled");
+                });
+                if (test instanceof CompanionCheck && ((CompanionCheck) test).mapNetwork)
+                    PhoneDialogCheck.updatePopup(test, a, capture);
+                on(test, () -> {
                     check(a.phoneUi.back() && a.body.findViewWithTag("phone.section.about") != null, "Back must return to settings");
                     a.tab("prayers");
                 });

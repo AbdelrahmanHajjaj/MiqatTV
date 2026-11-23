@@ -247,7 +247,10 @@ final class PhoneJourneyCheck {
                                             != null,
                                     "Widget must render actual RemoteViews");
                         });
-                PhoneUiCheck.capture(test, resumed, lang + "-journey-widget", captures);
+                if (captures) {
+                    PhoneUiCheck.on(test, () -> resumed.body.findViewWithTag("widget.layout.circle").performClick());
+                    PhoneUiCheck.capture(test, resumed, lang + "-journey-widget", true);
+                }
                 PhoneUiCheck.on(
                         test,
                         () -> {
@@ -328,15 +331,17 @@ final class PhoneJourneyCheck {
                             resumed.body.findViewWithTag("qibla.open").performClick();
                             check(
                                     resumed.page.equals("qibla")
-                                            && resumed.body.findViewWithTag("qibla.status") != null,
-                                    "Qibla screen/bearing unavailable for confirmed location");
+                                            && resumed.body.findViewWithTag("qibla.mode.map") != null,
+                                    "Qibla screen did not open");
                         });
                 LiveUiCheck.untilUi(
                         test,
                         () -> {
                             View compass = resumed.body.findViewWithTag("qibla.compass");
                             TextView status = resumed.body.findViewWithTag("qibla.status");
-                            return compass != null && compass.getVisibility() == View.VISIBLE
+                            return resumed.body.findViewWithTag("qibla.location.permission") != null
+                                    || resumed.body.findViewWithTag("qibla.location.retry") != null
+                                    || compass != null && compass.getVisibility() == View.VISIBLE
                                     || status != null
                                             && status.getText()
                                                     .toString()

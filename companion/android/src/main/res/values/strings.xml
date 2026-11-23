@@ -2,4 +2,5 @@
     <string name="app_name">Miqat</string>
     <string name="widget_next_name">Miqat · Next prayer</string>
     <string name="widget_strip_name">Miqat · Prayer strip</string>
+    <string name="widget_circle_name">Miqat · Countdown circle</string>
 </resources>

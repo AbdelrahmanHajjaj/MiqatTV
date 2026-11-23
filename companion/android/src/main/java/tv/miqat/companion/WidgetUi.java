@@ -117,11 +117,13 @@ final class WidgetUi {
                     draft.layout = selected;
                     changed();
                 });
-        a.body.addView(a.views.text(a.t("widget_resize_hint"), 12, a.muted));
+        if (!draft.layout.equals("circle"))
+            a.body.addView(a.views.text(a.t("widget_resize_hint"), 12, a.muted));
     }
 
     private int width() {
         if (draft != null && draft.layout.equals("next")) return 80;
+        if (draft != null && draft.layout.equals("circle")) return WidgetOptions.CIRCLE_SIZE;
         return Math.max(
                 140,
                 Math.round(
@@ -135,7 +137,8 @@ final class WidgetUi {
         preview.setTag("widget.preview");
         preview.setPadding(a.views.dp(4), a.views.dp(8), a.views.dp(4), a.views.dp(8));
         preview.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
-        int height = draft.layout.equals("next") ? 80 :
+        boolean fixedPreview = draft.layout.equals("next") || draft.layout.equals("circle");
+        int height = fixedPreview ? draft.height() :
                 Math.round(
                         draft.height() * draft.size / 100f
                                 * Math.max(
@@ -147,26 +150,29 @@ final class WidgetUi {
         android.view.View rendered =
                 WidgetRenderer.initial(a.getApplicationContext(), draft, width(), height)
                         .apply(a.getApplicationContext(), preview);
-        preview.addView(rendered, new LinearLayout.LayoutParams(draft.layout.equals("next") ? a.views.dp(width()) : -1, a.views.dp(height)));
+        preview.addView(rendered, new LinearLayout.LayoutParams(fixedPreview ? a.views.dp(width()) : -1, a.views.dp(height)));
         a.body.addView(preview);
         return rendered;
     }
 
     private void appearance(android.view.View preview) {
+        boolean circle = draft.layout.equals("circle");
+        List<Choices.Option> styles = new ArrayList<>(Arrays.asList(
+                new Choices.Option("appearance.theme", a.t("widget_theme")),
+                new Choices.Option("appearance.background", a.t("widget_background"))));
+        if (!circle) styles.add(new Choices.Option("shape", a.t("widget_shape")));
+        String selectedStyle = circle && style.equals("shape") ? "appearance.theme" : style;
         a.views.segmentedChoices(
                 a.body,
                 "widget.style",
-                Arrays.asList(
-                        new Choices.Option("appearance.theme", a.t("widget_theme")),
-                        new Choices.Option("appearance.background", a.t("widget_background")),
-                        new Choices.Option("shape", a.t("widget_shape"))),
-                style,
+                styles,
+                selectedStyle,
                 selected -> {
                     style = selected;
                     a.render();
                 });
         try {
-            if (style.equals("shape")) {
+            if (selectedStyle.equals("shape")) {
                 List<Choices.Option> shapes = new ArrayList<>();
                 for (String shape : WidgetOptions.SHAPES)
                     shapes.add(new Choices.Option(shape, a.t("widget_shape_" + shape)));
@@ -182,11 +188,11 @@ final class WidgetUi {
             } else
                 a.phoneUi.appearance.rail(
                         a.body,
-                        style,
-                        style.equals("appearance.theme") ? draft.theme : draft.scene,
+                        selectedStyle,
+                        selectedStyle.equals("appearance.theme") ? draft.theme : draft.scene,
                         true,
                         selected -> {
-                            if (style.equals("appearance.theme")) draft.theme = selected;
+                            if (selectedStyle.equals("appearance.theme")) draft.theme = selected;
                             else draft.scene = selected;
                             changed();
                         });

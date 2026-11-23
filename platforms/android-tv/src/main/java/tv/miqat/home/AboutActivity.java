@@ -65,7 +65,7 @@ public final class AboutActivity extends Screen {
     }
 
     private void checkForUpdates() {
-        AboutUpdates.show(this, rtl, new AboutUpdates.Labels(t.aboutCheckUpdates(), t.aboutCheckingUpdates(),
+        AboutUpdates.show(this, new AlertDialog.Builder(this), rtl, new AboutUpdates.Labels(t.aboutCheckUpdates(), t.aboutCheckingUpdates(),
                 t.aboutNoUpdate(), t.aboutNewUpdate(), t.aboutUpdateFailed(), t.aboutViewRelease(), t.back()),
                 this::showReleaseQr);
     }
