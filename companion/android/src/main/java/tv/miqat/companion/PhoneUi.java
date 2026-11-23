@@ -15,6 +15,7 @@ import android.widget.*;
 import org.json.*;
 
 import tv.miqat.companion.about.AboutMiqat;
+import tv.miqat.companion.about.AboutUpdates;
 import tv.miqat.companion.core.CompanionContract;
 import tv.miqat.companion.core.SettingSpec;
 
@@ -275,16 +276,26 @@ final class PhoneUi {
         a.body.addView(version);
         a.body.addView(a.views.text(a.t("aboutDeveloper"), 16, a.ink));
         a.body.addView(a.views.text(a.t("aboutSadaqah"), 14, a.muted));
-        a.views.button(a.body, a.t(data.actionLabel("about.github")), () -> {
-            try {
-                a.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(AboutMiqat.FEEDBACK_URL)));
-            } catch (ActivityNotFoundException missing) {
-                a.notice("aboutBrowserUnavailable");
-            }
-        }).setTag("phone.about.github");
+        if (AboutUpdates.available(a)) {
+            String title = a.t(data.actionLabel("about.check-updates"));
+            a.views.button(a.body, title, () -> AboutUpdates.show(a, a.ar, new AboutUpdates.Labels(
+                    title, a.t("aboutCheckingUpdates"), a.t("aboutNoUpdate"), a.t("aboutNewUpdate"),
+                    a.t("aboutUpdateFailed"), a.t("aboutViewRelease"), a.t("back")),
+                    this::openAboutLink)).setTag("phone.about.check-updates");
+        }
+        a.views.button(a.body, a.t(data.actionLabel("about.github")),
+                () -> openAboutLink(AboutMiqat.FEEDBACK_URL)).setTag("phone.about.github");
         Button email = a.views.button(a.body, a.t(data.actionLabel("about.email")), () -> {});
         email.setEnabled(false);
         email.setTag("phone.about.email");
+    }
+
+    private void openAboutLink(String url) {
+        try {
+            a.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (ActivityNotFoundException missing) {
+            a.notice("aboutBrowserUnavailable");
+        }
     }
 
     private void fasting() throws Exception {

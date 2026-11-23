@@ -1,5 +1,10 @@
 [
   {
+    "id": "about.check-updates",
+    "state": "unimplemented",
+    "reason": "LG updates are checked and installed through Miqat Phone TV setup."
+  },
+  {
     "id": "prayer.facing",
     "state": "unimplemented",
     "reason": "Qibla shows true north; manual screen-facing calibration is not ported."

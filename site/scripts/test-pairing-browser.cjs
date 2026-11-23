@@ -10,6 +10,9 @@ const server=http.createServer((request,response)=>{
 (async()=>{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));let browser,page;
   try{
+    const metadata = await fetch('http://127.0.0.1:'+server.address().port+'/MiqatTV/updates.json');
+    assert.equal(metadata.status, 200, 'the static build exposes the manual update manifest');
+    assert.deepEqual(await metadata.json(), require('../src/lib/stable-release.json'));
     browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'msedge',headless:true});
     for(const language of ['ar','en'])for(const width of [390,900,1440]){
       page=await browser.newPage({viewport:{width,height:1000}});const errors=[];

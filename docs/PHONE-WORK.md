@@ -13,6 +13,8 @@ platforms. LG continues after first-time SSH approval and can save a passphrase
 with explicit opt-in. See EVIDENCE.md for validation.
 WORK.md owns the next action.
 
+Sideloaded phone builds add a manual stable version check in About Miqat.
+
 About Miqat shows the installed phone app version, developer credit
 and GitHub feedback. Email feedback stays disabled pending a public address.
 

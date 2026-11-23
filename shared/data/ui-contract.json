@@ -515,6 +515,13 @@
     "save": "action"
   },
   {
+    "id": "about.check-updates",
+    "section": "device",
+    "kind": "action",
+    "label": "aboutCheckUpdates",
+    "save": "action"
+  },
+  {
     "id": "device.startup",
     "section": "device",
     "kind": "toggle",

@@ -4,6 +4,9 @@ Open **Settings → Device settings → About Miqat** for the installed version.
 feedback QR code to open the public GitHub form on your phone. GitHub sign-in is
 required. Email feedback is currently disabled.
 
+For a sideloaded build, **Check for updates** compares your installed version
+with the stable GitHub release. If a newer build is available, scan its release QR.
+
 The native Java Views launcher uses package `tv.miqat.home`, its existing settings
 and debug signing configuration. The portable domain rules come from `shared/core`;
 astronomy, Android ICU dates, persistence, scheduling, playback and UI stay here.

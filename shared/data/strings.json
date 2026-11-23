@@ -6,6 +6,12 @@
   "aboutGithub": {"ar": "الملاحظات عبر GitHub", "en": "Feedback on GitHub"},
   "aboutEmail": {"ar": "الملاحظات عبر البريد الإلكتروني", "en": "Feedback by email"},
   "aboutBrowserUnavailable": {"ar": "لا يوجد متصفح لفتح GitHub", "en": "No browser available to open GitHub"},
+  "aboutCheckUpdates": {"ar": "التحقق من التحديثات", "en": "Check for updates"},
+  "aboutCheckingUpdates": {"ar": "جارٍ التحقق من التحديثات…", "en": "Checking for updates…"},
+  "aboutNoUpdate": {"ar": "لا يوجد إصدار مستقر أحدث.", "en": "No newer stable version is available."},
+  "aboutNewUpdate": {"ar": "يتوفر تحديث", "en": "Update available"},
+  "aboutUpdateFailed": {"ar": "تعذر التحقق من التحديثات. حاول مرة أخرى.", "en": "Couldn’t check for updates. Try again."},
+  "aboutViewRelease": {"ar": "عرض الإصدار", "en": "View release"},
   "ref": {
     "ar": "النساء 103",
     "en": "An-Nisa 4:103",

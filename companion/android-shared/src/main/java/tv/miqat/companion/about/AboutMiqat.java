@@ -2,6 +2,7 @@ package tv.miqat.companion.about;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageInfo;
 
 public final class AboutMiqat {
     public static final String FEEDBACK_URL =
@@ -9,10 +10,14 @@ public final class AboutMiqat {
 
     private AboutMiqat() {}
 
-    @SuppressWarnings("deprecation")
     public static String version(Context context) {
+        return packageInfo(context).versionName;
+    }
+
+    @SuppressWarnings("deprecation")
+    static PackageInfo packageInfo(Context context) {
         try {
-            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
         } catch (PackageManager.NameNotFoundException impossible) {
             throw new IllegalStateException("Miqat package metadata is missing", impossible);
         }

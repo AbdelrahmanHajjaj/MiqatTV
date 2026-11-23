@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Sideloaded Android phone and Android TV builds can check for stable updates
+  from About Miqat and open the matching GitHub release.
+
 - LG webOS shows the installed version, developer credit and a GitHub feedback
   QR code under About Miqat. Email feedback is currently disabled.
 

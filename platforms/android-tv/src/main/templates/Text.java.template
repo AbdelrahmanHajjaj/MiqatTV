@@ -41,6 +41,12 @@ final class Text {
     String aboutGithub() { {{STRINGS:aboutGithub}} }
     String aboutEmail() { {{STRINGS:aboutEmail}} }
     String aboutBrowserUnavailable() { {{STRINGS:aboutBrowserUnavailable}} }
+    String aboutCheckUpdates() { {{STRINGS:aboutCheckUpdates}} }
+    String aboutCheckingUpdates() { {{STRINGS:aboutCheckingUpdates}} }
+    String aboutNoUpdate() { {{STRINGS:aboutNoUpdate}} }
+    String aboutNewUpdate() { {{STRINGS:aboutNewUpdate}} }
+    String aboutUpdateFailed() { {{STRINGS:aboutUpdateFailed}} }
+    String aboutViewRelease() { {{STRINGS:aboutViewRelease}} }
     /** The saved city in this language; set by {@link Screen#loadText}. */
     String cityName = "";
     String city() { return cityName; }

@@ -46,6 +46,7 @@ Migration scope/status live in WORK.md; verification facts live in EVIDENCE.md.
 
 | Control | State | Reason |
 | --- | --- | --- |
+| `about.check-updates` | unimplemented | LG updates are checked and installed through Miqat Phone TV setup. |
 | `prayer.facing` | unimplemented | Qibla shows true north; manual screen-facing calibration is not ported. |
 | `radio.playback` | unimplemented | Uses separate Play/Stop actions instead of a station-row toggle. |
 | `radio.screen-off` | os-unsupported | No supported production panel-off integration on the tested old LG. |

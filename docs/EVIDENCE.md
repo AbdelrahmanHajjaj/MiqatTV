@@ -1,5 +1,13 @@
 # Validation evidence
 
+## Manual Android update check — 23 November 2026
+
+Android phone and TV debug builds, lint, instrumentation builds, TV size and
+52 repository regressions pass. Catalog checks, website build and served update
+metadata check, and LG ES5/service and bilingual browser Settings checks pass.
+The metadata matches the published v0.7.6 phone and TV version codes. Device
+execution of the new check and the live Pages response remain pending.
+
 ## Draft release inputs — 23 November 2026
 
 Read-only GitHub checks of the resolver selected Validate run `45244094134`
