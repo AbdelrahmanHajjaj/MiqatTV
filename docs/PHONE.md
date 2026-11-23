@@ -188,13 +188,14 @@ ends to listen again. The phone station is independent of any paired TV.
 
 ## Qibla
 
-The offline compass uses the confirmed location and a foreground orientation
-sensor. Bearing is clockwise from true north; location accuracy does not measure
-phone orientation. Keep the phone level, calibrate it and avoid magnets/metal.
+Allow precise Android location to use Qibla. The compass and map use a fresh
+device location independently of the city set for prayer times. The compass works
+offline and uses a foreground orientation sensor. Bearing is clockwise from true
+north. Keep the phone level, calibrate it and avoid magnets/metal.
 Without a suitable sensor, use its numeric bearing with another compass. A bearing
 at the destination is unavailable.
 
-Tap **Load map** to open OpenStreetMap zoomed in on your confirmed prayer location.
+Select **Map** to open OpenStreetMap zoomed in on your current location.
 Drag to pan and pinch or use + and − to zoom. The location button restores the
 starting view. The map draws the great-circle route to the Kaaba and loads tiles
 only for the area in view. OpenStreetMap receives your IP and viewed area.
@@ -224,9 +225,11 @@ location/calculation/language/clock, independently of TV settings.
 Small tiles prioritize prayer/time and restore details as they grow. Wide one-row
 cards retain the enabled Hijri date, more prominent than the countdown. The strip
 can show both dates, fills its height and outlines the next prayer; after Isha its
-Fajr slot uses tomorrow's timestamp. Text/icons/colors follow the app. Remaining
-time is a snapshot at the existing refresh, not a background ticker. Periodic
-launcher refresh can be delayed while idle. Tap a widget to open Prayer.
+Fajr slot uses tomorrow's timestamp. Text, icons and colors follow the app.
+Android ticks the visible countdown each second using the system's digit style.
+The circle's ring and the next prayer update on widget refresh. Android can delay
+the rollover while idle or when exact timing access is unavailable.
+Tap a widget to open Prayer.
 
 ## Appearance
 

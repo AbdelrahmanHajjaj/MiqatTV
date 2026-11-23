@@ -278,7 +278,7 @@ final class PhoneUi {
         a.body.addView(a.views.text(a.t("aboutSadaqah"), 14, a.muted));
         if (AboutUpdates.available(a)) {
             String title = a.t(data.actionLabel("about.check-updates"));
-            a.views.button(a.body, title, () -> AboutUpdates.show(a, a.ar, new AboutUpdates.Labels(
+            a.views.button(a.body, title, () -> AboutUpdates.show(a, a.views.dialog(), a.ar, new AboutUpdates.Labels(
                     title, a.t("aboutCheckingUpdates"), a.t("aboutNoUpdate"), a.t("aboutNewUpdate"),
                     a.t("aboutUpdateFailed"), a.t("aboutViewRelease"), a.t("back")),
                     this::openAboutLink)).setTag("phone.about.check-updates");

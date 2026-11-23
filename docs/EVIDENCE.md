@@ -1,5 +1,18 @@
 # Validation evidence
 
+## Phone update sheet, widget seconds and Qibla location — 23 November 2026
+
+An owned API 37 emulator verified the themed update result in English and
+Arabic, live seconds on all four hosted widget presentations, and redraws at
+small bounds and enlarged text. The bilingual Qibla check loaded live Cairo
+tiles directly from the Map tab using a precise mock device fix while London
+remained saved for prayer times. Both maps finished drawing before capture.
+
+Phone and Android TV debug builds and lint passed, along with the phone
+instrumentation build, companion catalog checks and bilingual website build.
+The review APK retains its signer and all 25 approved recordings.
+SHA-256 prefix `422D4BB001831186`. Physical launcher behavior remains pending.
+
 ## Miqat Phone prayer usability — 23 November 2026
 
 Phone 0.5.22/code 38 passed debug app and instrumentation builds, lint,

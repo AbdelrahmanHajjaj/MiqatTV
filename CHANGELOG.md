@@ -11,6 +11,10 @@
 
 - Sideloaded Android phone and Android TV builds can check for stable updates
   from About Miqat and open the matching GitHub release.
+- Miqat Phone uses its themed sheet for update checks.
+- Phone widgets show seconds and count down on the launcher.
+- Selecting the Qibla Map tab loads it from the phone's precise location.
+  The compass uses the same reading independently of the prayer city.
 
 - LG webOS shows the installed version, developer credit and a GitHub feedback
   QR code under About Miqat. Email feedback is currently disabled.

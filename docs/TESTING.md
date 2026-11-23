@@ -276,11 +276,12 @@ and Hijri month/day selection against actual calculated times. The runtime
 suite checks the selected recording's ending preview, including retained legacy
 seconds caps. Short-tone/vibration channels preserve Android-owned user edits.
 
-The optional `-e suite phone-ui -e map-network true -e capture true` check loads
-real OSM tiles only after a simulated explicit Load map tap, using public Cairo
-fixture coordinates. It checks native square geometry, restricted WebView access
-and provider failures; inspect the resulting map capture for route/markers and
-attribution. Ordinary CI phone UI uses no map network request.
+The optional `-e suite phone-ui -e map-network true -e capture true` check needs
+precise location permission and the test-only mock-location app-op on an owned
+emulator. It keeps London as the prayer city while seeding a precise Cairo fix.
+It checks the Cairo bearing, native square Map tab, restricted WebView and live
+tiles. Inspect the route, attribution and About update sheet captures.
+Ordinary phone UI uses no map or update network request.
 
 Phone settings redraw checks retain the window container and inspect scroll on
 its first drawn frame during repeated number edits and saving. Keep weekdays

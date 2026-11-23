@@ -1,5 +1,7 @@
 package tv.miqat.companion;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.appwidget.*;
 import android.content.*;
 import android.os.Bundle;
@@ -8,6 +10,8 @@ import android.util.SizeF;
 import android.widget.RemoteViews;
 
 import java.util.*;
+import tv.miqat.companion.core.PhonePrayerRules;
+import tv.miqat.core.PrayerSelection;
 
 /** Offline widget rendering, refreshed by the existing prayer lifecycle and launcher. */
 public class PrayerWidget extends AppWidgetProvider {
@@ -47,10 +51,12 @@ public class PrayerWidget extends AppWidgetProvider {
     }
 
     static final String PINNED = "tv.miqat.companion.WIDGET_PINNED";
+    private static final String ROLLOVER = "tv.miqat.companion.WIDGET_ROLLOVER";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
+        if (ROLLOVER.equals(intent.getAction())) updateAll(context);
         if (PINNED.equals(intent.getAction())) {
             int id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
             if (owns(context, id)
@@ -70,6 +76,7 @@ public class PrayerWidget extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
         for (int id : ids) update(context, id);
+        scheduleRollover(context, true);
     }
 
     @Override
@@ -83,6 +90,11 @@ public class PrayerWidget extends AppWidgetProvider {
         android.content.SharedPreferences.Editor editor = PhoneStore.preferences(context).edit();
         for (int id : ids) editor.remove("widget-" + id);
         editor.apply();
+    }
+
+    @Override
+    public void onDisabled(Context context) {
+        if (ids(context).length == 0) scheduleRollover(context, false);
     }
 
     static void update(Context context, int id) {
@@ -121,10 +133,46 @@ public class PrayerWidget extends AppWidgetProvider {
 
     static void updateAll(Context context) {
         try {
-            for (int id : ids(context)) update(context, id);
+            int[] widgets = ids(context);
+            scheduleRollover(context, widgets.length > 0);
+            for (int id : widgets) update(context, id);
         } catch (RuntimeException unavailable) {
             android.util.Log.w(
                     "MiqatWidget", "Widget host update failed; the host may retry later");
         }
+    }
+
+    private static synchronized void scheduleRollover(Context context, boolean placed) {
+        AlarmManager alarms = context.getSystemService(AlarmManager.class);
+        int flags = PendingIntent.FLAG_IMMUTABLE | (placed ? 0 : PendingIntent.FLAG_NO_CREATE);
+        PendingIntent refresh = PendingIntent.getBroadcast(context, 0,
+                new Intent(context, PrayerWidget.class).setAction(ROLLOVER), flags);
+        if (refresh == null) return;
+        try {
+            if (placed) {
+                PhoneStore settings = PhoneStore.read(context);
+                long now = System.currentTimeMillis();
+                PrayerSelection next = settings.locationReady
+                        ? PhonePrayerRules.INSTANCE.nextPrayer(settings.day(now, 0).times, settings.day(now, 1).times, now)
+                        : null;
+                if (next != null) {
+                    long target = (long) next.getNextTime();
+                    if (PhoneAlarms.exact(context)) {
+                        try {
+                            alarms.setExact(AlarmManager.RTC, target, refresh);
+                            return;
+                        } catch (SecurityException revoked) {
+                            // Timing access can be revoked while settings are being applied.
+                        }
+                    }
+                    alarms.set(AlarmManager.RTC, target, refresh);
+                    return;
+                }
+            }
+        } catch (Exception unavailable) {
+            android.util.Log.w("MiqatWidget", "Cannot schedule widget prayer rollover");
+        }
+        alarms.cancel(refresh);
+        refresh.cancel();
     }
 }

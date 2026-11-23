@@ -82,6 +82,24 @@ final class WidgetHostCheck {
             PhoneUiCheck.check(WidgetOptions.read(a, ids[4]).layout.equals("circle")
                             && circle.resizeMode == AppWidgetProviderInfo.RESIZE_NONE,
                     "Countdown circle lost its fixed launcher layout");
+            int[] liveWidgets = {0, 2, 3, 4};
+            String[] first = new String[liveWidgets.length];
+            PhoneUiCheck.on(test, () -> {
+                for (int i = 0; i < liveWidgets.length; i++) {
+                    Chronometer clock = views[liveWidgets[i]].findViewById(R.id.widget_next_remaining);
+                    first[i] = clock.getText().toString();
+                    PhoneUiCheck.check(clock.isCountDown() && clock.getVisibility() == View.VISIBLE
+                                    && first[i].matches(".*\\p{Nd}{1,2}:\\p{Nd}{2}.*"),
+                            "Widget has no visible seconds countdown");
+                }
+            });
+            LiveUiCheck.untilUi(test, () -> {
+                for (int i = 0; i < liveWidgets.length; i++) {
+                    Chronometer clock = views[liveWidgets[i]].findViewById(R.id.widget_next_remaining);
+                    if (first[i].contentEquals(clock.getText())) return false;
+                }
+                return true;
+            });
             responsivePreviews(test, a, capture);
             pickerPreviews(test, a, ids, capture);
             WidgetOptions legacy = WidgetOptions.from(a, "{\"background\":false}");

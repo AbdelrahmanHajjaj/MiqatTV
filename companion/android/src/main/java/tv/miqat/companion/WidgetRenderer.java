@@ -2,6 +2,7 @@ package tv.miqat.companion;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -52,7 +53,7 @@ final class WidgetRenderer {
         } catch (Exception unavailable) {
             if (presentation.equals("circle")) {
                 view.setTextViewText(R.id.widget_next_label, PhoneAlarms.text(context, "phone_settings_failed"));
-                view.setTextViewText(R.id.widget_next_remaining, "");
+                view.setViewVisibility(R.id.widget_next_remaining, View.GONE);
                 view.setTextViewText(R.id.widget_title, "");
                 return view;
             }
@@ -69,6 +70,7 @@ final class WidgetRenderer {
             for (int id : new int[] {R.id.widget_next, R.id.widget_prayers, R.id.widget_strip})
                 view.setViewVisibility(id, View.GONE);
             view.setTextViewText(R.id.widget_updated, "");
+            view.setViewVisibility(R.id.widget_next_remaining, View.GONE);
         }
         return view;
     }
@@ -137,6 +139,7 @@ final class WidgetRenderer {
         view.setTextColor(R.id.widget_next_time, ink);
         view.setTextColor(R.id.widget_title, Color.parseColor(colors.getString("mist-400")));
         view.setTextColor(R.id.widget_updated, Color.parseColor(colors.getString("mist-400")));
+        view.setTextColor(R.id.widget_next_remaining, Color.parseColor(colors.getString("mist-400")));
         SimpleDateFormat date = new SimpleDateFormat("EEE d MMM", locale);
         date.setTimeZone(settings.zone());
         String title =
@@ -163,12 +166,12 @@ final class WidgetRenderer {
             if (options.hijri && options.date) title += "\n" + date.format(new Date(now));
             view.setInt(R.id.widget_title, "setMaxLines", options.hijri && options.date ? 2 : 1);
             view.setTextViewTextSize(R.id.widget_title, android.util.TypedValue.COMPLEX_UNIT_SP, 11 * options.size / 100f);
-            view.setTextColor(R.id.widget_next_remaining, Color.parseColor(colors.getString("mist-400")));
         }
         if (layout.equals("next")) {
             // Reserve real text height inside the host's rounded outline, including transparent widgets.
             int inset = Math.min(12, Math.max(4, Math.min(width, height) / 10));
-            view.setViewPadding(R.id.widget_content, dp(inset), dp(inset), dp(inset), dp(inset));
+            int verticalInset = height < 56 ? 1 : inset;
+            view.setViewPadding(R.id.widget_content, dp(inset), dp(verticalInset), dp(inset), dp(verticalInset));
             view.setViewPadding(R.id.widget_next_content, 0, 0, 0, 0);
             boolean narrow = width < 180;
             title = options.hijri ? PhoneTime.hijri(settings, now, ar) : "";
@@ -176,10 +179,8 @@ final class WidgetRenderer {
             view.setInt(R.id.widget_title, "setMaxLines", narrow ? 4 : options.hijri && options.date ? 2 : 1);
             int dateHeight = narrow ? 96 : options.hijri && options.date ? 56 : 28;
             view.setInt(R.id.widget_title, "setHeight", dp(Math.min(dateHeight, Math.round(height * (narrow ? .4f : .27f)))));
-            view.setInt(R.id.widget_next_remaining, "setHeight", dp(Math.min(24, height / 5)));
-            view.setViewVisibility(R.id.widget_next_remaining, height >= 80 && width >= 72 ? View.VISIBLE : View.GONE);
+            view.setInt(R.id.widget_next_remaining, "setHeight", dp(Math.max(9, Math.min(24, height / 5))));
             view.setTextColor(R.id.widget_title, ink);
-            view.setTextColor(R.id.widget_next_remaining, Color.parseColor(colors.getString("mist-400")));
             if (narrow) {
                 view.setViewVisibility(R.id.widget_next_icon, View.GONE);
                 view.setInt(R.id.widget_next_label, "setGravity", android.view.Gravity.CENTER);
@@ -216,20 +217,14 @@ final class WidgetRenderer {
                 ? tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(day.times, tomorrow.times, now)
                 : null;
         String prayer = data.text(settings.locationReady ? "phone_unavailable" : "phone_location_needed", ar);
-        String remaining = "";
         double fraction = 0;
         if (next != null) {
             prayer = data.prayerName(next.getNext(), ar);
-            long minutes = (long) tv.miqat.core.ReminderRules.INSTANCE.minutesLeft(next.getNextTime(), now);
-            remaining = text(String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60));
-            view.setContentDescription(R.id.widget_next_remaining,
-                    String.format(locale, data.text("phone_remaining", ar), remaining));
             fraction = circleRemaining(day, tomorrow, next);
         }
         view.setTextViewText(R.id.widget_next_label, prayer);
         view.setInt(R.id.widget_next_label, "setMaxLines", next == null ? 2 : 1);
-        view.setTextViewText(R.id.widget_next_remaining, remaining);
-        view.setViewVisibility(R.id.widget_next_remaining, next == null ? View.GONE : View.VISIBLE);
+        countdown(next);
         SimpleDateFormat civil = new SimpleDateFormat("d MMM", locale);
         civil.setTimeZone(settings.zone());
         String date = options.hijri ? PhoneTime.hijri(settings, now, ar) : "";
@@ -291,7 +286,7 @@ final class WidgetRenderer {
                 R.id.widget_prayers, ready && !nextOnly && !strip ? View.VISIBLE : View.GONE);
         view.setViewVisibility(R.id.widget_strip, ready && strip ? View.VISIBLE : View.GONE);
         if (!ready) {
-            if (nextOnly) view.setViewVisibility(R.id.widget_next_remaining, View.GONE);
+            countdown(null);
             if (minimal) view.setContentDescription(R.id.widget_root,
                     data.text(!settings.locationReady ? "phone_location_needed" : "phone_unavailable", ar));
             return;
@@ -321,13 +316,7 @@ final class WidgetRenderer {
                 R.id.widget_next_label,
                 android.util.TypedValue.COMPLEX_UNIT_SP,
                 12 * options.size / 100f);
-        if (wide || nextOnly) {
-            long minutes = next == null ? 0 : (long) tv.miqat.core.ReminderRules.INSTANCE.minutesLeft(next.getNextTime(), now);
-            String remaining = text(String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60));
-            String description = String.format(locale, data.text("phone_remaining", ar), remaining);
-            view.setTextViewText(R.id.widget_next_remaining, next == null ? "" : nextOnly && width < 240 ? remaining : description);
-            view.setContentDescription(R.id.widget_next_remaining, description);
-        }
+        countdown(next);
         if (!nextOnly) {
             for (int i = 0; i < 6; i++) {
                 row(
@@ -337,6 +326,18 @@ final class WidgetRenderer {
                         strip);
             }
         }
+    }
+
+    private void countdown(PrayerSelection next) throws Exception {
+        int id = R.id.widget_next_remaining;
+        view.setViewVisibility(id, next == null ? View.GONE : View.VISIBLE);
+        if (next == null) return;
+        String format = layout.equals("next") && width >= 240
+                ? data.text("phone_remaining", ar).replace("%s", "\u2066%s\u2069") : null;
+        // RemoteViews sets the base before the format, so a detached host could render the old format.
+        view.setString(id, "setFormat", format);
+        view.setChronometerCountDown(id, true);
+        view.setChronometer(id, SystemClock.elapsedRealtime() + (long) next.getNextTime() - now, format, true);
     }
 
     private void row(int index, PhoneSchedule.Day day, boolean next, boolean strip)

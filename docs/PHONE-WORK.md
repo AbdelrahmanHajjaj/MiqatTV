@@ -20,11 +20,12 @@ and GitHub feedback. Email feedback stays disabled pending a public address.
 
 ## Prayer usability feedback
 
-Home shows countdown seconds. Prayer and reminder controls preview today's
+Home and launcher widgets show live countdown seconds. Prayer and reminder controls preview today's
 calculated times. The Hijri grid and selected-day timetable accept horizontal
-swipes. The opt-in Qibla map starts at the saved prayer location with pan,
-pinch zoom and recenter. The fixed countdown-circle widget shows the remaining
-interval on each launcher refresh. See [validation](EVIDENCE.md).
+swipes. Selecting the Qibla Map tab opens a pannable, zoomable map at the
+phone's current precise location. The compass uses that same reading separately
+from prayer settings. About uses Miqat's themed update sheet. The fixed
+countdown-circle ring redraws on launcher refresh. See [validation](EVIDENCE.md).
 
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.

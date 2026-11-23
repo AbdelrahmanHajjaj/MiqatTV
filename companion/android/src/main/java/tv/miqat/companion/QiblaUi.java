@@ -1,6 +1,12 @@
 package tv.miqat.companion;
 
+import android.Manifest;
+import android.content.Intent;
 import android.graphics.*;
+import android.location.Location;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.provider.Settings;
 import android.hardware.*;
 import android.view.*;
 import android.webkit.*;
@@ -10,7 +16,13 @@ import tv.miqat.core.QiblaRules;
 
 /** Foreground compass. No location tracking or sensor service survives the screen. */
 final class QiblaUi implements SensorEventListener {
+    static final int LOCATION_PERMISSION = 82;
+
     private final MainActivity a;
+    private final PhoneLocation locator;
+    private Location fix;
+    private String locationError = "";
+    private boolean permissionAsked;
     private final SensorManager sensors;
     private final float[] rotation = new float[9], screen = new float[9], angles = new float[3];
     private Compass compass;
@@ -23,23 +35,12 @@ final class QiblaUi implements SensorEventListener {
 
     QiblaUi(MainActivity activity) {
         a = activity;
+        locator = new PhoneLocation(a);
         sensors = a.getSystemService(SensorManager.class);
     }
 
     void render() {
-        stop();
-        if (a.phoneUi.settings == null || !a.phoneUi.settings.locationReady) {
-            a.body.addView(a.views.text(a.t("phone_location_needed"), 16, a.ink));
-            a.views.button(a.body, a.t("phone_choose_location"), this::chooseLocation);
-            return;
-        }
-        PhoneStore settings = a.phoneUi.settings;
-        Double target = QiblaRules.INSTANCE.bearing(settings.latitude, settings.longitude);
-        if (target == null) {
-            a.body.addView(a.views.text(a.t("qibla_at_kaaba"), 16, a.ink));
-            return;
-        }
-        bearing = target;
+        clear();
         a.views.segmentedChoices(
                 a.body,
                 "qibla.mode",
@@ -51,21 +52,50 @@ final class QiblaUi implements SensorEventListener {
                     mapMode = selected.equals("map");
                     a.render();
                 });
-        a.body.addView(
-                a.views.text(
-                        a.t("qibla_bearing")
-                                + " · "
-                                + a.phoneUi.digits(
-                                        String.format(java.util.Locale.US, "%.1f°", bearing)),
-                        20,
-                        a.accent));
-        try {
-            a.body.addView(a.views.text(a.phoneUi.location(), 14, a.muted));
-        } catch (Exception invalid) {
-            a.body.addView(a.views.text(a.t("phone_current_location"), 14, a.muted));
+        if (mapMode) a.body.addView(a.views.text(a.t("phone_map_privacy"), 13, a.muted));
+        if (!PhoneLocation.preciseAllowed(a)) {
+            fix = null;
+            a.body.addView(a.views.text(a.t("qibla_location_required"), 16, a.ink));
+            boolean settings = permissionAsked && !a.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION);
+            a.views.button(a.body, a.t(settings ? "phone_location_settings" : "qibla_allow_location"),
+                    () -> {
+                        if (settings) {
+                            a.phoneUi.system(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.fromParts("package", a.getPackageName(), null)));
+                        } else {
+                            permissionAsked = true;
+                            a.requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION);
+                        }
+                    }).setTag("qibla.location.permission");
+            return;
         }
+        if (!PhoneLocation.usablePrecise(fix, SystemClock.elapsedRealtimeNanos())) {
+            fix = null;
+            if (!locationError.isEmpty()) {
+                a.body.addView(a.views.text(a.t(locationError), 16, a.ink));
+                a.views.button(a.body, a.t("qibla_retry_location"), () -> {
+                    locationError = "";
+                    a.render();
+                }).setTag("qibla.location.retry");
+            } else {
+                a.body.addView(a.views.text(a.t("phone_location_working"), 16, a.muted));
+                if (!locator.running) a.body.post(this::findLocation);
+            }
+            return;
+        }
+        Double target = QiblaRules.INSTANCE.bearing(fix.getLatitude(), fix.getLongitude());
+        if (target == null) {
+            a.body.addView(a.views.text(a.t("qibla_at_kaaba"), 16, a.ink));
+            return;
+        }
+        bearing = target;
+        TextView direction = a.views.text(a.t("qibla_bearing") + " · "
+                + a.phoneUi.digits(String.format(java.util.Locale.US, "%.1f°", bearing)), 20, a.accent);
+        direction.setTag("qibla.bearing");
+        a.body.addView(direction);
         if (mapMode) {
-            renderMap(settings);
+            renderMap(fix);
             return;
         }
         compass = new Compass();
@@ -76,8 +106,8 @@ final class QiblaUi implements SensorEventListener {
         a.body.addView(status);
         declination =
                 new GeomagneticField(
-                                (float) settings.latitude,
-                                (float) settings.longitude,
+                                (float) fix.getLatitude(),
+                                (float) fix.getLongitude(),
                                 0,
                                 System.currentTimeMillis())
                         .getDeclination();
@@ -89,18 +119,26 @@ final class QiblaUi implements SensorEventListener {
                 sensor != null
                         && sensors.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
         if (!registered) status.setText(a.t("qibla_no_sensor"));
-        a.views.navigationRow(
-                a.body, "compass", a.t("phone_choose_location"), "", this::chooseLocation);
     }
 
-    private void chooseLocation() {
-        stop();
-        a.phoneUi.open("calculation");
+    void locationPermissionResult() {
+        if (a.page.equals("qibla")) a.render();
     }
 
-    @android.annotation.SuppressLint("SetJavaScriptEnabled") // Only the bundled CSP-limited map runs scripts.
-    private void renderMap(PhoneStore settings) {
-        a.body.addView(a.views.text(a.t("phone_map_privacy"), 13, a.muted));
+    private void findLocation() {
+        if (!a.phoneForeground || !a.page.equals("qibla") || fix != null || locator.running
+                || !locationError.isEmpty() || !PhoneLocation.preciseAllowed(a)) return;
+        locator.requestPrecise(value -> {
+            fix = value;
+            a.render();
+        }, failure -> {
+            locationError = failure.equals("phone_location_disabled")
+                    ? "qibla_location_disabled" : "qibla_location_unavailable";
+            a.render();
+        });
+    }
+
+    private void renderMap(Location origin) {
         FrameLayout frame =
                 new FrameLayout(a) {
                     @Override
@@ -112,148 +150,151 @@ final class QiblaUi implements SensorEventListener {
                     }
                 };
         frame.setTag("qibla.map.frame");
-        frame.setVisibility(View.GONE);
         a.body.addView(frame, new LinearLayout.LayoutParams(-1, -2));
         status = a.views.text("", 13, a.accent);
         status.setTag("qibla.map.status");
         a.body.addView(status);
-        Button load =
-                a.views.button(
-                        a.body,
-                        a.t("phone_load_map"),
-                        () -> {
-                            if (map != null) {
-                                map.stopLoading();
-                                frame.removeView(map);
-                                map.destroy();
-                                map = null;
-                            }
-                            status.setText("");
-                            frame.setVisibility(View.VISIBLE);
-                            try {
-                                String html =
-                                        QiblaMap.html(
-                                                a,
-                                                settings.latitude,
-                                                settings.longitude,
-                                                a.t("phone_kaaba"),
-                                                a.t("phone_map_zoom_in"),
-                                                a.t("phone_map_zoom_out"),
-                                                a.t("phone_current_location"));
-                                map = new WebView(a) {
-                                    @Override
-                                    public boolean dispatchTouchEvent(MotionEvent event) {
-                                        if (event.getActionMasked() == MotionEvent.ACTION_DOWN)
-                                            getParent().requestDisallowInterceptTouchEvent(true);
-                                        return super.dispatchTouchEvent(event);
-                                    }
-                                };
-                                map.setTag("qibla.map");
-                                map.setContentDescription(
-                                        a.t("phone_qibla") + " · " + a.t("phone_map"));
-                                WebSettings web = map.getSettings();
-                                web.setJavaScriptEnabled(true);
-                                web.setAllowFileAccess(false);
-                                web.setAllowContentAccess(false);
-                                web.setGeolocationEnabled(false);
-                                CookieManager.getInstance().setAcceptThirdPartyCookies(map, false);
-                                web.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-                                web.setUseWideViewPort(true);
-                                web.setLoadWithOverviewMode(true);
-                                web.setTextZoom(100);
-                                web.setUserAgentString(
-                                        web.getUserAgentString()
-                                                + " Miqat/Android"
-                                                + " (+https://github.com/AbdelrahmanHajjaj/MiqatTV)");
-                                map.setBackgroundColor(a.ground);
-                                map.setWebViewClient(
-                                        new WebViewClient() {
-                                            @Override
-                                            public boolean shouldOverrideUrlLoading(
-                                                    WebView view, WebResourceRequest request) {
-                                                if (request.isForMainFrame()
-                                                        && request.hasGesture()
-                                                        && request.getUrl()
-                                                                .toString()
-                                                                .equals(
-                                                                        "https://www.openstreetmap.org/copyright"))
-                                                    try {
-                                                        a.startActivity(
-                                                                new android.content.Intent(
-                                                                        android.content.Intent
-                                                                                .ACTION_VIEW,
-                                                                        request.getUrl()));
-                                                    } catch (
-                                                            android.content
-                                                                            .ActivityNotFoundException
-                                                                    unavailable) {
-                                                        status.setText(
-                                                                a.t("phone_map_unavailable"));
-                                                    }
-                                                return true;
-                                            }
+        Button retry = a.views.button(a.body, a.t("phone_retry_map"), a::render);
+        retry.setTag("qibla.map.retry");
+        loadMap(origin, frame, retry);
+    }
 
-                                            @Override
-                                            public WebResourceResponse shouldInterceptRequest(
-                                                    WebView view, WebResourceRequest request) {
-                                                android.net.Uri uri = request.getUrl();
-                                                if ("https".equals(uri.getScheme())
-                                                        && "tile.openstreetmap.org"
-                                                                .equals(uri.getHost())
-                                                        && uri.getPath() != null
-                                                        && uri.getPath()
-                                                                .matches(
-                                                                        "/(?:[0-9]|1[0-8])/[0-9]+/[0-9]+\\.png"))
-                                                    return null;
-                                                return new WebResourceResponse(
-                                                        "text/plain",
-                                                        "utf-8",
-                                                        new java.io.ByteArrayInputStream(
-                                                                new byte[0]));
-                                            }
+    @android.annotation.SuppressLint("SetJavaScriptEnabled") // Only the bundled CSP-limited map runs scripts.
+    private void loadMap(Location origin, FrameLayout frame, Button retry) {
+        retry.setVisibility(View.GONE);
+        try {
+            String html =
+                    QiblaMap.html(
+                            a,
+                            origin.getLatitude(),
+                            origin.getLongitude(),
+                            a.t("phone_kaaba"),
+                            a.t("phone_map_zoom_in"),
+                            a.t("phone_map_zoom_out"),
+                            a.t("phone_current_location"));
+            map = new WebView(a) {
+                @Override
+                public boolean dispatchTouchEvent(MotionEvent event) {
+                    if (event.getActionMasked() == MotionEvent.ACTION_DOWN)
+                        getParent().requestDisallowInterceptTouchEvent(true);
+                    return super.dispatchTouchEvent(event);
+                }
+            };
+            map.setTag("qibla.map");
+            map.setContentDescription(
+                    a.t("phone_qibla") + " · " + a.t("phone_map"));
+            WebSettings web = map.getSettings();
+            web.setJavaScriptEnabled(true);
+            web.setAllowFileAccess(false);
+            web.setAllowContentAccess(false);
+            web.setGeolocationEnabled(false);
+            CookieManager.getInstance().setAcceptThirdPartyCookies(map, false);
+            web.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+            web.setUseWideViewPort(true);
+            web.setLoadWithOverviewMode(true);
+            web.setTextZoom(100);
+            web.setUserAgentString(
+                    web.getUserAgentString()
+                            + " Miqat/Android"
+                            + " (+https://github.com/AbdelrahmanHajjaj/MiqatTV)");
+            map.setBackgroundColor(a.ground);
+            map.setWebViewClient(
+                    new WebViewClient() {
+                        @Override
+                        public boolean shouldOverrideUrlLoading(
+                                WebView view, WebResourceRequest request) {
+                            if (request.isForMainFrame()
+                                    && request.hasGesture()
+                                    && request.getUrl()
+                                            .toString()
+                                            .equals(
+                                                    "https://www.openstreetmap.org/copyright"))
+                                try {
+                                    a.startActivity(
+                                            new android.content.Intent(
+                                                    android.content.Intent
+                                                            .ACTION_VIEW,
+                                                    request.getUrl()));
+                                } catch (
+                                        android.content
+                                                        .ActivityNotFoundException
+                                                unavailable) {
+                                    status.setText(
+                                            a.t("phone_map_unavailable"));
+                                }
+                            return true;
+                        }
 
-                                            @Override
-                                            public void onReceivedError(
-                                                    WebView view,
-                                                    WebResourceRequest request,
-                                                    WebResourceError error) {
-                                                if (view == map) status.setText(a.t("phone_map_unavailable"));
-                                            }
+                        @Override
+                        public WebResourceResponse shouldInterceptRequest(
+                                WebView view, WebResourceRequest request) {
+                            android.net.Uri uri = request.getUrl();
+                            if ("https".equals(uri.getScheme())
+                                    && "tile.openstreetmap.org"
+                                            .equals(uri.getHost())
+                                    && uri.getPath() != null
+                                    && uri.getPath()
+                                            .matches(
+                                                    "/(?:[0-9]|1[0-8])/[0-9]+/[0-9]+\\.png"))
+                                return null;
+                            return new WebResourceResponse(
+                                    "text/plain",
+                                    "utf-8",
+                                    new java.io.ByteArrayInputStream(
+                                            new byte[0]));
+                        }
 
-                                            @Override
-                                            public void onReceivedHttpError(
-                                                    WebView view,
-                                                    WebResourceRequest request,
-                                                    WebResourceResponse response) {
-                                                if (view == map) status.setText(a.t("phone_map_unavailable"));
-                                            }
-                                        });
-                                frame.addView(map, new FrameLayout.LayoutParams(-1, -1));
-                                map.loadDataWithBaseURL(
-                                        "https://abdelrahmanhajjaj.github.io/MiqatTV/qibla/",
-                                        html,
-                                        "text/html",
-                                        null,
-                                        "https://abdelrahmanhajjaj.github.io/MiqatTV/qibla/");
-                            } catch (RuntimeException unavailable) {
-                                status.setText(a.t("phone_map_unavailable"));
-                            }
-                        });
-        load.setTag("qibla.map.load");
-        a.views.navigationRow(
-                a.body, "compass", a.t("phone_choose_location"), "", this::chooseLocation);
+                        @Override
+                        public void onReceivedError(
+                                WebView view,
+                                WebResourceRequest request,
+                                WebResourceError error) {
+                            if (view == map) mapFailed(retry);
+                        }
+
+                        @Override
+                        public void onReceivedHttpError(
+                                WebView view,
+                                WebResourceRequest request,
+                                WebResourceResponse response) {
+                            if (view == map) mapFailed(retry);
+                        }
+                    });
+            frame.addView(map, new FrameLayout.LayoutParams(-1, -1));
+            String page = "https://abdelrahmanhajjaj.github.io/MiqatTV/qibla/";
+            map.loadDataWithBaseURL(page, html, "text/html", null, page);
+        } catch (RuntimeException unavailable) {
+            mapFailed(retry);
+        }
+    }
+
+    private void mapFailed(Button retry) {
+        status.setText(a.t("phone_map_unavailable"));
+        retry.setVisibility(View.VISIBLE);
     }
 
     void stop() {
+        mapMode = false;
+        locator.close();
+        fix = null;
+        locationError = "";
+        clear();
+    }
+
+    private void clear() {
         if (registered && sensors != null) sensors.unregisterListener(this);
         registered = false;
-        if (map != null) {
-            map.stopLoading();
-            if (map.getParent() instanceof android.view.ViewGroup)
-                ((android.view.ViewGroup) map.getParent()).removeView(map);
-            map.destroy();
-            map = null;
-        }
+        destroyMap();
+    }
+
+    private void destroyMap() {
+        if (map == null) return;
+        WebView previous = map;
+        map = null;
+        previous.stopLoading();
+        if (previous.getParent() instanceof ViewGroup)
+            ((ViewGroup) previous.getParent()).removeView(previous);
+        previous.destroy();
     }
 
     @Override

@@ -100,7 +100,8 @@ the portable fasting rules and revalidates an event at delivery.
 PhoneHome, PhoneLocationUi, PhoneAppearance, PhoneOnboarding and PhoneSound own
 their respective native journeys. PairingUi/TvSettingsUi/TvRemoteUi/TvListUi own
 TV workflows, while transports keep networking/trust separate. QiblaUi owns
-foreground sensors and opt-in, attributed map loading. Its bundled viewport
+foreground sensors and a bounded precise location fix independent of prayer
+settings. Selecting Map loads its attributed viewport, which
 requests only visible tiles and supports pinch zoom and pan. PhoneCalendar maps Hijri
 month and day navigation back to civil dates for the real prayer engine. WidgetUi owns immediate configuration, WidgetOptions per-instance
 presentation, WidgetRenderer native RemoteViews, and PrayerWidget the existing
@@ -110,6 +111,8 @@ initial presentations and styles are independent. The one-cell minimum shows a
 next-prayer tile with adaptive text; larger bounds restore the existing detail.
 Next prayer's initial presentation is one cell. The countdown circle uses a
 fixed two-cell-square provider and draws the remaining interval at each refresh.
+The launcher runs the widget's native second-by-second countdown. One shared
+non-wakeup alarm refreshes widgets at the next prayer boundary when placed.
 PhoneDayOverrides renders each
 weekday's controls in place. Native receiver variants share that provider.
 `PhoneHijriEvents` adapts the canonical recurring event catalog to corrected ICU

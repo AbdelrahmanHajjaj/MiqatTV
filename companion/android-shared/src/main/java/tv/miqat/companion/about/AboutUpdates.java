@@ -57,11 +57,12 @@ public final class AboutUpdates {
     }
 
     @SuppressWarnings("deprecation")
-    public static void show(Activity activity, boolean rtl, Labels labels, Consumer<String> openRelease) {
+    public static void show(Activity activity, AlertDialog.Builder builder, boolean rtl, Labels labels,
+                            Consumer<String> openRelease) {
         if (!available(activity)) return;
         PackageInfo installed = AboutMiqat.packageInfo(activity);
         long installedCode = Build.VERSION.SDK_INT >= 28 ? installed.getLongVersionCode() : installed.versionCode;
-        AlertDialog dialog = new AlertDialog.Builder(activity)
+        AlertDialog dialog = builder
                 .setTitle(labels.title()).setMessage(labels.checking())
                 .setNegativeButton(labels.close(), null)
                 .setPositiveButton(labels.viewRelease(), null).show();

@@ -2,6 +2,10 @@ package tv.miqat.companion;
 
 import android.app.Instrumentation;
 import android.icu.util.IslamicCalendar;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.SystemClock;
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.*;
@@ -12,30 +16,62 @@ final class PhoneCalendarCheck {
 
     static void mapNetwork(Instrumentation test, MainActivity a, boolean capture) throws Exception {
         PhoneStore original = PhoneStore.read(a);
+        LocationManager locations = a.getSystemService(LocationManager.class);
+        String provider = LocationManager.GPS_PROVIDER;
+        boolean installed = false;
         try {
             Map<String, String> fixture = new LinkedHashMap<>();
             fixture.put("prayer.location-ready", "true");
-            fixture.put("prayer.location", "cairo");
-            fixture.put("prayer.latitude", "30.0444");
-            fixture.put("prayer.longitude", "31.2357");
+            fixture.put("prayer.location", "london");
+            fixture.put("prayer.latitude", "51.5074");
+            fixture.put("prayer.longitude", "-0.1278");
             fixture.put("reminders.enabled", "false");
             original.changed(fixture).save(a);
+            PhoneUiCheck.check(PhoneLocation.preciseAllowed(a), "Grant precise location for the Qibla fixture");
+            locations.addTestProvider(provider, false, false, false, false, true, true, true,
+                    android.location.Criteria.POWER_LOW, android.location.Criteria.ACCURACY_FINE);
+            installed = true;
+            locations.setTestProviderEnabled(provider, true);
+            Location current = new Location(provider);
+            current.setLatitude(30.0444);
+            current.setLongitude(31.2357);
+            current.setAccuracy(5);
+            current.setTime(System.currentTimeMillis());
+            current.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+            locations.setTestProviderLocation(provider, current);
             PhoneUiCheck.on(
                     test,
                     () -> {
                         a.navigate("qibla");
-                        a.body.findViewWithTag("qibla.mode.map").performClick();
                         PhoneUiCheck.check(
                                 a.body.findViewWithTag("qibla.map") == null,
-                                "Map loaded before explicit tap");
-                        a.body.findViewWithTag("qibla.map.load").performClick();
+                                "Compass loaded the map");
                     });
+            LiveUiCheck.untilUi(test, () -> a.body.findViewWithTag("qibla.bearing") != null);
+            PhoneUiCheck.on(test, () -> {
+                TextView bearing = a.body.findViewWithTag("qibla.bearing");
+                PhoneUiCheck.check(bearing.getText().toString().contains(a.phoneUi.digits("136.1°")),
+                        "Qibla compass used the saved London prayer city");
+                a.body.findViewWithTag("qibla.mode.map").performClick();
+                PhoneUiCheck.check(a.body.findViewWithTag("qibla.map") != null,
+                        "Selecting Map did not load its viewport");
+            });
             LiveUiCheck.untilUi(
                     test,
                     () -> {
                         android.webkit.WebView map = a.body.findViewWithTag("qibla.map");
                         return map != null && map.getProgress() == 100;
                     });
+            LiveUiCheck.until(() -> {
+                java.util.concurrent.CompletableFuture<String> tiles = new java.util.concurrent.CompletableFuture<>();
+                PhoneUiCheck.on(test, () -> {
+                    android.webkit.WebView map = a.body.findViewWithTag("qibla.map");
+                    map.evaluateJavascript("(() => { const images = [...document.querySelectorAll('#tiles img')];"
+                            + "return images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0); })()",
+                            tiles::complete);
+                });
+                return "true".equals(tiles.get(5, java.util.concurrent.TimeUnit.SECONDS));
+            });
             PhoneUiCheck.on(
                     test,
                     () -> {
@@ -53,7 +89,20 @@ final class PhoneCalendarCheck {
                         PhoneUiCheck.check(
                                 map.getWidth() > 0 && map.getWidth() == map.getHeight(),
                                 "Map viewport must be square so endpoints and attribution fit");
+                        PhoneUiCheck.check(a.body.findViewWithTag("qibla.map.retry").getVisibility() == View.GONE,
+                                "A successful map still shows a load action");
                     });
+            java.util.concurrent.CompletableFuture<String> origin = new java.util.concurrent.CompletableFuture<>();
+            PhoneUiCheck.on(test, () -> {
+                android.webkit.WebView map = a.body.findViewWithTag("qibla.map");
+                map.evaluateJavascript("JSON.parse(document.querySelector('#map').dataset.route)[0][0]",
+                        origin::complete);
+            });
+            double longitude = Double.parseDouble(origin.get(5, java.util.concurrent.TimeUnit.SECONDS)) * 360 - 180;
+            PhoneUiCheck.check(Math.abs(longitude - current.getLongitude()) < 0.0001,
+                    "Map did not start at device longitude");
+            PhoneUiCheck.check(PhoneStore.read(a).value("prayer.location").equals("london"),
+                    "Using Qibla changed the prayer location");
             PhoneUiCheck.capture(test, a, (a.ar ? "ar" : "en") + "-phone-qibla-map", capture);
             PhoneUiCheck.on(
                     test,
@@ -64,6 +113,7 @@ final class PhoneCalendarCheck {
                                 "Map survived leaving its screen");
                     });
         } finally {
+            if (installed) locations.removeTestProvider(provider);
             original.save(a);
             PhoneUiCheck.on(test, a::render);
         }

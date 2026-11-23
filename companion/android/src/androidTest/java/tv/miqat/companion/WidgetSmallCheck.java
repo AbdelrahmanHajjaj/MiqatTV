@@ -204,7 +204,10 @@ final class WidgetSmallCheck {
     private static void text(View view,int id,int edge,String lang,float font) {
         TextView text=view.findViewById(id);
         PhoneUiCheck.check(text.getVisibility()==View.VISIBLE && text.getLayout()!=null && !text.getText().toString().isEmpty(),"Empty small widget text");
-        PhoneUiCheck.check(text.getLayout().getHeight()<=text.getHeight()-text.getCompoundPaddingTop()-text.getCompoundPaddingBottom(),"Clipped widget height: "+edge+" "+lang+" font="+font);
+        PhoneUiCheck.check(text.getLayout().getHeight()<=text.getHeight()-text.getCompoundPaddingTop()-text.getCompoundPaddingBottom(),
+                "Clipped widget height: " + text.getResources().getResourceEntryName(id) + " " + edge
+                        + " " + lang + " font=" + font + " text=" + text.getText()
+                        + " layout=" + text.getLayout().getHeight() + " view=" + text.getHeight());
         PhoneUiCheck.check(text.getLayout().getLineEnd(text.getLayout().getLineCount()-1)>=text.getText().length(),"Widget cut off its last text line");
         for(int line=0;line<text.getLayout().getLineCount();line++)
             PhoneUiCheck.check(text.getLayout().getEllipsisCount(line)==0 && text.getLayout().getLineWidth(line)<=text.getWidth()-text.getCompoundPaddingLeft()-text.getCompoundPaddingRight()+1,"Clipped widget width: "+edge+" "+lang+" font="+font);
