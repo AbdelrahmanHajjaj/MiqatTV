@@ -1,5 +1,18 @@
 # Validation evidence
 
+## Stable v0.7.6 — 23 November 2026
+
+[Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45241591193)
+and [hosted signing](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45242899885)
+passed for source 1e77a51ed754a5640b9a5bba9e6816c32d688666. The published
+tag resolves to that commit. All three downloads match SHA256SUMS and contain
+the 25 approved recordings. The phone APK is 0.5.22/code 38 and the Android TV
+APK is 0.7.4/code 15. Both match the pinned release certificates and package
+identities and are non-debuggable. LG is 0.2.31 and contains the validated
+adhan layout, first-control focus and single Close button. Both website builds
+link to v0.7.6 and all three packages. The final LG layout awaits hardware
+verification.
+
 ## Local review packages — 23 November 2026
 
 Built from `cb948a2`. Phone 0.5.21/code 37 and Android TV 0.7.3/code 14 pass
