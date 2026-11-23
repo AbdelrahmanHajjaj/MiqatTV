@@ -8,8 +8,8 @@ Thursdays.
 The same review build applies the phone's active theme and scene to Android's
 native radio media player.
 
-Next: review the standalone phone build and confirm the calendar and fasting
-settings before merge. Keep website download copy aligned with stable packages.
+Next: publish the approved v0.7.4 bundle with Android phone 0.5.20/code 36 from
+successful main validation. Refresh the bilingual website after publication.
 
 Stable v0.7.3 contains TV 0.7.3/code 14, phone 0.5.19/code 35,
 installer 1.1.5/code 8 and LG 0.2.30. Release builds/lint, focused rejection

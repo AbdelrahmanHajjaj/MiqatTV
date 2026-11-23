@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.7.4 — Android phone 0.5.20
+
 - Android phone adds Quran Radio with a Home popup, quick playback icons, and
   background playback in Android's media controls.
   Adhan pauses radio, and listeners can resume the live station afterward.
