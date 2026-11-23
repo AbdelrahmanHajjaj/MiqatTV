@@ -1,6 +1,6 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-23. Stable v0.7.6 includes phone 0.5.22/code 38 with TV
+Updated: 2026-11-24. Stable v0.7.7 includes phone 0.5.23/code 39 with TV
 setup and recovery, Quran Radio, Hijri ranges, and opt-in day-before,
 suhoor and iftar alerts.
 The phone marks all days of Ramadan and Eid and includes core and common Hijri
