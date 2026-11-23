@@ -1,0 +1,45 @@
+name: Miqat feedback · ملاحظات ميقات
+description: Report a bug, suggest a feature, or share feedback about Miqat.
+labels: [needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue and any attachments will be public. Remove personal details from your report and screenshot.
+
+        سيظهر البلاغ ومرفقاته للجميع. احذف معلوماتك الشخصية من النص ولقطة الشاشة.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category · النوع
+      options:
+        - Bug report · بلاغ عن مشكلة
+        - Feature request · اقتراح ميزة
+        - General feedback · ملاحظات عامة
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform · المنصة
+      options:
+        - Android phone
+        - Android TV / Google TV
+        - LG webOS
+        - Other · أخرى
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version · إصدار التطبيق
+      description: On Android, see Settings → About Miqat. على أندرويد، افتح الإعدادات ← عن ميقات.
+  - type: textarea
+    id: details
+    attributes:
+      label: Details · التفاصيل
+      description: |
+        For bugs, include what you did and what happened. You can attach a screenshot here.
+        عند الإبلاغ عن مشكلة، اذكر الخطوات وما حدث. يمكنك إرفاق لقطة شاشة هنا.
+    validations:
+      required: true

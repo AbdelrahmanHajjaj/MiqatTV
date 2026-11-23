@@ -5,6 +5,7 @@ import android.content.*;
 import android.content.res.ColorStateList;
 import android.graphics.*;
 import android.graphics.drawable.*;
+import android.net.Uri;
 import android.os.*;
 import android.provider.Settings;
 import android.text.InputType;
@@ -13,6 +14,7 @@ import android.widget.*;
 
 import org.json.*;
 
+import tv.miqat.companion.about.AboutMiqat;
 import tv.miqat.companion.core.CompanionContract;
 import tv.miqat.companion.core.SettingSpec;
 
@@ -211,6 +213,8 @@ final class PhoneUi {
             a.languageChoices(group);
             a.views.navigationRow(
                     group, "gear", a.t("setup_again"), "", () -> a.onboarding.open());
+            a.views.navigationRow(group, "gear", a.t(data.actionLabel("about.open")), "",
+                    () -> open("about")).setTag("phone.section.about");
             reset(a.body);
             return;
         }
@@ -239,6 +243,10 @@ final class PhoneUi {
             permissions();
             return;
         }
+        if (a.section.equals("about")) {
+            about();
+            return;
+        }
         if (a.section.equals("audio")) {
             audio();
             return;
@@ -259,6 +267,24 @@ final class PhoneUi {
             locationUi.advancedRow();
             locationUi.confirmLocation();
         }
+    }
+
+    private void about() {
+        TextView version = a.views.text(a.t("aboutVersion") + " \u2066" + AboutMiqat.version(a) + "\u2069", 18, a.ink);
+        version.setTag("phone.about.version");
+        a.body.addView(version);
+        a.body.addView(a.views.text(a.t("aboutDeveloper"), 16, a.ink));
+        a.body.addView(a.views.text(a.t("aboutSadaqah"), 14, a.muted));
+        a.views.button(a.body, a.t(data.actionLabel("about.github")), () -> {
+            try {
+                a.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(AboutMiqat.FEEDBACK_URL)));
+            } catch (ActivityNotFoundException missing) {
+                a.notice("aboutBrowserUnavailable");
+            }
+        }).setTag("phone.about.github");
+        Button email = a.views.button(a.body, a.t(data.actionLabel("about.email")), () -> {});
+        email.setEnabled(false);
+        email.setTag("phone.about.email");
     }
 
     private void fasting() throws Exception {
@@ -409,6 +435,7 @@ final class PhoneUi {
     }
 
     String sectionTitle() {
+        if (a.section.equals("about")) return a.t(data.actionLabel("about.open"));
         if (a.section.startsWith("days:") || a.section.startsWith("day:"))
             return a.t("phone_day_overrides");
         if (a.section.equals("default-audio")) return a.t("phone_default_audio_title");

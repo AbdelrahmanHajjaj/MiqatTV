@@ -508,6 +508,13 @@
     "save": "immediate"
   },
   {
+    "id": "device.about",
+    "section": "device",
+    "kind": "action",
+    "label": "aboutMiqat",
+    "save": "action"
+  },
+  {
     "id": "device.startup",
     "section": "device",
     "kind": "toggle",

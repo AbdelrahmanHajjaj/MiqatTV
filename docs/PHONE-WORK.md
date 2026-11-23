@@ -12,6 +12,10 @@ Unreleased TV setup shows measured download and transfer percentages for both
 platforms. LG continues after first-time SSH approval and can save a passphrase
 with explicit opt-in. See EVIDENCE.md for validation.
 WORK.md owns the next action.
+
+Unreleased About Miqat shows the installed phone app version, developer credit
+and GitHub feedback. Email feedback stays disabled pending a public address.
+
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.
 

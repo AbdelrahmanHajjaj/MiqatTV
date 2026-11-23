@@ -7,7 +7,8 @@
 - LG setup can remember the TV address and encrypt its Developer Mode
   passphrase on the phone. Approving a new TV identity continues the connection
   with the passphrase already entered.
-
+- Android phone and Android TV show the installed version, developer credit and
+  GitHub feedback in About Miqat. Email feedback is disabled until a public address is set.
 - LG webOS silences Miqat's HDMI input during the adhan popup. Older TVs
   also hide the HDMI picture until the popup closes.
 
