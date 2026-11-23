@@ -1,12 +1,14 @@
 """Focused checks for publishing complete APKs from trusted CI results."""
 import copy
+import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 from tools.check_apk_media import check_apk
-from tools.release_source import validate_run
+from tools.release_source import resolve_inputs, validate_run
 
 
 class DeliveryChecks(unittest.TestCase):
@@ -49,3 +51,29 @@ class DeliveryChecks(unittest.TestCase):
                 validate_run(changed, repo, sha, "v0.7.0-preview.1")
         with self.assertRaises(ValueError):
             validate_run(run, repo, sha, "--latest")
+
+    def test_release_defaults_skip_reserved_tags_and_allow_independent_overrides(self):
+        sha, repo = "a" * 40, "owner/MiqatTV"
+        run = {"id": 42, "status": "completed", "conclusion": "success", "head_branch": "main",
+               "head_sha": sha, "path": ".github/workflows/validate.yml", "event": "push",
+               "head_repository": {"full_name": repo}}
+        responses = {
+            "git/ref/heads/main": json.dumps({"object": {"sha": sha}}),
+            "actions/workflows/validate.yml/runs": json.dumps({"workflow_runs": [run]}),
+            "actions/runs/42": json.dumps(run),
+            "releases": "v0.7.6\nv0.7.7-preview.1",
+            "tags": "v0.7.7-preview.2",
+            "releases/latest": "v0.7.6",
+        }
+        with patch("tools.release_source.gh_api", side_effect=lambda endpoint, *_: responses[
+                endpoint.removeprefix(f"repos/{repo}/")]):
+            self.assertEqual(resolve_inputs(repo, sha, "", ""), ("42", "v0.7.7-preview.3"))
+            self.assertEqual(resolve_inputs(repo, sha, "42", ""), ("42", "v0.7.7-preview.3"))
+            self.assertEqual(resolve_inputs(repo, sha, "", "v0.8.0-rc.1"), ("42", "v0.8.0-rc.1"))
+            with self.assertRaisesRegex(ValueError, "already in use"):
+                resolve_inputs(repo, sha, "42", "v0.7.7-preview.2")
+            with self.assertRaisesRegex(ValueError, "Main has moved"):
+                resolve_inputs(repo, "b" * 40, "42", "v0.8.0-rc.1")
+            responses["actions/workflows/validate.yml/runs"] = '{"workflow_runs": []}'
+            with self.assertRaisesRegex(ValueError, "No successful Validate run"):
+                resolve_inputs(repo, sha, "", "")
