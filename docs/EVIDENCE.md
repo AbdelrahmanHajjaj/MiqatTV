@@ -1,5 +1,21 @@
 # Validation evidence
 
+## Stable v0.7.7 — 24 November 2026
+
+[PR #39](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/39) passed its required
+checks before merging. [Validate](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45277597905)
+passed on main `6c94d20` after a site-only verification change superseded the
+original run. The [signing workflow](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45278829809)
+built the draft from that run.
+
+[Miqat v0.7.7](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.7)
+is Latest. It uses the same assets and source commit as the
+[signed preview](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.7-preview.2).
+Verified published asset sizes and SHA-256 digests against the downloaded
+preview, Android package IDs and persistent signing certificates, and all 25
+recordings in each APK. Packages are phone 0.5.23/code 39, Android TV
+0.7.5/code 16 and LG 0.2.32. Physical device installation remains unverified.
+
 ## Circle text scaling — 23 November 2026
 
 On the owned API 37 emulator, selecting 120% in the Circle editor enlarged
