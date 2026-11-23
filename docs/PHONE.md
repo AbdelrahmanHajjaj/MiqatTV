@@ -48,11 +48,34 @@ extra tomorrow-Fajr row. The date opens a Hijri month popup; selecting a day sho
 its calculated prayer times directly beneath the calendar. Done, Back and
 cancellation return to the complete live Home. Browsing does not change alerts.
 
-Events have calendar markers and a month list. Home shows today's event or the
-nearest within three days, without an empty row otherwise. The recurring catalog
-includes Ramadan's start, Eid al-Fitr, Arafah, Eid al-Adha and Ashura. Dates follow
-Umm al-Qura, location timezone and the Hijri adjustment; they are calculated dates,
-not local moon-sighting announcements.
+Events have calendar markers and a month list. Home shows today's observances or
+the next within three days. The calendar numbers each day of Ramadan and marks its
+last ten nights, all three days of Eid al-Fitr, and the Hajj observances from
+Tarwiyah through the Days of Tashriq, including Eid al-Adha. It also marks Hijri New
+Year, Ashura, Mawlid, Isra and Mi'raj, and Mid-Sha'ban. Dates follow the app's
+Umm al-Qura calendar, prayer timezone and Hijri adjustment.
+[Eid al-Fitr](https://sis.gov.eg/en/egypt/society/days-and-occasions/eid-al-fitr/) ·
+[Hajj rites](https://dar-alifta.org/en/article/details/29/overview-of-the-rites-of-hajj-and-umrah)
+
+## Fasting reminders
+
+Open **Settings → Fasting reminders** to enable the reminders you want. All
+three are off initially.
+
+- **Day-before reminder** says **Fasting tomorrow** and shows the upcoming
+  Hijri date. It defaults to 8:00 PM in the prayer location's timezone, and
+  you can choose another time.
+- **Suhoor reminder** defaults to 30 minutes before the phone's calculated
+  Fajr, with a choice from 5 to 120 minutes.
+- **Iftar reminder** arrives at the phone's calculated Maghrib.
+
+Ramadan is selected initially. Ashura, Arafah, the White Days, and Mondays and
+Thursdays are each optional. Overlapping selections send one reminder of each
+enabled type. The first day of Eid al-Fitr and 10–13 Dhul-Hijjah are excluded.
+Fasting uses its own notification channel and works with prayer alerts disabled.
+Confirm the prayer location and allow Android notifications to receive it.
+[Fasting times](https://www.dar-alifta.org/en/fatwa/details/8075/the-beginning-of-the-fasting-hours) ·
+[Eid and Tashriq fasting exclusions](https://www.dar-alifta.org/en/fatwa/details/6288/fasting-on-the-days-of-tashreeq)
 
 ## Prayer alerts
 
@@ -142,6 +165,9 @@ to reopen the Home popup. Pause closes the stream and keeps the station
 selected. Play reconnects to the live broadcast. Android may keep the
 player pinned while it is playing. Use **Stop radio** to end the session,
 or pause and dismiss the player where Android offers that action.
+The player uses the current phone theme and background as its artwork. Changes
+in **Settings → Appearance** refresh the artwork during playback. Android
+chooses its crop, tint and placement.
 
 Radio tries to reconnect after a stall. If the popup shows **Station unavailable**,
 the stream is closed. Tap **Play** to try the same station again.

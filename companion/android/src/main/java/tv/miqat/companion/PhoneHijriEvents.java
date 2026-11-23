@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import tv.miqat.companion.core.HijriEvent;
 import tv.miqat.companion.core.HijriEvents;
 
@@ -29,14 +30,21 @@ final class PhoneHijriEvents {
             JSONArray catalog = PhoneData.get(context).source.getJSONArray("hijriEvents");
             List<HijriEvent> dates = dates(catalog);
             IslamicCalendar date = PhoneCalendar.calendar(settings, stamp, ar);
-            String id = HijriEvents.INSTANCE.find(dates,
-                    date.get(android.icu.util.Calendar.MONTH) + 1,
-                    date.get(android.icu.util.Calendar.DATE));
-            if (id != null)
+            int day = date.get(android.icu.util.Calendar.DATE);
+            List<String> labels = new ArrayList<>();
+            for (HijriEvent match : HijriEvents.INSTANCE.onDay(dates,
+                    date.get(android.icu.util.Calendar.MONTH) + 1, day))
                 for (int i = 0; i < catalog.length(); i++) {
                     JSONObject event = catalog.getJSONObject(i);
-                    if (id.equals(event.getString("id"))) return event.getString(ar ? "ar" : "en");
+                    if (!match.getId().equals(event.getString("id"))) continue;
+                    String label = String.format(Locale.ROOT, event.getString(ar ? "ar" : "en"),
+                            day - match.getDay() + 1);
+                    String digits = settings.value("display.digits");
+                    labels.add(tv.miqat.core.DisplayText.INSTANCE.digits(
+                            label, digits.equals("eastern") || digits.equals("auto") && ar));
+                    break;
                 }
+            return String.join(" · ", labels);
         } catch (Exception unavailable) {
             android.util.Log.w("MiqatCalendar", "Hijri event catalog unavailable", unavailable);
         }
@@ -47,7 +55,9 @@ final class PhoneHijriEvents {
         List<HijriEvent> dates = new ArrayList<>();
         for (int i = 0; i < catalog.length(); i++) {
             JSONObject event = catalog.getJSONObject(i);
-            dates.add(new HijriEvent(event.getString("id"), event.getInt("month"), event.getInt("day")));
+            int day = event.getInt("day");
+            dates.add(new HijriEvent(event.getString("id"), event.getInt("month"), day,
+                    event.optInt("lastDay", day)));
         }
         return dates;
     }

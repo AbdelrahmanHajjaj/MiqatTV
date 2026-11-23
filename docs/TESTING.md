@@ -198,6 +198,8 @@ Use `-e case alarm-route` for Arabic and the alarm audio route,
 `-e case offline` to verify bounded retries, failed-state controls and a
 single-tap restart after the server recovers, or
 `-e case dismiss` for paused media-card dismissal in Android Quick Settings.
+Use `-e case artwork -e capture true` to verify live theme and scene updates on
+the same playing session and capture the native media controls.
 Run `-e case cairo` and `-e case qatar` separately for live MP3 and HLS
 playback. These two checks depend on the broadcasters and internet access.
 
@@ -307,6 +309,15 @@ closing by Done, actual Android Back or cancellation. Each path must expose toda
 full hero/countdown/tools and actual prayer times. The bilingual phone UI suite
 runs the same regression alongside calendar month/event/timezone tests. Calendar
 browsing stays inside the popup and no longer persists another date on Home.
+
+`phone-fasting` checks Hijri observance ranges and bilingual Settings controls on
+an owned emulator. It verifies that a day-before reminder arms on its own, follows
+the chosen local time and expires at midnight. It claims all three reminders at
+simulated due times, checks their Android notification channel and confirms
+cancellation when the last fasting choice is turned off. Pass `-e capture true`
+to capture the actual notification shade. Portable tests cover overlap, fasting
+exclusions and the Monday/Thursday option.
+
 The hosted-widget journey checks strip date toggles independently, modern/legacy
 bounds and full-height unclipped columns at small sizes and enlarged text. Refresh
 native bilingual picker PNGs whenever their XML or generated sample times change.

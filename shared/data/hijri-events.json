@@ -1,7 +1,14 @@
 [
+  {"id":"new-year","month":1,"day":1,"en":"Hijri New Year","ar":"رأس السنة الهجرية"},
   {"id":"ashura","month":1,"day":10,"en":"Ashura","ar":"عاشوراء"},
-  {"id":"ramadan","month":9,"day":1,"en":"Ramadan begins","ar":"بداية رمضان"},
-  {"id":"eid-fitr","month":10,"day":1,"en":"Eid al-Fitr","ar":"عيد الفطر"},
+  {"id":"mawlid","month":3,"day":12,"en":"Mawlid","ar":"المولد النبوي"},
+  {"id":"isra-miraj","month":7,"day":27,"en":"Isra and Mi’raj","ar":"الإسراء والمعراج"},
+  {"id":"mid-shaban","month":8,"day":15,"en":"Mid-Sha’ban","ar":"النصف من شعبان"},
+  {"id":"ramadan","month":9,"day":1,"lastDay":30,"en":"Day %d of Ramadan","ar":"اليوم %d من رمضان"},
+  {"id":"ramadan-last-nights","month":9,"day":21,"lastDay":30,"en":"Last nights of Ramadan","ar":"العشر الأواخر من رمضان"},
+  {"id":"eid-fitr","month":10,"day":1,"lastDay":3,"en":"Eid al-Fitr · Day %d","ar":"عيد الفطر · اليوم %d"},
+  {"id":"tarwiyah","month":12,"day":8,"en":"Day of Tarwiyah","ar":"يوم التروية"},
   {"id":"arafah","month":12,"day":9,"en":"Day of Arafah","ar":"يوم عرفة"},
-  {"id":"eid-adha","month":12,"day":10,"en":"Eid al-Adha","ar":"عيد الأضحى"}
+  {"id":"eid-adha","month":12,"day":10,"lastDay":13,"en":"Eid al-Adha · Day %d","ar":"عيد الأضحى · اليوم %d"},
+  {"id":"tashriq","month":12,"day":11,"lastDay":13,"en":"Days of Tashriq","ar":"أيام التشريق"}
 ]

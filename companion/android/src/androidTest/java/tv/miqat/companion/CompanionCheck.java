@@ -23,7 +23,7 @@ public final class CompanionCheck extends Instrumentation {
     String presentation = "";
     String backgroundSuite = "";
     boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary, phoneAudioRoute, setupLocation, widgetSmall;
-    boolean mapNetwork;
+    boolean mapNetwork, phoneFasting;
     String radio = "";
     boolean journey,
             customCheck,
@@ -60,6 +60,7 @@ public final class CompanionCheck extends Instrumentation {
         widgetSmall = suite.equals("widget-small");
         if (suite.equals("phone-presentation")) presentation = arguments.getString("case","all");
         calendarReturn = suite.equals("phone-calendar-return");
+        phoneFasting = suite.equals("phone-fasting");
         journey = suite.equals("phone-journey");
         customCheck = suite.equals("phone-custom");
         releaseCheck = suite.equals("public-release");
@@ -141,6 +142,12 @@ public final class CompanionCheck extends Instrumentation {
             if (calendarReturn) {
                 PhoneCalendarCheck.returnsHome(this);
                 result.putString("stream", "PASS: calendar Done, Back and cancellation return to live Home\n");
+                finish(-1, result);
+                return;
+            }
+            if (phoneFasting) {
+                PhoneFastingCheck.run(this, captures);
+                result.putString("stream", "PASS: Hijri observance ranges and independent fasting reminders\n");
                 finish(-1, result);
                 return;
             }

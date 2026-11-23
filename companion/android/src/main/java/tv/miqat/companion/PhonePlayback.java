@@ -252,7 +252,7 @@ public final class PhonePlayback extends Service {
                 });
         updateMediaState(0);
         media.setActive(true);
-        artwork = new AdhanArtwork(this, settings).cover();
+        artwork = new PhoneMediaArtwork(this, settings).cover();
         media.setMetadata(
                 new MediaMetadata.Builder()
                         .putString(MediaMetadata.METADATA_KEY_TITLE, title(settings))

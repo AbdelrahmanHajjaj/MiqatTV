@@ -9,6 +9,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -74,11 +77,20 @@ public final class PhoneRadio extends Service {
     private JSONObject station;
     private Uri session;
     private MediaSession media;
+    private Bitmap artwork;
+    private int artworkColor = Notification.COLOR_DEFAULT;
+    private String artworkSelection = "";
     private AudioFocusRequest focus;
     private MediaPlayer player;
     private int retries, focusGeneration;
     private boolean foreground;
     private long lastNotice;
+    private final SharedPreferences.OnSharedPreferenceChangeListener appearanceChanged = (prefs, key) -> {
+        if (media != null && (key == null || key.equals("settings")) && updateArtwork()) {
+            updateMetadata();
+            scheduleNotice();
+        }
+    };
     private final BroadcastReceiver noisy = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) pause();
@@ -141,6 +153,7 @@ public final class PhoneRadio extends Service {
 
     @Override public void onCreate() {
         super.onCreate();
+        PhoneStore.preferences(this).registerOnSharedPreferenceChangeListener(appearanceChanged);
         IntentFilter filter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(noisy, filter, Context.RECEIVER_NOT_EXPORTED);
         else registerReceiver(noisy, filter);
@@ -186,9 +199,8 @@ public final class PhoneRadio extends Service {
             session = Uri.fromParts("miqat-radio", UUID.randomUUID().toString(), null);
             media = new MediaSession(this, "Miqat radio");
             media.setPlaybackToLocal(ATTRIBUTES);
-            media.setMetadata(new MediaMetadata.Builder()
-                    .putString(MediaMetadata.METADATA_KEY_TITLE, stationName(station, PhoneAlarms.arabic(this)))
-                    .putString(MediaMetadata.METADATA_KEY_ARTIST, PhoneAlarms.text(this, "phone_radio")).build());
+            updateArtwork();
+            updateMetadata();
             media.setSessionActivity(openPlayer());
             MediaSession owner = media;
             media.setCallback(new MediaSession.Callback() {
@@ -320,15 +332,44 @@ public final class PhoneRadio extends Service {
 
     private void publish() {
         updateMedia();
+        scheduleNotice();
+        MainActivity.refreshRadio();
+    }
+
+    private void scheduleNotice() {
         // Coalesce rapid player and Adhan transitions so SystemUI retains the latest action.
         handler.removeCallbacks(updateNotice);
         handler.postAtTime(updateNotice, Math.max(SystemClock.uptimeMillis(), lastNotice + 650));
-        MainActivity.refreshRadio();
     }
 
     private void postNotification() {
         getSystemService(NotificationManager.class).notify(NOTIFICATION, notification());
         lastNotice = SystemClock.uptimeMillis();
+    }
+
+    private boolean updateArtwork() {
+        try {
+            PhoneStore settings = PhoneStore.read(this);
+            String theme = settings.value("appearance.theme");
+            String selection = theme + "/" + settings.value("appearance.background");
+            if (selection.equals(artworkSelection)) return false;
+            int color = Color.parseColor(settings.data.colors(theme).getString("lapis-900"));
+            artwork = PhoneMediaArtwork.radioCover(this, settings);
+            artworkColor = color;
+            artworkSelection = selection;
+            return true;
+        } catch (Exception unavailable) {
+            android.util.Log.w("MiqatRadio", "Selected media artwork unavailable", unavailable);
+            return false;
+        }
+    }
+
+    private void updateMetadata() {
+        MediaMetadata.Builder metadata = new MediaMetadata.Builder()
+                .putString(MediaMetadata.METADATA_KEY_TITLE, stationName(station, PhoneAlarms.arabic(this)))
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, PhoneAlarms.text(this, "phone_radio"));
+        if (artwork != null) metadata.putBitmap(MediaMetadata.METADATA_KEY_ART, artwork);
+        media.setMetadata(metadata.build());
     }
 
     private void updateMedia() {
@@ -358,7 +399,9 @@ public final class PhoneRadio extends Service {
                 .setOnlyAlertOnce(true)
                 .setShowWhen(false)
                 .setCategory(Notification.CATEGORY_TRANSPORT)
+                .setColor(artworkColor)
                 .setStyle(style);
+        if (artwork != null) notice.setLargeIcon(artwork);
         if (Build.VERSION.SDK_INT >= 31)
             notice.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE);
         if (transport)
@@ -390,6 +433,9 @@ public final class PhoneRadio extends Service {
         releaseFocus();
         media.release();
         media = null;
+        artwork = null;
+        artworkColor = Notification.COLOR_DEFAULT;
+        artworkSelection = "";
         station = null;
         session = null;
         state = State.PAUSED;
@@ -401,6 +447,7 @@ public final class PhoneRadio extends Service {
     }
 
     @Override public void onDestroy() {
+        PhoneStore.preferences(this).unregisterOnSharedPreferenceChangeListener(appearanceChanged);
         unregisterReceiver(noisy);
         clearSession();
         super.onDestroy();

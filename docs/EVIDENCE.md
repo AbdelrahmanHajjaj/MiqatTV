@@ -1,5 +1,34 @@
 # Validation evidence
 
+## Radio media artwork — 23 November 2026
+
+The phone debug and instrumentation APKs build and lint cleanly with zero
+errors. On the API 37 phone emulator, changing theme and background separately
+updates the already playing radio session. Android Quick Settings renders the
+Forest theme with and without the Tea Hills scene, with the station, Pause and
+Stop visible. The loopback playback/Adhan and paused dismissal cases pass.
+Media card rendering on older Android versions and physical phones remains
+unverified.
+
+## Phone Hijri observances and fasting reminders — 23 November 2026
+
+Phone debug and instrumentation APKs build. Android lint reports zero errors
+and 39 warnings. All 23 companion JVM and 13 phone generator tests pass, along
+with shared source validation. The phone is the only Hijri catalog consumer.
+
+The focused bilingual check on the API 37 phone emulator covers every day of
+the tested Ramadan month, the third day of Eid al-Fitr, and the overlapping
+Eid al-Adha and Tashriq labels. The Settings switches save correctly in English
+and Arabic, with the suhoor offset visible and RTL controls in the Arabic
+capture. With other alerts off, a Monday fast arms its day-before notice for
+Sunday at 8:00 PM in the prayer timezone. Moving it to 11:59 PM reschedules it,
+and a claim after midnight is rejected. All three reminders post on the fasting
+channel using simulated due times. The actual English and Arabic notification
+shade captures show the fast's Hijri date, Fajr and Maghrib. Duplicate claims,
+turning off the last fasting choice, and the existing migration/audio scheduling
+regression also pass.
+Real-time fasting notification delivery and physical phones remain unverified.
+
 ## Phone Quran Radio — 23 November 2026
 
 Debug phone and instrumentation APKs build. Android lint reports zero errors

@@ -6,13 +6,21 @@ import android.graphics.drawable.*;
 
 import org.json.JSONObject;
 
-/** Selected scene and canonical arch, shared by the optional screen and media artwork. */
-final class AdhanArtwork extends LayerDrawable {
-    AdhanArtwork(Context context, PhoneStore settings) throws Exception {
-        super(layers(context, settings));
+/** Selected phone scene and canonical arch for the Adhan screen and media sessions. */
+final class PhoneMediaArtwork extends LayerDrawable {
+    PhoneMediaArtwork(Context context, PhoneStore settings) throws Exception {
+        this(context, settings, false);
     }
 
-    private static Drawable[] layers(Context context, PhoneStore settings) throws Exception {
+    private PhoneMediaArtwork(Context context, PhoneStore settings, boolean systemShade) throws Exception {
+        super(layers(context, settings, systemShade));
+    }
+
+    static Bitmap radioCover(Context context, PhoneStore settings) throws Exception {
+        return new PhoneMediaArtwork(context, settings, true).cover();
+    }
+
+    private static Drawable[] layers(Context context, PhoneStore settings, boolean systemShade) throws Exception {
         JSONObject colors = settings.data.colors(settings.value("appearance.theme"));
         int ground = Color.parseColor(colors.getString("lapis-900"));
         int accent = Color.parseColor(colors.getString("gold-400"));
@@ -24,12 +32,15 @@ final class AdhanArtwork extends LayerDrawable {
             android.util.Log.w("MiqatArtwork", "Selected background unavailable", unavailable);
         }
         Drawable scene = photo == null ? new ColorDrawable(ground) : new PhoneBackdrop(photo);
+        // Android's media card applies its own contrast scrim over this bitmap.
+        int topShade = systemShade ? 0x22000000 : 0x55000000;
+        int bottomShade = systemShade ? 0x55000000 : 0xbb000000;
         return new Drawable[] {
             new ColorDrawable(ground),
             scene,
             new GradientDrawable(
                     GradientDrawable.Orientation.TOP_BOTTOM,
-                    new int[] {(ground & 0xffffff) | 0x55000000, (ground & 0xffffff) | 0xbb000000}),
+                    new int[] {(ground & 0xffffff) | topShade, (ground & 0xffffff) | bottomShade}),
             new Arch(ground, accent)
         };
     }

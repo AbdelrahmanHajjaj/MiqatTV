@@ -1,14 +1,15 @@
 # Current work
 
-Updated: 2026-11-23. Approved scope: add standalone phone Quran Radio in
-`feat/phone-radio`. The phone uses the shared stations in a Home popup with
-quick playback icons and Android's system media player. Adhan pauses radio,
-and resuming requires Play. Radio shows buffering, retries an interrupted
-stream and restores Play if the station remains unavailable.
+Updated: 2026-11-23. Quran Radio was approved and merged in PR #22.
+Current scope in `feat/phone-hijri-reminders`: core and common Hijri
+observances, every day of Ramadan and Eid, and opt-in day-before, suhoor and
+iftar reminders for Ramadan, selected voluntary Hijri fasts, and Mondays and
+Thursdays.
+The same review build applies the phone's active theme and scene to Android's
+native radio media player.
 
-Next: review the radio change and check notification behavior on an older
-supported Android version. Keep the website download copy aligned with the
-stable packages until a release includes radio.
+Next: review the standalone phone build and confirm the calendar and fasting
+settings before merge. Keep website download copy aligned with stable packages.
 
 Stable v0.7.3 contains TV 0.7.3/code 14, phone 0.5.19/code 35,
 installer 1.1.5/code 8 and LG 0.2.30. Release builds/lint, focused rejection

@@ -1,9 +1,9 @@
 package tv.miqat.companion.core
 
 /** Recurring dates come from the canonical catalog; the shell supplies its corrected Hijri day. */
-data class HijriEvent(val id: String, val month: Int, val day: Int) {
+data class HijriEvent(val id: String, val month: Int, val day: Int, val lastDay: Int = day) {
     init {
-        require(id.isNotBlank() && month in 1..12 && day in 1..30)
+        require(id.isNotBlank() && month in 1..12 && day in 1..30 && lastDay in day..30)
     }
 }
 
@@ -12,7 +12,12 @@ object HijriEvents {
 
     fun find(events: List<HijriEvent>, month: Int, day: Int): String? {
         require(month in 1..12 && day in 1..30)
-        return events.firstOrNull { it.month == month && it.day == day }?.id
+        return events.firstOrNull { it.month == month && day in it.day..it.lastDay }?.id
+    }
+
+    fun onDay(events: List<HijriEvent>, month: Int, day: Int): List<HijriEvent> {
+        require(month in 1..12 && day in 1..30)
+        return events.filter { it.month == month && day in it.day..it.lastDay }
     }
 
     /** The shell supplies chronological corrected [month, day] pairs, beginning with today. */

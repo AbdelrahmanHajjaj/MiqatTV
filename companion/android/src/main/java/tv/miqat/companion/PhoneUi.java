@@ -193,7 +193,7 @@ final class PhoneUi {
         if (a.section.isEmpty()) {
             LinearLayout group = a.views.navigationGroup(a.body);
             for (String section :
-                    new String[] {"calculation", "audio", "appearance", "permissions"})
+                    new String[] {"calculation", "audio", "fasting", "appearance", "permissions"})
                 a.views
                         .navigationRow(
                                 group,
@@ -243,6 +243,10 @@ final class PhoneUi {
             audio();
             return;
         }
+        if (a.section.equals("fasting")) {
+            fasting();
+            return;
+        }
         if (a.section.equals("calculation")) locationUi.locationEditor();
         if (a.section.equals("appearance")) appearance.editor(a.body, false);
         for (JSONObject c : data.controls.values())
@@ -255,6 +259,31 @@ final class PhoneUi {
             locationUi.advancedRow();
             locationUi.confirmLocation();
         }
+    }
+
+    private void fasting() throws Exception {
+        control(data.controls.get("fasting.eve"));
+        if (settings.value("fasting.eve").equals("true"))
+            control(data.controls.get("fasting.eve-time"));
+        control(data.controls.get("fasting.suhoor"));
+        if (settings.value("fasting.suhoor").equals("true"))
+            control(data.controls.get("fasting.suhoor-minutes"));
+        control(data.controls.get("fasting.iftar"));
+        a.body.addView(a.views.heading(a.t("phone_fasting_days")));
+        for (String id : new String[] {"ramadan", "ashura", "arafah", "white-days", "monday-thursday"})
+            control(data.controls.get("fasting." + id));
+        if (!PhoneFasting.preferences(settings).getEnabled()) return;
+        if (!settings.locationReady)
+            a.views.button(a.body, a.t("phone_location_needed"), () -> open("calculation"));
+        if (!PhoneAlarms.notifications(a))
+            a.views.button(a.body, a.t("phone_permission_notifications"), this::requestNotifications);
+        else if (!PhoneAlarms.channel(a, PhoneAlarms.FASTING))
+            a.views.button(a.body, a.t("phone_channel_settings"), () -> system(
+                    new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, a.getPackageName())
+                            .putExtra(Settings.EXTRA_CHANNEL_ID, PhoneAlarms.FASTING)));
+        if (!PhoneAlarms.exact(a))
+            a.views.button(a.body, a.t("phone_permission_exact"), this::requestExact);
     }
 
     private void prayerRows() throws Exception {
@@ -408,7 +437,7 @@ final class PhoneUi {
             return a.t("phone_custom");
         }
         if (id.equals("quiet.mode")) return a.t("phone_" + value);
-        if (id.equals("quiet.start") || id.equals("quiet.end")) {
+        if (id.equals("quiet.start") || id.equals("quiet.end") || id.equals("fasting.eve-time")) {
             int minute = Integer.parseInt(value), hour = minute / 60;
             return digits(
                     settings.value("display.clock").equals("12")
