@@ -12,7 +12,6 @@ flowchart TD
   Core --> Phone[Android phone: Java Views]
   PhoneCore[companion/core: settings and phone event rules] --> Phone
   Installer[installer/runtime: guarded Android TV setup] --> Phone
-  Installer --> Standalone[Standalone installer host]
   Sources[shared/data and shared/design] --> Generators[Validation and generation]
   Generators --> Core
   Generators --> Android
@@ -32,7 +31,7 @@ flowchart TD
 | companion/core | Portable settings drafts/session contracts and phone event planning. |
 | companion/android | Independent prayer UI, alerts/media, location/sensors/widgets, and TV setup/control. |
 | companion/android-shared | Native Android LAN trust/transport and QR helpers. |
-| installer | Shared Android ADB setup/recovery library and standalone installer host. |
+| installer | Android TV setup and recovery library used by Miqat Phone. |
 
 Core accepts explicit inputs and returns decisions. It has no platform, network,
 storage, renderer or clock dependency. The JVM artifact is tv.miqat:core; JS
@@ -74,10 +73,8 @@ TV shells own rendering, persistence and LAN transport. See [protocol boundaries
 and [companion delivery history](COMPANION-WORK.md).
 
 The Android companion also hosts `installer/runtime` through a private setup
-activity. The standalone installer uses that same implementation. Installation
-credentials/recovery records live in the hosting app's private storage, separately
-from ordinary companion LAN credentials; the two installed apps do not share
-private files. LG phone setup uses its own foreground SSH transport, explicit
+activity. Installation credentials and recovery records live in the phone
+app’s private storage, separately from ordinary companion LAN credentials. LG phone setup uses its own foreground SSH transport, explicit
 host-key approval and local IPK verification; keys/passphrases remain session-only.
 Current approved work is sequenced in [WORK.md](WORK.md).
 

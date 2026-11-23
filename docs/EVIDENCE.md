@@ -1,5 +1,14 @@
 # Validation evidence
 
+## Standalone installer retirement — 23 November 2026
+
+Miqat Phone and Android TV debug/release APKs build. Phone debug/release lint
+and instrumentation APK compilation pass. The phone release manifest contains
+the private setup activity and its ordinary phone launcher. Both release APKs
+contain all 25 exact approved recordings. Workflow lint, canonical checks and
+root Python/Java regressions pass. Physical TV setup and hosted package signing
+were outside this check.
+
 ## Stable v0.7.4 — 23 November 2026
 
 [Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45201856829)

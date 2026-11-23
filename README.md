@@ -67,7 +67,6 @@ See the next prayer across the room, hear the Adhan and listen to Quran radio on
 | `miqat-phone.apk` | Android phone app, including TV companion/setup mode. |
 | `miqat.apk` | Android TV app. |
 | `tv.miqat.webos_…_all.ipk` | LG webOS app and service. |
-| `miqat-installer.apk` | Optional standalone Android TV setup/recovery tool; the phone app includes the same runtime. |
 
 In the phone app's TV setup, choose **Stable** for the current release.
 Android APKs use persistent release keys. Moving from an older debug-signed build

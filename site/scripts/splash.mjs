@@ -12,7 +12,6 @@ for (const [input, output, width, height] of [
   ['miqat-tv-icon-source.png', 'platforms/webos/app/icon.png', 80, 80],
   ['miqat-tv-icon-source.png', 'platforms/webos/app/icon-large.png', 130, 130],
   ['miqat-tv-icon-source.png', 'platforms/android-tv/src/main/res/drawable-nodpi/miqat_icon.png', 512, 512],
-  ['miqat-tv-icon-source.png', 'installer/src/main/res/drawable-nodpi/miqat_icon.png', 512, 512],
   ['miqat-tv-splash-1920x1080.png', 'platforms/android-tv/src/main/res/drawable-nodpi/miqat_splash.png', 1280, 720],
   ['miqat-tv-splash-1920x1080.png', 'platforms/android-tv/src/main/res/drawable-xhdpi/miqat_banner.png', 320, 180],
   ['miqat-tv-icon-source.png', 'site/public/branding/icon.png', 130, 130],

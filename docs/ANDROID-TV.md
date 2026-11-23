@@ -29,7 +29,7 @@ From the repository root, with JDK 17, Node 24 and Android SDK 34 installed:
 Set `ANDROID_HOME` to the installed SDK for this standalone build, or use an ignored
 `platforms/android-tv/local.properties`. It consumes only this project, `shared/`,
 reviewed shared recordings under `shared/media/`, and the root Gradle wrapper. It does
-not configure the phone installer, preview or LG project. The output remains
+not configure the phone app, preview or LG project. The output remains
 `platforms/android-tv/build/outputs/apk/debug/app-debug.apk`, with a strict 25 MB limit.
 The new Miqat package installs fresh. Retain its signing key for subsequent updates.
 
@@ -42,7 +42,7 @@ runtime dependency. The full upstream MIT notice and source reference stay packa
 The repository's aggregate build keeps the existing task names:
 
 ```sh
-./gradlew :app:assembleDebug :installer:assembleDebug --no-daemon
+./gradlew :app:assembleDebug :companion:assembleDebug --no-daemon
 python3 -S -B -m unittest discover -s tests -v
 ```
 

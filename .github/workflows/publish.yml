@@ -83,7 +83,6 @@ jobs:
           printf '%s' "$MIQAT_SIGNING_KEYSTORE_BASE64" | base64 --decode > "$key"
           mkdir -p state/unsigned-release state/release
           cp state/downloads/android/miqat-release-unsigned.apk state/unsigned-release/miqat.apk
-          cp state/downloads/android/miqat-installer-release-unsigned.apk state/unsigned-release/miqat-installer.apk
           cp state/downloads/phone/companion-release-unsigned.apk state/unsigned-release/miqat-phone.apk
           tools="$ANDROID_HOME/build-tools/35.0.0"
           while read -r filename alias; do
@@ -92,7 +91,7 @@ jobs:
               --ks-pass env:MIQAT_SIGNING_PASSWORD --key-pass env:MIQAT_SIGNING_PASSWORD \
               --out "state/release/$filename" "$RUNNER_TEMP/aligned-$filename"
           done < <(python3 -c 'import json; c=json.load(open("tools/release-certificates.json")); [print(name, entry["alias"]) for name, entry in c.items()]')
-          python3 tools/check_android_release.py "$tools" state/release/miqat.apk state/release/miqat-phone.apk state/release/miqat-installer.apk
+          python3 tools/check_android_release.py "$tools" state/release/miqat.apk state/release/miqat-phone.apk
       - name: Remove temporary signing material
         if: always()
         run: rm -f "$RUNNER_TEMP/miqat-release.keystore"
@@ -101,18 +100,18 @@ jobs:
           cp state/downloads/webos/*.ipk state/release/
           python3 tools/check_apk_media.py state/release/miqat.apk
           python3 tools/check_apk_media.py state/release/miqat-phone.apk
-          (cd state/release && sha256sum -- miqat.apk miqat-installer.apk miqat-phone.apk ./*.ipk > SHA256SUMS)
+          (cd state/release && sha256sum -- miqat.apk miqat-phone.apk ./*.ipk > SHA256SUMS)
           cat > state/release-notes.md <<EOF
-          Miqat preview builds for Android phones, Android TV / Google TV and LG webOS, plus the optional standalone TV installer.
+          Miqat preview builds for Android phones, Android TV / Google TV and LG webOS.
 
           Validation: https://github.com/$GITHUB_REPOSITORY/actions/runs/$RUN_ID
 
           Android APKs are release builds signed with persistent Miqat keys. Moving from an older debug-signed preview requires a fresh install once; future releases retain their signing identity.
 
-          SHA256SUMS covers all four packages. Source: $GITHUB_SHA.
+          SHA256SUMS covers both APKs and the LG IPK. Source: $GITHUB_SHA.
           EOF
       - name: Create a draft; do not publish a stable release
         run: |
-          gh release create "$RELEASE_TAG" state/release/miqat.apk state/release/miqat-installer.apk state/release/miqat-phone.apk state/release/*.ipk state/release/SHA256SUMS \
+          gh release create "$RELEASE_TAG" state/release/miqat.apk state/release/miqat-phone.apk state/release/*.ipk state/release/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --prerelease \
             --title "Miqat $RELEASE_TAG" --notes-file state/release-notes.md

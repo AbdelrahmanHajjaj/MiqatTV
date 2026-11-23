@@ -1,8 +1,7 @@
 # Releases
 
-[Validate](CI.md) builds the Android phone app, Android TV, the optional standalone
-installer and LG webOS. The phone includes standalone prayers and TV companion
-mode. Each main commit must pass its applicable core, Android build/lint, LG and
+[Validate](CI.md) builds Miqat for Android phones, Android TV and LG webOS.
+The phone includes standalone prayers and TV companion mode. Each main commit must pass its applicable core, Android build/lint, LG and
 website checks before its artifacts can enter the draft publication workflow.
 
 ## Create a draft
@@ -13,14 +12,13 @@ website checks before its artifacts can enter the draft publication workflow.
 3. Inspect the draft assets and SHA256SUMS, source commit, validation link and
    signing configuration before publication.
 
-The draft contains four packages and their SHA256SUMS:
+The draft contains three packages and their SHA256SUMS:
 
 | Asset | Purpose |
 | --- | --- |
 | `miqat-phone.apk` | Standalone Android prayers and optional TV companion/setup mode. |
 | `miqat.apk` | Android TV / Google TV launcher. |
 | `tv.miqat.webos_<version>_all.ipk` | LG webOS app and service. |
-| `miqat-installer.apk` | Optional standalone Android TV setup/recovery host. |
 
 All come from the same successful current-main Validate run. Validation compiles
 and lints the Android release variants, then the publisher signs those unsigned
@@ -39,7 +37,7 @@ An installed copy of the same signed preview needs no reinstall.
 
 ## Persistent Android signing
 
-Phone, Android TV and installer have separate RSA release keys in one encrypted
+The phone and Android TV APKs use separate RSA release keys in one encrypted
 PKCS12 keystore. `tools/release-certificates.json` records only public certificate
 fingerprints, aliases and package IDs. Preserve these identities for updates.
 
@@ -62,7 +60,7 @@ recovery. Never commit, upload as an artifact, or paste its contents into chat.
 For a local release build:
 
 ```sh
-./gradlew :app:assembleRelease :installer:assembleRelease :companion:assembleRelease --no-daemon
+./gradlew :app:assembleRelease :companion:assembleRelease --no-daemon
 ```
 
 These outputs are unsigned under each module's `build/outputs/apk/release/`.
@@ -71,11 +69,11 @@ Pass `--ks state/signing/miqat-release.keystore`, the matching `--ks-key-alias`
 from the public certificate file, and both `--ks-pass env:MIQAT_SIGNING_PASSWORD`
 and `--key-pass env:MIQAT_SIGNING_PASSWORD`. Load the password from the private
 recovery file into that process environment; never place its value in arguments.
-Name the signed outputs `miqat.apk`, `miqat-phone.apk` and `miqat-installer.apk`,
+Name the signed outputs `miqat.apk` and `miqat-phone.apk`,
 then verify:
 
 ```sh
-python3 tools/check_android_release.py "$ANDROID_HOME/build-tools/35.0.0" state/release/miqat.apk state/release/miqat-phone.apk state/release/miqat-installer.apk
+python3 tools/check_android_release.py "$ANDROID_HOME/build-tools/35.0.0" state/release/miqat.apk state/release/miqat-phone.apk
 ```
 
 Moving from the old debug-signed previews requires a fresh install once. Removing
@@ -88,7 +86,7 @@ independent: signed release-mode APKs may still be labelled prerelease on GitHub
 ## Versioning and publication
 
 Phone versions live in `companion/android/build.gradle`, Android TV versions in
-`platforms/android-tv/build.gradle`, and installer versions in `installer/build.gradle`.
+`platforms/android-tv/build.gradle`.
 LG's version must match package.json, its lockfile, appinfo.json and service/package.json.
 Increase version codes for distributed updates, retain the new Miqat identities
 and chosen signing key, and never replace a published version's binaries.
@@ -98,10 +96,8 @@ and its own attribution; see [third-party notices](THIRD-PARTY.md). Private
 originals and device data stay ignored. Follow [TESTING.md](TESTING.md) and record
 the results.
 
-The standalone installer's default downloader expects miqat.apk in a stable
-release. The main phone app's TV setup separately offers public Latest, Stable
-and Preview channels. Private drafts/CI artifacts are not public downloads;
-Advanced local packages remain usable. See [build/install](BUILD.md).
+Miqat Phone’s TV setup offers public Latest, Stable and Preview download
+channels and can install local packages under Advanced. See [build/install](BUILD.md).
 
 When publishing an app release, update availability copy in README, PHONE.md and
 the bilingual website, and check the package links and [screenshot provenance](screenshots/README.md).

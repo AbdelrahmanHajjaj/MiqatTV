@@ -7,7 +7,10 @@ coverage, and optional day-before, suhoor and iftar reminders. The signed
 bundle passed download and package verification. The bilingual website
 links to v0.7.4 and documents the new phone features.
 
-No open release work. See EVIDENCE.md and the release and PR records.
+The standalone Android TV installer has been retired from the build and release
+workflow. Miqat Phone hosts TV setup and recovery. The next release from
+successful main validation will omit the separate APK. See EVIDENCE.md and
+the release and PR records.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Routine CI has no phone/TV emulator jobs; retain

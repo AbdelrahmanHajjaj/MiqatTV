@@ -1,4 +1,4 @@
-// One implementation, hosted by the companion and the existing standalone installer.
+// Android TV setup and recovery for Miqat Phone.
 plugins { id 'com.android.library' }
 
 android {

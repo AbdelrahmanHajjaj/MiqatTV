@@ -3,7 +3,6 @@ package tv.miqat.installer;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -26,7 +25,6 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +39,7 @@ import io.github.muntashirakon.adb.AdbPairingRequiredException;
  * tools/install.sh). Every screen is the same frame: stage bar, arch, title, lead, content, and the actions pinned
  * to the bottom.
  */
-public class MainActivity extends Activity {
+public abstract class MainActivity extends Activity {
     InstallerPalette palette = InstallerPalette.DEFAULT;
 
     protected InstallerPalette createPalette() { return InstallerPalette.DEFAULT; }
@@ -101,10 +99,7 @@ public class MainActivity extends Activity {
         hero = new Hero(this);
         finder = new Finder(this, tvs -> runOnUiThread(() -> showTvs(tvs)));
 
-        String demo = getIntent().getStringExtra("screen");
-        boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-        if (demo != null && debuggable) showDemo(demo);
-        else if(getIntent().getBooleanExtra("choose-local",false)){showGuide();chooseLocal();}
+        if(getIntent().getBooleanExtra("choose-local",false)){showGuide();chooseLocal();}
         else if(getIntent().getBooleanExtra("prepared",false))showFind();
         else showGuide();
     }
@@ -185,10 +180,6 @@ public class MainActivity extends Activity {
     // Connect: finding the TV
 
     private void showFind() {
-        showFind(true);
-    }
-
-    private void showFind(boolean search) {
         if(getIntent().getBooleanExtra("choose-local",false)&&localApk==null){chooseLocal();return;}
         stopFinders();
         back = this::leavePreparation;
@@ -223,7 +214,7 @@ public class MainActivity extends Activity {
                 if(motionEnabled())help.animate().alpha(1f).setDuration(300).start();
             }
         }, 8000);
-        if (search) finder.start();
+        finder.start();
     }
 
     private void showTvs(List<Finder.Tv> tvs) {
@@ -818,75 +809,6 @@ public class MainActivity extends Activity {
     private static String message(Exception e) {
         String m = e.getMessage();
         return m == null || m.isEmpty() ? e.getClass().getSimpleName() : m;
-    }
-
-    // Debug builds only: one screen with sample data, for screenshots and checking layouts without a TV.
-    // adb shell am start -n tv.miqat.installer/.MainActivity --es screen find|allow|pair|install|done|partly|problem
-
-    private void showDemo(String screen) {
-        switch (screen) {
-            case "find": {
-                showFind(false);
-                Finder.Tv wireless = new Finder.Tv("192.168.1.50");
-                wireless.tls = 41234;
-                wireless.pairing = 37019;
-                Finder.Tv classic = new Finder.Tv("192.168.1.62");
-                classic.classic = Finder.CLASSIC_PORT;
-                if (tvList == null) {
-                    tvList = Ui.column(this);
-                    content.addView(tvList);
-                }
-                showTvs(Arrays.asList(wireless, classic));
-                break;
-            }
-            case "allow":
-                showAllow();
-                back = () -> go(this::showFind);
-                break;
-            case "pair":
-                showPair("192.168.1.50", 41234);
-                break;
-            case "install": {
-                frame(INSTALL, Hero.Mode.PROGRESS, getString(R.string.install_title),
-                        getString(R.string.install_lead_version, "0.5"));
-                timeline = timeline();
-                add(timeline, 20);
-                add(Timeline.legend(this), 12);
-                timeline.set(0, Timeline.State.CHECKED);
-                timeline.set(1, Timeline.State.CHECKED);
-                timeline.set(2, Timeline.State.CHECKED);
-                timeline.note(2, getString(R.string.state_was_set));
-                timeline.set(3, Timeline.State.CHECKED);
-                timeline.set(4, Timeline.State.DONE);
-                timeline.set(5, Timeline.State.WORKING);
-                hero.progress(0.94f);
-                break;
-            }
-            case "done":
-            case "partly": {
-                installedOk = screen.equals("done");
-                version = "0.5";
-                timeline = timeline();
-                for (int i = 0; i < steps.size() + 2; i++) timeline.set(i, Timeline.State.CHECKED);
-                if (!installedOk) timeline.set(3, Timeline.State.FAILED);
-                showDone(Arrays.asList(getString(R.string.sum_city, Ui.arabic(this) ? "القاهرة" : "Cairo"),
-                        getString(R.string.sum_favourites, "YouTube, Shahid, Claude Code TV, BrowseHere"),
-                        getString(R.string.sum_cleaned, "14")), false);
-                break;
-            }
-            case "prayer":
-            case "city":
-            case "favourites":
-            case "clean":
-            case "cleaning":
-                new Personalise(this, null).demo(screen);
-                break;
-            case "problem":
-                fail(gen, getString(R.string.error_connect, "192.168.1.50"));
-                break;
-            default:
-                showGuide();
-        }
     }
 
     // The frame

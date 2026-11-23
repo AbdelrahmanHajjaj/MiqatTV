@@ -50,7 +50,7 @@ class CiChecks(unittest.TestCase):
             (["site/src/lib/test.ts"], {"preview"}),
             (["platforms/android-tv/build.gradle"], {"android"}),
             (["platforms/webos/app/index.html"], {"webos"}),
-            (["installer/build.gradle"], {"android"}),
+            (["installer/runtime/build.gradle"], {"android", "companion"}),
             (["companion/contract.json"], set(JOBS) - {"core"}),
             (["shared/core/rules.kt"], set(JOBS)),
             (["shared/media/adhan/test.mp3"], set(JOBS)),

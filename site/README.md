@@ -25,8 +25,7 @@ Research reviewed on 22 November 2026:
 Miqat applies these patterns to its own features and screenshots. Do not copy
 competitor wording, ratings, awards or unimplemented features.
 `src/lib/site.ts` owns `RELEASE_TAG`; update it when publishing a new release and
-check the three device download links. The release page also provides the
-optional standalone TV installer.
+check the three device download links.
 
 ## Content and assets
 

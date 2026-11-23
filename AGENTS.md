@@ -17,7 +17,7 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
 - shared/media/: the approved, checksummed recordings packaged by Android and LG.
 - platforms/android-tv/: Java and Android Views; [Android notes](docs/ANDROID-INTEGRATION.md).
 - platforms/webos/: ES5 app and JS service; read its [AGENTS.md](platforms/webos/AGENTS.md).
-- installer/: reusable TV setup/recovery runtime plus its optional standalone phone host.
+- installer/: Android TV setup and recovery library used by Miqat Phone.
 - companion/: standalone Android phone prayers and optional TV setup/control; see docs/PHONE.md and companion/README.md.
 - site/: bilingual product website, current screenshots, interactive TV preview and resource generators; device APIs are simulated.
 - docs/: setup, development, technical references and validation status.
