@@ -87,11 +87,15 @@ date/location/method/school and does not alter the schedule. The old-LG adapter
 uses a bundled public USERTrust RSA root for this fixed host; source and full
 notices ship in service/trust/ and service/licenses/online-ca.txt.
 
-Silent banners retain HDMI sound. On webOS 4 and later, the adhan popup uses
-muted, video-only HDMI so the picture can keep moving behind the central mihrab.
-Older TVs release HDMI during the popup because they lack per-element mute.
-Closing the popup restores the input. Other inputs and audio modes release the
-decoder first.
+Silent banners retain HDMI sound. On webOS 4 and later, Miqat requests a lower
+HDMI element volume during the adhan so the picture can keep moving. If the
+element rejects the volume change, Miqat attempts mute. Some HDMI pipelines
+accept a property change without changing audible output. Use **Mute HDMI**
+if the programme is still too loud and **Hide HDMI** if the sound continues.
+
+Older TVs, other input types and any released HDMI source use an opaque
+full-screen adhan page. Closing the popup restores the input at normal volume.
+Other audio modes release the decoder before playing.
 
 On SDKs below 4, adhan volume is an absolute TV level: 30% means 30/100, then the
 app conditionally restores the captured level. It preserves a different level

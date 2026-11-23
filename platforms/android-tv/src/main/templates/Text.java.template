@@ -59,6 +59,8 @@ final class Text {
     String all(int n) { return d(allTitle() + "\n" + n); }
     String ampm(boolean am) { return ar ? (am ? {{TEXT:ar:am}} : {{TEXT:ar:pm}}) : (am ? {{TEXT:en:am}} : {{TEXT:en:pm}}); }
     String adhanAt() { {{STRINGS:adhanAt}} }
+    String adhanMuteInput() { {{STRINGS:adhanMuteInput}} }
+    String adhanHideInput() { {{STRINGS:adhanHideInput}} }
     String nowTag() { {{STRINGS:nowTag}} }
     String nextTag() { {{STRINGS:nextTag}} }
     String jumuahLabel() { {{STRINGS:jumuahLabel}} }

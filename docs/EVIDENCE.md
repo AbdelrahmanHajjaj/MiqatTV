@@ -33,6 +33,14 @@ and Stop in legacy TV-volume mode. LG ES5 build and service tests pass,
 including the existing master-volume ownership checks. Physical sound and
 picture acceptance is pending.
 
+## LG adhan full-screen fallback — 23 November 2026
+
+The owner observed HDMI stop and return on legacy hardware with the preceding
+audio-isolation build. Browser regressions exercise the new opaque page, HDMI
+attenuation, mute and release, restored picture and volume settings, and the
+English and Arabic remote action. The browser mocks the decoder and Luna.
+The new presentation and newer-TV speaker output remain pending on hardware.
+
 ## Stable v0.7.5 — 23 November 2026
 
 [Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45207954747)

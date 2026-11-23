@@ -49,6 +49,8 @@ test('profiles preserve real differences without treating missing shortcuts as m
   assert.equal(item('android','device.remote').available,true);
   assert.equal(item('lg','device.remote').available,false);
   assert.equal(item('android','reminders.per-prayer').available,true);
+  assert.equal(item('lg','adhan.quiet-input').route,'tv-step');
+  assert.equal(data.commands.includes('adhan.quiet-input'),false);
   assert.equal(item('lg','appearance.theme').options.some(x=>x.value==='custom'),false);
 });
 test('generation is deterministic and never includes network addresses or audio bytes',()=>{

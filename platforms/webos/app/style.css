@@ -250,7 +250,11 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 [dir=rtl] .banner-overlay .alert-box { padding-right: 44px; padding-left: 360px; }
 .card-overlay .alert-box { position: absolute; left: 510px; top: 250px; width: 900px; text-align: center; padding: 48px; }
 .audio-overlay { background: {{color.scrim}}; pointer-events: auto !important; }
-.adhan-overlay { background: transparent; }
+.adhan-overlay { background: {{color.lapis-950}}; }
+.adhan-overlay.over-input { background: transparent; }
+.call-input-sound { display: none; position: absolute; right: 44px; bottom: 44px; width: 220px; }
+.adhan-overlay.over-input .call-input-sound { display: block; }
+[dir=rtl] .call-input-sound { left: 44px; right: auto; }
 .audio-overlay .alert-box { position: absolute; left: 260px; right: 260px; top: 180px; text-align: center; padding: 72px; }
 .audio-overlay .alert-box h1 { font-size: 64px; line-height: 1.8; }
 .audio-overlay button { margin-top: 48px; }

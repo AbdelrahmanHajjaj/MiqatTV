@@ -773,6 +773,13 @@
     "save": "action"
   },
   {
+    "id": "adhan.quiet-input",
+    "section": "adhan",
+    "kind": "action",
+    "label": "adhanMuteInput",
+    "save": "action"
+  },
+  {
     "id": "apps.uninstall",
     "section": "apps",
     "kind": "action",

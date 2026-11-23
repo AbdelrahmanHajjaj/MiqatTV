@@ -98,6 +98,7 @@ internal object UiCatalog {
         UiControl("pairing.approve", "pairing", "action", "approvePhone", "action", "", emptyArray()),
         UiControl("pairing.reject", "pairing", "action", "rejectPhone", "action", "", emptyArray()),
         UiControl("pairing.revoke", "pairing", "action", "revokePhone", "action", "", emptyArray()),
+        UiControl("adhan.quiet-input", "adhan", "action", "adhanMuteInput", "action", "", emptyArray()),
         UiControl("apps.uninstall", "apps", "action", "uninstall", "action", "", emptyArray()),
     )
 }

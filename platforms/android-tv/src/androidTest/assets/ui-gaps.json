@@ -113,5 +113,10 @@
     "id": "offsets.reset",
     "state": "unimplemented",
     "reason": "Each prayer has a stepper; no Reset adjustments action."
+  },
+  {
+    "id": "adhan.quiet-input",
+    "state": "os-unsupported",
+    "reason": "Android TV does not own the playing app or HDMI decoder. The adhan uses native audio focus."
   }
 ]

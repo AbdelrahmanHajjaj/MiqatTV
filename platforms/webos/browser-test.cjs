@@ -141,7 +141,7 @@ const server = http.createServer((req, res) => {
     async function inputRestored() {
       await page.waitForFunction(() => {
         const video = document.getElementById('input-video'), source = video.querySelector('source');
-        return source && !video.muted && !source.type.includes('mediaOption=') && !document.querySelector('audio');
+        return source && video.volume === 1 && !video.muted && !source.type.includes('mediaOption=') && !document.querySelector('audio');
       });
     }
     const errors = []; page.on('pageerror', e => errors.push(e.message));
@@ -592,6 +592,14 @@ const server = http.createServer((req, res) => {
       await page.keyboard.press('Escape');
       await page.waitForSelector('.settings-page');
       assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'prayer.today', 'Back restores the originating setting');
+      await page.locator('[data-action=section][data-value=tests]').click();
+      await page.locator('[data-action=test-adhan]').click();
+      const quietInput = page.locator('[data-action=quiet-input]');
+      await quietInput.waitFor();
+      assert.equal(await quietInput.getAttribute('data-ui-kind'), 'action');
+      seen.add(await quietInput.getAttribute('data-ui'));
+      await page.keyboard.press('Escape');
+      await inputRestored();
       await page.evaluate(({bound, gaps}) => window['tv.miqat:core'].tv.miqat.core.UiContract.validateCoverage(bound, gaps),
         {bound: [...seen], gaps: uiGaps.map(gap => gap.id)});
       await page.evaluate(({offered, gaps}) => {
@@ -902,9 +910,8 @@ const server = http.createServer((req, res) => {
     assert.match(await page.locator('audio').getAttribute('src'), /chebae_fajr\.mp3$/);
     assert.equal(await page.locator('#input-video source').count(), 1, 'adhan retains HDMI while audio plays');
     assert.equal(await page.locator('#input-video source').getAttribute('src'), 'ext://hdmi:2', 'adhan retains the selected HDMI picture');
-    assert.deepEqual(await page.locator('#input-video source').evaluate(el => JSON.parse(decodeURI(el.type.split(';mediaOption=')[1]))),
-      {option: {mediaFormat: {type: 'video_only'}}}, 'adhan requests video-only HDMI');
-    assert.equal(await page.locator('#input-video').evaluate(el => el.muted), true, 'adhan mutes the HDMI element even if the decoder ignores video_only');
+    assert.deepEqual(await page.locator('#input-video').evaluate(el => [el.volume, el.muted]), [0.15, false], 'adhan lowers HDMI before starting');
+    assert.equal(await page.locator('[data-action=quiet-input]').innerText(), 'Mute HDMI');
     if(capture)await page.screenshot({path: path.join(shots, 'adhan-test-en.png')});
     assert.equal(await page.locator('.call-frame').count(), 1, 'adhan uses the Android mihrab layout');
     assert.equal(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'only the adhan mihrab has a background');
@@ -927,6 +934,45 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#input-video source').count(), 0, 'spoken playback retains the existing decoder handoff');
     assert.match(await page.locator('audio').getAttribute('src'), /before_fajr\.mp3$/);
     await page.evaluate(() => document.querySelector('audio').dispatchEvent(new Event('ended')));
+    await inputRestored();
+    await tests();
+    await page.locator('[data-action=test-adhan]').click();
+    await page.locator('[data-action=quiet-input]').waitFor();
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.locator(':focus').getAttribute('data-action'), 'dismiss-alert');
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.locator(':focus').getAttribute('data-action'), 'quiet-input');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('#input-video').evaluate(el => el.muted), true);
+    assert.equal(await page.locator('[data-action=quiet-input]').innerText(), 'Hide HDMI');
+    assert.equal(await page.locator('#input-video source').count(), 1, 'mute retains HDMI video');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('#input-video source').count(), 0, 'Hide HDMI releases the decoder');
+    assert.match(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), /^rgb\(/, 'the full call page is opaque');
+    assert.equal(await page.locator(':focus').getAttribute('data-action'), 'dismiss-alert');
+    await page.waitForFunction(() => document.querySelector('audio')?.getAttribute('src'), null);
+    await page.keyboard.press('Escape');
+    await inputRestored();
+    await page.locator('#input-video').evaluate(video => Object.defineProperty(video, 'volume', {configurable: true, get: () => 1, set() {}}));
+    await tests();
+    await page.locator('[data-action=test-adhan]').click();
+    await page.locator('[data-action=quiet-input]').waitFor();
+    assert.equal(await page.locator('#input-video').evaluate(video => video.muted), true, 'rejected attenuation falls back to mute');
+    assert.equal(await page.locator('[data-action=quiet-input]').innerText(), 'Hide HDMI');
+    await page.locator('#input-video').evaluate(video => delete video.volume);
+    await page.keyboard.press('Escape');
+    await inputRestored();
+    await page.locator('#input-video').evaluate(video => {
+      Object.defineProperty(video, 'volume', {configurable: true, get: () => 1, set() {}});
+      Object.defineProperty(video, 'muted', {configurable: true, get: () => false, set() {}});
+    });
+    await tests();
+    await page.locator('[data-action=test-adhan]').click();
+    await page.waitForFunction(() => document.querySelector('audio')?.getAttribute('src'));
+    assert.equal(await page.locator('#input-video source').count(), 0, 'rejected volume and mute release HDMI before adhan');
+    assert.match(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), /^rgb\(/);
+    await page.locator('#input-video').evaluate(video => { delete video.volume; delete video.muted; });
+    await page.keyboard.press('Escape');
     await inputRestored();
     await tests();
     await page.locator('[data-action=test-adhan]').click();
@@ -1108,7 +1154,10 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.evaluate(() => window.closeCount), 0, 'scheduled adhan in foreground preserves Settings');
     for (const mode of ['adhan', 'banner']) {
       await scheduled(mode, true);
-      if (mode === 'adhan') assert.match(await page.locator('#input-video source').getAttribute('type'), /mediaOption=/, 'background adhan also retains HDMI video');
+      if (mode === 'adhan') {
+        await page.locator('#input-video source').waitFor({state: 'attached'});
+        assert.equal(await page.locator('#input-video').evaluate(el => el.volume), 0.15, 'background adhan also lowers HDMI');
+      }
       await page.evaluate(() => { window.mediaCalls = []; });
       if (mode === 'adhan') {
         await page.waitForSelector('audio', {state: 'attached'});
@@ -1150,6 +1199,8 @@ const server = http.createServer((req, res) => {
     assert.equal(legacyPlayback.masterVolume, 15, 'old LG applies 15/100 independently of the captured TV level before adhan playback');
     assert.equal(legacyPlayback.elementVolume, 1, 'native volume fallback does not apply attenuation twice');
     assert.equal(legacyPlayback.inputSource, undefined, 'old LG releases HDMI before starting adhan because it ignores element mute');
+    assert.match(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), /^rgb\(/, 'legacy LG uses an opaque call page');
+    assert.equal(await page.locator('[data-action=quiet-input]').isVisible(), false, 'released HDMI has no sound action');
     await page.locator('[data-action=toggle-adhan]').click();
     await page.waitForFunction(() => window.mockMasterVolume === 50);
     assert.equal(await page.locator('.call-frame').count(), 1, 'Stop restores volume while keeping the replay screen');
@@ -1388,6 +1439,11 @@ const server = http.createServer((req, res) => {
       await page.locator('[data-action=test-card]').click(); await fits('.card-overlay .alert-box,.card-overlay button');
       await page.keyboard.press('Escape'); await tests();
       await page.locator('[data-action=test-adhan]').click(); await page.waitForFunction(() => document.querySelector('audio')?.getAttribute('src'));
+      const quietInput = page.locator('[data-action=quiet-input]');
+      assert.equal(await quietInput.innerText(), lang === 'ar' ? 'كتم صوت HDMI' : 'Mute HDMI');
+      const quietBounds = await quietInput.boundingBox();
+      assert.ok(quietBounds.x >= 0 && quietBounds.y >= 0 &&
+        quietBounds.x + quietBounds.width <= 1920 && quietBounds.y + quietBounds.height <= 1080, 'HDMI sound action stays on screen');
       await fits('.call-column button,.call-verse,.call-name,.call-time,.call-status');
       assert.equal(await page.locator('.call-verse').innerText(), sacred.adhanCall);
       if (size === 80 || size === 110 || size === 150) if(capture)await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-call.png')});
