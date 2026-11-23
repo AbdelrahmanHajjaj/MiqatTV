@@ -1,6 +1,6 @@
 {
   "id": "tv.miqat.webos",
-  "version": "0.2.30",
+  "version": "0.2.31",
   "vendor": "Miqat",
   "type": "web",
   "main": "index.html",
