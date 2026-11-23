@@ -11,8 +11,10 @@ Loopback cases exercise playback with the screen off, a real scheduled Adhan
 on both media and alarm routes, and retention of the paused state afterward.
 Notification Play/Pause, SystemUI dismissal while playing, and the separate
 Stop action during Adhan pass. The unreachable stream case reaches its retry
-limit and Stop clears the failed session. English and Arabic landscape captures
-show the station, status and controls in the expected direction. Earlier
+limit and Stop clears the failed session. English and Arabic captures in
+portrait and landscape show the station, status and controls in the expected
+direction. The Adhan notification check now selects the playing notification
+by prayer and time after a run expanded an older Fajr reminder instead. Earlier
 Android versions and physical phones remain unverified.
 
 ## Stable promotion — 23 November 2026

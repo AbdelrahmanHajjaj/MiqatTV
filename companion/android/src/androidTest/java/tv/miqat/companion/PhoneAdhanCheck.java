@@ -81,7 +81,7 @@ final class PhoneAdhanCheck {
                 "Status bar must retain the Miqat mihrab icon");
         PhoneRuntimeCheck.shell(test, "cmd statusbar expand-notifications");
         try {
-            PhonePresentationCheck.expandNotification(test,settings.data.prayerName(event.getPrayer(),ar));
+            PhonePresentationCheck.expandNotification(test, title);
             PhoneUiCheck.capture(test,c,"adhan-notification-actions",true);
             android.view.accessibility.AccessibilityNodeInfo label=PhonePresentationCheck.notificationText(test,expected);
             check(label!=null,"Playing recording label is not visible");label.recycle();
