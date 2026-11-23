@@ -185,9 +185,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     mkdirSync(directory,{recursive:true});
     const entries=catalog.prayerNames[language].map((name,i)=>['widget_preview_prayer_'+i,name]);
     const sampleDate=new Intl.DateTimeFormat(language+'-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date('2026-11-21T12:00:00Z'));
+    const circleDate=language==='ar'?sampleDate.replace(/[0-9]/g,digit=>'٠١٢٣٤٥٦٧٨٩'[Number(digit)]):sampleDate;
     const cairo=read('shared/data/cities.json').find(city=>city.id==='cairo');
-    const countdown=language==='ar'?'٠٠:٢٤':'00:24';
-    entries.push(['widget_preview_metadata',sampleDate+' · '+cairo[language]],['widget_preview_countdown',countdown],['widget_preview_remaining',catalog.text.phone_remaining[language].replace('%s',countdown)]);
+    const countdown=language==='ar'?'٢٤:٣٠':'24:30';
+    entries.push(['widget_preview_metadata',sampleDate+' · '+cairo[language]],['widget_preview_hijri',circleDate],['widget_preview_countdown',countdown],['widget_preview_remaining',catalog.text.phone_remaining[language].replace('%s',countdown)]);
     const clock=new Intl.DateTimeFormat(language,{hour:'numeric',minute:'2-digit',hour12:phone.contract.controls.find(c=>c.id==='display.clock').default==='12',numberingSystem:language==='ar'?'arab':'latn',timeZone:'UTC'});
     entries.push(...sampleTimes.map((time,i)=>['widget_preview_time_'+i,clock.format(new Date('2026-11-21T'+time+':00Z'))]));
     const xml=entries.map(([name,value])=>'<string name="'+name+'">'+value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll("'","\\'")+'</string>').join('');

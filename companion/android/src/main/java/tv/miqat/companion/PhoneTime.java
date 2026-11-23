@@ -17,6 +17,10 @@ final class PhoneTime {
     }
 
     static String hijri(PhoneStore settings, long stamp, boolean ar) {
+        return hijri(settings, stamp, ar, false);
+    }
+
+    static String hijri(PhoneStore settings, long stamp, boolean ar, boolean compact) {
         android.icu.util.IslamicCalendar calendar =
                 new android.icu.util.IslamicCalendar(
                         android.icu.util.TimeZone.getTimeZone(settings.zone().getID()),
@@ -27,7 +31,7 @@ final class PhoneTime {
         calendar.add(android.icu.util.Calendar.DATE, settings.number("prayer.hijri-offset"));
         android.icu.text.DateFormat format =
                 android.icu.text.DateFormat.getDateInstance(
-                        android.icu.text.DateFormat.LONG,
+                        compact ? android.icu.text.DateFormat.SHORT : android.icu.text.DateFormat.LONG,
                         new android.icu.util.ULocale(
                                 (ar ? "ar" : "en") + "@calendar=islamic-umalqura"));
         format.setCalendar(calendar);

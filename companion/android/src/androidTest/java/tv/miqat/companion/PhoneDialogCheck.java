@@ -4,8 +4,11 @@ import android.app.AlertDialog;
 import android.app.Instrumentation;
 import android.content.res.TypedArray;
 import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
@@ -14,6 +17,33 @@ import java.util.concurrent.TimeUnit;
 
 /** Checks real sheet layout and its configured entrance transform. */
 final class PhoneDialogCheck {
+    static void updatePopup(Instrumentation test, MainActivity a, boolean capture) throws Exception {
+        LiveUiCheck.click(test, a, "phone.about.check-updates");
+        try {
+            LiveUiCheck.until(() -> {
+                AccessibilityNodeInfo root = test.getUiAutomation().getRootInActiveWindow();
+                if (root == null) return false;
+                var messages = root.findAccessibilityNodeInfosByViewId("android:id/message");
+                if (messages.isEmpty()) return false;
+                String message = String.valueOf(messages.get(0).getText());
+                return message.equals(a.t("aboutNoUpdate")) || message.startsWith(a.t("aboutNewUpdate"))
+                        || message.equals(a.t("aboutUpdateFailed"));
+            });
+            AccessibilityNodeInfo root = test.getUiAutomation().getRootInActiveWindow();
+            var titles = root.findAccessibilityNodeInfosByViewId("android:id/alertTitle");
+            PhoneUiCheck.check(!titles.isEmpty() && a.t("aboutCheckUpdates").contentEquals(titles.get(0).getText()),
+                    "The update sheet title was missing");
+            Rect title = new Rect();
+            titles.get(0).getBoundsInScreen(title);
+            PhoneUiCheck.check(title.top > a.getResources().getDisplayMetrics().heightPixels * .65f,
+                    "Update sheet still opens as a centered Android dialog");
+            PhoneUiCheck.capture(test, a, (a.ar ? "ar" : "en") + "-phone-update", capture);
+        } finally {
+            LiveUiCheck.key(test, KeyEvent.KEYCODE_BACK);
+            LiveUiCheck.untilUi(test, a::hasWindowFocus);
+        }
+    }
+
     static void run(Instrumentation test) throws Exception {
         MainActivity a = LiveUiCheck.launch(test);
         try { check(test, a); }

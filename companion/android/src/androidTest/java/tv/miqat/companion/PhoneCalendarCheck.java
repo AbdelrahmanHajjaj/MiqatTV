@@ -2,6 +2,10 @@ package tv.miqat.companion;
 
 import android.app.Instrumentation;
 import android.icu.util.IslamicCalendar;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.SystemClock;
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.*;
@@ -12,37 +16,68 @@ final class PhoneCalendarCheck {
 
     static void mapNetwork(Instrumentation test, MainActivity a, boolean capture) throws Exception {
         PhoneStore original = PhoneStore.read(a);
+        LocationManager locations = a.getSystemService(LocationManager.class);
+        String provider = LocationManager.GPS_PROVIDER;
+        boolean installed = false;
         try {
             Map<String, String> fixture = new LinkedHashMap<>();
             fixture.put("prayer.location-ready", "true");
-            fixture.put("prayer.location", "cairo");
-            fixture.put("prayer.latitude", "30.0444");
-            fixture.put("prayer.longitude", "31.2357");
+            fixture.put("prayer.location", "london");
+            fixture.put("prayer.latitude", "51.5074");
+            fixture.put("prayer.longitude", "-0.1278");
             fixture.put("reminders.enabled", "false");
             original.changed(fixture).save(a);
+            PhoneUiCheck.check(PhoneLocation.preciseAllowed(a), "Grant precise location for the Qibla fixture");
+            locations.addTestProvider(provider, false, false, false, false, true, true, true,
+                    android.location.Criteria.POWER_LOW, android.location.Criteria.ACCURACY_FINE);
+            installed = true;
+            locations.setTestProviderEnabled(provider, true);
+            Location current = new Location(provider);
+            current.setLatitude(30.0444);
+            current.setLongitude(31.2357);
+            current.setAccuracy(5);
+            current.setTime(System.currentTimeMillis());
+            current.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+            locations.setTestProviderLocation(provider, current);
             PhoneUiCheck.on(
                     test,
                     () -> {
                         a.navigate("qibla");
-                        a.body.findViewWithTag("qibla.mode.map").performClick();
                         PhoneUiCheck.check(
                                 a.body.findViewWithTag("qibla.map") == null,
-                                "Map loaded before explicit tap");
-                        a.body.findViewWithTag("qibla.map.load").performClick();
+                                "Compass loaded the map");
                     });
+            LiveUiCheck.untilUi(test, () -> a.body.findViewWithTag("qibla.bearing") != null);
+            PhoneUiCheck.on(test, () -> {
+                TextView bearing = a.body.findViewWithTag("qibla.bearing");
+                PhoneUiCheck.check(bearing.getText().toString().contains(a.phoneUi.digits("136.1°")),
+                        "Qibla compass used the saved London prayer city");
+                a.body.findViewWithTag("qibla.mode.map").performClick();
+                PhoneUiCheck.check(a.body.findViewWithTag("qibla.map") != null,
+                        "Selecting Map did not load its viewport");
+            });
             LiveUiCheck.untilUi(
                     test,
                     () -> {
                         android.webkit.WebView map = a.body.findViewWithTag("qibla.map");
                         return map != null && map.getProgress() == 100;
                     });
+            LiveUiCheck.until(() -> {
+                java.util.concurrent.CompletableFuture<String> tiles = new java.util.concurrent.CompletableFuture<>();
+                PhoneUiCheck.on(test, () -> {
+                    android.webkit.WebView map = a.body.findViewWithTag("qibla.map");
+                    map.evaluateJavascript("(() => { const images = [...document.querySelectorAll('#tiles img')];"
+                            + "return images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0); })()",
+                            tiles::complete);
+                });
+                return "true".equals(tiles.get(5, java.util.concurrent.TimeUnit.SECONDS));
+            });
             PhoneUiCheck.on(
                     test,
                     () -> {
                         android.webkit.WebView map = a.body.findViewWithTag("qibla.map");
                         PhoneUiCheck.check(
-                                !map.getSettings().getJavaScriptEnabled()
-                                        && !map.getSettings().getAllowFileAccess()
+                                !map.getSettings().getAllowFileAccess()
                                         && !map.getSettings().getAllowContentAccess(),
                                 "Map expanded device access");
                         PhoneUiCheck.check(
@@ -54,7 +89,20 @@ final class PhoneCalendarCheck {
                         PhoneUiCheck.check(
                                 map.getWidth() > 0 && map.getWidth() == map.getHeight(),
                                 "Map viewport must be square so endpoints and attribution fit");
+                        PhoneUiCheck.check(a.body.findViewWithTag("qibla.map.retry").getVisibility() == View.GONE,
+                                "A successful map still shows a load action");
                     });
+            java.util.concurrent.CompletableFuture<String> origin = new java.util.concurrent.CompletableFuture<>();
+            PhoneUiCheck.on(test, () -> {
+                android.webkit.WebView map = a.body.findViewWithTag("qibla.map");
+                map.evaluateJavascript("JSON.parse(document.querySelector('#map').dataset.route)[0][0]",
+                        origin::complete);
+            });
+            double longitude = Double.parseDouble(origin.get(5, java.util.concurrent.TimeUnit.SECONDS)) * 360 - 180;
+            PhoneUiCheck.check(Math.abs(longitude - current.getLongitude()) < 0.0001,
+                    "Map did not start at device longitude");
+            PhoneUiCheck.check(PhoneStore.read(a).value("prayer.location").equals("london"),
+                    "Using Qibla changed the prayer location");
             PhoneUiCheck.capture(test, a, (a.ar ? "ar" : "en") + "-phone-qibla-map", capture);
             PhoneUiCheck.on(
                     test,
@@ -65,6 +113,7 @@ final class PhoneCalendarCheck {
                                 "Map survived leaving its screen");
                     });
         } finally {
+            if (installed) locations.removeTestProvider(provider);
             original.save(a);
             PhoneUiCheck.on(test, a::render);
         }
@@ -163,8 +212,7 @@ final class PhoneCalendarCheck {
                 PhoneUiCheck.check(
                         Math.abs(route[i][0] - route[i - 1][0]) < .5,
                         "Qibla line took the long path across the dateline");
-            String html = QiblaMap.html(origin[0], origin[1], 0, 0xffffff, "Kaaba");
-            int tiles = html.split("<img ", -1).length - 1;
+            String html = QiblaMap.html(a, origin[0], origin[1], "Kaaba", "Zoom in", "Zoom out", "Center");
             String svg = html.substring(html.indexOf("<svg"), html.indexOf("</svg>") + 6);
             org.w3c.dom.Document drawing =
                     javax.xml.parsers.DocumentBuilderFactory.newInstance()
@@ -176,16 +224,16 @@ final class PhoneCalendarCheck {
                             && ((org.w3c.dom.Element)
                                             drawing.getElementsByTagName("polyline").item(1))
                                     .getAttribute("stroke")
-                                    .equals("#0A6060")
-                            && html.contains("id='credit'"),
+                                    .equals("#0a6060")
+                            && html.contains("id=\"credit\""),
                     "Map route, endpoints and attribution must render independently");
             PhoneUiCheck.check(
-                    tiles > 0
-                            && tiles <= 9
-                            && !html.contains("NaN")
+                    !html.contains("NaN")
                             && !html.contains("Infinity")
                             && html.contains("© OpenStreetMap contributors")
-                            && !html.contains("<script"),
+                            && html.contains("default-src 'none'")
+                            && html.contains("script-src 'nonce-miqat-viewport'")
+                            && !html.contains("%%ROUTE%%"),
                     "Unbounded or invalid Qibla map document");
         }
         PhoneUiCheck.on(
@@ -226,10 +274,64 @@ final class PhoneCalendarCheck {
                     "Calendar date browsing must leave live Home intact underneath");
             a.phoneUi.choiceDialog.getButton(-2).performClick();
         });
+        swipes(test, a);
         verifyReturn(test, a);
         PhoneUiCheck.check(
                 PhoneStore.read(a).values.equals(original.values),
                 "Calendar navigation changed prayer settings");
+    }
+
+    private static void swipes(Instrumentation test, MainActivity a) throws Exception {
+        PhoneUiCheck.on(test, () -> a.body.findViewWithTag("phone.today").performClick());
+        LiveUiCheck.untilUi(test, () -> a.phoneUi.choiceDialog.getWindow().getDecorView()
+                .findViewWithTag("calendar.grid").getWidth() > 0);
+        String[] month = new String[1];
+        PhoneUiCheck.on(test, () -> {
+            android.view.View root = a.phoneUi.choiceDialog.getWindow().getDecorView();
+            month[0] = ((TextView) root.findViewWithTag("calendar.month")).getText().toString();
+            swipe(root.findViewWithTag("calendar.grid"), a.ar);
+            PhoneUiCheck.check(!month[0].contentEquals(((TextView) root.findViewWithTag("calendar.month")).getText()),
+                    "Calendar grid swipe did not change the month");
+        });
+        LiveUiCheck.untilUi(test, () -> a.phoneUi.choiceDialog.getWindow().getDecorView()
+                .findViewWithTag("calendar.grid").getWidth() > 0);
+        PhoneUiCheck.on(test, () -> {
+            android.view.View root = a.phoneUi.choiceDialog.getWindow().getDecorView();
+            swipe(root.findViewWithTag("calendar.grid"), !a.ar);
+            PhoneUiCheck.check(month[0].contentEquals(((TextView) root.findViewWithTag("calendar.month")).getText()),
+                    "Reverse calendar grid swipe did not restore the month");
+        });
+        LiveUiCheck.untilUi(test, () -> a.phoneUi.choiceDialog.getWindow().getDecorView()
+                .findViewWithTag("calendar.selected-day").getWidth() > 0);
+        PhoneUiCheck.on(test, () -> {
+            android.view.View root = a.phoneUi.choiceDialog.getWindow().getDecorView();
+            swipe(root.findViewWithTag("calendar.selected-day"), a.ar);
+            calendarTimes(a, root, a.phoneUi.settings.day(System.currentTimeMillis(), 1));
+            a.phoneUi.choiceDialog.getButton(-2).performClick();
+        });
+        String[] current = new String[1];
+        PhoneUiCheck.on(test, () -> {
+            current[0] = ((TextView) a.body.findViewWithTag("phone.countdown")).getText().toString();
+            PhoneUiCheck.check(current[0].matches(".*\\p{Nd}{2}:\\p{Nd}{2}:\\p{Nd}{2}.*"),
+                    "Home countdown did not include seconds");
+        });
+        LiveUiCheck.untilUi(test, () -> !current[0].contentEquals(
+                ((TextView) a.body.findViewWithTag("phone.countdown")).getText()));
+    }
+
+    private static void swipe(android.view.View target, boolean right) {
+        int width = target.getWidth();
+        float y = target.getHeight() / 2f;
+        long start = android.os.SystemClock.uptimeMillis();
+        int[] actions = {android.view.MotionEvent.ACTION_DOWN, android.view.MotionEvent.ACTION_MOVE,
+                android.view.MotionEvent.ACTION_MOVE, android.view.MotionEvent.ACTION_UP};
+        for (int i = 0; i < actions.length; i++) {
+            float fraction = .2f + .2f * i;
+            android.view.MotionEvent event = android.view.MotionEvent.obtain(start, start + i * 16,
+                    actions[i], width * (right ? fraction : 1 - fraction), y, 0);
+            target.dispatchTouchEvent(event);
+            event.recycle();
+        }
     }
 
     static void events(Instrumentation test, MainActivity a, PhoneStore original) throws Exception {

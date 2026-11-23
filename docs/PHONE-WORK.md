@@ -18,6 +18,18 @@ Sideloaded phone builds add a manual stable version check in About Miqat.
 About Miqat shows the installed phone app version, developer credit
 and GitHub feedback. Email feedback stays disabled pending a public address.
 
+## Prayer usability feedback
+
+Home and launcher widgets show live countdown seconds. Prayer and reminder controls preview today's
+calculated times. The Hijri grid and selected-day timetable accept horizontal
+swipes. Selecting the Qibla Map tab opens a pannable, zoomable map at the
+phone's current precise location. The compass uses that same reading separately
+from prayer settings. About uses Miqat's themed update sheet. The fixed
+countdown circle shows the prayer icon, scheduled time and smaller seconds
+countdown. Its ring refreshes about once a minute while awake. The 120% text
+option enlarges Circle in its configuration preview and on the launcher.
+See [validation](EVIDENCE.md).
+
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.
 

@@ -5,6 +5,13 @@ Android TV 0.7.4/code 15 and LG 0.2.31. TV setup and recovery are in
 Miqat Phone. The three published packages passed checksum and identity
 verification. The website uses the v0.7.6 download links. See EVIDENCE.md.
 
+The phone feedback branch covers live countdown seconds on Home and widgets,
+the circular widget with its prayer time, icon and live ring, time previews and
+calendar swipes. About uses the themed
+update sheet. Qibla uses precise device location and loads when Map is selected.
+Next action is PR validation after GitHub CLI authentication is restored.
+See PHONE-WORK.md and EVIDENCE.md.
+
 The owner observed the legacy HDMI picture cut and return on the preceding
 test build. LG 0.2.31 keeps the Arabic call inside the mihrab, enters Settings
 content on OK, and uses one Close button. Legacy layout and newer-TV audio

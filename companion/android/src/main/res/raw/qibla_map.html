@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https://tile.openstreetmap.org; style-src 'unsafe-inline'; script-src 'nonce-miqat-viewport'">
+<style>
+html,body { margin:0; width:100%; height:100%; overflow:hidden; font:14px sans-serif }
+#map { position:absolute; top:0; right:0; bottom:0; left:0; overflow:hidden; touch-action:none; background:#e9e8df; cursor:grab }
+#map:active { cursor:grabbing }
+#map img, #route { position:absolute; pointer-events:none; user-select:none }
+#route { top:0; left:0; width:100%; height:100% }
+#credit { position:absolute; bottom:0; right:0; background:white; color:#173b3e; padding:4px }
+#north, #controls { position:absolute; top:8px; color:#173b3e }
+#north { left:8px; background:white; padding:5px }
+#controls { right:8px; display:grid; grid-gap:4px }
+button { width:42px; height:42px; border:1px solid #ccd4d3; border-radius:6px; background:white; color:#173b3e; font-size:22px }
+</style>
+</head>
+<body>
+<div id="map" tabindex="0" data-route='%%ROUTE%%'>
+  <div id="tiles" aria-hidden="true"></div>
+  <svg id="route" aria-hidden="true">
+    <polyline id="halo" fill="none" stroke="white" stroke-width="7" stroke-linejoin="round"></polyline>
+    <polyline id="line" fill="none" stroke="#0a6060" stroke-width="4" stroke-linejoin="round"></polyline>
+    <circle id="start" r="6" fill="#173b3e" stroke="white" stroke-width="2"></circle>
+    <circle id="end" r="7" fill="#173b3e" stroke="white" stroke-width="2"></circle>
+    <text id="kaaba" text-anchor="middle" fill="#173b3e" stroke="white" stroke-width="3" paint-order="stroke">%%KAABA%%</text>
+  </svg>
+</div>
+<span id="north">N ↑</span>
+<div id="controls">
+  <button type="button" id="closer" aria-label="%%ZOOM_IN%%">+</button>
+  <button type="button" id="farther" aria-label="%%ZOOM_OUT%%">−</button>
+  <button type="button" id="recenter" aria-label="%%RECENTER%%">⌖</button>
+</div>
+<a id="credit" href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>
+<script nonce="miqat-viewport">
+'use strict';
+const byId = id => document.getElementById(id);
+const map = byId('map'), tiles = byId('tiles');
+const route = JSON.parse(map.dataset.route);
+const initialZoom = 15;
+const [originX, originY] = route[0];
+let x = originX, y = originY, zoom = initialZoom;
+const shown = new Map(), pointers = new Map();
+const world = () => 256 * 2 ** zoom;
+let pending = false;
+
+function update() {
+  if (pending) return;
+  pending = true;
+  requestAnimationFrame(draw);
+}
+
+function draw() {
+  pending = false;
+  const width = map.clientWidth, height = map.clientHeight;
+  const level = Math.round(zoom), tileCount = 2 ** level, tileSize = world() / tileCount;
+  const left = x * world() - width / 2, top = y * world() - height / 2;
+  const visible = new Set();
+  for (let row = Math.max(0, Math.floor(top / tileSize));
+       row < tileCount && row * tileSize < top + height; row++) {
+    for (let column = Math.floor(left / tileSize); column * tileSize < left + width; column++) {
+      const key = level + '/' + column + '/' + row;
+      visible.add(key);
+      let tile = shown.get(key);
+      if (!tile) {
+        tile = document.createElement('img');
+        tile.alt = '';
+        tile.src = 'https://tile.openstreetmap.org/' + level + '/'
+          + ((column % tileCount + tileCount) % tileCount) + '/' + row + '.png';
+        shown.set(key, tile);
+        tiles.appendChild(tile);
+      }
+      tile.style.left = (column * tileSize - left) + 'px';
+      tile.style.top = (row * tileSize - top) + 'px';
+      tile.style.width = tile.style.height = (tileSize + .25) + 'px';
+    }
+  }
+  for (const [key, tile] of shown) {
+    if (visible.has(key)) continue;
+    tile.remove();
+    shown.delete(key);
+  }
+  const wrap = Math.round(x - (originX + route[route.length - 1][0]) / 2);
+  const projected = route.map(([px, py]) => [(px + wrap) * world() - left, py * world() - top]);
+  const line = projected.map(point => point.join(',')).join(' ');
+  byId('halo').setAttribute('points', line);
+  byId('line').setAttribute('points', line);
+  const end = projected[projected.length - 1];
+  for (const [id, point] of [['start', projected[0]], ['end', end]]) {
+    byId(id).setAttribute('cx', point[0]);
+    byId(id).setAttribute('cy', point[1]);
+  }
+  byId('kaaba').setAttribute('x', end[0]);
+  byId('kaaba').setAttribute('y', end[1] + 24);
+  byId('closer').disabled = zoom >= 18;
+  byId('farther').disabled = zoom <= 0;
+}
+
+function move(before, after, change) {
+  const dx = map.clientWidth / 2, dy = map.clientHeight / 2;
+  x += (before.x - dx) / world();
+  y += (before.y - dy) / world();
+  zoom = Math.max(0, Math.min(18, zoom + change));
+  x -= (after.x - dx) / world();
+  y = Math.max(0, Math.min(1, y - (after.y - dy) / world()));
+  update();
+}
+
+function gesture() {
+  const [one, two] = pointers.values();
+  if (!two) return {x:one.x, y:one.y};
+  return {x:(one.x + two.x) / 2, y:(one.y + two.y) / 2,
+          span:Math.max(1, Math.hypot(one.x - two.x, one.y - two.y))};
+}
+
+map.addEventListener('pointerdown', event => {
+  if (pointers.size >= 2 || event.button !== 0) return;
+  pointers.set(event.pointerId, {x:event.clientX, y:event.clientY});
+  map.setPointerCapture(event.pointerId);
+});
+map.addEventListener('pointermove', event => {
+  if (!pointers.has(event.pointerId)) return;
+  const before = gesture();
+  pointers.set(event.pointerId, {x:event.clientX, y:event.clientY});
+  const after = gesture();
+  move(before, after, after.span ? Math.log2(after.span / before.span) : 0);
+});
+for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
+  map.addEventListener(type, event => pointers.delete(event.pointerId));
+
+function step(change) {
+  const center = {x:map.clientWidth / 2, y:map.clientHeight / 2};
+  move(center, center, change);
+}
+byId('closer').onclick = () => step(1);
+byId('farther').onclick = () => step(-1);
+byId('recenter').onclick = () => {
+  x = originX;
+  y = originY;
+  zoom = initialZoom;
+  update();
+};
+map.addEventListener('keydown', event => {
+  const directions = {ArrowLeft:[1,0], ArrowRight:[-1,0], ArrowUp:[0,1], ArrowDown:[0,-1]};
+  const direction = directions[event.key];
+  if (!direction) return;
+  event.preventDefault();
+  move({x:direction[0] * 48, y:direction[1] * 48}, {x:0, y:0}, 0);
+});
+window.addEventListener('resize', update);
+update();
+</script>
+</body>
+</html>

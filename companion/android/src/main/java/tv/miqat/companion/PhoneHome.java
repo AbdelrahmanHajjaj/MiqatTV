@@ -50,21 +50,7 @@ final class PhoneHome {
                             return;
                         }
                         if (countdown != null && nextTime > 0) {
-                            long minutes =
-                                    Math.max(
-                                            0,
-                                            (nextTime - System.currentTimeMillis() + 59999)
-                                                    / 60000);
-                            countdown.setText(
-                                    String.format(
-                                            ui.locale(),
-                                            a.t("phone_remaining"),
-                                            ui.digits(
-                                                    String.format(
-                                                            Locale.US,
-                                                            "%02d:%02d",
-                                                            minutes / 60,
-                                                            minutes % 60))));
+                            countdown.setText(remaining(nextTime, now));
                         }
                         if (status != null && ui.settings != null) {
                             String state = PhoneAlarms.status(a, ui.settings);
@@ -74,9 +60,16 @@ final class PhoneHome {
                     }
                     if (playback != null)
                         playback.sync();
-                    clock.postDelayed(this, 1000);
+                    clock.postDelayed(this, 1000 - System.currentTimeMillis() % 1000);
                 }
             };
+
+    private String remaining(long target, long now) {
+        long seconds = Math.max(0, (target - now + 999) / 1000);
+        String duration = String.format(Locale.US, "%02d:%02d:%02d",
+                seconds / 3600, seconds / 60 % 60, seconds % 60);
+        return String.format(ui.locale(), a.t("phone_remaining"), ui.digits(duration));
+    }
 
     void start() {
         clock.removeCallbacksAndMessages(null);
@@ -412,18 +405,9 @@ final class PhoneHome {
             prayer.addView(time, size);
         }
         if (next != null) {
-            long minutes = Math.max(0, ((long) target - now + 59999) / 60000);
             TextView remaining =
                     a.views.text(
-                            String.format(
-                                    ui.locale(),
-                                    a.t("phone_remaining"),
-                                    ui.digits(
-                                            String.format(
-                                                    Locale.US,
-                                                    "%02d:%02d",
-                                                    minutes / 60,
-                                                    minutes % 60))),
+                            remaining((long) target, now),
                             13,
                             a.accent);
             remaining.setPadding(0, a.views.dp(2), 0, 0);
