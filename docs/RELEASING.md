@@ -14,7 +14,8 @@ website checks before its artifacts can enter the draft publication workflow.
    commit or an unused tag such as `v0.7.7-preview.1`. If validation is missing
    or its artifacts expired, run Validate on `main` first.
 3. Inspect the draft assets and SHA256SUMS, source commit, validation link and
-   signing configuration before publication.
+   signing configuration. Publish the existing draft as a prerelease after
+   review. GitHub Actions uploads all build assets.
 
 The draft contains three packages and their SHA256SUMS:
 
@@ -31,15 +32,21 @@ failed, PR/fork or other-workflow runs. It creates an unpublished draft prerelea
 
 ## Promote a verified preview to stable
 
-With owner approval, create a clean stable tag at the preview's source commit and
-copy its verified packages and SHA256SUMS to a new draft. Compare every
-uploaded asset's size and SHA-256 digest with the published preview before
-publishing without prerelease status and marking it Latest. Preserve the preview
-tag and assets. Promotion reuses the signed bytes; no rebuild, new version code
-or signing-key access is needed. Update website download links and current guides.
+With owner approval, run [Promote stable release](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/promote.yml)
+on main with the published preview tag. Leave **Verify only** unchecked to
+publish. GitHub Actions checks the preview's validation run, asset authors,
+checksums and Android signing identities. It uploads the verified packages
+and SHA256SUMS to a stable draft, compares the uploaded bytes to the preview
+and publishes the stable tag at the same source commit as Latest.
+
+For a verification run, select **Verify only**. If an upload stops partway,
+rerun promotion with the same preview tag. The workflow checks the existing
+draft assets and uploads the missing files.
+
+Update website download links and current guides after publication.
 Set the tag and both APK version names/codes in `site/src/lib/stable-release.json`
 from the verified published artifacts. GitHub Pages serves this as `updates.json`.
-An installed copy of the same signed preview needs no reinstall.
+An installed copy of the same signed preview already has the stable binaries.
 
 ## Persistent Android signing
 

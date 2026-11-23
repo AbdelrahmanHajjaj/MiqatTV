@@ -109,10 +109,14 @@ the unsigned Android TV APK from `android-builds` in that successful Validate ru
 persistent keys in the main-only `android-release` environment and verifies
 their release mode, package IDs and pinned certificates before creating the draft.
 
-Only the manual build-release job has contents write permission. Its token has no
-PR approval grant. The repository default remains read-only. No personal token
-is stored by this setup. Signing secrets belong only to the `android-release`
-environment; the temporary decoded key is removed and excluded from artifacts/caches.
+The draft and stable promotion jobs have contents write permission. Both use
+the workflow token. Signing secrets live in the `android-release` environment.
+The draft job removes the temporary key and excludes it from artifacts and caches.
+
+The manual **Promote stable release** workflow handles all stable asset uploads.
+It verifies the published Actions preview, preserves its bytes and publishes
+the stable tag on approval. **Verify only** runs those preview checks without
+changing GitHub releases.
 
 CI debug artifacts retain their development signatures. Published Android release
 APKs use persistent Miqat keys. Moving from an old debug-signed preview requires

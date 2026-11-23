@@ -1,0 +1,43 @@
+name: Promote stable release
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_tag:
+        description: Published signed preview tag (for example v0.7.7-preview.2)
+        required: true
+        type: string
+      verify_only:
+        description: Verify the preview without creating or publishing a release
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: draft-release
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Verify and promote signed release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW_TAG: ${{ inputs.preview_tag }}
+          VERIFY_ONLY: ${{ inputs.verify_only }}
+        run: python3 -S -B -m tools.promote_release
