@@ -8,6 +8,7 @@ const voices = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/dat
 const sacred = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/data/sacred-text.json')));
 const uiGaps = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-gaps.json')));
 const uiChoiceGaps = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-choice-gaps.json')));
+const appVersion = require('./app/appinfo.json').version;
 const shots = path.resolve(__dirname, '../../state/webos-port');
 const capture=process.argv.includes('--capture');
 if(capture)fs.mkdirSync(shots, { recursive: true });
@@ -196,6 +197,22 @@ const server = http.createServer((req, res) => {
       assert.ok(spacing.width<=561, 'sidebar stays slim when interface size increases');
       assert.ok(spacing.navLeft>=48 && spacing.navRight<=1872, 'navigation keeps padding from the TV edges');
       if(uiScale===110) if(capture)await page.screenshot({path:path.join(shots,'settings-spacing-'+lang+'-110.png')});
+      await page.locator('[data-action=section][data-value=device]').click();
+      const about = page.locator('[data-ui="device.about"]');
+      await about.focus();
+      const beforeAbout = await page.locator('.settings-rows').evaluate(el => el.scrollTop);
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator('.about-version').textContent(), appVersion, 'About shows the installed package version');
+      assert.match(await page.locator('.about-details').innerText(), lang === 'ar' ? /عبد الرحمن حجاج/ : /Abdelrahman Hajjaj/);
+      assert.equal(await page.locator('.about-details button').isDisabled(), true, 'Email is unavailable');
+      assert.ok(await page.locator('.about-qr > svg').evaluate(el => {
+        const qr = el.getBoundingClientRect(), page = el.closest('.about-page').getBoundingClientRect();
+        return qr.width > 240 && qr.bottom <= page.bottom && qr.left >= page.left && qr.right <= page.right;
+      }), 'the full feedback QR is visible');
+      if (capture && uiScale === 150) await page.screenshot({path:path.join(shots,'about-'+lang+'.png')});
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'device.about');
+      assert.equal(await page.locator('.settings-rows').evaluate(el => el.scrollTop), beforeAbout);
       if (uiScale === 110) {
         await page.locator('.settings-nav [data-value=reminders]').click();
         assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'reminders.enabled', 'activating Reminders moves focus into content');
@@ -213,7 +230,7 @@ const server = http.createServer((req, res) => {
     }
     await page.evaluate(original => original===null ? localStorage.removeItem('fixture') : localStorage.setItem('fixture', original), beforeSpacing);
     await page.reload(); await inputRestored();
-    console.log('PASS: Settings sidebar/content spacing and appearance bounds in both languages at every supported size.');
+    console.log('PASS: Settings spacing, About version/QR/return focus and appearance bounds in both languages at every supported size.');
     if(process.argv.includes('--settings-layout')) return;
     async function preservingSettings() {
       const original = await page.evaluate(() => localStorage.getItem('fixture'));

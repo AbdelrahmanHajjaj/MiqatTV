@@ -14,9 +14,10 @@ Miqat Phone TV setup exposes package download and transfer progress, and LG
 setup supports remembering the Developer Mode passphrase. Physical TV setup
 validation remains pending.
 
-About Miqat on Android phone and TV shows the installed app version, developer
-credit and a GitHub feedback form. Email stays disabled until a public address
-is chosen. No network client is added to either app.
+About Miqat on Android phone and Android TV shows the installed app version,
+developer credit and GitHub feedback. The LG About page is unreleased. It uses
+a feedback QR code, and the browser preview mirrors it. Email stays disabled
+until a public address is chosen.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Routine CI has no phone/TV emulator jobs; retain

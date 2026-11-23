@@ -38,6 +38,8 @@ write(path.join(out, 'app/qrcode.js'), fs.readFileSync(require.resolve('qrcode-g
 write(path.join(out, 'app/qr-style.js'), read('shared/design/qr.js'));
 write(path.join(out, 'app/pairing-qr.js'), read('companion/qr.js'));
   const data = {
+    appVersion: json('platforms/webos/app/appinfo.json').version,
+    feedbackUrl: json('shared/data/feedback.json').github,
     qrStyle: json('shared/design/assets/qr-style.json'),
     qrMark: 'data:image/png;base64,' + fs.readFileSync(path.join(root, 'shared/design/assets/qr-mark.png')).toString('base64'),
     companionCommands: JSON.parse(read('companion/protocol/lan.json')).commands,
