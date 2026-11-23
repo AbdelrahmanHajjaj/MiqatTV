@@ -55,8 +55,9 @@ The new presentation and newer-TV speaker output remain pending on hardware.
 Edge reproduced the Arabic call crossing the mihrab's inner border and focus
 remaining on the sidebar after opening Reminders or Adhan Tests. The corrected
 LG 0.2.31 build fits the call inside the arch and focuses the first control.
-The browser checks both languages across the supported interface sizes. Final
-layout on legacy TV hardware remains pending.
+The browser checks both languages across the supported interface sizes and
+verifies that the single Close button stops playback and restores the input.
+Final layout on legacy TV hardware remains pending.
 
 ## Stable v0.7.5 — 23 November 2026
 

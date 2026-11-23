@@ -94,7 +94,8 @@ accept a property change without changing audible output. Use **Mute HDMI**
 if the programme is still too loud and **Hide HDMI** if the sound continues.
 
 Older TVs, other input types and any released HDMI source use an opaque
-full-screen adhan page. Closing the popup restores the input at normal volume.
+full-screen adhan page. **Close** stops the adhan and restores the input at
+normal volume.
 Other audio modes release the decoder before playing.
 
 On SDKs below 4, adhan volume is an absolute TV level: 30% means 30/100, then the

@@ -929,12 +929,8 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'only the adhan mihrab has a background');
     assert.equal(await page.locator('#screen').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'adhan hides the originating page outside its mihrab');
     assert.equal(await page.locator('.call-verse').innerText(), 'حَيَّ عَلَى الصَّلَاةِ');
-    await page.locator('[data-action=toggle-adhan]').click();
-    assert.equal(await page.locator('[data-action=toggle-adhan]').innerText(), 'Play');
-    assert.equal(await page.locator('.call-frame').count(), 1, 'Stop preserves the call screen for replay');
-    await page.locator('[data-action=toggle-adhan]').click();
-    await page.waitForFunction(() => document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
-    await page.keyboard.press('Escape');
+    assert.deepEqual(await page.locator('.call-column button').allTextContents(), ['Close'], 'Close is the only adhan control');
+    await page.locator('[data-action=dismiss-alert]').click();
     await inputRestored();
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'test-adhan', 'adhan returns to the original test row');
     assert.equal(await page.locator('#screen').evaluate(el => getComputedStyle(el).visibility), 'visible', 'dismissing adhan restores the originating page');
@@ -950,7 +946,6 @@ const server = http.createServer((req, res) => {
     await tests();
     await page.locator('[data-action=test-adhan]').click();
     await page.locator('[data-action=quiet-input]').waitFor();
-    await page.keyboard.press('ArrowDown');
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'dismiss-alert');
     await page.keyboard.press('ArrowDown');
     assert.equal(await page.locator(':focus').getAttribute('data-action'), 'quiet-input');
@@ -1104,6 +1099,7 @@ const server = http.createServer((req, res) => {
     await page.waitForFunction(() => document.querySelector('audio') && document.querySelector('audio').getAttribute('src'));
     assert.equal(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'Arabic adhan keeps the same transparent outer area');
     assert.equal(await page.locator('#screen').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'Arabic adhan hides the originating page');
+    assert.deepEqual(await page.locator('.call-column button').allTextContents(), ['إغلاق']);
     if(capture)await page.screenshot({path: path.join(shots, 'adhan-test-ar.png')});
     await page.keyboard.press('Escape');
     await inputRestored();
@@ -1213,29 +1209,19 @@ const server = http.createServer((req, res) => {
     assert.equal(legacyPlayback.inputSource, undefined, 'old LG releases HDMI before starting adhan because it ignores element mute');
     assert.match(await page.locator('#overlay').evaluate(el => getComputedStyle(el).backgroundColor), /^rgb\(/, 'legacy LG uses an opaque call page');
     assert.equal(await page.locator('[data-action=quiet-input]').isVisible(), false, 'released HDMI has no sound action');
-    await page.locator('[data-action=toggle-adhan]').click();
+    await page.locator('[data-action=dismiss-alert]').click();
     await page.waitForFunction(() => window.mockMasterVolume === 50);
-    assert.equal(await page.locator('.call-frame').count(), 1, 'Stop restores volume while keeping the replay screen');
-    assert.equal(await page.locator('#input-video source').count(), 0, 'old LG keeps HDMI released until the call screen closes');
-    await page.locator('[data-action=toggle-adhan]').click();
-    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
-    const owners = await page.evaluate(() => window.volumeCalls.filter(call => call.action === 'prepare').map(call => call.id));
-    assert.equal(new Set(owners).size, owners.length, 'each replay has a distinct volume owner');
-    await page.keyboard.press('Escape');
-    await page.waitForFunction(() => window.mockMasterVolume === 50);
+    assert.equal(await page.locator('.call-frame').count(), 0, 'Close stops and dismisses the adhan');
     await inputRestored();
-    await page.evaluate(() => { window.mediaCalls = []; });
+    await page.evaluate(() => { window.mediaCalls = []; window.deferVolume = true; });
     await tests(); await page.locator('[data-action=test-adhan]').click();
-    await page.waitForFunction(() => window.mockMasterVolume === 15);
-    await page.locator('[data-action=toggle-adhan]').click();
-    await page.waitForFunction(() => window.mockMasterVolume === 50);
-    await page.evaluate(() => { window.deferVolume = true; });
-    await page.locator('[data-action=toggle-adhan]').click();
     await page.waitForFunction(() => window.volumeReplies && window.volumeReplies.length === 1);
-    await page.waitForTimeout(700); // Cross the original 450 ms decoder-release delay while replay preparation is pending.
-    assert.equal(await page.evaluate(() => window.mediaCalls.filter(c => c.op === 'play' && c.tag === 'AUDIO').length), 0, 'an old play timer cannot bypass replay volume preparation');
+    const owners = await page.evaluate(() => window.volumeCalls.filter(call => call.action === 'prepare').map(call => call.id));
+    assert.equal(new Set(owners).size, owners.length, 'each alert has a distinct volume owner');
+    await page.waitForTimeout(700); // Cross the 450 ms decoder-release delay while preparation is pending.
+    assert.equal(await page.evaluate(() => window.mediaCalls.filter(c => c.op === 'play' && c.tag === 'AUDIO').length), 0, 'the decoder delay cannot bypass volume preparation');
     await page.evaluate(() => { window.deferVolume = false; window.volumeReplies.shift()(); });
-    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
+    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('audio')?.getAttribute('src'));
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => window.mockMasterVolume === 50);
     await inputRestored();
@@ -1282,8 +1268,10 @@ const server = http.createServer((req, res) => {
     await page.evaluate(() => document.querySelector('audio').dispatchEvent(new Event('ended')));
     await page.waitForFunction(() => window.mockMasterVolume === 50);
     assert.equal(await page.locator('.call-frame').count(), 1, 'completed full adhan restores level while keeping its timed call screen');
-    await page.locator('[data-action=toggle-adhan]').click();
-    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('[data-action=toggle-adhan]').textContent === 'Stop');
+    await page.locator('[data-action=dismiss-alert]').click();
+    await inputRestored();
+    await tests(); await page.locator('[data-action=test-adhan]').click();
+    await page.waitForFunction(() => window.mockMasterVolume === 15 && document.querySelector('audio')?.getAttribute('src'));
     await page.evaluate(() => {
       const audio = document.querySelector('audio');
       Object.defineProperty(audio, 'error', {value: {code: 4}}); audio.dispatchEvent(new Event('error'));

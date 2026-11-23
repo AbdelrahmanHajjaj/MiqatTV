@@ -268,7 +268,7 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 [dir=ltr] .call-name { font: 128px/1.1 Marcellus, serif; }
 .call-time { font-size: 64px; line-height: 1.2; color: {{color.gold-400}}; }
 .audio-overlay .call-column button { display: block; width: 420px; height: 76px; min-height: 76px; padding: 14px 20px; border-radius: 38px; font-size: 28px; margin: 18px auto 0; }
-.audio-overlay .call-column .call-play { margin-top: 36px; }
+.audio-overlay .call-column .call-dismiss { margin-top: 36px; }
 .call-status { font-size: 22px; color: {{color.mist-400}}; margin-top: 20px; }
 .voice-count { margin: 22px 80px; color: {{color.mist-400}}; font-size: 24px; }
 .voice-list { position: absolute; top: 240px; left: 180px; right: 180px; height: 650px; overflow-y: auto; padding: 12px; }

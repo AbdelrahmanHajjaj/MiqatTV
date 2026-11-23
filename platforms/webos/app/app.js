@@ -1000,21 +1000,21 @@
     releaseVideo();
     var audio = document.createElement('audio'), serial = ++audioSerial, decoderReadyAt = Date.now() + 450;
     audio.setAttribute('preload', 'none'); audio.volume = prefs.volume / 100;
-    var item = {kind: kind, audio: audio, serial: serial, started: false};
+    var id = instance + '-' + (++volumeSerial);
+    var item = {kind: kind, audio: audio, serial: serial, started: false, volumeId: id};
     media = item;
     companionUiState();
     document.getElementById('stage').appendChild(audio);
     function active() { return media && media.serial === serial; }
-    function failed(detail, ownerId) {
-      if (!active() || ownerId && (item.volumeId !== ownerId || item.paused)) { return; }
+    function failed(detail) {
+      if (!active()) { return; }
       stopAudio('error', true, detail);
       notify(t('تعذر تشغيل الصوت. تمت العودة للمدخل.', 'Audio could not play. Returning to input.'), detail);
     }
-    item.play = function () {
-      var id = instance + '-' + (++volumeSerial); item.volumeId = id; item.started = false;
+    function startPlayback() {
       clearTimeout(mediaTimer); clearTimeout(audioTimer);
       request('audioVolume', {action: 'prepare', id: id}, function (reply) {
-        if (!active() || item.volumeId !== id || item.paused) {
+        if (!active()) {
           request('audioVolume', {action: 'release', id: id}); return;
         }
         if (!reply.returnValue || ['tv', 'element'].indexOf(reply.mode) < 0) { failed(reply.errorText || 'Audio level unavailable'); return; }
@@ -1031,37 +1031,33 @@
           adhanInput = null;
         }
         audio.volume = reply.mode === 'tv' ? 1 : prefs.volume / 100;
-        if (kind !== 'radio' && !item.deadline) {
+        if (kind !== 'radio') {
           item.deadline = setTimeout(function () { if (active()) { stopAudio('stopped', true); } }, (seconds || (prefs.callClose ? prefs.callClose * 60 : 600)) * 1000);
         }
         // Wait for the decoder handoff; only this prepared owner may start playback.
         mediaTimer = setTimeout(function () {
-          if (!active() || item.volumeId !== id || item.paused) { return; }
-          if (!audio.getAttribute('src')) { audio.src = url; audio.load(); }
-          item.started = false;
-          try { var started = audio.play(); if (started && started.catch) { started.catch(function (error) { failed(error.message, id); }); } }
-          catch (error) { failed(error.message, id); }
+          if (!active()) { return; }
+          audio.src = url; audio.load();
+          try { var started = audio.play(); if (started && started.catch) { started.catch(function (error) { failed(error.message); }); } }
+          catch (error) { failed(error.message); }
           if (active() && !item.started) {
-            audioTimer = setTimeout(function () { failed('Audio did not start within 15 seconds', id); }, 15000);
+            audioTimer = setTimeout(function () { failed('Audio did not start within 15 seconds'); }, 15000);
           }
         }, Math.max(0, decoderReadyAt - Date.now()));
       });
-    };
+    }
     audio.addEventListener('playing', function () {
-      if (!active() || item.paused) { return; } media.started = true; clearTimeout(audioTimer); mediaReport('playing');
+      if (!active()) { return; } media.started = true; clearTimeout(audioTimer); mediaReport('playing');
       var status = overlay.querySelector('[data-audio-status]') || screen.querySelector('[data-radio-status]');
       if (status) { status.textContent = t('جارٍ التشغيل', 'Playing'); }
-      var toggle = overlay.querySelector('[data-action=toggle-adhan]'); if (toggle) { toggle.textContent = t('إيقاف', 'Stop'); }
     });
     audio.addEventListener('error', function () { failed('Media error ' + (audio.error ? audio.error.code : 'unknown')); });
     audio.addEventListener('ended', function () {
       if (!active()) { return; } mediaReport('ended');
-      media.ended = true;
       if (kind === 'radio') { stopAudio('ended', true); }
       else if (!seconds && prefs.callClose > 0 && kind === 'adhan') {
         releaseAudioVolume(item);
         var status = overlay.querySelector('[data-audio-status]'); if (status) { status.textContent = t('انتهى الأذان', 'Adhan finished'); }
-        var toggle = overlay.querySelector('[data-action=toggle-adhan]'); if (toggle) { toggle.textContent = t('تشغيل', 'Play'); }
       } else { stopAudio('ended', true); }
     });
     var progressCount = 0;
@@ -1072,7 +1068,7 @@
       if (progressCount >= 15) { clearInterval(media.progressTimer); }
     }, 1000);
     mediaReport('loading');
-    item.play();
+    startPlayback();
   }
   function startRadio(keepView) {
     radioBeforeCall = false; dismissOverlay(); startAudio('radio', A.station(prefs.station).url, 0); if (!keepView) { show('radio'); }
@@ -1106,7 +1102,7 @@
         '<path class="inner" d="' + D.mihrab.inner + '"/></svg><section class="call-column">' +
         '<div class="call-verse" lang="ar" dir="rtl">' + escape(D.sacred.adhanCall) + '</div><p class="call-label">' + (alert.test ? t('اختبار الأذان', 'Adhan test') : t('حان وقت الصلاة', 'Time for prayer')) +
         '</p><div class="call-name">' + escape(label) + '</div><div class="call-time">' + digits(A.clock(alert.prayerTime || new Date(), prefs)) + '</div>' +
-        button('toggle-adhan', t('إيقاف', 'Stop'), '', 'call-play') + button('dismiss-alert', t('إغلاق', 'Dismiss'), '', 'call-dismiss') +
+        button('dismiss-alert', t('إغلاق', 'Close'), '', 'call-dismiss') +
         '<p class="call-status" data-audio-status>' + t('جارٍ تحميل الصوت…', 'Loading audio…') + '</p></section></div>' +
         button('quiet-input', s('adhanMuteInput'), '', 'call-input-sound', '', uiContract.bind('adhan.quiet-input', 'action'));
     } else {
@@ -1174,22 +1170,6 @@
       startAudio('adhan', 'audio/adhan/' + value + '.mp3', 12); voicePreview = value;
       var scroll = returnContext.scroll; render('[data-action=preview-voice][data-value="' + value + '"]');
       screen.querySelector('.voice-list').scrollTop = scroll; return;
-    }
-    if (action === 'toggle-adhan' && media) {
-      var toggle = overlay.querySelector('[data-action=toggle-adhan]');
-      if (media.paused || media.ended) {
-        clearTimeout(overlayTimer); media.paused = false; media.ended = false;
-        toggle.textContent = t('جارٍ التحميل…', 'Loading…');
-        try {
-          if (media.audio.getAttribute('src')) { media.audio.currentTime = 0; }
-          media.play();
-        } catch (error) { stopAudio('error', true, error.message); }
-      } else {
-        clearTimeout(mediaTimer); clearTimeout(audioTimer);
-        media.audio.pause(); media.paused = true; mediaReport('stopped'); releaseAudioVolume(media); toggle.textContent = t('تشغيل', 'Play');
-        if (prefs.callClose === 0) { overlayTimer = setTimeout(function () { stopAudio('stopped', true); }, 10000); }
-      }
-      return;
     }
     if (['input', 'home', 'settings', 'inputs', 'bar', 'prayer-day', 'radio', 'apps'].indexOf(action) >= 0) {
       if (action === 'input' && media) { radioBeforeCall = false; stopAudio('stopped', true); return; }
