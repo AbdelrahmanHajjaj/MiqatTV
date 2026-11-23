@@ -71,6 +71,17 @@ const server=http.createServer((request,response)=>{
       assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('miqat-prefs')).prayerOffsets),[1,0,1,0,0,0],'independent prayer controls retain each change');
       await page.reload();
       await page.locator('[data-nav="6"]').click();const entry=page.locator('[data-ui="device.companion"]');await entry.waitFor();
+      const about = page.locator('[data-ui="device.about"]');
+      await about.click();
+      const aboutPage = page.locator('[data-about]');
+      assert.equal(await aboutPage.isVisible(), true);
+      assert.equal(await aboutPage.locator('.about-version').textContent(), require('../../platforms/webos/app/appinfo.json').version);
+      assert.equal(await aboutPage.locator('button:disabled').count(), 1);
+      assert.equal(await aboutPage.locator('.about-demo-qr svg').isVisible(), true);
+      if (process.argv.includes('--capture') && size === 150) await page.locator('.tv-frame').screenshot({path:path.join(shots,'about-'+language+'.png')});
+      await page.keyboard.press('Escape');
+      assert.equal(await aboutPage.isHidden(), true);
+      assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'device.about');
       const before=await page.evaluate(()=>localStorage.getItem('miqat-prefs'));const seen=new Set(['device.companion']);
       const collect=async()=>{for(const id of await page.locator('[data-pairing]:not([hidden]) [data-ui]').evaluateAll(items=>items.map(el=>{if(el.dataset.uiKind!=='action')throw Error('Wrong pairing binding');return el.dataset.ui;})))seen.add(id);};
       await entry.click();await page.locator('[data-pairing]:not([hidden])').waitFor();await collect();

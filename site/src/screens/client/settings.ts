@@ -40,6 +40,18 @@ onScreen('settings', (stage, signal) => {
   let online: OnlineView | null = null;
   const onlineBackground = [...root.children].filter(el => el !== onlineEl) as HTMLElement[];
 
+  const aboutEl = $('[data-about]'), aboutBack = $('[data-about-back]');
+  const aboutBackground = [...root.children].filter(el => el !== aboutEl) as HTMLElement[];
+  let aboutRow: number | null = null;
+  const closeAbout = () => {
+    if (aboutRow === null) return;
+    const row = aboutRow;
+    aboutRow = null;
+    aboutEl.hidden = true;
+    aboutBackground.forEach(el => el.inert = false);
+    focusRow(row);
+  };
+
   const pairingEl=$('[data-pairing]'),pairingBody=$('[data-pairing-body]'),pairingBack=$('[data-pair-action=back]');
   let pairingRow:number|null=null,pairingState=pairingDemo();
   const pairingBackground=[...root.children].filter(el=>el!==pairingEl) as HTMLElement[];
@@ -279,6 +291,13 @@ onScreen('settings', (stage, signal) => {
     const r = rowsFor(rowCtx(), section, radioOn, offsetsPage)[i];
     if (!r) return;
     if(r.id==='device.companion'){pairingRow=i;pairingEl.hidden=false;pairingBackground.forEach(el=>el.inert=true);renderPairing();return;}
+    if (r.id === 'device.about') {
+      aboutRow = i;
+      aboutEl.hidden = false;
+      aboutBackground.forEach(el => el.inert = true);
+      aboutBack.focus({preventScroll: true});
+      return;
+    }
     if (r.id === 'prayer.online') { void checkOnline(i); return; }
     if (r.id === 'homeReset') save({ ...ctx.prefs, homeCountdown: 0, homeSide: 0, homeBar: 0, homePrayers: 0, homeLayout: 'two_rows' });
     else if (r.kind === 'carousel') return;
@@ -318,6 +337,11 @@ onScreen('settings', (stage, signal) => {
     const toEnd = rtl ? -horiz : horiz; // +1 toward the end of the line, mirrored in RTL
     const handled = () => { e.preventDefault(); e.stopPropagation(); };
 
+    if (aboutRow !== null) {
+      if (ok || back || vert || horiz || k === 'Tab') handled();
+      if (ok || back) closeAbout();
+      return;
+    }
     if(pairingRow!==null){
       if(!ok&&!back&&!vert&&!horiz&&k!=='Tab')return;handled();
       if(back)closePairing();
@@ -388,6 +412,10 @@ onScreen('settings', (stage, signal) => {
   // Pointer: the same actions.
   root.addEventListener('click', (e) => {
     const el = e.target as HTMLElement;
+    if (aboutRow !== null) {
+      if (el.closest('[data-about-back]')) closeAbout();
+      return;
+    }
     if(pairingRow!==null){
       const button=el.closest<HTMLElement>('[data-pair-action]');if(!button)return;
       const action=button.dataset.pairAction;if(action==='back')closePairing();

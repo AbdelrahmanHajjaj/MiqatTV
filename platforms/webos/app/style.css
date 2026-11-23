@@ -327,6 +327,14 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 [dir=rtl] .pairing-controls .value { float:left; }
 .pairing-code { display:block;font-size:56px;letter-spacing:8px; }
 .pairing-controls h2 { word-wrap:break-word; }
+.about-body { display:table; table-layout:fixed; width:100%; margin-top:32px; }
+.about-details, .about-feedback { display:table-cell; vertical-align:top; }
+.about-details p { margin:0 0 30px; line-height:1.55; }
+.about-version { display:inline-block; }
+.about-details button:disabled { color:{{color.mist-400}}; }
+.about-feedback { width:352px; text-align:center; }
+.about-feedback p { margin:0 0 18px; }
+.about-qr, .about-qr > svg { display:block; width:320px; height:320px; margin:auto; }
 
 
 .appearance-group { margin:24px 16px 12px; color:{{color.mist-400}};font-size:24px; }

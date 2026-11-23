@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- LG webOS shows the installed version, developer credit and a GitHub feedback
+  QR code under About Miqat. Email feedback is currently disabled.
+
 ## v0.7.6
 
 - LG keeps the Arabic adhan call inside the mihrab and moves focus to the first
