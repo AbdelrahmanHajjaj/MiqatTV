@@ -1,5 +1,22 @@
 # Validation evidence
 
+## Miqat Phone prayer usability — 23 November 2026
+
+Phone 0.5.22/code 38 passed debug app and instrumentation builds, lint,
+companion generator, canonical catalog and bilingual website checks.
+On an owned API 37 emulator,
+the bilingual phone UI, fresh-use/hosted-widget journey, one-cell widget checks
+and 80–150% sizing passed. Native checks exercised countdown seconds, inline
+adjusted times, calendar swipes, fixed widget binding and a shrinking ring at two
+real prayer timestamps. Portrait captures use the Cairo fixture.
+
+The bilingual WebView loaded live OpenStreetMap tiles after explicit Load map.
+Playwright verified pinch, pan, recenter, nearby initial tiles, zoom controls and
+visible attribution with mocked tiles. Physical launcher acceptance is pending.
+
+The latest review APK retains the review signer and matches the built bytes.
+It contains all 25 approved recordings. SHA-256 prefix `26350C577D04939F`.
+
 ## Manual Android update check — 23 November 2026
 
 Android phone and TV debug builds, lint, instrumentation builds, TV size and

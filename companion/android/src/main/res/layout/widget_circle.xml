@@ -1,0 +1,30 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:layoutDirection="locale">
+    <ImageView android:id="@+id/widget_backdrop" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:scaleType="fitCenter" android:importantForAccessibility="no" />
+    <ImageView android:id="@+id/widget_circle_ring" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:scaleType="fitCenter"
+        android:src="@drawable/widget_circle_preview" android:importantForAccessibility="no" />
+    <LinearLayout android:id="@+id/widget_content" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:padding="24dp">
+        <TextView android:id="@+id/widget_next_label" style="@style/MiqatWidgetValue"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
+            android:textColor="@color/companion_gold_400" android:text="@string/widget_preview_prayer_0"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
+            android:autoSizeMaxTextSize="24sp" android:autoSizeStepGranularity="1sp" />
+        <TextView android:id="@+id/widget_next_remaining" style="@style/MiqatWidgetHero"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
+            android:text="@string/widget_preview_countdown"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
+            android:autoSizeMaxTextSize="30sp" android:autoSizeStepGranularity="1sp" />
+        <TextView android:id="@+id/widget_title" style="@style/MiqatWidgetText"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:maxLines="2" android:includeFontPadding="false"
+            android:text="@string/widget_preview_hijri"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
+            android:autoSizeMaxTextSize="13sp" android:autoSizeStepGranularity="1sp" />
+    </LinearLayout>
+</FrameLayout>

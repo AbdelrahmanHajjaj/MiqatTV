@@ -98,6 +98,7 @@ final class QiblaUi implements SensorEventListener {
         a.phoneUi.open("calculation");
     }
 
+    @android.annotation.SuppressLint("SetJavaScriptEnabled") // Only the bundled CSP-limited map runs scripts.
     private void renderMap(PhoneStore settings) {
         a.body.addView(a.views.text(a.t("phone_map_privacy"), 13, a.muted));
         FrameLayout frame =
@@ -132,17 +133,26 @@ final class QiblaUi implements SensorEventListener {
                             try {
                                 String html =
                                         QiblaMap.html(
+                                                a,
                                                 settings.latitude,
                                                 settings.longitude,
-                                                a.ground,
-                                                a.ink,
-                                                a.t("phone_kaaba"));
-                                map = new WebView(a);
+                                                a.t("phone_kaaba"),
+                                                a.t("phone_map_zoom_in"),
+                                                a.t("phone_map_zoom_out"),
+                                                a.t("phone_current_location"));
+                                map = new WebView(a) {
+                                    @Override
+                                    public boolean dispatchTouchEvent(MotionEvent event) {
+                                        if (event.getActionMasked() == MotionEvent.ACTION_DOWN)
+                                            getParent().requestDisallowInterceptTouchEvent(true);
+                                        return super.dispatchTouchEvent(event);
+                                    }
+                                };
                                 map.setTag("qibla.map");
                                 map.setContentDescription(
                                         a.t("phone_qibla") + " · " + a.t("phone_map"));
                                 WebSettings web = map.getSettings();
-                                web.setJavaScriptEnabled(false);
+                                web.setJavaScriptEnabled(true);
                                 web.setAllowFileAccess(false);
                                 web.setAllowContentAccess(false);
                                 web.setGeolocationEnabled(false);
@@ -207,7 +217,7 @@ final class QiblaUi implements SensorEventListener {
                                                     WebView view,
                                                     WebResourceRequest request,
                                                     WebResourceError error) {
-                                                status.setText(a.t("phone_map_unavailable"));
+                                                if (view == map) status.setText(a.t("phone_map_unavailable"));
                                             }
 
                                             @Override
@@ -215,7 +225,7 @@ final class QiblaUi implements SensorEventListener {
                                                     WebView view,
                                                     WebResourceRequest request,
                                                     WebResourceResponse response) {
-                                                status.setText(a.t("phone_map_unavailable"));
+                                                if (view == map) status.setText(a.t("phone_map_unavailable"));
                                             }
                                         });
                                 frame.addView(map, new FrameLayout.LayoutParams(-1, -1));

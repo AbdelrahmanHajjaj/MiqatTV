@@ -9,14 +9,15 @@ no real household addresses, credentials, private recordings or pairing QR codes
 
 | Files, with `-en.png` / `-ar.png` | Source |
 | --- | --- |
-| `phone-home` | PhoneHomeCheck's completed Home fixture. |
+| `phone-home` | PhoneJourneyCheck's completed Home fixture with countdown seconds. |
 | `phone-calendar` | Ramadan day 12 selected in the native calendar during the v0.7.4 review. |
 | `phone-fasting` | PhoneFastingCheck's day-before, suhoor and iftar settings in the v0.7.4 review. |
 | `phone-radio` | Native Quran Radio popup on Home from the PR #22 review. |
-| `phone-prayer` | PhonePolishCheck's real per-prayer controls. |
+| `phone-prayer` | PhonePolishCheck's per-prayer adjustment and reminder previews. |
 | `phone-voices` | PhoneLibraryCheck's named demonstration audio library. |
 | `phone-location` | PhoneUiCheck's real Location settings. |
-| `phone-qibla`, `phone-widgets`, `phone-style` | PhoneJourneyCheck's Qibla, widget configuration and setup-style screens. |
+| `phone-qibla` | PhoneCalendarCheck's opt-in map using live OpenStreetMap tiles for the public Cairo fixture. |
+| `phone-widgets`, `phone-style` | PhoneJourneyCheck's Circle widget configuration and setup-style screens. |
 | `companion-tvs`, `companion-remote`, `companion-appearance` | CompanionCheck's native demo-TV interfaces, including the corrected preview caption. |
 | `android-home` | Native Android TV Home from the 0.7.2 UI-alignment review. |
 | `lg-home` | LG browser-test's aligned Home capture from the 0.2.30 review. |
@@ -26,6 +27,8 @@ emulator at 1080×2400, density 420. Fixtures provide dates, locations, themes,
 audio names, sensor headings and demo TVs.
 Radio, Ramadan and fasting captures use phone 0.5.19/code 35 review builds on the
 Android API 37 emulator at 1080×2400 with Cairo selected.
+Home, prayer adjustments, the Qibla map and Circle widget configuration use the
+0.5.22/code 38 review build on the same portrait emulator.
 
 Android TV 0.7.2/code 13 captures use native Views in a landscape API 34 Google APIs
 emulator at 1920×1080/density 160. Original PNGs include its system navigation

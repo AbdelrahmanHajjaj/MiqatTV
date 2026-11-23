@@ -45,11 +45,17 @@ final class WidgetRenderer {
         String presentation = initialLayout == null ? options.layoutFor(width, height, context.getResources().getConfiguration().fontScale) : initialLayout;
         RemoteViews view = new RemoteViews(context.getPackageName(), presentation.equals("next")
                 ? PhoneAlarms.arabic(context) ? R.layout.widget_next_card_ar : R.layout.widget_next_card
-                : R.layout.prayer_widget);
+                : presentation.equals("circle") ? R.layout.widget_circle : R.layout.prayer_widget);
         view.setOnClickPendingIntent(R.id.widget_root, PhoneAlarms.open(context));
         try {
             new WidgetRenderer(context, view, options, width, height, initialLayout, now).render();
         } catch (Exception unavailable) {
+            if (presentation.equals("circle")) {
+                view.setTextViewText(R.id.widget_next_label, PhoneAlarms.text(context, "phone_settings_failed"));
+                view.setTextViewText(R.id.widget_next_remaining, "");
+                view.setTextViewText(R.id.widget_title, "");
+                return view;
+            }
             view.setInt(
                     R.id.widget_backdrop,
                     "setColorFilter",
@@ -75,7 +81,8 @@ final class WidgetRenderer {
         this.view = view;
         this.options = options;
         layout = initialLayout == null ? options.layoutFor(width, height, context.getResources().getConfiguration().fontScale) : initialLayout;
-        this.width = width > 0 ? width : options.layout.equals("strip") ? 400 : options.layout.equals("next") ? 80 : 280;
+        this.width = width > 0 ? width : options.layout.equals("strip") ? 400
+                : options.layout.equals("next") ? 80 : options.layout.equals("circle") ? options.height() : 280;
         this.height = height > 0 ? height : options.height();
         float scale = Math.max(1f, context.getResources().getConfiguration().fontScale) * options.size / 100f;
         wide = !layout.equals("strip") && (this.width >= 260 * scale
@@ -98,6 +105,10 @@ final class WidgetRenderer {
     }
 
     private void render() throws Exception {
+        if (layout.equals("circle")) {
+            circle();
+            return;
+        }
         if (wide || layout.equals("next")) {
             view.removeAllViews(R.id.widget_next);
             int content = ar ? R.layout.widget_next_wide_ar : R.layout.widget_next_wide;
@@ -185,6 +196,75 @@ final class WidgetRenderer {
         view.setViewVisibility(
                 R.id.widget_updated,
                 layout.equals("next") || layout.equals("strip") || compact || minimal || layout.equals("day") && height < 360 * context.getResources().getConfiguration().fontScale ? View.GONE : View.VISIBLE);
+    }
+
+    private void circle() throws Exception {
+        int side = Math.min(width, height);
+        view.setImageViewBitmap(R.id.widget_backdrop,
+                WidgetBackground.create(context, settings, options, colors, side, side));
+        view.setInt(R.id.widget_backdrop, "setImageAlpha", options.opacity * 255 / 100);
+        int inset = Math.round(side * (options.size == 120 ? .14f : .18f));
+        view.setViewPadding(R.id.widget_content, dp((width - side) / 2 + inset),
+                dp((height - side) / 2 + inset), dp((width - side + 1) / 2 + inset),
+                dp((height - side + 1) / 2 + inset));
+        view.setTextColor(R.id.widget_next_label, accent);
+        view.setTextColor(R.id.widget_next_remaining, ink);
+        view.setTextColor(R.id.widget_title, ink);
+
+        PhoneSchedule.Day day = settings.day(now, 0), tomorrow = settings.day(now, 1);
+        PrayerSelection next = settings.locationReady
+                ? tv.miqat.companion.core.PhonePrayerRules.INSTANCE.nextPrayer(day.times, tomorrow.times, now)
+                : null;
+        String prayer = data.text(settings.locationReady ? "phone_unavailable" : "phone_location_needed", ar);
+        String remaining = "";
+        double fraction = 0;
+        if (next != null) {
+            prayer = data.prayerName(next.getNext(), ar);
+            long minutes = (long) tv.miqat.core.ReminderRules.INSTANCE.minutesLeft(next.getNextTime(), now);
+            remaining = text(String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60));
+            view.setContentDescription(R.id.widget_next_remaining,
+                    String.format(locale, data.text("phone_remaining", ar), remaining));
+            fraction = circleRemaining(day, tomorrow, next);
+        }
+        view.setTextViewText(R.id.widget_next_label, prayer);
+        view.setInt(R.id.widget_next_label, "setMaxLines", next == null ? 2 : 1);
+        view.setTextViewText(R.id.widget_next_remaining, remaining);
+        view.setViewVisibility(R.id.widget_next_remaining, next == null ? View.GONE : View.VISIBLE);
+        SimpleDateFormat civil = new SimpleDateFormat("d MMM", locale);
+        civil.setTimeZone(settings.zone());
+        String date = options.hijri ? PhoneTime.hijri(settings, now, ar) : "";
+        if (options.date) date += (date.isEmpty() ? "" : "\n") + civil.format(new Date(now));
+        view.setTextViewText(R.id.widget_title, text(date));
+        view.setViewVisibility(R.id.widget_title, date.isEmpty() ? View.GONE : View.VISIBLE);
+        view.setImageViewBitmap(R.id.widget_circle_ring, ring(side, fraction));
+    }
+
+    private double circleRemaining(PhoneSchedule.Day day, PhoneSchedule.Day tomorrow, PrayerSelection next) {
+        int prayer = next.getNext();
+        double target = next.getNextTime();
+        double[] previousDay = prayer == 0 && (tomorrow.times == null || target != tomorrow.times[0])
+                ? settings.day(now, -1).times : day.times;
+        if (previousDay == null) return 0;
+        double previous = previousDay[prayer == 0 ? 5 : prayer == 2 ? 0 : prayer - 1];
+        return target <= previous ? 0 : Math.max(0, Math.min(1, (target - now) / (target - previous)));
+    }
+
+    private android.graphics.Bitmap ring(int side, double fraction) {
+        int pixels = Math.max(1, Math.min(320, dp(side)));
+        android.graphics.Bitmap image = android.graphics.Bitmap.createBitmap(
+                pixels, pixels, android.graphics.Bitmap.Config.ARGB_8888);
+        android.graphics.Canvas canvas = new android.graphics.Canvas(image);
+        android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        paint.setStyle(android.graphics.Paint.Style.STROKE);
+        paint.setStrokeWidth(pixels * .0375f);
+        paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+        paint.setColor((accent & 0xffffff) | 0x55000000);
+        float inset = pixels * .06f;
+        android.graphics.RectF track = new android.graphics.RectF(inset, inset, pixels - inset, pixels - inset);
+        canvas.drawOval(track, paint);
+        paint.setColor(accent);
+        canvas.drawArc(track, -90, (float) (360 * fraction), false, paint);
+        return image;
     }
 
     private void prayers() throws Exception {

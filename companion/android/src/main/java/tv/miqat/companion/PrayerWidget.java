@@ -16,12 +16,15 @@ public class PrayerWidget extends AppWidgetProvider {
 
     public static final class Strip extends PrayerWidget {}
 
+    public static final class Circle extends PrayerWidget {}
+
     static ComponentName component(Context context, String layout) {
         return new ComponentName(
                 context,
                 layout.equals("next")
                         ? Next.class
-                        : layout.equals("strip") ? Strip.class : PrayerWidget.class);
+                        : layout.equals("strip") ? Strip.class
+                        : layout.equals("circle") ? Circle.class : PrayerWidget.class);
     }
 
     static int[] ids(Context context) {

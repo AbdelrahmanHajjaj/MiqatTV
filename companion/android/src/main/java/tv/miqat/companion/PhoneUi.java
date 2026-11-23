@@ -437,6 +437,7 @@ final class PhoneUi {
                     a.body.getChildAt(i).setAlpha(.4f);
                 }
         }
+        refreshPrayerTimePreviews(base + "offset");
         if (!settings.prayerEnabled(prayer)) {
             for (int i = start; i < a.body.getChildCount(); i++) {
                 a.views.disableContent(a.body.getChildAt(i));
@@ -606,6 +607,16 @@ final class PhoneUi {
                                             settings.value("display.clock").equals("24")));
                         });
                 return;
+            }
+            if (prayerTimePreview(id)) {
+                LinearLayout labels = a.views.column();
+                row.removeView(title);
+                row.addView(labels, new LinearLayout.LayoutParams(0, -2, 1));
+                labels.addView(title, new LinearLayout.LayoutParams(-1, -2));
+                TextView preview = a.views.text("", 13, a.accent);
+                preview.setTag("phone." + id + ".preview");
+                labels.addView(preview);
+                if (id.equals("prayer.sunrise-offset")) refreshPrayerTimePreviews(id);
             }
             number(row, spec, saved, label);
             if (id.startsWith("call.")
@@ -814,6 +825,7 @@ final class PhoneUi {
                     return;
                 }
                 input.setError(null);
+                if (prayerTimePreview(id)) refreshPrayerTimePreviews(id);
             } catch (Exception invalid) {
                 input.setError(text.isEmpty() || normalize(text).equals("-") ? null : a.t("invalid"));
             }
@@ -837,6 +849,29 @@ final class PhoneUi {
     private boolean saveTypedNumber(String id, String next) {
         return settings.value(id).equals(next)
                 || save(Collections.singletonMap(id, next), id.equals("display.size"), id.equals("display.size"));
+    }
+
+    private static boolean prayerTimePreview(String id) {
+        return id.equals("prayer.sunrise-offset") || id.startsWith("call.")
+                && (id.endsWith(".offset") || id.endsWith(".before") || id.endsWith(".after"));
+    }
+
+    private void refreshPrayerTimePreviews(String id) {
+        boolean sunrise = id.equals("prayer.sunrise-offset");
+        int prayer = sunrise ? 1
+                : Arrays.asList(PhoneStore.PRAYERS).indexOf(id.substring(5, id.lastIndexOf('.')));
+        String base = "call." + PhoneStore.PRAYERS[prayer] + ".";
+        double[] times = settings.locationReady ? settings.day(System.currentTimeMillis(), 0).times : null;
+        for (String key : sunrise ? new String[] {id}
+                : new String[] {base + "offset", base + "before", base + "after"}) {
+            TextView preview = a.body.findViewWithTag("phone." + key + ".preview");
+            if (preview == null) continue;
+            int minutes = key.endsWith(".before") ? -settings.before[prayer]
+                    : key.endsWith(".after") ? settings.after[prayer] : 0;
+            boolean isOffset = key.endsWith("offset");
+            preview.setText(times == null || !isOffset && minutes == 0
+                    ? "—" : time(times[prayer] + minutes * 60_000L));
+        }
     }
 
     private static String numberValue(SettingSpec spec, String text) {

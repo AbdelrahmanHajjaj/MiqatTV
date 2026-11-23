@@ -247,7 +247,10 @@ final class PhoneJourneyCheck {
                                             != null,
                                     "Widget must render actual RemoteViews");
                         });
-                PhoneUiCheck.capture(test, resumed, lang + "-journey-widget", captures);
+                if (captures) {
+                    PhoneUiCheck.on(test, () -> resumed.body.findViewWithTag("widget.layout.circle").performClick());
+                    PhoneUiCheck.capture(test, resumed, lang + "-journey-widget", true);
+                }
                 PhoneUiCheck.on(
                         test,
                         () -> {

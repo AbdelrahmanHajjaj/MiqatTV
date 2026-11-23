@@ -17,8 +17,8 @@ final class WidgetHostCheck {
             throw new IllegalStateException("Widget host fixture requires API 29+");
         PhoneStore original = PhoneStore.read(a);
         AppWidgetHost[] host = {null};
-        AppWidgetHostView[] views = new AppWidgetHostView[4];
-        int[] ids = new int[4];
+        AppWidgetHostView[] views = new AppWidgetHostView[5];
+        int[] ids = new int[5];
         MainActivity[] editor = {null};
         test.getUiAutomation().adoptShellPermissionIdentity(Manifest.permission.BIND_APPWIDGET);
         try {
@@ -35,15 +35,17 @@ final class WidgetHostCheck {
                                     manager.bindAppWidgetIdIfAllowed(
                                             ids[i],
                                             PrayerWidget.component(
-                                                    a, i == 2 ? "next" : i == 3 ? "strip" : "day")),
+                                                    a, i == 2 ? "next" : i == 3 ? "strip" : i == 4 ? "circle" : "day")),
                                     "System rejected test-owned widget binding");
                             views[i] =
                                     host[0].createView(a, ids[i], manager.getAppWidgetInfo(ids[i]));
                             a.body.addView(
-                                    views[i], new LinearLayout.LayoutParams(-1, a.views.dp(340)));
+                                    views[i], i == 4
+                                            ? new LinearLayout.LayoutParams(a.views.dp(160), a.views.dp(160))
+                                            : new LinearLayout.LayoutParams(-1, a.views.dp(340)));
                             android.os.Bundle initial = new android.os.Bundle();
-                            setBounds(initial, i == 2 ? 160 : i == 3 ? 400 : 280,
-                                    i == 2 ? 160 : i == 3 ? 140 : 330);
+                            setBounds(initial, i == 2 || i == 4 ? 160 : i == 3 ? 400 : 280,
+                                    i == 2 || i == 4 ? 160 : i == 3 ? 140 : 330);
                             manager.updateAppWidgetOptions(ids[i], initial);
                             PrayerWidget.update(a, ids[i]);
                         }
@@ -73,6 +75,13 @@ final class WidgetHostCheck {
                 PhoneUiCheck.check(defaults.hijri && !defaults.date,
                         "New widgets must default to Hijri without Gregorian date");
             }
+            LiveUiCheck.untilUi(test, () -> views[4].findViewById(R.id.widget_circle_ring) != null
+                    && ((TextView) views[4].findViewById(R.id.widget_title)).getText().toString()
+                            .equals(a.phoneUi.digits(PhoneTime.hijri(a.phoneUi.settings, System.currentTimeMillis(), a.ar))));
+            AppWidgetProviderInfo circle = AppWidgetManager.getInstance(a).getAppWidgetInfo(ids[4]);
+            PhoneUiCheck.check(WidgetOptions.read(a, ids[4]).layout.equals("circle")
+                            && circle.resizeMode == AppWidgetProviderInfo.RESIZE_NONE,
+                    "Countdown circle lost its fixed launcher layout");
             responsivePreviews(test, a, capture);
             pickerPreviews(test, a, ids, capture);
             WidgetOptions legacy = WidgetOptions.from(a, "{\"background\":false}");
@@ -95,6 +104,12 @@ final class WidgetHostCheck {
                                 .getText().toString().equals(cancelled.t("widget_add")),"A new widget must offer Add");
                         for (String layout : WidgetOptions.LAYOUTS) {
                             cancelled.body.findViewWithTag("widget.layout." + layout).performClick();
+                            if (layout.equals("circle")) {
+                                PhoneUiCheck.check(cancelled.body.findViewById(R.id.widget_circle_ring) != null
+                                                && cancelled.body.findViewWithTag("widget.style.shape") == null,
+                                        "Countdown circle preview lost its ring or offered alternate shapes");
+                                continue;
+                            }
                             PhoneUiCheck.check((cancelled.body.findViewById(R.id.widget_strip).getVisibility()==View.VISIBLE)==layout.equals("strip")
                                     && (cancelled.body.findViewById(R.id.widget_prayers).getVisibility()==View.VISIBLE)==layout.equals("day"),
                                     "Initial presentation selector previewed another widget: "+layout);
@@ -254,7 +269,8 @@ final class WidgetHostCheck {
                 LiveUiCheck.untilUi(
                         test,
                         () -> {
-                            TextView text = view.findViewById(R.id.widget_times);
+                             TextView text = view.findViewById(view == views[4]
+                                     ? R.id.widget_next_label : R.id.widget_times);
                             return text != null
                                     && text.getVisibility() == View.VISIBLE
                                     && text.getText()
@@ -358,10 +374,16 @@ final class WidgetHostCheck {
             for(String initial : WidgetOptions.LAYOUTS) {
                 style.layout=initial;
                 View selected=WidgetRenderer.initial(context,style,363,style.height()).apply(context,new FrameLayout(a));
+                if (initial.equals("circle")) {
+                    PhoneUiCheck.check(selected.findViewById(R.id.widget_circle_ring) != null,
+                            "Wide allocation replaced the fixed circle");
+                    continue;
+                }
                 PhoneUiCheck.check((selected.findViewById(R.id.widget_strip).getVisibility()==View.VISIBLE)==initial.equals("strip")
                         && (selected.findViewById(R.id.widget_prayers).getVisibility()==View.VISIBLE)==initial.equals("day"),
                         "Initial picker preview adapted away from selected presentation "+initial);
             }
+            style.layout = "strip";
             if(Build.VERSION.SDK_INT>=31) {
                 android.os.Bundle bounds=new android.os.Bundle();setBounds(bounds,300,400);
                 java.util.ArrayList<android.util.SizeF> sizes=new java.util.ArrayList<>();
@@ -550,21 +572,23 @@ final class WidgetHostCheck {
     }
 
     private static void pickerPreviews(Instrumentation test, MainActivity a, int[] ids, boolean capture) throws Exception {
-        for (int index : new int[] {0, 2, 3}) {
-            String layout = index == 0 ? "day" : index == 2 ? "next" : "strip";
+        for (int index : new int[] {0, 2, 3, 4}) {
+            String layout = index == 0 ? "day" : index == 2 ? "next" : index == 3 ? "strip" : "circle";
+            boolean circle = layout.equals("circle");
             AppWidgetProviderInfo info = AppWidgetManager.getInstance(a).getAppWidgetInfo(ids[index]);
             android.graphics.Bitmap[] image = {null};
             PhoneUiCheck.on(test, () -> {
                 android.view.View preview = new RemoteViews(a.getPackageName(), info.previewLayout).apply(a, new FrameLayout(a));
-                TextView prayer = preview.findViewById(layout.equals("next") ? R.id.widget_next_label : R.id.widget_prayer_name);
-                TextView time = preview.findViewById(layout.equals("next") ? R.id.widget_next_time : R.id.widget_prayer_time);
+                TextView prayer = preview.findViewById(circle || layout.equals("next") ? R.id.widget_next_label : R.id.widget_prayer_name);
+                TextView time = preview.findViewById(circle ? R.id.widget_next_remaining
+                        : layout.equals("next") ? R.id.widget_next_time : R.id.widget_prayer_time);
                 PhoneUiCheck.check(prayer != null && !prayer.getText().toString().isEmpty()
                                 && time != null && !time.getText().toString().isEmpty(),
                         "Android picker preview is empty for " + layout);
                 if (!capture) return;
                 preview.setLayoutDirection(a.ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
-                int width = a.views.dp(layout.equals("strip") ? 400 : layout.equals("next") ? 80 : 280);
-                int height = a.views.dp(layout.equals("day") ? 300 : layout.equals("next") ? 80 : 140);
+                int width = a.views.dp(circle ? WidgetOptions.CIRCLE_SIZE : layout.equals("strip") ? 400 : layout.equals("next") ? 80 : 280);
+                int height = a.views.dp(circle ? WidgetOptions.CIRCLE_SIZE : layout.equals("day") ? 300 : layout.equals("next") ? 80 : 140);
                 preview.measure(android.view.View.MeasureSpec.makeMeasureSpec(width, android.view.View.MeasureSpec.EXACTLY),
                         android.view.View.MeasureSpec.makeMeasureSpec(height, android.view.View.MeasureSpec.EXACTLY));
                 preview.layout(0, 0, width, height);

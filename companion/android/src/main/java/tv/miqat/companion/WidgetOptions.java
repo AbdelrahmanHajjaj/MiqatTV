@@ -8,7 +8,8 @@ import java.util.Arrays;
 
 /** Per-instance presentation only; prayer settings always come from PhoneStore. */
 final class WidgetOptions {
-    static final String[] LAYOUTS = {"next", "day", "strip"};
+    static final String[] LAYOUTS = {"next", "day", "strip", "circle"};
+    static final int CIRCLE_SIZE = 160;
     static final String[] SHAPES = {"rounded", "soft", "square"};
     String layout = "day", theme = "app", scene = "plain", shape = "rounded";
     boolean date, hijri = true;
@@ -54,11 +55,12 @@ final class WidgetOptions {
     }
 
     int height() {
+        if (layout.equals("circle")) return CIRCLE_SIZE;
         return layout.equals("day") ? 300 : layout.equals("next") ? 80 : 140;
     }
 
     String layoutFor(int width, int height, float fontScale) {
-        if (width <= 0 || height <= 0) return layout;
+        if (layout.equals("circle") || width <= 0 || height <= 0) return layout;
         float scale = Math.max(1f, fontScale) * size / 100f;
         int dayHeight = Math.round(80 + 220 * scale);
         if (width >= 220 * scale && height >= dayHeight) return "day";

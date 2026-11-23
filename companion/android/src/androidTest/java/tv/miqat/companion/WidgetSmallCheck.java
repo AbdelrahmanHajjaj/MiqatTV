@@ -25,13 +25,15 @@ final class WidgetSmallCheck {
             changes.put("prayer.location-ready","true");changes.put("prayer.background-location","false");
             changes.put("prayer.location","cairo");changes.put("prayer.latitude","30.0444");changes.put("prayer.longitude","31.2357");
             changes.put("reminders.enabled","false");changes.put("display.clock","12");
+            changes.put("display.digits", "auto");
             PhoneStore settings=PhoneStore.read(c).changed(changes);settings.save(c);
             a=LiveUiCheck.launch(test);MainActivity shown=a;
             test.getUiAutomation().adoptShellPermissionIdentity(Manifest.permission.BIND_APPWIDGET);
             host=new AppWidgetHost(a,41940);AppWidgetHost owned=host;
             PhoneUiCheck.on(test,()->{shown.body.removeAllViews();owned.startListening();});
             AppWidgetManager manager=AppWidgetManager.getInstance(c);
-            for(String preset:WidgetOptions.LAYOUTS) {
+            String[] resizable = {"next", "day", "strip"};
+            for(String preset:resizable) {
                 int id=host.allocateAppWidgetId();
                 PhoneUiCheck.check(manager.bindAppWidgetIdIfAllowed(id,PrayerWidget.component(c,preset)),"Cannot bind one-cell widget");
                 AppWidgetProviderInfo info=manager.getAppWidgetInfo(id);
@@ -51,13 +53,15 @@ final class WidgetSmallCheck {
             for(String lang:new String[]{"en","ar"}) {
                 ui.edit().putString("language",lang).commit();
                 String widestPrayer=settings.data.prayerName(4,lang.equals("ar"));
-                String hijri=PhoneTime.hijri(settings,now,lang.equals("ar"));
+                String hijri = tv.miqat.core.DisplayText.INSTANCE.digits(
+                        PhoneTime.hijri(settings, now, lang.equals("ar")), lang.equals("ar"));
                 PhoneUiCheck.on(test,()->spacing(c,shown,now,lang,hijri,captures));
+                PhoneUiCheck.on(test, () -> countdownCircle(c, shown, settings, now, lang, captures));
                 for(float font:new float[]{1f,2f}) for(int size:new int[]{100,120}) {
                     Configuration config=new Configuration(c.getResources().getConfiguration());config.fontScale=font;
                     Context scaled=c.createConfigurationContext(config);
                     PhoneUiCheck.on(test,()->{
-                        for(String preset:WidgetOptions.LAYOUTS) for(int edge:new int[]{40,56,80}) for(boolean modern:new boolean[]{false,true}) {
+                        for(String preset:resizable) for(int edge:new int[]{40,56,80}) for(boolean modern:new boolean[]{false,true}) {
                             WidgetOptions options=new WidgetOptions();options.layout=preset;options.size=size;options.date=true;
                             String original=options.encode();
                             RemoteViews content=PrayerWidget.responsive(scaled,options,bounds(edge,edge,modern));
@@ -110,6 +114,38 @@ final class WidgetSmallCheck {
             PhoneUiCheck.check(ui.edit().putString("language",language).commit(),"Cannot restore widget language fixture");
             PhoneAlarms.rebuild(c);PhoneBackgroundLocation.sync(c);
         }
+    }
+
+    private static void countdownCircle(Context c, MainActivity a, PhoneStore settings, long now,
+            String language, boolean captures) {
+        WidgetOptions options = new WidgetOptions();
+        options.layout = "circle";
+        int size = WidgetOptions.CIRCLE_SIZE;
+        long maghrib = (long) settings.day(now, 0).times[4];
+        int[] arc = new int[2];
+        for (int i = 0; i < arc.length; i++) {
+            View view = WidgetRenderer.create(c, options, size, size, i == 0 ? now : maghrib - 60_000)
+                    .apply(c, new FrameLayout(a));
+            measure(view, a, size, size);
+            boolean arabic = language.equals("ar");
+            try {
+                PhoneUiCheck.check(((TextView) view.findViewById(R.id.widget_next_label)).getText()
+                                .toString().equals(settings.data.prayerName(4, arabic)),
+                        "Circle did not show the next prayer");
+            } catch (Exception invalid) {
+                throw new AssertionError(invalid);
+            }
+            text(view, R.id.widget_title, size, language, 1);
+            text(view, R.id.widget_next_remaining, size, language, 1);
+            Bitmap ring = ((android.graphics.drawable.BitmapDrawable)
+                    ((ImageView) view.findViewById(R.id.widget_circle_ring)).getDrawable()).getBitmap();
+            for (int x = 0; x < ring.getWidth(); x++)
+                for (int y = 0; y < ring.getHeight(); y++)
+                    if (Color.alpha(ring.getPixel(x, y)) == 255) arc[i]++;
+            if (i == 0 && captures) capture(c, view, language + "-widget-countdown-circle");
+        }
+        PhoneUiCheck.check(arc[1] > 0 && arc[0] > 3 * arc[1],
+                "Circle did not lose progress as the next prayer approached");
     }
     private static void spacing(Context c,MainActivity a,long now,String lang,String hijri,boolean captures) {
         for(float font:new float[]{1f,2f}) for(String shape:WidgetOptions.SHAPES) {

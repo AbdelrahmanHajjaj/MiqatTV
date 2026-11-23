@@ -255,7 +255,7 @@ from filtered results as well as unchanged Cancel/Apply behavior.
 
 Widget picker XML layouts are the source for static fallback images. When changing
 those layouts/styles, run the owned-emulator phone journey with `-e capture true`.
-It renders `en-picker-{day,next,strip}.png` and Arabic counterparts under the app’s
+It renders `en-picker-{day,next,strip,circle}.png` and Arabic counterparts under the app’s
 external files directory. Inspect them, then copy English images to native
 `res/drawable-nodpi/widget_preview_*.png` and Arabic to `res/drawable-ar-nodpi/`.
 These images are native renders, not separately authored preview designs.
@@ -312,6 +312,8 @@ closing by Done, actual Android Back or cancellation. Each path must expose toda
 full hero/countdown/tools and actual prayer times. The bilingual phone UI suite
 runs the same regression alongside calendar month/event/timezone tests. Calendar
 browsing stays inside the popup and no longer persists another date on Home.
+The full phone UI suite also swipes the grid and timetable in both languages
+and observes Home's seconds countdown advancing.
 
 `phone-fasting` checks Hijri observance ranges and bilingual Settings controls on
 an owned emulator. It verifies that a day-before reminder arms on its own, follows

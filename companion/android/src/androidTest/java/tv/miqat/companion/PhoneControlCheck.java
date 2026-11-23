@@ -43,10 +43,14 @@ final class PhoneControlCheck {
                 verify(a, "call.fajr.offset", 1);
                 verify(a, "call.fajr.before", 1);
                 verify(a, "call.fajr.after", 1);
+                preview(a, "call.fajr.offset", 0, 0);
+                preview(a, "call.fajr.before", 0, -1);
+                preview(a, "call.fajr.after", 0, 1);
                 a.body.findViewWithTag("phone.call.fajr.before.edit").performClick();
                 EditText input = a.body.findViewWithTag("phone.call.fajr.before.input");
                 input.setText("٧");
                 verify(a, "call.fajr.before", 7);
+                preview(a, "call.fajr.before", 0, -7);
                 PhoneUiCheck.check(input == a.body.findViewWithTag("phone.call.fajr.before.input"),
                         "Typing replaced the active field");
                 a.body.findViewWithTag("phone.call.fajr.before.edit").performClick();
@@ -55,6 +59,7 @@ final class PhoneControlCheck {
                         "Tapping an active number restored its stale value");
                 input.setText("9999");
                 verify(a, "call.fajr.before", 7);
+                preview(a, "call.fajr.before", 0, -7);
                 PhoneUiCheck.check(input.getError() != null, "Out-of-range entry lacked validation");
                 a.body.findViewWithTag("phone.call.fajr.after.plus").performClick();
                 verify(a, "call.fajr.before", 7);
@@ -73,6 +78,7 @@ final class PhoneControlCheck {
                 a.body.findViewWithTag("phone.prayer.sunrise-offset.plus").performClick();
                 verify(a, "reminders.volume", 65);
                 verify(a, "prayer.sunrise-offset", 1);
+                preview(a, "prayer.sunrise-offset", 1, 0);
                 verify(a, "call.fajr.before", 9);
                 PhoneUiCheck.check(a.getWindow().getDecorView().findViewWithTag("phone.prayer.sunrise-offset.save") == null,
                         "Step controls still require Done");
@@ -93,6 +99,15 @@ final class PhoneControlCheck {
             PhoneAlarms.rebuild(a);
             PhoneUiCheck.on(test, a::render);
         }
+    }
+
+    private static void preview(MainActivity a, String id, int prayer, int minutes) {
+        PhoneStore settings = a.phoneUi.settings;
+        android.widget.TextView preview = a.body.findViewWithTag("phone." + id + ".preview");
+        String expected = settings.locationReady
+                ? a.phoneUi.time(settings.day(System.currentTimeMillis(), 0).times[prayer] + minutes * 60_000L)
+                : "—";
+        PhoneUiCheck.check(preview.getText().toString().equals(expected), "Incorrect time preview for " + id);
     }
 
     private static void verify(MainActivity a, String id, int expected) {
