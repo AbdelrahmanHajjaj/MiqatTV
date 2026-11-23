@@ -32,6 +32,8 @@ public final class MainActivity extends Activity {
     TvSetup tvSetup;
     PhoneOnboarding onboarding;
     QiblaUi qibla;
+    PhoneRadioUi radio;
+    private boolean openRadio;
     WidgetUi widgetUi;
     final DemoTv[] tvs = new DemoTv[2];
     final List<LanTv> lanTvs = new ArrayList<>();
@@ -136,6 +138,7 @@ public final class MainActivity extends Activity {
             tvSetup = new TvSetup(this);
             onboarding = new PhoneOnboarding(this);
             qibla = new QiblaUi(this);
+            radio = new PhoneRadioUi(this, PhoneData.get(this));
             widgetUi = new WidgetUi(this);
             if (state != null) tvSetup.restore(state);
             phones = new Phones(this);
@@ -178,6 +181,9 @@ public final class MainActivity extends Activity {
             if (state != null) widgetUi.restore(state);
             if (!widgetConfiguration && state == null && onboarding.shouldStart())
                 page = "onboarding";
+            openRadio = !widgetConfiguration && (getIntent().getBooleanExtra("phone-radio", false)
+                    || state != null && state.getBoolean("radio-popup") || page.equals("radio"));
+            if (page.equals("radio")) page = "prayers";
             render();
             Object retained = getLastNonConfigurationInstance();
             pairingUi.resume(retained);
@@ -606,8 +612,10 @@ public final class MainActivity extends Activity {
             title.setTextSize(20);
             phoneUi.locationUi.addDetect(toolbar);
         }
-        if (page.equals("prayers"))
+        if (page.equals("prayers")) {
+            radio.addHomeControls(toolbar);
             views.iconButton(toolbar, "bell", t("phone_audio"), () -> phoneUi.open("audio"));
+        }
         String subtitle =
                 page.equals("tvs")
                         ? t("tvs")
@@ -832,6 +840,12 @@ public final class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         if (intent.getBooleanExtra("prayer-home", false)) tab("prayers");
+        openRadio = intent.getBooleanExtra("phone-radio", false);
+    }
+
+    static void refreshRadio() {
+        MainActivity activity = resumed.get();
+        if (activity != null && activity.page.equals("prayers")) activity.radio.refresh();
     }
 
     @Override
@@ -847,6 +861,12 @@ public final class MainActivity extends Activity {
                     || page.equals("qibla")) render();
             phoneUi.home.start();
             phoneUi.locationUi.refreshTravel();
+        }
+        if (openRadio && !page.equals("onboarding")) {
+            openRadio = false;
+            getIntent().removeExtra("phone-radio");
+            tab("prayers");
+            if (page.equals("prayers")) radio.show();
         }
         getWindow().getDecorView().post(MainActivity::showPlayingAdhan);
         getWindow().getDecorView().post(onboarding::requestLocation);
@@ -894,6 +914,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (radio != null) radio.dismiss();
         pairingUi.cancelPairing();
         if (lgSetup != null) lgSetup.close();
         io.shutdownNow();
@@ -979,6 +1000,7 @@ public final class MainActivity extends Activity {
         if (tvSetup != null) tvSetup.save(state);
         if (phoneUi != null) phoneUi.save(state);
         if (widgetUi != null) widgetUi.save(state);
+        state.putBoolean("radio-popup", radio != null && radio.popup != null && radio.popup.isShowing());
         state.putInt("selected", selected);
         state.putString("page", page);
         state.putString("section", section);

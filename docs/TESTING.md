@@ -190,6 +190,17 @@ The fixture saves/restores phone settings; it does not operate a TV. UI, portrai
 sizing, denial and actual-delivery suites are targeted manual checks, alongside
 the native TV UI/LAN suites. Routine CI does not run them.
 
+Phone radio uses `-e suite phone-radio` on an owned muted emulator. Grant
+prayer notification access for the cases that schedule Adhan. The loopback
+fixture covers the Home popup and shortcut, locked-screen playback,
+scheduled Adhan interruption, and Android system media controls.
+Use `-e case alarm-route` for Arabic and the alarm audio route,
+`-e case offline` to verify bounded retries, failed-state controls and a
+single-tap restart after the server recovers, or
+`-e case dismiss` for paused media-card dismissal in Android Quick Settings.
+Run `-e case cairo` and `-e case qatar` separately for live MP3 and HLS
+playback. These two checks depend on the broadcasters and internet access.
+
 Phone feedback suites: `phone-location-denied` requires foreground location denied;
 `phone-location-approx` uses a framework network-provider fixture with coarse-only
 access and mock-location app-op on an owned emulator; `phone-location` requires

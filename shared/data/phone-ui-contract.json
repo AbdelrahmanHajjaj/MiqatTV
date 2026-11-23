@@ -2,7 +2,16 @@
   "version": 7,
   "defaultCity": "cairo",
   "defaultFajrVoice": "chebae_fajr",
-  "actions": [{"id":"playback.controls","section":"audio","label":"phone_adhan_controls"},{"id":"tests.phone-adhan","section":"audio","label":"phone_test_adhan"},{"id":"tests.phone-notification","section":"audio","label":"phone_test_notification"},{"id":"tests.phone-cancel","section":"audio","label":"phone_test_cancel"}],
+  "actions": [
+    {"id":"playback.controls","section":"audio","label":"phone_adhan_controls"},
+    {"id":"tests.phone-adhan","section":"audio","label":"phone_test_adhan"},
+    {"id":"tests.phone-notification","section":"audio","label":"phone_test_notification"},
+    {"id":"tests.phone-cancel","section":"audio","label":"phone_test_cancel"},
+    {"id":"radio.station","section":"radio","label":"phone_radio_station","choices":"stations"},
+    {"id":"radio.play","section":"radio","label":"phone_resume"},
+    {"id":"radio.pause","section":"radio","label":"phone_pause"},
+    {"id":"radio.stop","section":"radio","label":"phone_radio_stop"}
+  ],
   "controls": [
     {"id":"prayer.method","section":"calculation","kind":"choice","label":"phone_method","choices":"methods","default":"EGYPTIAN"},
     {"id":"prayer.asr","section":"calculation","kind":"choice","label":"phone_asr","choices":["shafi","hanafi"],"default":"shafi"},

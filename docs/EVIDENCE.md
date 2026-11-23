@@ -1,5 +1,28 @@
 # Validation evidence
 
+## Phone Quran Radio — 23 November 2026
+
+Debug phone and instrumentation APKs build. Android lint reports zero errors
+and 39 warnings. The companion JVM tests, shared catalog validation and 13
+phone generator tests pass. The APK contains the 25 exact approved recordings.
+
+On the owned, muted API 37 emulator, Cairo MP3 and Qatar HLS each reach playback.
+Loopback cases exercise playback with the screen off, a real scheduled Adhan
+on both media and alarm routes, and retention of the paused state afterward.
+The Home shortcut pauses playback and tapping the MediaStyle notification opens
+the Home popup. Android Quick Settings Play/Pause and Stop pass, and using Hide
+on the paused card ends the session. The separate Stop action during Adhan
+passes. Cairo playback exposes a media notification even with permission for
+ordinary notifications revoked. The unreachable stream reaches its retry limit
+and Stop clears the failed session. English and Arabic portrait captures show
+the popup, station and compact playback icons in the expected direction.
+Earlier Android versions and physical phones remain unverified.
+
+The unavailable-stream fixture fails on the old two-retry APK and passes
+with four reconnects. The exhausted player leaves the foreground, reports
+an error to Android media controls, and restores Play on Home and in the popup.
+One tap reconnects to the same station after the fixture server recovers.
+
 ## Stable promotion — 23 November 2026
 
 The owner approved stable promotion of the verified signed preview. Stable

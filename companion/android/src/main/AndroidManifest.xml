@@ -49,6 +49,8 @@
         </receiver>
         <service android:name=".PhonePlayback" android:exported="false" android:directBootAware="true"
             android:foregroundServiceType="mediaPlayback" />
+        <service android:name=".PhoneRadio" android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
         <service android:name=".PhoneLocationJob" android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <receiver android:name=".PrayerWidget$Next" android:exported="false" android:label="@string/widget_next_name">

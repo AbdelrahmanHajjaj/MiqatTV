@@ -24,6 +24,7 @@ public final class CompanionCheck extends Instrumentation {
     String backgroundSuite = "";
     boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary, phoneAudioRoute, setupLocation, widgetSmall;
     boolean mapNetwork;
+    String radio = "";
     boolean journey,
             customCheck,
             releaseCheck,
@@ -48,6 +49,7 @@ public final class CompanionCheck extends Instrumentation {
         mapNetwork = arguments != null && "true".equals(arguments.getString("map-network", "false"));
         captures = arguments != null && "true".equals(arguments.getString("capture", "false"));
         String suite = arguments == null ? "" : arguments.getString("suite", "");
+        if (suite.equals("phone-radio")) radio = arguments.getString("case", "fixture");
         backgroundSuite = suite.startsWith("phone-background-") ? suite : "";
         phoneControls = suite.equals("phone-controls");
         phoneDialog = suite.equals("phone-dialog");
@@ -85,6 +87,12 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if (!radio.isEmpty()) {
+                PhoneRadioCheck.run(this, radio, captures);
+                result.putString("stream", "PASS: phone radio " + radio + "\n");
+                finish(-1, result);
+                return;
+            }
             if(widgetSmall) {
                 WidgetSmallCheck.run(this,captures);
                 result.putString("stream","PASS: one-cell widget bounds, text and resize recovery\n");
