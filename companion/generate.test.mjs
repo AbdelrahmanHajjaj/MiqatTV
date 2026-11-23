@@ -80,7 +80,7 @@ test('new branding settings reach both profiles with canonical scenes and immedi
 
 test('phone alert metadata keeps independent enable, weekday overrides and relative audio bounds',()=>{
  const {contract}=generatePhone();
- assert.equal(contract.version,8);
+ assert.equal(contract.version,9);
  assert.deepEqual(contract.controls.find(c=>c.id==='reminders.alarm-mode'),{id:'reminders.alarm-mode',section:'audio',kind:'toggle',label:'phone_alarm_sound',default:'false',since:7});
  assert.equal(contract.perPrayer.find(c=>c.suffix==='enabled').default,'true');
  for(let day=0;day<7;day++) {

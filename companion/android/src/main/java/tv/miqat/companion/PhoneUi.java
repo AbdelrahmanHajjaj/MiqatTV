@@ -262,6 +262,9 @@ final class PhoneUi {
     }
 
     private void fasting() throws Exception {
+        control(data.controls.get("fasting.eve"));
+        if (settings.value("fasting.eve").equals("true"))
+            control(data.controls.get("fasting.eve-time"));
         control(data.controls.get("fasting.suhoor"));
         if (settings.value("fasting.suhoor").equals("true"))
             control(data.controls.get("fasting.suhoor-minutes"));
@@ -434,7 +437,7 @@ final class PhoneUi {
             return a.t("phone_custom");
         }
         if (id.equals("quiet.mode")) return a.t("phone_" + value);
-        if (id.equals("quiet.start") || id.equals("quiet.end")) {
+        if (id.equals("quiet.start") || id.equals("quiet.end") || id.equals("fasting.eve-time")) {
             int minute = Integer.parseInt(value), hour = minute / 60;
             return digits(
                     settings.value("display.clock").equals("12")

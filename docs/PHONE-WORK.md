@@ -1,6 +1,7 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-23. Latest scope: Hijri ranges and opt-in suhoor/iftar alerts.
+Updated: 2026-11-23. Latest scope: Hijri ranges and opt-in day-before, suhoor
+and iftar alerts.
 The phone marks all days of Ramadan and Eid and includes core and common Hijri
 observances. Fasting selections include Ramadan, Ashura, Arafah, the White Days,
 and Mondays and Thursdays. Quran Radio was approved and merged in PR #22.

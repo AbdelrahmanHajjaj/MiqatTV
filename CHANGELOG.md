@@ -9,8 +9,9 @@
   and brings back Play if the station remains unavailable.
 - The phone Hijri calendar numbers every day of Ramadan and marks the Eid
   holidays, Hajj dates and other common observances across their full ranges.
-- Phone settings add opt-in suhoor and iftar notifications for Ramadan and
-  optional fasts on Ashura, Arafah, the White Days, and Mondays and Thursdays.
+- Phone settings add opt-in day-before, suhoor and iftar notifications for
+  Ramadan and optional fasts on Ashura, Arafah, the White Days, and Mondays and
+  Thursdays.
 
 ## Stable release — Android TV 0.7.3 / phone 0.5.19 / installer 1.1.5
 

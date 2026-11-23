@@ -230,7 +230,7 @@ final class PhoneAlarms {
                 }
                 if (!PhoneStore.preferences(c)
                         .edit()
-                        .putString("alarm-error", days.length == 0 ? "phone_unavailable" : "")
+                        .putString("alarm-error", days.length == 0 && event == null ? "phone_unavailable" : "")
                         .commit()) return "phone_save_failed";
                 return status(c, settings);
             } catch (Exception failure) {
@@ -316,7 +316,8 @@ final class PhoneAlarms {
                 return null;
             ReminderEvent event = new ReminderEvent(id, kind, prayer,
                     value.getDouble("time"), value.getDouble("prayerTime"));
-            if (fasting && !PhoneFasting.matches(settings, event)) return null;
+            if (fasting && (!PhoneFasting.stillTimely(event, now) || !PhoneFasting.matches(settings, event)))
+                return null;
             List<String> claims = new ArrayList<>(Arrays.asList(handled(c)));
             if (claims.contains(id)) return null;
             claims.add(id);
@@ -389,17 +390,24 @@ final class PhoneAlarms {
     }
 
     private static void notifyFasting(Context c, PhoneStore settings, ReminderEvent event) {
-        if (!channel(c, FASTING) || !PhoneFasting.matches(settings, event)) return;
+        if (!channel(c, FASTING) || !PhoneFasting.stillTimely(event, System.currentTimeMillis())
+                || !PhoneFasting.matches(settings, event)) return;
+        boolean eve = tv.miqat.companion.core.FastingRules.EVE.equals(event.getKind());
         boolean suhoor = tv.miqat.companion.core.FastingRules.SUHOOR.equals(event.getKind());
-        String time = PhoneTime.at(settings, event.getPrayerTime(), arabic(c));
+        boolean ar = arabic(c);
+        String title = text(c, eve ? "phone_fasting_eve_notice" : suhoor ? "phone_suhoor_notice" : "phone_iftar_notice");
+        String details = eve
+                ? PhoneTime.hijri(settings, (long) event.getPrayerTime(), ar)
+                : String.format(Locale.ROOT, text(c, suhoor ? "phone_suhoor_time" : "phone_iftar_time"),
+                        PhoneTime.at(settings, event.getPrayerTime(), ar));
         Notification notice = new Notification.Builder(c, FASTING)
                 .setSmallIcon(R.drawable.companion_icon_mihrab)
-                .setContentTitle(text(c, suhoor ? "phone_suhoor_notice" : "phone_iftar_notice"))
-                .setContentText(String.format(Locale.ROOT, text(c, suhoor ? "phone_suhoor_time" : "phone_iftar_time"), time))
+                .setContentTitle(title)
+                .setContentText(details)
                 .setContentIntent(open(c))
                 .setAutoCancel(true)
                 .setCategory(Notification.CATEGORY_REMINDER)
                 .build();
-        c.getSystemService(NotificationManager.class).notify(suhoor ? 42030 : 42031, notice);
+        c.getSystemService(NotificationManager.class).notify(eve ? 42032 : suhoor ? 42030 : 42031, notice);
     }
 }

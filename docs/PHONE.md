@@ -59,10 +59,15 @@ Umm al-Qura calendar, prayer timezone and Hijri adjustment.
 
 ## Fasting reminders
 
-Open **Settings → Fasting reminders** to enable **Suhoor reminder**, **Iftar
-reminder**, or both. Both are off initially. Suhoor is 30 minutes before the
-phone's calculated Fajr by default, with a choice from 5 to 120 minutes. Iftar
-is at the phone's calculated Maghrib.
+Open **Settings → Fasting reminders** to enable the reminders you want. All
+three are off initially.
+
+- **Day-before reminder** says **Fasting tomorrow** and shows the upcoming
+  Hijri date. It defaults to 8:00 PM in the prayer location's timezone, and
+  you can choose another time.
+- **Suhoor reminder** defaults to 30 minutes before the phone's calculated
+  Fajr, with a choice from 5 to 120 minutes.
+- **Iftar reminder** arrives at the phone's calculated Maghrib.
 
 Ramadan is selected initially. Ashura, Arafah, the White Days, and Mondays and
 Thursdays are each optional. Overlapping selections send one reminder of each

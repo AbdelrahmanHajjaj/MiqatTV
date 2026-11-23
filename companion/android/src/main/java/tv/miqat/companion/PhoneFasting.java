@@ -1,9 +1,12 @@
 package tv.miqat.companion;
 
 import android.icu.util.IslamicCalendar;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
 import tv.miqat.companion.core.FastingPreferences;
@@ -21,7 +24,8 @@ final class PhoneFasting {
                 selected(settings, "arafah"), selected(settings, "white-days"),
                 selected(settings, "monday-thursday"),
                 selected(settings, "suhoor") ? settings.number("fasting.suhoor-minutes") : 0,
-                selected(settings, "iftar"));
+                selected(settings, "iftar"),
+                selected(settings, "eve") ? settings.number("fasting.eve-time") : null);
     }
 
     private static boolean selected(PhoneStore settings, String id) {
@@ -29,7 +33,12 @@ final class PhoneFasting {
     }
 
     static boolean kind(String kind) {
-        return FastingRules.SUHOOR.equals(kind) || FastingRules.IFTAR.equals(kind);
+        return FastingRules.SUHOOR.equals(kind) || FastingRules.IFTAR.equals(kind)
+                || FastingRules.EVE.equals(kind);
+    }
+
+    static boolean stillTimely(ReminderEvent event, long now) {
+        return !FastingRules.EVE.equals(event.getKind()) || now < event.getPrayerTime();
     }
 
     static ReminderEvent next(PhoneStore settings, long now, String[] handled) {
@@ -39,6 +48,7 @@ final class PhoneFasting {
         for (int offset = -1; offset <= 7; offset++) {
             for (ReminderEvent event : events(settings, preferences, now, offset)) {
                 if (event.getTime() > now - PhonePrayerRules.LATE_WINDOW_MS
+                        && stillTimely(event, now)
                         && !claimed.contains(event.getId())
                         && (next == null || event.getTime() < next.getTime()))
                     next = event;
@@ -64,7 +74,6 @@ final class PhoneFasting {
     private static List<ReminderEvent> events(
             PhoneStore settings, FastingPreferences preferences, long now, int offset) {
         PhoneSchedule.Day day = settings.day(now, offset);
-        if (day.times == null) return Collections.emptyList();
         IslamicCalendar date = PhoneCalendar.calendar(settings, day.start, false);
         Calendar civil = new GregorianCalendar(settings.zone());
         civil.setTimeInMillis(day.start);
@@ -72,6 +81,16 @@ final class PhoneFasting {
                 date.get(android.icu.util.Calendar.MONTH) + 1,
                 date.get(android.icu.util.Calendar.DATE),
                 civil.get(Calendar.DAY_OF_WEEK) - 1,
-                day.times[0], day.times[4], preferences);
+                day.times == null ? Double.NaN : day.times[0],
+                day.times == null ? Double.NaN : day.times[4], preferences, day.start,
+                eveTime(settings, day.start, preferences.getEveMinutes()));
+    }
+
+    private static Long eveTime(PhoneStore settings, long fastDayStart, Integer minutes) {
+        if (minutes == null) return null;
+        ZoneId zone = settings.zone().toZoneId();
+        LocalDate previous = Instant.ofEpochMilli(fastDayStart).atZone(zone).toLocalDate().minusDays(1);
+        ZonedDateTime time = previous.atTime(minutes / 60, minutes % 60).atZone(zone);
+        return time.toLocalDate().equals(previous) ? time.toInstant().toEpochMilli() : null;
     }
 }

@@ -2,8 +2,9 @@
 
 Updated: 2026-11-23. Quran Radio was approved and merged in PR #22.
 Current scope in `feat/phone-hijri-reminders`: core and common Hijri
-observances, every day of Ramadan and Eid, and opt-in suhoor/iftar reminders
-for Ramadan, selected voluntary Hijri fasts, and Mondays and Thursdays.
+observances, every day of Ramadan and Eid, and opt-in day-before, suhoor and
+iftar reminders for Ramadan, selected voluntary Hijri fasts, and Mondays and
+Thursdays.
 
 Next: review the standalone phone build and confirm the calendar and fasting
 settings before merge. Keep website download copy aligned with stable packages.

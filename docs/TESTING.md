@@ -309,11 +309,12 @@ runs the same regression alongside calendar month/event/timezone tests. Calendar
 browsing stays inside the popup and no longer persists another date on Home.
 
 `phone-fasting` checks Hijri observance ranges and bilingual Settings controls on
-an owned emulator. It verifies that fasting alarms arm with prayer alerts off,
-claims Suhoor and Iftar using simulated due times based on local Fajr and Maghrib,
-checks their Android notification channel and confirms cancellation when the last
-fasting choice is turned off. Portable tests cover overlap, fasting exclusions
-and the Monday/Thursday option.
+an owned emulator. It verifies that a day-before reminder arms on its own, follows
+the chosen local time and expires at midnight. It claims all three reminders at
+simulated due times, checks their Android notification channel and confirms
+cancellation when the last fasting choice is turned off. Pass `-e capture true`
+to capture the actual notification shade. Portable tests cover overlap, fasting
+exclusions and the Monday/Thursday option.
 
 The hosted-widget journey checks strip date toggles independently, modern/legacy
 bounds and full-height unclipped columns at small sizes and enlarged text. Refresh
