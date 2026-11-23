@@ -1,8 +1,9 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-22. PR #13's common TV UI alignment is merged after full CI.
-Latest scope: public phone/companion/TV documentation and screenshot showcase;
-WORK.md owns next action. Earlier sections below are delivery history and may
+Updated: 2026-11-23. Latest scope: standalone phone Quran Radio. The radio
+notification has independent Play/Pause and Stop controls, and Adhan interrupts
+radio until the listener resumes. WORK.md owns the next action.
+Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.
 
 The presentation refresh keeps phone 0.5.18/code 34, corrects its obsolete TV

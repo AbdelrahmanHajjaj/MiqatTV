@@ -3,6 +3,7 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {uiChoices, validateUiContract} from '../tools/ui-contract.mjs';
 import {vectorIcon} from './icons.mjs';
+import {validateStations} from '../tools/catalogs.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
@@ -40,7 +41,7 @@ export function generatePhone() {
     } else if(control.kind!=='toggle'||!['true','false'].includes(control.default))throw Error('Invalid phone control kind: '+id);
   }
   for(const action of contract.actions??[]) {
-    if(typeof action.id!=='string'||ids.has(action.id)||action.section!=='audio'||!text[action.label]?.en||!text[action.label]?.ar)throw Error('Invalid phone action: '+action.id);
+    if(typeof action.id!=='string'||ids.has(action.id)||!['audio','radio'].includes(action.section)||!text[action.label]?.en||!text[action.label]?.ar)throw Error('Invalid phone action: '+action.id);
     ids.add(action.id);
   }
   const hijriEvents=read('shared/data/hijri-events.json'),eventIds=new Set(),eventDates=new Set();
@@ -52,7 +53,9 @@ export function generatePhone() {
       typeof event.en!=='string'||!event.en.trim()||typeof event.ar!=='string'||!event.ar.trim())throw Error('Invalid Hijri event: '+event.id);
     eventIds.add(event.id);eventDates.add(date);
   }
-  return {contract,cities,voices,backgrounds,hijriEvents,prayerVerse:read('shared/data/sacred-text.json').prayerVerse};
+  const stations=read('shared/data/stations.json');
+  validateStations(stations);
+  return {contract,cities,voices,stations,backgrounds,hijriEvents,prayerVerse:read('shared/data/sacred-text.json').prayerVerse};
 }
 export function generate(platforms = ['android','lg']) {
   const controls = read('shared/data/ui-contract.json'), strings = read('shared/data/strings.json');

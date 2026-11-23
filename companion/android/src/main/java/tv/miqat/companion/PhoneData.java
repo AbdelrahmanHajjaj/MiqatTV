@@ -13,7 +13,7 @@ import java.util.*;
 /** Phone-only UI metadata comes from shared/data/phone-ui-contract.json. */
 final class PhoneData {
     private static volatile PhoneData cached;
-    final JSONArray cities, voices;
+    final JSONArray cities, voices, stations;
     final JSONObject source;
     final LinkedHashMap<String, JSONObject> controls = new LinkedHashMap<>();
     final LinkedHashMap<String, String> defaults = new LinkedHashMap<>();
@@ -42,6 +42,7 @@ final class PhoneData {
         }
         cities = source.getJSONArray("cities");
         voices = source.getJSONArray("voices");
+        stations = source.getJSONArray("stations");
         JSONObject contract = source.getJSONObject("contract");
         JSONArray general = contract.getJSONArray("controls");
         for (int i = 0; i < general.length(); i++) add(general.getJSONObject(i));
@@ -63,6 +64,23 @@ final class PhoneData {
         defaults.put("prayer.location-ready", "false");
         for (String slot : new String[] {"default", "fajr", "dhuhr", "asr", "maghrib", "isha"})
             defaults.put("audio.custom." + slot, "");
+    }
+
+    JSONObject station(String id) {
+        for (int i = 0; i < stations.length(); i++) {
+            JSONObject station = stations.optJSONObject(i);
+            if (station.optString("id").equals(id)) return station;
+        }
+        return null;
+    }
+
+    String actionLabel(String id) {
+        JSONArray actions = source.optJSONObject("contract").optJSONArray("actions");
+        for (int i = 0; i < actions.length(); i++) {
+            JSONObject action = actions.optJSONObject(i);
+            if (id.equals(action.optString("id"))) return action.optString("label");
+        }
+        throw new IllegalArgumentException("Missing phone action " + id);
     }
 
     private void add(JSONObject c) throws Exception {

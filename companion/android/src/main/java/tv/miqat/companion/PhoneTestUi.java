@@ -45,13 +45,6 @@ final class PhoneTestUi {
         }
     }
     private static String label(MainActivity a, String id) {
-        try {
-            org.json.JSONArray actions = a.phoneUi.data.source.getJSONObject("contract").getJSONArray("actions");
-            for (int i=0;i<actions.length();i++) {
-                org.json.JSONObject action = actions.getJSONObject(i);
-                if (action.getString("id").equals(id)) return a.t(action.getString("label"));
-            }
-        } catch (org.json.JSONException invalid) { throw new IllegalArgumentException("Invalid phone test action metadata",invalid); }
-        throw new IllegalArgumentException("Missing phone test action " + id);
+        return a.t(a.phoneUi.data.actionLabel(id));
     }
 }

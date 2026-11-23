@@ -13,6 +13,7 @@ Use Miqat on its own; a TV is optional.
 - Offline prayer times, a next-prayer card and a Hijri calendar with each selected day's timetable and recurring events.
 - Per-prayer Adhan, Short tone or Silent, independent vibration, weekdays, day overrides and minute adjustments.
 - Built-in voices and a named private library of recordings imported from your device; configurable level and recording length.
+- Quran Radio with background listening and playback controls in its own notification.
 - Qibla compass, an optional map, and resizable home-screen widgets starting at 1×1.
 - Themes and backgrounds to personalise the app, with Arabic/English and adjustable text sizes.
 - Prayer times for your city, with optional location updates when you travel.

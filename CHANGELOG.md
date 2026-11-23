@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Android phone adds Quran Radio with background playback and its own notification.
+  Adhan pauses radio, and listeners can resume the live station afterward.
+
 ## Stable release — Android TV 0.7.3 / phone 0.5.19 / installer 1.1.5
 
 - Build phone, Android TV and installer release APKs with permanent Miqat signing keys for future updates.

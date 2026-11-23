@@ -32,6 +32,7 @@ public final class MainActivity extends Activity {
     TvSetup tvSetup;
     PhoneOnboarding onboarding;
     QiblaUi qibla;
+    PhoneRadioUi radio;
     WidgetUi widgetUi;
     final DemoTv[] tvs = new DemoTv[2];
     final List<LanTv> lanTvs = new ArrayList<>();
@@ -136,6 +137,7 @@ public final class MainActivity extends Activity {
             tvSetup = new TvSetup(this);
             onboarding = new PhoneOnboarding(this);
             qibla = new QiblaUi(this);
+            radio = new PhoneRadioUi(this, PhoneData.get(this));
             widgetUi = new WidgetUi(this);
             if (state != null) tvSetup.restore(state);
             phones = new Phones(this);
@@ -178,6 +180,8 @@ public final class MainActivity extends Activity {
             if (state != null) widgetUi.restore(state);
             if (!widgetConfiguration && state == null && onboarding.shouldStart())
                 page = "onboarding";
+            else if (!widgetConfiguration && state == null && getIntent().getBooleanExtra("phone-radio", false))
+                page = "radio";
             render();
             Object retained = getLastNonConfigurationInstance();
             pairingUi.resume(retained);
@@ -532,6 +536,7 @@ public final class MainActivity extends Activity {
         if (page.equals("onboarding")
                 || page.equals("tv-setup")
                 || page.equals("qibla")
+                || page.equals("radio")
                 || page.equals("widgets")
                 || page.equals("pair")
                 || page.equals("lg-setup")
@@ -561,6 +566,8 @@ public final class MainActivity extends Activity {
                                 ? (ar ? "ميقات" : "Miqat")
                                 : page.equals("qibla")
                                         ? t("phone_qibla")
+                                        : page.equals("radio")
+                                                ? t("phone_radio")
                                         : page.equals("widgets")
                                                 ? t("phone_widgets")
                                                 : page.equals("prayers")
@@ -606,8 +613,11 @@ public final class MainActivity extends Activity {
             title.setTextSize(20);
             phoneUi.locationUi.addDetect(toolbar);
         }
-        if (page.equals("prayers"))
+        if (page.equals("prayers")) {
+            views.iconButton(toolbar, "radio", t("phone_radio"), () -> tab("radio"))
+                    .setTag("phone.radio.open");
             views.iconButton(toolbar, "bell", t("phone_audio"), () -> phoneUi.open("audio"));
+        }
         String subtitle =
                 page.equals("tvs")
                         ? t("tvs")
@@ -666,6 +676,9 @@ public final class MainActivity extends Activity {
                 break;
             case "qibla":
                 qibla.render();
+                break;
+            case "radio":
+                radio.render();
                 break;
             case "widgets":
                 widgetUi.render();
@@ -832,6 +845,12 @@ public final class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         if (intent.getBooleanExtra("prayer-home", false)) tab("prayers");
+        if (intent.getBooleanExtra("phone-radio", false)) tab("radio");
+    }
+
+    static void refreshRadio() {
+        MainActivity activity = resumed.get();
+        if (activity != null && activity.page.equals("radio")) activity.radio.refresh();
     }
 
     @Override
@@ -844,7 +863,8 @@ public final class MainActivity extends Activity {
             if (page.equals("prayers")
                     || page.equals("phone-settings")
                     || page.equals("onboarding")
-                    || page.equals("qibla")) render();
+                    || page.equals("qibla")
+                    || page.equals("radio")) render();
             phoneUi.home.start();
             phoneUi.locationUi.refreshTravel();
         }
@@ -925,7 +945,7 @@ public final class MainActivity extends Activity {
             lgSetup.back();
             return;
         }
-        if (page.equals("qibla") || page.equals("widgets")) {
+        if (page.equals("qibla") || page.equals("widgets") || page.equals("radio")) {
             qibla.stop();
             tab("prayers");
             return;

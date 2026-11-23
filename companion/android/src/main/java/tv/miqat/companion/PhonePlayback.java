@@ -443,8 +443,6 @@ public final class PhonePlayback extends Service {
                                     && change != AudioManager.AUDIOFOCUS_GAIN) stopSelf();
                         })
                         .build();
-        if (audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
-            throw new IllegalStateException("Audio focus unavailable");
         player = new MediaPlayer();
         player.setAudioAttributes(attributes);
         player.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
@@ -455,6 +453,9 @@ public final class PhonePlayback extends Service {
                 player.setDataSource(
                         file.getFileDescriptor(), file.getStartOffset(), file.getLength());
             }
+        PhoneRadio.pauseForAdhan();
+        if (audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+            throw new IllegalStateException("Audio focus unavailable");
         player.setVolume(0,0);
         player.setOnCompletionListener(done -> stopSelf());
         player.setOnErrorListener((failed, what, extra) -> {
@@ -562,6 +563,7 @@ public final class PhonePlayback extends Service {
     public void onDestroy() {
         release();
         if (active == this) active = null;
+        PhoneRadio.adhanEnded();
         stopForeground(STOP_FOREGROUND_REMOVE);
         super.onDestroy();
     }

@@ -130,6 +130,20 @@ events at least two minutes late. Manufacturer battery restrictions still apply;
 Prayer alert permissions links to Android settings. No idle foreground service or
 background TV connection runs.
 
+## Quran Radio
+
+Open **Quran Radio** from the prayer home toolbar, choose a station and tap
+**Play**. The stream uses the internet and continues while you use other apps or
+lock the screen. Enable radio notifications to start playback.
+
+The player notification opens Radio and offers Play/Pause and **Stop radio**.
+Pause closes the stream and keeps the station selected. Play reconnects to the
+live broadcast. Dismissing the notification stops playback where Android allows
+the gesture. **Stop radio** also closes the session on devices that keep it pinned.
+
+Adhan pauses the stream, including during reconnection. Tap **Play** after Adhan
+ends to listen again. The phone station is independent of any paired TV.
+
 ## Qibla
 
 The offline compass uses the confirmed location and a foreground orientation

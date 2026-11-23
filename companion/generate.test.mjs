@@ -115,6 +115,14 @@ test('phone event dates and prayer verse preserve their canonical sources',()=>{
 
 test('phone test actions are canonical and obsolete motion has no ordinary settings section',()=>{
  const {contract}=generatePhone();
- assert.deepEqual(contract.actions.map(a=>a.id),['playback.controls','tests.phone-adhan','tests.phone-notification','tests.phone-cancel']);
+ assert.deepEqual(contract.actions.filter(a=>a.section==='audio').map(a=>a.id),['playback.controls','tests.phone-adhan','tests.phone-notification','tests.phone-cancel']);
  assert.equal(contract.controls.find(c=>c.id==='display.reduce-motion').section,'legacy-display');
  });
+
+test('phone radio uses the canonical station catalog and playback actions',()=>{
+ const {contract,stations}=generatePhone();
+ const source=JSON.parse(readFileSync(new URL('../shared/data/stations.json',import.meta.url),'utf8'));
+ assert.deepEqual(stations,source);
+ assert.deepEqual(contract.actions.filter(a=>a.section==='radio').map(a=>a.id),
+   ['radio.station','radio.play','radio.pause','radio.stop']);
+});

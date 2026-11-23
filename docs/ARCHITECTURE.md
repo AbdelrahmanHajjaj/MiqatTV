@@ -127,12 +127,18 @@ named index, separate from portable settings' selected hashes. PhoneAlertTest ow
 an independent elapsed-time/boot-scoped one-shot claim; explicit delivery tests
 never replace the real schedule. PhoneTestUi owns its countdown/cancel actions.
 
+PhoneRadio owns user-started live playback from the canonical station catalog.
+Its foreground service and notification are separate from Adhan. It releases the
+stream and audio focus when paused, and cancels pending retries on pause or Stop.
+PhonePlayback pauses radio before acquiring Adhan audio focus. The radio
+selection is local to the phone and reconnecting after Adhan requires Play.
+
 PhoneVolume temporarily owns only the chosen stream index, deriving the nearest
 positive step from PhonePrayerRules.volumeIndex and the OS maximum. A private
 restore record is committed before changing it. Pause/stop/failure releases it
 only if the current index is still Miqat's applied value. A manual change is
 preserved; unchanged settings do not reassert volume. Recovery after process
-death runs at the next Miqat entry. No extra service or network work is added.
+death runs at the next Miqat entry.
 
 PlaybackWave renders the Home card's bounded foreground animation and canonical
 playback-controls action. It captures no audio and respects Android and retained
