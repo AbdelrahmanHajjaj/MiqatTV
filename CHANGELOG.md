@@ -7,6 +7,8 @@
   Adhan pauses radio, and listeners can resume the live station afterward.
 - Phone radio shows when it is buffering, allows four automatic reconnects,
   and brings back Play if the station remains unavailable.
+- The Android radio media player shows artwork from the phone's active theme
+  and background, including changes made during playback.
 - The phone Hijri calendar numbers every day of Ramadan and marks the Eid
   holidays, Hajj dates and other common observances across their full ranges.
 - Phone settings add opt-in day-before, suhoor and iftar notifications for

@@ -165,6 +165,9 @@ to reopen the Home popup. Pause closes the stream and keeps the station
 selected. Play reconnects to the live broadcast. Android may keep the
 player pinned while it is playing. Use **Stop radio** to end the session,
 or pause and dismiss the player where Android offers that action.
+The player uses the current phone theme and background as its artwork. Changes
+in **Settings → Appearance** refresh the artwork during playback. Android
+chooses its crop, tint and placement.
 
 Radio tries to reconnect after a stall. If the popup shows **Station unavailable**,
 the stream is closed. Tap **Play** to try the same station again.

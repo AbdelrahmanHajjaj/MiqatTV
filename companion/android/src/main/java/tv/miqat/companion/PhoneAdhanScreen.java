@@ -82,7 +82,7 @@ public final class PhoneAdhanScreen extends Activity {
             accent = Color.parseColor(colors.getString("gold-400"));
             LinearLayout shell = new LinearLayout(this);
             shell.setOrientation(LinearLayout.VERTICAL);
-            shell.setBackground(new AdhanArtwork(this, settings));
+            shell.setBackground(new PhoneMediaArtwork(this, settings));
             ScrollView scroll = new ScrollView(this);
             scroll.setFillViewport(true);
             shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));

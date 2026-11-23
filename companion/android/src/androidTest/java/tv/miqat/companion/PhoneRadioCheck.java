@@ -6,6 +6,8 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
@@ -47,7 +49,8 @@ final class PhoneRadioCheck {
         Context c = test.getTargetContext();
         boolean offline = scenario.equals("offline");
         boolean dismiss = scenario.equals("dismiss");
-        boolean fixture = offline || dismiss || scenario.equals("fixture") || scenario.equals("alarm-route");
+        boolean artwork = scenario.equals("artwork");
+        boolean fixture = offline || dismiss || artwork || scenario.equals("fixture") || scenario.equals("alarm-route");
         if (fixture && !offline && !dismiss)
             check(PhoneAlarms.notifications(c), "Grant prayer notification access before scheduling Adhan");
         String id = fixture ? "cairo" : scenario;
@@ -77,6 +80,8 @@ final class PhoneRadioCheck {
                 station.put("url", "http://127.0.0.1:" + server.getLocalPort() + "/live.mp3");
             }
             prayers.edit().putBoolean("onboarding-seen", true).commit();
+            if (artwork) previous.changed(Map.of("appearance.theme", "mihrab",
+                    "appearance.background", "plain")).save(c);
             boolean arabic = scenario.equals("alarm-route");
             prefs.edit().putString(PhoneRadio.STATION_PREFERENCE, id)
                     .putString("language", arabic ? "ar" : "en").commit();
@@ -102,6 +107,10 @@ final class PhoneRadioCheck {
             MediaController player = mediaPlayer(test, c);
             if (!fixture) return;
             on(test, () -> click(home, "radio.close"));
+            if (artwork) {
+                checkArtwork(test, c, home, player, capture);
+                return;
+            }
             if (!arabic && !dismiss) {
                 on(test, () -> {
                     View quick = home.findViewById(android.R.id.content).findViewWithTag("phone.radio.quick");
@@ -169,6 +178,42 @@ final class PhoneRadioCheck {
             shell(test, "cmd statusbar collapse");
             shell(test, "input keyevent KEYCODE_WAKEUP");
             shell(test, "wm dismiss-keyguard");
+        }
+    }
+
+    private static void checkArtwork(Instrumentation test, Context c, MainActivity home,
+            MediaController player, boolean capture) throws Exception {
+        Bitmap mihrab = artwork(player);
+        check(mihrab != null && radioNotice(c).getLargeIcon() != null,
+                "Native radio player did not receive its theme artwork");
+        on(test, () -> check(home.phoneUi.save(Map.of("appearance.theme", "forest"), false),
+                "Could not change the active theme"));
+        await(test, () -> artwork(player) != null && !mihrab.sameAs(artwork(player)), 5000,
+                "Changing only the theme did not recolor the active media session");
+        Bitmap forest = artwork(player);
+        if (capture) captureSystemMedia(test, c, "radio-forest-plain");
+        on(test, () -> check(home.phoneUi.save(Map.of("appearance.background", "tea_hills"), false),
+                "Could not change the active background"));
+        await(test, () -> artwork(player) != null && !forest.sameAs(artwork(player)), 5000,
+                "Changing only the background did not refresh the active media session");
+        if (capture) captureSystemMedia(test, c, "radio-forest-tea-hills");
+        check(player.getSessionToken().equals(mediaPlayer(test, c).getSessionToken())
+                        && player.getPlaybackState().getState() == PlaybackState.STATE_PLAYING,
+                "Artwork refresh interrupted the playing session");
+    }
+
+    private static Bitmap artwork(MediaController player) {
+        MediaMetadata metadata = player.getMetadata();
+        return metadata == null ? null : metadata.getBitmap(MediaMetadata.METADATA_KEY_ART);
+    }
+
+    private static void captureSystemMedia(Instrumentation test, Context c, String name) throws Exception {
+        shell(test, "cmd statusbar expand-settings");
+        try {
+            mediaNode(test, "Pause").recycle();
+            PhoneUiCheck.capture(test, c, name, true);
+        } finally {
+            shell(test, "cmd statusbar collapse");
         }
     }
 

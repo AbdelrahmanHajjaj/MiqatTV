@@ -1,5 +1,15 @@
 # Validation evidence
 
+## Radio media artwork — 23 November 2026
+
+The phone debug and instrumentation APKs build and lint cleanly with zero
+errors. On the API 37 phone emulator, changing theme and background separately
+updates the already playing radio session. Android Quick Settings renders the
+Forest theme with and without the Tea Hills scene, with the station, Pause and
+Stop visible. The loopback playback/Adhan and paused dismissal cases pass.
+Media card rendering on older Android versions and physical phones remains
+unverified.
+
 ## Phone Hijri observances and fasting reminders — 23 November 2026
 
 Phone debug and instrumentation APKs build. Android lint reports zero errors

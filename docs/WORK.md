@@ -5,6 +5,8 @@ Current scope in `feat/phone-hijri-reminders`: core and common Hijri
 observances, every day of Ramadan and Eid, and opt-in day-before, suhoor and
 iftar reminders for Ramadan, selected voluntary Hijri fasts, and Mondays and
 Thursdays.
+The same review build applies the phone's active theme and scene to Android's
+native radio media player.
 
 Next: review the standalone phone build and confirm the calendar and fasting
 settings before merge. Keep website download copy aligned with stable packages.

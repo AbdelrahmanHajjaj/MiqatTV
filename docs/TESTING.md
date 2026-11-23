@@ -198,6 +198,8 @@ Use `-e case alarm-route` for Arabic and the alarm audio route,
 `-e case offline` to verify bounded retries, failed-state controls and a
 single-tap restart after the server recovers, or
 `-e case dismiss` for paused media-card dismissal in Android Quick Settings.
+Use `-e case artwork -e capture true` to verify live theme and scene updates on
+the same playing session and capture the native media controls.
 Run `-e case cairo` and `-e case qatar` separately for live MP3 and HLS
 playback. These two checks depend on the broadcasters and internet access.
 
