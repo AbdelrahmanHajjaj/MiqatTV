@@ -46,7 +46,9 @@ final class WidgetRenderer {
         String presentation = initialLayout == null ? options.layoutFor(width, height, context.getResources().getConfiguration().fontScale) : initialLayout;
         RemoteViews view = new RemoteViews(context.getPackageName(), presentation.equals("next")
                 ? PhoneAlarms.arabic(context) ? R.layout.widget_next_card_ar : R.layout.widget_next_card
-                : presentation.equals("circle") ? R.layout.widget_circle : R.layout.prayer_widget);
+                : presentation.equals("circle")
+                        ? (options.size == 120 ? R.layout.widget_circle_large : R.layout.widget_circle)
+                        : R.layout.prayer_widget);
         view.setOnClickPendingIntent(R.id.widget_root, PhoneAlarms.open(context));
         try {
             new WidgetRenderer(context, view, options, width, height, initialLayout, now).render();
@@ -203,18 +205,21 @@ final class WidgetRenderer {
 
     private void circle() throws Exception {
         int side = Math.min(width, height);
+        boolean largeText = options.size == 120;
+        boolean roomy = largeText && side >= WidgetOptions.CIRCLE_SIZE;
         view.setInt(R.id.widget_root, "setLayoutDirection", ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         view.setImageViewBitmap(R.id.widget_backdrop,
                 WidgetBackground.create(context, settings, options, colors, side, side));
         view.setInt(R.id.widget_backdrop, "setImageAlpha", options.opacity * 255 / 100);
-        int horizontal = Math.round(side * (options.size == 120 ? .12f : .13f));
+        int horizontal = Math.round(side * (largeText ? .115f : .13f));
         int top = Math.round(side * .22f);
-        int bottom = Math.round(side * .18f);
+        int bottom = Math.round(side * (roomy ? .13f : .18f));
         view.setViewPadding(R.id.widget_content, dp((width - side) / 2 + horizontal),
                 dp((height - side) / 2 + top), dp((width - side + 1) / 2 + horizontal),
                 dp((height - side + 1) / 2 + bottom));
         // The bottom of the date row has less usable width than the middle of the circle.
-        int dateInset = dp((int) Math.ceil(side * .235f) - horizontal);
+        float dateMargin = roomy ? .215f : largeText ? .25f : .235f;
+        int dateInset = dp((int) Math.ceil(side * dateMargin) - horizontal);
         view.setViewPadding(R.id.widget_title, dateInset, 0, dateInset, 0);
         view.setTextColor(R.id.widget_next_label, accent);
         view.setTextColor(R.id.widget_next_time, ink);

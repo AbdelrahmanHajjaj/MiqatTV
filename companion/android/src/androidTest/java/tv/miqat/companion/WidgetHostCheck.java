@@ -102,6 +102,35 @@ final class WidgetHostCheck {
             });
             responsivePreviews(test, a, capture);
             pickerPreviews(test, a, ids, capture);
+            MainActivity circleEditor = (MainActivity) test.startActivitySync(
+                    new Intent(a, MainActivity.class)
+                            .setAction(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE)
+                            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, ids[4])
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            editor[0] = circleEditor;
+            TextView[] hosted = {null};
+            float[] hostedSize = {0};
+            PhoneUiCheck.on(test, () -> {
+                View preview = circleEditor.body.findViewWithTag("widget.preview");
+                int edge = View.MeasureSpec.makeMeasureSpec(a.views.dp(WidgetOptions.CIRCLE_SIZE), View.MeasureSpec.EXACTLY);
+                View defaultCircle = preview.findViewById(R.id.widget_root);
+                defaultCircle.measure(edge, edge);
+                float normal = ((TextView) defaultCircle.findViewById(R.id.widget_next_label)).getTextSize();
+                hosted[0] = views[4].findViewById(R.id.widget_next_label);
+                hostedSize[0] = hosted[0].getTextSize();
+                circleEditor.body.findViewWithTag("widget.size.120").performClick();
+                View largeCircle = circleEditor.body.findViewWithTag("widget.preview").findViewById(R.id.widget_root);
+                largeCircle.measure(edge, edge);
+                PhoneUiCheck.check(((TextView) largeCircle.findViewById(R.id.widget_next_label)).getTextSize() > normal,
+                        "120% did not enlarge the Circle preview");
+            });
+            LiveUiCheck.untilUi(test, () -> {
+                TextView updated = views[4].findViewById(R.id.widget_next_label);
+                return updated != hosted[0] && updated.getTextSize() > hostedSize[0];
+            });
+            PhoneUiCheck.check(WidgetOptions.read(a, ids[4]).size == 120, "Circle text size was not saved");
+            PhoneUiCheck.on(test, circleEditor::finish);
+            editor[0] = null;
             WidgetOptions legacy = WidgetOptions.from(a, "{\"background\":false}");
             WidgetOptions invalid = WidgetOptions.from(a, "{\"opacity\":999,\"shape\":\"unknown\",\"scene\":\"../private\"}");
             PhoneUiCheck.check(legacy.opacity == 0 && invalid.opacity == 100

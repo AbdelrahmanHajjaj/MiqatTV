@@ -1,5 +1,17 @@
 # Validation evidence
 
+## Circle text scaling — 23 November 2026
+
+On the owned API 37 emulator, selecting 120% in the Circle editor enlarged
+the prayer name immediately in the preview and the hosted widget. English and
+Arabic captures at 160 dp show growth in the name, time, countdown and date.
+At 112 and 160 dp, both language layouts kept the date and name inside the
+ring with default and doubled system text. The hosted ring still redrew.
+The debug and instrumentation packages, lint, and bilingual website built.
+The review APK retains its signer and all 25 approved recordings.
+SHA-256 prefix `50041F83E9A9BA37`.
+Physical launcher acceptance remains pending.
+
 ## Circular prayer widget — 23 November 2026
 
 The owned API 37 emulator checked the prayer name and icon above the scheduled

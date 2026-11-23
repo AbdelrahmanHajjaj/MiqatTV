@@ -444,5 +444,7 @@ pixels across an automatic minute refresh with prayer alerts disabled.
 
 The hosted multi-widget journey distinguishes Add during first configuration
 from Update on re-entry, retaining immediate saves and independent instances.
+For Circle, it checks that selecting 120% enlarges the configuration preview
+and the hosted widget.
 The CI runtime verifies SystemUI dismissibility and actual dismissal cleanup;
 it does not prescribe a touch gesture for different Android/OEM implementations.

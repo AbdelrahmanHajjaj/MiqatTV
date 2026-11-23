@@ -1,7 +1,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
-    android:layoutDirection="locale">
+    android:layoutDirection="locale" android:theme="@style/MiqatWidgetCircle">
     <ImageView android:id="@+id/widget_backdrop" android:layout_width="match_parent"
         android:layout_height="match_parent" android:scaleType="fitCenter" android:importantForAccessibility="no" />
     <ImageView android:id="@+id/widget_circle_ring" android:layout_width="match_parent"
@@ -22,25 +22,26 @@
                 android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
                 android:textColor="@color/companion_gold_400" android:text="@string/widget_preview_prayer_0"
                 android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
-                android:textSize="22sp" android:autoSizeMaxTextSize="22sp" android:autoSizeStepGranularity="1sp" />
+                android:textSize="?attr/circlePrayerSize" android:autoSizeMaxTextSize="?attr/circlePrayerSize"
+                android:autoSizeStepGranularity="1sp" />
         </LinearLayout>
         <TextView android:id="@+id/widget_next_time" style="@style/MiqatWidgetHero"
-            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.82"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.95"
             android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
             android:text="@string/widget_preview_time_0"
             android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
-            android:autoSizeMaxTextSize="17sp" android:autoSizeStepGranularity="1sp" />
+            android:autoSizeMaxTextSize="?attr/circleTimeSize" android:autoSizeStepGranularity="1sp" />
         <TextView android:id="@+id/widget_next_remaining" style="@style/MiqatWidgetMuted"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.59"
             android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
             android:text="@string/widget_preview_countdown"
             android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
-            android:autoSizeMaxTextSize="10sp" android:autoSizeStepGranularity="1sp" />
+            android:autoSizeMaxTextSize="?attr/circleDetailSize" android:autoSizeStepGranularity="1sp" />
         <TextView android:id="@+id/widget_title" style="@style/MiqatWidgetText"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.25"
             android:paddingStart="17dp" android:paddingEnd="17dp" android:gravity="center" android:maxLines="2" android:includeFontPadding="false"
             android:text="@string/widget_preview_hijri"
             android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
-            android:autoSizeMaxTextSize="10sp" android:autoSizeStepGranularity="1sp" />
+            android:autoSizeMaxTextSize="?attr/circleDetailSize" android:autoSizeStepGranularity="1sp" />
     </LinearLayout>
 </FrameLayout>

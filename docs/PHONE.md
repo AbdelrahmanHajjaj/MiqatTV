@@ -214,7 +214,7 @@ Choose **Circle** in Miqat or **Countdown circle** in the launcher. It starts in
 fixed **2×2** slot on compatible launchers. The prayer name and icon are the
 largest row, followed by the scheduled time and a smaller countdown. The
 selected dates sit inside the ring, which shows the fraction of the prayer
-interval remaining.
+interval remaining. Select **120%** under **Text size** for larger Circle text.
 
 Each instance retains its own theme/background/opacity, text size,
 Hijri/Gregorian date choices and initial presentation. Changes update that widget

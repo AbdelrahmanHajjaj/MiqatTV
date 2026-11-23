@@ -76,7 +76,7 @@ final class WidgetSmallCheck {
                     Configuration config=new Configuration(c.getResources().getConfiguration());config.fontScale=font;
                     Context scaled=c.createConfigurationContext(config);
                     PhoneUiCheck.on(test,()->{
-                        circleLayout(scaled, shown, settings, now, lang, font, size);
+                        circleLayout(scaled, shown, settings, now, lang, font, size, captures);
                         for(String preset:resizable) for(int edge:new int[]{40,56,80}) for(boolean modern:new boolean[]{false,true}) {
                             WidgetOptions options=new WidgetOptions();options.layout=preset;options.size=size;options.date=true;
                             String original=options.encode();
@@ -145,7 +145,7 @@ final class WidgetSmallCheck {
     }
 
     private static void circleLayout(Context c, MainActivity a, PhoneStore settings, long now,
-            String language, float font, int size) {
+            String language, float font, int size, boolean captures) {
         WidgetOptions options = new WidgetOptions();
         options.layout = "circle";
         options.size = size;
@@ -162,7 +162,7 @@ final class WidgetSmallCheck {
                     "Circle must show the next prayer's scheduled time");
             PhoneUiCheck.check(label.getTextSize() >= time.getTextSize()
                             && countdown.getTop() >= time.getBottom() && countdown.getTextSize() < time.getTextSize(),
-                    "Circle hierarchy at " + edge + " dp " + language + " font=" + font
+                    "Circle hierarchy at " + edge + " dp " + language + " font=" + font + " size=" + size
                             + ": name=" + label.getTextSize() + ", time=" + time.getTextSize()
                             + ", countdown=" + countdown.getTextSize());
             PhoneUiCheck.check(icon.getVisibility() == View.VISIBLE && icon.getDrawable() != null
@@ -170,12 +170,16 @@ final class WidgetSmallCheck {
                     "The next-prayer icon must appear beside its name");
             for (int id : new int[] {R.id.widget_next_label, R.id.widget_next_time,
                     R.id.widget_next_remaining, R.id.widget_title}) text(view, id, edge, language, font);
-            insideRing(view, view.findViewById(R.id.widget_title));
-            insideRing(view, (View) label.getParent());
+            String variant = edge + " dp " + language + " font=" + font + " size=" + size
+                    + " bothDates=" + bothDates;
+            insideRing(view, view.findViewById(R.id.widget_title), variant);
+            insideRing(view, (View) label.getParent(), variant);
+            if (captures && edge == WidgetOptions.CIRCLE_SIZE && font == 1 && !bothDates)
+                capture(c, view, language + "-circle-" + size);
         }
     }
 
-    private static void insideRing(View root, View content) {
+    private static void insideRing(View root, View content, String variant) {
         Rect bounds = new Rect();
         content.getDrawingRect(bounds);
         ((ViewGroup) root).offsetDescendantRectToMyCoords(content, bounds);
@@ -186,8 +190,9 @@ final class WidgetSmallCheck {
             double limit = root.getWidth() * .421;
             for (int y = 0; y < pixels.getHeight(); y++) for (int x = 0; x < pixels.getWidth(); x++) {
                 if (Color.alpha(pixels.getPixel(x, y)) > 32)
-                    PhoneUiCheck.check(Math.hypot(bounds.left + x - center, bounds.top + y - center) < limit,
-                            "Circle content intersects the ring at " + root.getWidth() + " pixels: " + content.getClass().getSimpleName());
+                    PhoneUiCheck.check(Math.hypot(bounds.left + x - center,
+                                    bounds.top + content.getTranslationY() + y - center) < limit,
+                            "Circle content intersects the ring: " + variant + " " + content.getClass().getSimpleName());
             }
         } finally {
             pixels.recycle();

@@ -15,6 +15,8 @@
 - Phone widgets show seconds and count down on the launcher.
 - The countdown circle shows the next prayer's icon, name and time, with a
   smaller countdown underneath. Its outer ring advances automatically.
+- The Circle widget's 120% setting enlarges the text in its preview and on the
+  home screen.
 - Selecting the Qibla Map tab loads it from the phone's precise location.
   The compass uses the same reading independently of the prayer city.
 
