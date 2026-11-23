@@ -598,8 +598,8 @@ final class WidgetHostCheck {
             PhoneUiCheck.on(test, () -> {
                 android.view.View preview = new RemoteViews(a.getPackageName(), info.previewLayout).apply(a, new FrameLayout(a));
                 TextView prayer = preview.findViewById(circle || layout.equals("next") ? R.id.widget_next_label : R.id.widget_prayer_name);
-                TextView time = preview.findViewById(circle ? R.id.widget_next_remaining
-                        : layout.equals("next") ? R.id.widget_next_time : R.id.widget_prayer_time);
+                TextView time = preview.findViewById(circle || layout.equals("next")
+                        ? R.id.widget_next_time : R.id.widget_prayer_time);
                 PhoneUiCheck.check(prayer != null && !prayer.getText().toString().isEmpty()
                                 && time != null && !time.getText().toString().isEmpty(),
                         "Android picker preview is empty for " + layout);

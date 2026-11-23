@@ -13,6 +13,8 @@
   from About Miqat and open the matching GitHub release.
 - Miqat Phone uses its themed sheet for update checks.
 - Phone widgets show seconds and count down on the launcher.
+- The countdown circle shows the next prayer's icon, name and time, with a
+  smaller countdown underneath. Its outer ring advances automatically.
 - Selecting the Qibla Map tab loads it from the phone's precise location.
   The compass uses the same reading independently of the prayer city.
 

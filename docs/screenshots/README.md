@@ -17,7 +17,8 @@ no real household addresses, credentials, private recordings or pairing QR codes
 | `phone-voices` | PhoneLibraryCheck's named demonstration audio library. |
 | `phone-location` | PhoneUiCheck's real Location settings. |
 | `phone-qibla` | PhoneCalendarCheck's Map tab using live OpenStreetMap tiles and a precise Cairo fixture while the prayer city is London. |
-| `phone-widgets`, `phone-style` | PhoneJourneyCheck's Circle widget with live seconds in configuration and its setup-style screens. |
+| `phone-widgets` | PhoneJourneyCheck's Circle widget configuration, showing the prayer icon and name, scheduled time, live seconds and date inside the ring. |
+| `phone-style` | PhoneJourneyCheck's setup-style screens. |
 | `companion-tvs`, `companion-remote`, `companion-appearance` | CompanionCheck's native demo-TV interfaces, including the corrected preview caption. |
 | `android-home` | Native Android TV Home from the 0.7.2 UI-alignment review. |
 | `lg-home` | LG browser-test's aligned Home capture from the 0.2.30 review. |

@@ -1,5 +1,17 @@
 # Validation evidence
 
+## Circular prayer widget — 23 November 2026
+
+The owned API 37 emulator checked the prayer name and icon above the scheduled
+time and live countdown. At 112 and 160 dp, English and Arabic checks covered
+100% and 120% widget text and default and doubled system text. The heading and
+date pixels stayed inside the ring with Hijri alone and both dates enabled.
+The hosted ring redrew at the next minute while awake with prayer alerts off.
+The bilingual phone journey, picker previews, debug app and instrumentation
+builds, lint, catalog checks and website build passed. The review APK retains
+its signer and all 25 approved recordings. SHA-256 prefix `F4D0A5DCCB8B603E`.
+Physical launcher acceptance remains pending.
+
 ## Phone update sheet, widget seconds and Qibla location — 23 November 2026
 
 An owned API 37 emulator verified the themed update result in English and

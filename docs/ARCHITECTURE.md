@@ -112,7 +112,8 @@ next-prayer tile with adaptive text; larger bounds restore the existing detail.
 Next prayer's initial presentation is one cell. The countdown circle uses a
 fixed two-cell-square provider and draws the remaining interval at each refresh.
 The launcher runs the widget's native second-by-second countdown. One shared
-non-wakeup alarm refreshes widgets at the next prayer boundary when placed.
+non-wakeup alarm refreshes widgets at the next prayer boundary, with minute
+refreshes for placed circles between prayers.
 PhoneDayOverrides renders each
 weekday's controls in place. Native receiver variants share that provider.
 `PhoneHijriEvents` adapts the canonical recurring event catalog to corrected ICU

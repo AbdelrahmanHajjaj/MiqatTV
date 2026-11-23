@@ -6,7 +6,8 @@ Miqat Phone. The three published packages passed checksum and identity
 verification. The website uses the v0.7.6 download links. See EVIDENCE.md.
 
 The phone feedback branch covers live countdown seconds on Home and widgets,
-the circular widget, time previews and calendar swipes. About uses the themed
+the circular widget with its prayer time, icon and live ring, time previews and
+calendar swipes. About uses the themed
 update sheet. Qibla uses precise device location and loads when Map is selected.
 Next action is PR validation after GitHub CLI authentication is restored.
 See PHONE-WORK.md and EVIDENCE.md.

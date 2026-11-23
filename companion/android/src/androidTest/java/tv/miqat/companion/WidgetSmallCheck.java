@@ -32,6 +32,21 @@ final class WidgetSmallCheck {
             host=new AppWidgetHost(a,41940);AppWidgetHost owned=host;
             PhoneUiCheck.on(test,()->{shown.body.removeAllViews();owned.startListening();});
             AppWidgetManager manager=AppWidgetManager.getInstance(c);
+            AppWidgetHostView[] circle = {null};
+            int circleId = owned.allocateAppWidgetId();
+            PhoneUiCheck.check(manager.bindAppWidgetIdIfAllowed(circleId, PrayerWidget.component(c, "circle")),
+                    "Cannot bind the countdown circle");
+            PhoneUiCheck.on(test, () -> {
+                circle[0] = owned.createView(shown, circleId, manager.getAppWidgetInfo(circleId));
+                int edge = shown.views.dp(WidgetOptions.CIRCLE_SIZE);
+                shown.body.addView(circle[0], new LinearLayout.LayoutParams(edge, edge));
+            });
+            manager.updateAppWidgetOptions(circleId, bounds(160, 160, true));
+            PrayerWidget.update(c, circleId);
+            LiveUiCheck.untilUi(test, () -> ring(circle[0]) != null);
+            Bitmap[] firstRing = {null};
+            PhoneUiCheck.on(test, () -> firstRing[0] = ring(circle[0]));
+            long firstMinute = (System.currentTimeMillis() / 60_000 + 1) * 60_000;
             String[] resizable = {"next", "day", "strip"};
             for(String preset:resizable) {
                 int id=host.allocateAppWidgetId();
@@ -61,6 +76,7 @@ final class WidgetSmallCheck {
                     Configuration config=new Configuration(c.getResources().getConfiguration());config.fontScale=font;
                     Context scaled=c.createConfigurationContext(config);
                     PhoneUiCheck.on(test,()->{
+                        circleLayout(scaled, shown, settings, now, lang, font, size);
                         for(String preset:resizable) for(int edge:new int[]{40,56,80}) for(boolean modern:new boolean[]{false,true}) {
                             WidgetOptions options=new WidgetOptions();options.layout=preset;options.size=size;options.date=true;
                             String original=options.encode();
@@ -100,6 +116,12 @@ final class WidgetSmallCheck {
                 String full=PhoneTime.at(settings,settings.day(now,0).times[4],PhoneAlarms.arabic(c));
                 PhoneUiCheck.check(accessible.getContentDescription().toString().contains(full),"One-cell accessibility lost the full prayer time");
             });
+            PhoneUiCheck.check(PhoneAlarms.exact(c), "Enable exact timing for the live ring check");
+            PhoneRuntimeCheck.await(test, () -> {
+                if (System.currentTimeMillis() < firstMinute) return false;
+                Bitmap current = ring(circle[0]);
+                return current != null && !firstRing[0].sameAs(current);
+            }, 75_000, "The hosted ring did not redraw on its next automatic refresh");
             settings.changed(Collections.singletonMap("prayer.location-ready","false")).save(c);
             PhoneUiCheck.on(test,()->{
                 View missing=WidgetRenderer.create(c,new WidgetOptions(),40,40,now).apply(c,new FrameLayout(shown));measure(missing,shown,40,40);
@@ -113,6 +135,62 @@ final class WidgetSmallCheck {
             PhoneUiCheck.check(restore.commit(),"Cannot restore widget settings fixture");
             PhoneUiCheck.check(ui.edit().putString("language",language).commit(),"Cannot restore widget language fixture");
             PhoneAlarms.rebuild(c);PhoneBackgroundLocation.sync(c);
+        }
+    }
+
+    private static Bitmap ring(View host) {
+        ImageView image = host.findViewById(R.id.widget_circle_ring);
+        return image != null && image.getDrawable() instanceof android.graphics.drawable.BitmapDrawable
+                ? ((android.graphics.drawable.BitmapDrawable) image.getDrawable()).getBitmap() : null;
+    }
+
+    private static void circleLayout(Context c, MainActivity a, PhoneStore settings, long now,
+            String language, float font, int size) {
+        WidgetOptions options = new WidgetOptions();
+        options.layout = "circle";
+        options.size = size;
+        for (int edge : new int[] {112, WidgetOptions.CIRCLE_SIZE}) for (boolean bothDates : new boolean[] {false, true}) {
+            options.date = bothDates;
+            View view = WidgetRenderer.create(c, options, edge, edge, now).apply(c, new FrameLayout(c));
+            measure(view, a, edge, edge);
+            TextView time = view.findViewById(R.id.widget_next_time);
+            TextView countdown = view.findViewById(R.id.widget_next_remaining);
+            ImageView icon = view.findViewById(R.id.widget_next_icon);
+            TextView label = view.findViewById(R.id.widget_next_label);
+            PhoneUiCheck.check(time.getText().toString().equals(
+                            PhoneTime.at(settings, settings.day(now, 0).times[4], language.equals("ar"))),
+                    "Circle must show the next prayer's scheduled time");
+            PhoneUiCheck.check(label.getTextSize() >= time.getTextSize()
+                            && countdown.getTop() >= time.getBottom() && countdown.getTextSize() < time.getTextSize(),
+                    "Circle hierarchy at " + edge + " dp " + language + " font=" + font
+                            + ": name=" + label.getTextSize() + ", time=" + time.getTextSize()
+                            + ", countdown=" + countdown.getTextSize());
+            PhoneUiCheck.check(icon.getVisibility() == View.VISIBLE && icon.getDrawable() != null
+                            && icon.getParent() == label.getParent(),
+                    "The next-prayer icon must appear beside its name");
+            for (int id : new int[] {R.id.widget_next_label, R.id.widget_next_time,
+                    R.id.widget_next_remaining, R.id.widget_title}) text(view, id, edge, language, font);
+            insideRing(view, view.findViewById(R.id.widget_title));
+            insideRing(view, (View) label.getParent());
+        }
+    }
+
+    private static void insideRing(View root, View content) {
+        Rect bounds = new Rect();
+        content.getDrawingRect(bounds);
+        ((ViewGroup) root).offsetDescendantRectToMyCoords(content, bounds);
+        Bitmap pixels = Bitmap.createBitmap(content.getWidth(), content.getHeight(), Bitmap.Config.ARGB_8888);
+        try {
+            content.draw(new Canvas(pixels));
+            double center = root.getWidth() / 2.0;
+            double limit = root.getWidth() * .421;
+            for (int y = 0; y < pixels.getHeight(); y++) for (int x = 0; x < pixels.getWidth(); x++) {
+                if (Color.alpha(pixels.getPixel(x, y)) > 32)
+                    PhoneUiCheck.check(Math.hypot(bounds.left + x - center, bounds.top + y - center) < limit,
+                            "Circle content intersects the ring at " + root.getWidth() + " pixels: " + content.getClass().getSimpleName());
+            }
+        } finally {
+            pixels.recycle();
         }
     }
 
@@ -210,7 +288,11 @@ final class WidgetSmallCheck {
                         + " layout=" + text.getLayout().getHeight() + " view=" + text.getHeight());
         PhoneUiCheck.check(text.getLayout().getLineEnd(text.getLayout().getLineCount()-1)>=text.getText().length(),"Widget cut off its last text line");
         for(int line=0;line<text.getLayout().getLineCount();line++)
-            PhoneUiCheck.check(text.getLayout().getEllipsisCount(line)==0 && text.getLayout().getLineWidth(line)<=text.getWidth()-text.getCompoundPaddingLeft()-text.getCompoundPaddingRight()+1,"Clipped widget width: "+edge+" "+lang+" font="+font);
+            PhoneUiCheck.check(text.getLayout().getEllipsisCount(line)==0
+                            && text.getLayout().getLineMax(line)<=text.getWidth()-text.getCompoundPaddingLeft()-text.getCompoundPaddingRight()+1,
+                    "Clipped widget width: " + text.getResources().getResourceEntryName(id) + " " + edge
+                            + " " + lang + " font=" + font + " text=" + text.getText()
+                            + " line=" + text.getLayout().getLineMax(line) + " view=" + text.getWidth());
     }
     private static void capture(Context c,View view,String name) {
         Bitmap image=Bitmap.createBitmap(view.getWidth(),view.getHeight(),Bitmap.Config.ARGB_8888);view.draw(new Canvas(image));

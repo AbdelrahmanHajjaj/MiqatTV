@@ -52,11 +52,13 @@ public class PrayerWidget extends AppWidgetProvider {
 
     static final String PINNED = "tv.miqat.companion.WIDGET_PINNED";
     private static final String ROLLOVER = "tv.miqat.companion.WIDGET_ROLLOVER";
+    private static final String PRAYER_TIME = "prayer-time";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        if (ROLLOVER.equals(intent.getAction())) updateAll(context);
+        if (ROLLOVER.equals(intent.getAction()))
+            refreshWidgets(context, intent.getLongExtra(PRAYER_TIME, 0) > System.currentTimeMillis());
         if (PINNED.equals(intent.getAction())) {
             int id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
             if (owns(context, id)
@@ -75,8 +77,8 @@ public class PrayerWidget extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
-        for (int id : ids) update(context, id);
-        scheduleRollover(context, true);
+        for (int id : ids) render(context, id, WidgetOptions.read(context, id));
+        scheduleRefresh(context, ids(context));
     }
 
     @Override
@@ -90,16 +92,22 @@ public class PrayerWidget extends AppWidgetProvider {
         android.content.SharedPreferences.Editor editor = PhoneStore.preferences(context).edit();
         for (int id : ids) editor.remove("widget-" + id);
         editor.apply();
+        scheduleRefresh(context, ids(context));
     }
 
     @Override
     public void onDisabled(Context context) {
-        if (ids(context).length == 0) scheduleRollover(context, false);
+        scheduleRefresh(context, ids(context));
     }
 
     static void update(Context context, int id) {
+        render(context, id, WidgetOptions.read(context, id));
+        scheduleRefresh(context, ids(context));
+    }
+
+    private static void render(Context context, int id, WidgetOptions options) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        manager.updateAppWidget(id, responsive(context, WidgetOptions.read(context, id), manager.getAppWidgetOptions(id)));
+        manager.updateAppWidget(id, responsive(context, options, manager.getAppWidgetOptions(id)));
     }
 
     static RemoteViews responsive(Context context, WidgetOptions options, Bundle bounds) {
@@ -132,31 +140,46 @@ public class PrayerWidget extends AppWidgetProvider {
     }
 
     static void updateAll(Context context) {
+        refreshWidgets(context, false);
+    }
+
+    private static void refreshWidgets(Context context, boolean circlesOnly) {
         try {
             int[] widgets = ids(context);
-            scheduleRollover(context, widgets.length > 0);
-            for (int id : widgets) update(context, id);
+            scheduleRefresh(context, widgets);
+            for (int id : widgets) {
+                WidgetOptions options = WidgetOptions.read(context, id);
+                if (!circlesOnly || options.layout.equals("circle")) render(context, id, options);
+            }
         } catch (RuntimeException unavailable) {
             android.util.Log.w(
                     "MiqatWidget", "Widget host update failed; the host may retry later");
         }
     }
 
-    private static synchronized void scheduleRollover(Context context, boolean placed) {
+    private static synchronized void scheduleRefresh(Context context, int[] widgets) {
         AlarmManager alarms = context.getSystemService(AlarmManager.class);
-        int flags = PendingIntent.FLAG_IMMUTABLE | (placed ? 0 : PendingIntent.FLAG_NO_CREATE);
-        PendingIntent refresh = PendingIntent.getBroadcast(context, 0,
-                new Intent(context, PrayerWidget.class).setAction(ROLLOVER), flags);
-        if (refresh == null) return;
+        Intent intent = new Intent(context, PrayerWidget.class).setAction(ROLLOVER);
         try {
-            if (placed) {
+            if (widgets.length > 0) {
                 PhoneStore settings = PhoneStore.read(context);
                 long now = System.currentTimeMillis();
                 PrayerSelection next = settings.locationReady
                         ? PhonePrayerRules.INSTANCE.nextPrayer(settings.day(now, 0).times, settings.day(now, 1).times, now)
                         : null;
                 if (next != null) {
-                    long target = (long) next.getNextTime();
+                    long prayer = (long) next.getNextTime();
+                    long target = prayer;
+                    for (int id : widgets) {
+                        if (WidgetOptions.read(context, id).layout.equals("circle")) {
+                            // A minute changes the drawn arc without waking a sleeping phone.
+                            target = Math.min(prayer, (now / 60_000 + 1) * 60_000);
+                            break;
+                        }
+                    }
+                    PendingIntent refresh = PendingIntent.getBroadcast(context, 0,
+                            intent.putExtra(PRAYER_TIME, prayer),
+                            PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
                     if (PhoneAlarms.exact(context)) {
                         try {
                             alarms.setExact(AlarmManager.RTC, target, refresh);
@@ -170,9 +193,13 @@ public class PrayerWidget extends AppWidgetProvider {
                 }
             }
         } catch (Exception unavailable) {
-            android.util.Log.w("MiqatWidget", "Cannot schedule widget prayer rollover");
+            android.util.Log.w("MiqatWidget", "Cannot schedule widget refresh");
         }
-        alarms.cancel(refresh);
-        refresh.cancel();
+        PendingIntent refresh = PendingIntent.getBroadcast(context, 0, intent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_NO_CREATE);
+        if (refresh != null) {
+            alarms.cancel(refresh);
+            refresh.cancel();
+        }
     }
 }

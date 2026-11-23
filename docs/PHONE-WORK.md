@@ -25,7 +25,9 @@ calculated times. The Hijri grid and selected-day timetable accept horizontal
 swipes. Selecting the Qibla Map tab opens a pannable, zoomable map at the
 phone's current precise location. The compass uses that same reading separately
 from prayer settings. About uses Miqat's themed update sheet. The fixed
-countdown-circle ring redraws on launcher refresh. See [validation](EVIDENCE.md).
+countdown circle shows the prayer icon, scheduled time and smaller seconds
+countdown. Its ring refreshes about once a minute while awake.
+See [validation](EVIDENCE.md).
 
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.

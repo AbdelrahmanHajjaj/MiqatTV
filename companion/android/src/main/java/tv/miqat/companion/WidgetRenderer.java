@@ -53,6 +53,8 @@ final class WidgetRenderer {
         } catch (Exception unavailable) {
             if (presentation.equals("circle")) {
                 view.setTextViewText(R.id.widget_next_label, PhoneAlarms.text(context, "phone_settings_failed"));
+                view.setViewVisibility(R.id.widget_next_icon, View.GONE);
+                view.setViewVisibility(R.id.widget_next_time, View.GONE);
                 view.setViewVisibility(R.id.widget_next_remaining, View.GONE);
                 view.setTextViewText(R.id.widget_title, "");
                 return view;
@@ -201,15 +203,22 @@ final class WidgetRenderer {
 
     private void circle() throws Exception {
         int side = Math.min(width, height);
+        view.setInt(R.id.widget_root, "setLayoutDirection", ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         view.setImageViewBitmap(R.id.widget_backdrop,
                 WidgetBackground.create(context, settings, options, colors, side, side));
         view.setInt(R.id.widget_backdrop, "setImageAlpha", options.opacity * 255 / 100);
-        int inset = Math.round(side * (options.size == 120 ? .14f : .18f));
-        view.setViewPadding(R.id.widget_content, dp((width - side) / 2 + inset),
-                dp((height - side) / 2 + inset), dp((width - side + 1) / 2 + inset),
-                dp((height - side + 1) / 2 + inset));
+        int horizontal = Math.round(side * (options.size == 120 ? .12f : .13f));
+        int top = Math.round(side * .22f);
+        int bottom = Math.round(side * .18f);
+        view.setViewPadding(R.id.widget_content, dp((width - side) / 2 + horizontal),
+                dp((height - side) / 2 + top), dp((width - side + 1) / 2 + horizontal),
+                dp((height - side + 1) / 2 + bottom));
+        // The bottom of the date row has less usable width than the middle of the circle.
+        int dateInset = dp((int) Math.ceil(side * .235f) - horizontal);
+        view.setViewPadding(R.id.widget_title, dateInset, 0, dateInset, 0);
         view.setTextColor(R.id.widget_next_label, accent);
-        view.setTextColor(R.id.widget_next_remaining, ink);
+        view.setTextColor(R.id.widget_next_time, ink);
+        view.setTextColor(R.id.widget_next_remaining, Color.parseColor(colors.getString("mist-400")));
         view.setTextColor(R.id.widget_title, ink);
 
         PhoneSchedule.Day day = settings.day(now, 0), tomorrow = settings.day(now, 1);
@@ -220,14 +229,19 @@ final class WidgetRenderer {
         double fraction = 0;
         if (next != null) {
             prayer = data.prayerName(next.getNext(), ar);
+            view.setImageViewResource(R.id.widget_next_icon, prayerIcon(next.getNext()));
+            view.setInt(R.id.widget_next_icon, "setColorFilter", accent);
+            view.setTextViewText(R.id.widget_next_time, text(time.format(new Date((long) next.getNextTime()))));
             fraction = circleRemaining(day, tomorrow, next);
         }
+        view.setViewVisibility(R.id.widget_next_icon, next == null ? View.GONE : View.VISIBLE);
+        view.setViewVisibility(R.id.widget_next_time, next == null ? View.GONE : View.VISIBLE);
         view.setTextViewText(R.id.widget_next_label, prayer);
         view.setInt(R.id.widget_next_label, "setMaxLines", next == null ? 2 : 1);
         countdown(next);
         SimpleDateFormat civil = new SimpleDateFormat("d MMM", locale);
         civil.setTimeZone(settings.zone());
-        String date = options.hijri ? PhoneTime.hijri(settings, now, ar) : "";
+        String date = options.hijri ? PhoneTime.hijri(settings, now, ar, options.date) : "";
         if (options.date) date += (date.isEmpty() ? "" : "\n") + civil.format(new Date(now));
         view.setTextViewText(R.id.widget_title, text(date));
         view.setViewVisibility(R.id.widget_title, date.isEmpty() ? View.GONE : View.VISIBLE);

@@ -437,6 +437,11 @@ outline for every shape. Reapply successive square/wide RemoteViews to the same
 host view so resizing cannot retain the previous prayer layout. Inspect native
 English/Arabic renders; these checks do not replace Samsung launcher acceptance.
 
+For the circle, `widget-small` checks the adjacent prayer icon and name,
+scheduled time, smaller countdown and date at 112 and 160 dp. Run it with exact
+timing available on the awake emulator so it can also compare the hosted ring
+pixels across an automatic minute refresh with prayer alerts disabled.
+
 The hosted multi-widget journey distinguishes Add during first configuration
 from Update on re-entry, retaining immediate saves and independent instances.
 The CI runtime verifies SystemUI dismissibility and actual dismissal cleanup;

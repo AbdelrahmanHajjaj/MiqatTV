@@ -211,9 +211,10 @@ variants; older launchers use their resize bounds. Some launchers need a widget
 removed/re-added to refresh changed minimum limits.
 
 Choose **Circle** in Miqat or **Countdown circle** in the launcher. It starts in a
-fixed **2×2** slot on compatible launchers and shows the next prayer,
-remaining time and selected dates. Its outer ring shows the share of the current
-prayer interval remaining at the last widget refresh.
+fixed **2×2** slot on compatible launchers. The prayer name and icon are the
+largest row, followed by the scheduled time and a smaller countdown. The
+selected dates sit inside the ring, which shows the fraction of the prayer
+interval remaining.
 
 Each instance retains its own theme/background/opacity, text size,
 Hijri/Gregorian date choices and initial presentation. Changes update that widget
@@ -227,8 +228,9 @@ cards retain the enabled Hijri date, more prominent than the countdown. The stri
 can show both dates, fills its height and outlines the next prayer; after Isha its
 Fajr slot uses tomorrow's timestamp. Text, icons and colors follow the app.
 Android ticks the visible countdown each second using the system's digit style.
-The circle's ring and the next prayer update on widget refresh. Android can delay
-the rollover while idle or when exact timing access is unavailable.
+The circle's ring refreshes about once a minute while the phone is awake.
+Android can delay ring updates and prayer rollover while idle or when exact
+timing access is unavailable.
 Tap a widget to open Prayer.
 
 ## Appearance
