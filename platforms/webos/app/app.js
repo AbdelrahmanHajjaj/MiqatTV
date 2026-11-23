@@ -893,9 +893,10 @@
   function play(target, videoOnly) {
     if (!target) { show('inputs'); return; }
     input = target; lastError = null;
-    if (tv && !media && !(document.hidden || document.webkitHidden)) {
+    if (tv && (!media || videoOnly) && !(document.hidden || document.webkitHidden)) {
       video.style.display = 'block';
       video.pause(); while (video.firstChild) { video.removeChild(video.firstChild); }
+      video.muted = !!videoOnly;
       var source = document.createElement('source'); source.type = target.type; source.src = target.url;
       if (videoOnly) { source.type += ';mediaOption=' + encodeURI(JSON.stringify({option: {mediaFormat: {type: 'video_only'}}})); }
       video.appendChild(source); video.load(); video.play();
@@ -973,8 +974,9 @@
   }
   function startAudio(kind, url, seconds) {
     if (media) { stopAudio('stopped', false); }
-    if (kind === 'adhan' && input && /^HDMI_[1-4]$/.test(input.id)) { play(input, true); }
-    else { releaseVideo(); }
+    var adhanInput = kind === 'adhan' && input && /^HDMI_[1-4]$/.test(input.id) ? input : null;
+    // Legacy TVs ignore element mute and may change master volume during preparation.
+    releaseVideo();
     var audio = document.createElement('audio'), serial = ++audioSerial, decoderReadyAt = Date.now() + 450;
     audio.setAttribute('preload', 'none'); audio.volume = prefs.volume / 100;
     var item = {kind: kind, audio: audio, serial: serial, started: false};
@@ -995,6 +997,11 @@
           request('audioVolume', {action: 'release', id: id}); return;
         }
         if (!reply.returnValue || ['tv', 'element'].indexOf(reply.mode) < 0) { failed(reply.errorText || 'Audio level unavailable'); return; }
+        if (adhanInput && reply.mode === 'element') {
+          play(adhanInput, true);
+          adhanInput = null;
+          decoderReadyAt = Date.now() + 450;
+        }
         audio.volume = reply.mode === 'tv' ? 1 : prefs.volume / 100;
         if (kind !== 'radio' && !item.deadline) {
           item.deadline = setTimeout(function () { if (active()) { stopAudio('stopped', true); } }, (seconds || (prefs.callClose ? prefs.callClose * 60 : 600)) * 1000);

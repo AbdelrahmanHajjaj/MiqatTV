@@ -1,5 +1,14 @@
 # Validation evidence
 
+## LG adhan HDMI isolation — 23 November 2026
+
+The Edge browser regression reproduced unmuted HDMI with the previous LG app
+and passed against the fix at development version 0.2.30. It checks muted HDMI
+and restoration in element-volume mode, and decoder release during playback
+and Stop in legacy TV-volume mode. LG ES5 build and service tests pass,
+including the existing master-volume ownership checks. Physical sound and
+picture acceptance is pending.
+
 ## Stable v0.7.5 — 23 November 2026
 
 [Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45207954747)

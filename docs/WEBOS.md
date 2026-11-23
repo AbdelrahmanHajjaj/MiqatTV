@@ -81,10 +81,11 @@ date/location/method/school and does not alter the schedule. The old-LG adapter
 uses a bundled public USERTrust RSA root for this fixed host; source and full
 notices ship in service/trust/ and service/licenses/online-ca.txt.
 
-Silent banners retain HDMI sound. During adhan, HDMI uses video-only input so
-the picture can keep moving while local audio plays behind the central mihrab.
-Other inputs/audio modes release the decoder first. Completion, Stop, errors and
-suspend use the existing cleanup and input-restoration handlers.
+Silent banners retain HDMI sound. On webOS 4 and later, the adhan popup uses
+muted, video-only HDMI so the picture can keep moving behind the central mihrab.
+Older TVs release HDMI during the popup because they lack per-element mute.
+Closing the popup restores the input. Other inputs and audio modes release the
+decoder first.
 
 On SDKs below 4, adhan volume is an absolute TV level: 30% means 30/100, then the
 app conditionally restores the captured level. It preserves a different level

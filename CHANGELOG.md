@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- LG webOS silences Miqat's HDMI input during the adhan popup. Older TVs
+  also hide the HDMI picture until the popup closes.
+
 ## v0.7.5 — Android phone 0.5.21
 
 - Use Miqat Phone for TV setup and recovery. New releases no longer include a
