@@ -1,24 +1,13 @@
 # Current work
 
-Updated: 2026-11-23. Quran Radio was approved and merged in PR #22.
-Current scope in `feat/phone-hijri-reminders`: core and common Hijri
-observances, every day of Ramadan and Eid, and opt-in day-before, suhoor and
-iftar reminders for Ramadan, selected voluntary Hijri fasts, and Mondays and
-Thursdays.
-The same review build applies the phone's active theme and scene to Android's
-native radio media player.
+Updated: 2026-11-23. Stable v0.7.4 includes phone 0.5.20/code 36,
+Android TV 0.7.3/code 14, installer 1.1.5/code 8 and LG 0.2.30.
+The phone adds Quran Radio, numbered Ramadan days and wider Eid and Hajj
+coverage, and optional day-before, suhoor and iftar reminders. The signed
+bundle passed download and package verification. The bilingual website
+links to v0.7.4 and documents the new phone features.
 
-Next: publish the approved v0.7.4 bundle with Android phone 0.5.20/code 36 from
-successful main validation. Refresh the bilingual website after publication.
-
-Stable v0.7.3 contains TV 0.7.3/code 14, phone 0.5.19/code 35,
-installer 1.1.5/code 8 and LG 0.2.30. Release builds/lint, focused rejection
-checks, final-main validation and hosted signing pass. Downloaded APKs match
-their pinned certificates, package IDs, release manifests and package checksums.
-Stable promotion reuses v0.7.3-preview.1's exact signed bytes and source commit;
-existing installations of that preview need no reinstall. Prior release tags and
-assets are preserved. See EVIDENCE.md and the
-release/PR records for validation and website deployment outcomes.
+No open release work. See EVIDENCE.md and the release and PR records.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Routine CI has no phone/TV emulator jobs; retain

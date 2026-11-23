@@ -1,12 +1,11 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-23. Latest scope: Hijri ranges and opt-in day-before, suhoor
-and iftar alerts.
+Updated: 2026-11-23. Stable v0.7.4 includes phone 0.5.20/code 36 with Quran
+Radio, Hijri ranges, and opt-in day-before, suhoor and iftar alerts.
 The phone marks all days of Ramadan and Eid and includes core and common Hijri
 observances. Fasting selections include Ramadan, Ashura, Arafah, the White Days,
 and Mondays and Thursdays. Quran Radio was approved and merged in PR #22.
-The current review build also gives Android's radio media card the active
-phone theme and background.
+Android's radio media card uses the active phone theme and background.
 WORK.md owns the next action.
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.

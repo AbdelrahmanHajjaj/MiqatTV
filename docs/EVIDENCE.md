@@ -1,5 +1,20 @@
 # Validation evidence
 
+## Stable v0.7.4 — 23 November 2026
+
+[Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45201856829)
+and [hosted signing](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45203162058)
+passed for source bba4ddaa3a8eed2b142e53258d01a1c0431033ed. All four draft downloads
+match SHA256SUMS. The three APKs match their pinned certificates and package IDs,
+are non-debuggable and carry the expected versions. The phone and TV APKs carry
+the 25 approved recordings. The checker rejects the actual debug phone APK.
+GitHub's Latest release is v0.7.4 and the published tag resolves to the verified
+source commit.
+
+The website build, data and token checks passed. Local browser checks covered both
+languages at 390, 900 and 1440 px, plus the existing TV preview regressions.
+The native Ramadan, fasting settings and radio screenshots have recorded sources.
+
 ## Radio media artwork — 23 November 2026
 
 The phone debug and instrumentation APKs build and lint cleanly with zero
