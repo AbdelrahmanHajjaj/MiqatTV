@@ -1,6 +1,6 @@
 # Miqat phone app delivery ledger
 
-Updated: 2026-11-23. Stable v0.7.5 includes phone 0.5.21/code 37 with TV
+Updated: 2026-11-23. Stable v0.7.6 includes phone 0.5.22/code 38 with TV
 setup and recovery, Quran Radio, Hijri ranges, and opt-in day-before,
 suhoor and iftar alerts.
 The phone marks all days of Ramadan and Eid and includes core and common Hijri
@@ -8,12 +8,12 @@ observances. Fasting selections include Ramadan, Ashura, Arafah, the White Days,
 and Mondays and Thursdays. Quran Radio was approved and merged in PR #22.
 Android's radio media card uses the active phone theme and background.
 The v0.7.5 bundle is the first without the separate installer APK.
-Unreleased TV setup shows measured download and transfer percentages for both
+TV setup shows measured download and transfer percentages for both
 platforms. LG continues after first-time SSH approval and can save a passphrase
 with explicit opt-in. See EVIDENCE.md for validation.
 WORK.md owns the next action.
 
-Unreleased About Miqat shows the installed phone app version, developer credit
+About Miqat shows the installed phone app version, developer credit
 and GitHub feedback. Email feedback stays disabled pending a public address.
 
 Earlier sections below are delivery history and may
