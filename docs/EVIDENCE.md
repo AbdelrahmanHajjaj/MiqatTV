@@ -1,5 +1,12 @@
 # Validation evidence
 
+## Draft release inputs — 23 November 2026
+
+Read-only GitHub checks of the resolver selected Validate run `45244094134`
+for `ae76fe0` and proposed `v0.7.7-preview.1`. Explicit inputs resolved with
+the same build checks. Delivery and signing regressions passed, including
+missing validation, stale main and tag collisions with drafts and Git refs.
+
 ## LG About Miqat — 23 November 2026
 
 The LG ES5/service suite and browser Settings check pass. The browser check

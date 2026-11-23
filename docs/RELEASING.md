@@ -6,9 +6,13 @@ website checks before its artifacts can enter the draft publication workflow.
 
 ## Create a draft
 
-1. Select a successful Validate run for the current main commit.
-2. Run Draft build release on main with that run ID and a unique version tag,
-   for example v0.7.0-preview.1.
+1. Open [Draft build release](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/publish.yml)
+   on GitHub and click **Run workflow** on `main`. Leave both inputs blank to use
+   the newest successful Validate run for that commit and the first unused
+   preview tag for the next patch after the latest stable release.
+2. To override either default, enter a successful Validate run ID for that same
+   commit or an unused tag such as `v0.7.7-preview.1`. If validation is missing
+   or its artifacts expired, run Validate on `main` first.
 3. Inspect the draft assets and SHA256SUMS, source commit, validation link and
    signing configuration before publication.
 

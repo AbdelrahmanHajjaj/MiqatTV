@@ -95,8 +95,10 @@ both languages when changing product sections or screenshot layout.
 
 ## Draft release
 
-Run Draft build release from main, supplying a successful Validate run ID for the
-current main commit and a new tag such as v0.7.0-preview.1. The publisher rejects
+Run Draft build release from main. By default it selects the newest successful
+Validate run for the current commit and the first unused preview tag for the
+next patch after the latest stable release. Either input can be overridden.
+The publisher rejects
 PR/fork artifacts, stale commits, other workflows and unsuccessful runs. It reuses
 the verified Android phone, Android TV and LG artifacts, checks APK media, computes SHA256SUMS and creates
 a draft prerelease. It never publishes a stable release automatically.
