@@ -175,6 +175,9 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('.settings-nav .selected').getAttribute('data-value'),'reminders','Down previews the focused sidebar section without OK');
       assert.equal(await page.locator(':focus').getAttribute('data-value'),'reminders','preview retains sidebar focus');
       assert.ok(await page.locator('.settings-rows [data-ui^="reminders."]').count()>0,'previewed section renders real reminder controls');
+      await page.keyboard.press('Enter');
+      assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'reminders.enabled', 'OK enters the first Reminders control');
+      await page.keyboard.press('Escape');
       await page.keyboard.press(lang==='ar'?'ArrowLeft':'ArrowRight');
       assert.equal(await page.locator(':focus').evaluate(el=>!!el.closest('.settings-rows')),true,'content-direction arrow enters the previewed section');
       await page.keyboard.press('Escape');
@@ -193,6 +196,15 @@ const server = http.createServer((req, res) => {
       assert.ok(spacing.width<=561, 'sidebar stays slim when interface size increases');
       assert.ok(spacing.navLeft>=48 && spacing.navRight<=1872, 'navigation keeps padding from the TV edges');
       if(uiScale===110) if(capture)await page.screenshot({path:path.join(shots,'settings-spacing-'+lang+'-110.png')});
+      if (uiScale === 110) {
+        await page.locator('.settings-nav [data-value=reminders]').click();
+        assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'reminders.enabled', 'activating Reminders moves focus into content');
+        await page.locator('.settings-rows [data-action=tests]').click();
+        assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'tests.prayer', 'opening Adhan Tests focuses its first control');
+        await page.keyboard.press('Escape');
+        await page.keyboard.press('Enter');
+        assert.equal(await page.locator(':focus').getAttribute('data-ui'), 'tests.prayer', 'OK on the Tests sidebar enters its first control');
+      }
       await page.locator('[data-action=section][data-value=appearance]').click();
       assert.ok(await page.locator('.appearance-preview').evaluate(el => {
         const preview=el.getBoundingClientRect(), rows=document.querySelector('.settings-rows').getBoundingClientRect();
@@ -1446,6 +1458,16 @@ const server = http.createServer((req, res) => {
         quietBounds.x + quietBounds.width <= 1920 && quietBounds.y + quietBounds.height <= 1080, 'HDMI sound action stays on screen');
       await fits('.call-column button,.call-verse,.call-name,.call-time,.call-status');
       assert.equal(await page.locator('.call-verse').innerText(), sacred.adhanCall);
+      const insideArch = await page.locator('.call-frame .inner').evaluate(async arch => {
+        await document.fonts.ready;
+        const inverse = arch.getScreenCTM().inverse();
+        const call = document.createRange();
+        call.selectNodeContents(document.querySelector('.call-verse'));
+        const {left, right, top, bottom} = call.getBoundingClientRect();
+        return [left + 2, right - 2].every(x => [top + 1, bottom - 1].every(y =>
+          arch.isPointInFill(new DOMPoint(x, y).matrixTransform(inverse))));
+      });
+      assert.ok(insideArch, 'the Arabic call and its diacritics fit inside the inner mihrab border');
       if (size === 80 || size === 110 || size === 150) if(capture)await page.screenshot({path:path.join(shots, 'size-' + lang + '-' + size + '-call.png')});
       await page.keyboard.press('Escape'); await inputRestored();
       await tests(); await page.locator('[data-action=settings-back]').click();

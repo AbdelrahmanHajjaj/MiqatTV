@@ -50,6 +50,14 @@ attenuation, mute and release, restored picture and volume settings, and the
 English and Arabic remote action. The browser mocks the decoder and Luna.
 The new presentation and newer-TV speaker output remain pending on hardware.
 
+## LG adhan layout and Settings focus — 23 November 2026
+
+Edge reproduced the Arabic call crossing the mihrab's inner border and focus
+remaining on the sidebar after opening Reminders or Adhan Tests. The corrected
+LG 0.2.31 build fits the call inside the arch and focuses the first control.
+The browser checks both languages across the supported interface sizes. Final
+layout on legacy TV hardware remains pending.
+
 ## Stable v0.7.5 — 23 November 2026
 
 [Main validation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45207954747)

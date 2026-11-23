@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v0.7.6
+
+- LG keeps the Arabic adhan call inside the mihrab and moves focus to the first
+  control when opening Reminders or Adhan Tests.
+
 - Miqat Phone shows download and transfer percentages during Android TV and LG
   setup, with separate status messages for installation and verification.
 - LG setup can remember the TV address and encrypt its Developer Mode

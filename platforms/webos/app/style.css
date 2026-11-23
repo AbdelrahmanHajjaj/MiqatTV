@@ -261,9 +261,9 @@ button.editing .segments { outline: 3px solid {{color.lapis-900}}; outline-offse
 .call-frame { position: absolute; left: 600px; top: 110px; overflow: visible; pointer-events: none; }
 .call-frame .outer { fill: {{color.lapis-800}}; stroke: {{color.gold-200}}; stroke-width: 3; }
 .call-frame .inner { fill: none; stroke: {{color.arch-inner}}; stroke-width: 1.5; }
-.call-column { position: absolute; left: 640px; top: 230px; width: 640px; text-align: center; pointer-events: auto; }
+.call-column { position: absolute; left: 640px; top: 280px; width: 640px; text-align: center; pointer-events: auto; }
 .call-verse { font: 54px/1.4 Amiri, serif; color: {{color.gold-400}}; }
-.call-label { margin: 32px 0 0; font-size: 22px; color: {{color.mist-400}}; }
+.call-label { margin: 12px 0 0; font-size: 22px; color: {{color.mist-400}}; }
 .call-name { font: 100px/1.5 Alexandria, sans-serif; color: {{color.plaster-100}}; }
 [dir=ltr] .call-name { font: 128px/1.1 Marcellus, serif; }
 .call-time { font-size: 64px; line-height: 1.2; color: {{color.gold-400}}; }

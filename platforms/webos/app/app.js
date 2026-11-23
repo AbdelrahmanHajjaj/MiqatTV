@@ -28,6 +28,7 @@
   var appearanceKeys = A.appearanceKeys;
   var overlay = document.getElementById('overlay');
   var sections = ['prayer', 'reminders', 'radio', 'display', 'appearance', 'device', 'tests'];
+  var firstSettingsRow = '[class~=settings-rows] button:not(:disabled):not([tabindex="-1"])';
   function sectionName(id) { return {
     prayer: t('الصلاة والقبلة', 'Prayer & Qibla'), reminders: t('الأذان والتنبيهات', 'Adhan & reminders'),
     radio: t('إذاعة القرآن', 'Quran radio'), display: t('العرض والتحكم', 'Display & controls'),
@@ -633,7 +634,7 @@
         view === 'apps' ? screen.querySelector('.app-tile') : screen.querySelector('button')); if (target) { focusControl(target); }
     }
     var currentRows = screen.querySelector('.settings-rows');
-    if (currentRows && previousRows && focusAction && focusAction.indexOf('section') < 0) { currentRows.scrollTop = savedScroll; }
+    if (currentRows && previousRows && focusAction && focusAction !== firstSettingsRow && focusAction.indexOf('section') < 0) { currentRows.scrollTop = savedScroll; }
     if (view !== 'home') { updateClock(); } report();
   }
   function armDock() { clearTimeout(dockTimer); if (view === 'bar' && prefs.dockAutoHide) { dockTimer = setTimeout(function () { show('input'); }, prefs.dockAutoHide * 1000); } }
@@ -1198,8 +1199,8 @@
       if (action === 'inputs') { discover(false); } return;
     }
     var next = A.prefs(prefs);
-    if (action === 'section') { section = value; render('[data-action=section][data-value=' + value + ']'); return; }
-    if (action === 'tests') { section = 'tests'; show('settings'); return; }
+    if (action === 'section') { section = value; render(firstSettingsRow); return; }
+    if (action === 'tests') { section = 'tests'; show('settings', firstSettingsRow); return; }
     if (action === 'offsets') { section = 'offsets'; render(); return; }
     if (action === 'reset-offsets') { next.offsets = [0, 0, 0, 0, 0, 0]; savePrefs(next, action); return; }
     if (action === 'bell') { if (!prayerRules.isPrayer(Number(value))) { return; } next.bells[Number(value)] = !next.bells[Number(value)]; savePrefs(next, '[data-action=bell][data-value="' + value + '"]', 'prayer-day'); return; }
@@ -1312,7 +1313,7 @@
     if (pointerDown) { return; }
     if (view === 'settings' && event.target.getAttribute('data-action') === 'section') {
       var focusedSection = event.target.getAttribute('data-value');
-      if (focusedSection !== section) { activate('section', focusedSection); return; }
+      if (focusedSection !== section) { section = focusedSection; render(); return; }
     }
     var factor = window['tv.miqat:core'].tv.miqat.core.UiScale.percent(prefs.uiScale) / 100;
     if (factor <= 1.1 && view !== 'settings') { return; }
