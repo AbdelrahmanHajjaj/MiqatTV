@@ -7,6 +7,8 @@ observances. Fasting selections include Ramadan, Ashura, Arafah, the White Days,
 and Mondays and Thursdays. Quran Radio was approved and merged in PR #22.
 The current review build also gives Android's radio media card the active
 phone theme and background.
+TV setup and recovery ship in Miqat Phone. The separate installer APK was
+retired from the build and release workflow.
 WORK.md owns the next action.
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.

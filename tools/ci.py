@@ -29,7 +29,7 @@ def affected(paths):
             if path.endswith(("/ui-gaps.json", "/ui-choice-gaps.json")):
                 jobs.update(JOBS)
         elif path.startswith("installer/"):
-            jobs.add("android")
+            jobs.update(("android", "companion"))
         elif path.startswith("companion/"):
             # TV shells and preview consume the companion contract, QR and LAN sources.
             jobs.update(("android", "webos", "preview", "companion"))

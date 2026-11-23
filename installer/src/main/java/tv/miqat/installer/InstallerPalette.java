@@ -1,6 +1,6 @@
 package tv.miqat.installer;
 
-/** Immutable host colours; the standalone installer keeps the canonical default palette. */
+/** Immutable host colours, with a canonical fallback palette. */
 public final class InstallerPalette {
     public static final InstallerPalette DEFAULT = new InstallerPalette(
             InstallerColors.LAPIS_900, InstallerColors.LAPIS_800, InstallerColors.LAPIS_700,

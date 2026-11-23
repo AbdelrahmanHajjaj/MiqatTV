@@ -106,8 +106,6 @@ jobs:
           ./gradlew -p platforms/android-tv verifyApkSize lintDebug assembleDebugAndroidTest assembleRelease lintRelease --no-daemon
           python3 tools/check_apk_media.py platforms/android-tv/build/outputs/apk/debug/app-debug.apk
           python3 tools/check_apk_media.py platforms/android-tv/build/outputs/apk/release/app-release-unsigned.apk
-      - name: Build and lint the phone installer
-        run: ./gradlew :installer:assembleDebug :installer:lintDebug :installer:assembleRelease :installer:lintRelease --no-daemon
       - name: Run Java and setup/recovery regressions
         run: python3 -S -B -m unittest discover -s tests -v
       - name: Collect full-audio APKs
@@ -115,9 +113,7 @@ jobs:
         run: |
           mkdir -p state/builds/android
           cp platforms/android-tv/build/outputs/apk/debug/app-debug.apk state/builds/android/miqat.apk
-          cp installer/build/outputs/apk/debug/installer-debug.apk state/builds/android/miqat-installer.apk
           cp platforms/android-tv/build/outputs/apk/release/app-release-unsigned.apk state/builds/android/miqat-release-unsigned.apk
-          cp installer/build/outputs/apk/release/installer-release-unsigned.apk state/builds/android/miqat-installer-release-unsigned.apk
           cp platforms/android-tv/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk state/builds/android/miqat-android-test.apk
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: github.event_name != 'pull_request'
@@ -132,7 +128,6 @@ jobs:
           name: android-reports
           path: |
             platforms/android-tv/build/reports/
-            installer/build/reports/
           retention-days: 7
 
   webos:

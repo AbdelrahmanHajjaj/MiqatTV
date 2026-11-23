@@ -28,18 +28,10 @@ Output: platforms/android-tv/build/outputs/apk/debug/app-debug.apk.
 Follow [Android setup](ANDROID-SETUP.md) to install and configure Home, prayer
 service and permissions. Keep the stock Home available until setup works.
 
-The main phone app includes TV setup. To use the optional standalone Android TV
-installer instead, build it with the TV app:
-
-```sh
-./gradlew :app:assembleDebug :installer:assembleDebug --no-daemon
-```
-
-Install installer/build/outputs/apk/debug/installer-debug.apk on the phone, copy
-the TV APK to it, then choose **Install a local launcher APK**. The installer is
-an ADB setup/recovery tool sharing its runtime with the phone app. Online download
-requires a public release with a matching miqat.apk asset. Private preview drafts
-and CI artifacts are not offered by the in-app release picker.
+To install a locally built TV APK from Miqat Phone, copy it to the phone and
+choose **Your TVs → Set up my TV → Android / Google TV**. Under Advanced,
+choose **Install a local launcher APK**. The in-app release picker downloads
+`miqat.apk` from a public release.
 
 ## LG webOS
 
@@ -90,13 +82,13 @@ and [CI and draft publication](CI.md) before distributing an update.
 
 ## Fresh installation
 
-Miqat uses tv.miqat.companion (phone), tv.miqat.home (Android TV),
-tv.miqat.installer and tv.miqat.webos.
+Miqat uses tv.miqat.companion (phone), tv.miqat.home (Android TV)
+and tv.miqat.webos (LG).
 They install separately from earlier builds. Before removing a previous launcher,
 record its prayer, appearance, input and startup choices and disable its scheduled
 alerts/startup. On Android, restore a working stock Home before removing it.
 
-The installer exports a device setup/recovery record. That record restores Android
+Miqat Phone exports a device setup/recovery record. That record restores Android
 system setup; it does not export Miqat prayer or appearance preferences. A portable
 settings export/import feature is not included in this foundation. Re-enter those
 choices after installation and check the prayer schedule before enabling alerts.

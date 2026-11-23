@@ -1,21 +1,20 @@
 # Local TV setup and recovery
 
-The PC tools install your locally built Miqat; they never fetch or push Git. Python 3.9+, JDK 17 and Android SDK 34 are required for PC setup. The phone installer downloads the published TV APK from [Miqat releases](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases), verifies its size/SHA-256 and package identity, and refuses a version-code downgrade. Published previews are labelled. Local APKs are under **Advanced → Install a local launcher APK**; choose **Use public download** to return to the default.
+The PC tools install your locally built Miqat; they never fetch or push Git. Python 3.9+, JDK 17 and Android SDK 34 are required for PC setup. Miqat Phone can download the published TV APK from [Miqat releases](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases), verifies its size/SHA-256 and package identity, and refuses a version-code downgrade. Published previews are labelled. Local APKs are under **Advanced → Install a local launcher APK**; choose **Use public download** to return to the default.
 
-On the Miqat phone companion, choose **Your TVs → Set up my TV** (or **Pair a
+In Miqat Phone, choose **Your TVs → Set up my TV** (or **Pair a
 new TV**) → **Android / Google TV**. Read the preparation guide, then choose
 Latest (default), Stable or Preview; the Advanced icon selects a local APK.
-This uses the same guarded runtime as the standalone installer, including optional
-reviewed cleanup and recovery, in the phone's selected language and theme. After successful setup,
+Setup includes optional reviewed cleanup and recovery in the phone's selected
+language and theme. After successful setup,
 **Pair TV** opens ordinary pairing; confirm access using the TV's remote. Cancelling
 or finishing incomplete setup does not start pairing. This setup entry supports
 Android/Google TV; the phone's LG option uses its separate SSH flow described in
 [the LG guide](WEBOS.md).
 
-The standalone installer remains available. Its ADB authorisation and private
-recovery files are not automatically transferred to the companion. Export and
-keep its recovery backup before clearing or removing that app; PC recovery below
-can use the export. Download installation requires a published compatible APK;
+If you previously used the standalone installer, export its recovery backup
+before removing it. PC recovery can use that export. Authorize Miqat Phone
+separately when prompted. Download installation requires a published compatible APK;
 use a local APK when no release is available.
 
 Tested on TCL 50C641K, Android 11 (API 30), firmware V8-R51MT02-LF1V903.021315. Installation, exclusive Home and reboot passed; see [validation and remaining hardware checks](EVIDENCE.md). The tools read the actual API version and refuse anything below 26.
@@ -53,7 +52,7 @@ python -S -B tools/device.py restore
 
 Disable only apps the household has agreed to remove from use. Core services, the active Home, selected screensaver, input hardware, Wi-Fi-owning setup wizard and CVTE Home are protected. Each change is recorded before disabling it. Restore re-enables only recorded packages that were originally enabled, verifies the original Home, restores settings still owned by this setup, and leaves Miqat installed. Keep the backup after restore. A later user choice is preserved; inspect any skipped settings on the TV.
 
-The phone installer writes the same recovery format into its private storage before setup. **Save recovery backup** exports `recovery.json` to the phone's chosen location. **Restore original TV setup** uses that record while connected. Keep an exported copy before clearing installer data. For PC recovery, put the exported file in a folder and pass that folder with `--backup-dir`; the device identity must match. The phone backup includes diagnostic snapshots inside the JSON.
+Miqat Phone writes the same recovery format into its private storage before setup. **Save recovery backup** exports `recovery.json` to the phone's chosen location. **Restore original TV setup** uses that record while connected. Keep an exported copy before clearing the app’s data. For PC recovery, put the exported file in a folder and pass that folder with `--backup-dir`; the device identity must match. The phone backup includes diagnostic snapshots inside the JSON.
 
 Old `state/disabled.log` files are not automatically imported: they do not identify a TV or its original Home. Review those records manually before restoring an older installation.
 
@@ -89,7 +88,7 @@ Check Home from another app and after reboot, HDMI/source selection, held volume
 
 ## Local checks
 
-`python -S -B -m unittest discover -s tests -v` runs simulated-TV checks; it never connects to a TV. Build both apps with `./gradlew :app:assembleDebug :installer:assembleDebug`. Hardware checks remain separate.
+`python -S -B -m unittest discover -s tests -v` runs simulated-TV checks; it never connects to a TV. Build both apps with `./gradlew :app:assembleDebug :companion:assembleDebug`. Hardware checks remain separate.
 
 
 ### Device-test cleanup

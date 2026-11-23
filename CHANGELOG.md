@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Use Miqat Phone for TV setup and recovery. New releases no longer include a
+  separate installer APK.
+
 ## v0.7.4 — Android phone 0.5.20
 
 - Android phone adds Quran Radio with a Home popup, quick playback icons, and

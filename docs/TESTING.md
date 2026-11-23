@@ -47,7 +47,7 @@ files, and inspect `git diff` afterwards.
 | Android TV | `./gradlew -p platforms/android-tv verifyApkSize lintDebug assembleDebugAndroidTest --no-daemon`, then `python3 -S -B -m unittest discover -s tests -v`. Build first: JVM regressions need the core jar and extracted Adhan sources. |
 | Preview | `npm --prefix site run data:check`, `npm --prefix site test`, `npm --prefix site run build`; check changed flows in Arabic and English in a browser. |
 | LG webOS | `npm --prefix platforms/webos test`, then `npm --prefix platforms/webos run test:browser`; these build and check shipped ES5, adapters, service, volume, HTTPS and mocked UI behavior. |
-| Android phone installer / PC recovery | `./gradlew :app:assembleDebug :installer:assembleDebug :installer:lintDebug --no-daemon`, then root Python regressions. Exercise changed setup/recovery paths on an explicitly selected test device. |
+| Android TV setup in Miqat Phone / PC recovery | `./gradlew :app:assembleDebug :companion:assembleDebug :companion:lintDebug --no-daemon`, then root Python regressions. Exercise changed setup/recovery paths on an explicitly selected test device. |
 | Media preparation | `node tools/prepare-adhans.test.mjs` (FFmpeg/ffprobe required); `node tools/prepare-adhans.mjs --check`; check the affected platform packages and audition any changed religious wording/cut. |
 
 Android and LG builds use the 13 adhan and 12 announcement clips in shared/media/.
@@ -60,7 +60,7 @@ python3 tools/check_apk_media.py PATH_TO_APK verifies exact packaged media.
 
 ## UI and input acceptance
 
-For Android release delivery, compile/lint all three release variants and run
+For Android release delivery, compile/lint both Android release variants and run
 `python3 -S -B -m unittest discover -s tests -p test_release_signing.py -v`.
 Verify real signed outputs with `tools/check_android_release.py` and the SDK
 Build Tools directory, including the pinned certificate and non-debuggable
@@ -129,7 +129,7 @@ The Validate workflow selects affected PR consumers using tools/ci.py; shared,
 workflow/tooling and unknown paths select all consumers. Ordinary documentation
 changes run workflow/selection/whitespace checks. Packaged notices and generated
 docs/UI-GAPS.md still select all consumers. Main and manual Validate runs execute
-the automated suite: core JVM/JS/Java and canonical checks, Android/installer builds
+the automated suite: core JVM/JS/Java and canonical checks, Android TV builds
 and lint, Python/Java regressions, complete LG ES5/service/browser tests and
 packaging, preview suite/build, and Companion portable/host-JVM checks and builds.
 Routine CI does not launch Android emulators or run native instrumentation.
@@ -160,8 +160,8 @@ The default bilingual phone suite also opens the embedded Android setup guide,
 checks its private activity/language/direction, verifies cancelling and incomplete
 setup return without pairing, and exercises the successful setup-to-pairing result.
 Completion is a native UI fixture; this does not perform an ADB installation or
-prove cleanup/restore on a physical TV. The standalone installer must still build
-and lint when changing `installer/runtime` or its shared source directories.
+prove cleanup/restore on a physical TV. Build and lint Miqat Phone when changing
+`installer/runtime` or its source directories.
 
 LG phone installation: `tests/test_lg_package.py` exercises bounded IPK metadata
 inspection and downgrade protection on the JVM. With the companion APK/test APK
