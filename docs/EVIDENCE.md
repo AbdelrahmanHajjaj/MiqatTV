@@ -1,5 +1,14 @@
 # Validation evidence
 
+## Local review packages — 23 November 2026
+
+Built from `cb948a2`. Phone 0.5.21/code 37 and Android TV 0.7.3/code 14 pass
+debug lint, retain the review signer and contain all 25 approved recordings.
+The TV APK is 21,140,686 bytes, below the 25,000,000-byte cap. LG 0.2.30 passes
+the ES5 and service suite. Its IPK has the expected app and service IDs,
+entry points and all 25 recordings. SHA-256 matches across the three local
+review exports. Physical-device acceptance remains pending.
+
 ## Phone TV setup progress and LG reconnect — 23 November 2026
 
 Android TV and phone debug builds, phone lint, instrumentation compilation and

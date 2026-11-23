@@ -87,6 +87,11 @@ in companion/ in this repository; keep phone prayer settings independent of TVs.
   Use gh for PR operations. The owner pre-authorizes normal merges of approved
   task PRs after all required checks pass, followed by syncing local main. Release
   publication and physical-device deployment still need specific instruction.
+  After each confirmed merge to main, run `./tools/cleanup-merged.ps1 -Branch <head-branch>`
+  from the primary checkout as part of delivery. It verifies the tip against
+  origin/main, removes the clean managed worktree and local branch, and archives
+  its private state under ignored `state/worktree-archive/`. Report any skipped
+  cleanup. GitHub's head-branch deletion setting handles remote branches.
 - Update CHANGELOG.md for visible changes. Keep current support limits accurate.
 - Keep README, current guides and the bilingual website aligned with all shipped
   products: standalone phone, TV companion mode, Android TV and LG. Public images
