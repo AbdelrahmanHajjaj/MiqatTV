@@ -1,10 +1,5 @@
 [
   {
-    "id": "device.about",
-    "state": "unimplemented",
-    "reason": "About and feedback are currently available in the Android apps."
-  },
-  {
     "id": "prayer.facing",
     "state": "unimplemented",
     "reason": "Qibla shows true north; manual screen-facing calibration is not ported."

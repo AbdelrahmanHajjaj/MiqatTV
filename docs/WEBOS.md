@@ -67,6 +67,10 @@ new per-task evidence folders or duplicate exports; summarize checks concisely.
 
 ## Controls and settings
 
+Open **Settings → Device settings → About Miqat** for the installed version and
+developer credit. Scan the feedback QR code to open the public GitHub form on
+your phone. GitHub sign-in is required. Email feedback is currently disabled.
+
 OK on input opens the compact prayer bar. Home exposes Prayer, radio, Settings,
 app shortcuts and All apps. Up from the first app row reaches the top controls;
 Down from the last row reaches All apps. In All apps, Up from any first-row

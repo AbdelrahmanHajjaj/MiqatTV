@@ -1,5 +1,13 @@
 # Validation evidence
 
+## LG About Miqat — 23 November 2026
+
+The LG ES5/service suite and browser Settings check pass. The browser check
+exercises the installed package version, disabled email, visible feedback QR
+and restored focus and scroll in Arabic and English at 80–150%. QR codes from
+both 150% browser captures decode to the GitHub feedback form. Website preview
+build and browser checks cover the same entry. Physical LG acceptance is pending.
+
 ## Local review packages — 23 November 2026
 
 Built from `cb948a2`. Phone 0.5.21/code 37 and Android TV 0.7.3/code 14 pass

@@ -28,6 +28,7 @@
   var appearanceKeys = A.appearanceKeys;
   var overlay = document.getElementById('overlay');
   var sections = ['prayer', 'reminders', 'radio', 'display', 'appearance', 'device', 'tests'];
+  var aboutScroll = 0;
   function sectionName(id) { return {
     prayer: t('الصلاة والقبلة', 'Prayer & Qibla'), reminders: t('الأذان والتنبيهات', 'Adhan & reminders'),
     radio: t('إذاعة القرآن', 'Quran radio'), display: t('العرض والتحكم', 'Display & controls'),
@@ -418,7 +419,7 @@
         row('device.inputs', 'inputs', inputName()) + row('device.apps', 'apps', '') +
         row('device.settings', 'tv-settings', '') +
         row('device.companion', 'companion', '') +
-        row('device.health', 'health', '') + row('device.exit-input', 'exit', '');
+        row('device.health', 'health', '') + row('device.exit-input', 'exit', '') + row('device.about', 'about', '');
     } else if (section === 'tests') {
       result = row('tests.prayer', 'testPrayer', s('prayerNames')[testPrayer], 'choice') +
         row('tests.banner', 'test-banner', t('بلا صوت', 'Silent')) +
@@ -566,6 +567,8 @@
         html = settingsMarkup();
       } else if (view === 'pairing') {
         html = pairingControls ? pairingControlsMarkup() : pairingMarkup();
+      } else if (view === 'about') {
+        html = aboutMarkup();
       } else if (view === 'prayer-day') {
         dayViewMinute = Math.floor(+now / 60000);
         var today = schedule(now), daySelection = A.select(today, now), h = A.hijri(now, prefs), bearing = A.qibla(prefs);
@@ -737,6 +740,22 @@
     if (nextView !== 'online-prayer') { cancelOnline(); }
     clearTimeout(noticeTimer); document.getElementById('notice').style.display = 'none';
     view = nextView; render(focusAction); armDock();
+  }
+  function aboutMarkup() {
+    var code = window.qrcode(0, D.qrStyle.errorCorrection);
+    code.addData(D.feedbackUrl);
+    code.make();
+    var qr = window.mihrabQr(code, D.qrStyle, D.palettes[prefs.theme], D.palettes.mihrab['plaster-100'], D.qrMark);
+    return '<section class="page about-page">' + header(s('aboutMiqat'), 'about-back') +
+      '<div class="about-body"><div class="about-details"><p>' + escape(s('aboutVersion')) +
+      ' <strong dir="ltr" class="about-version">' + escape(D.appVersion) + '</strong></p><p>' + escape(s('aboutDeveloper')) +
+      '</p><p>' + escape(s('aboutSadaqah')) + '</p><button type="button" disabled>' + escape(s('aboutEmail')) +
+      '</button></div><div class="about-feedback"><p>' + escape(s('aboutGithub')) +
+      '</p><div class="about-qr" role="img" aria-label="' + escape(s('aboutGithub')) + '">' + qr + '</div></div></div></section>';
+  }
+  function closeAbout() {
+    show('settings', 'about');
+    screen.querySelector('.settings-rows').scrollTop = aboutScroll;
   }
   function updateClock() {
     if (document.hidden || document.webkitHidden || view === 'input') { return; }
@@ -1130,6 +1149,11 @@
     armDock();
     if (action === 'companion') { pairingMessage = ''; startCompanion(); show('pairing', 'pairing-back'); return; }
     if (action === 'pairing-back') { show('settings', 'companion'); return; }
+    if (action === 'about' && view === 'settings') {
+      aboutScroll = screen.querySelector('.settings-rows').scrollTop;
+      show('about', 'about-back'); return;
+    }
+    if (action === 'about-back') { closeAbout(); return; }
     if (action === 'pairing-retry') { stopCompanion(); startCompanion(); render('pairing-back'); return; }
     if (['pairing-open', 'pairing-cancel', 'pairing-approve', 'pairing-reject', 'pairing-revoke'].indexOf(action) >= 0) { pairingAction(action.slice(8), value); return; }
     if (action === 'reload-settings') {
@@ -1401,6 +1425,7 @@
       else if (view === 'prayer-day') { show(dayParent, 'prayer-day'); }
       else if (view === 'online-prayer') { show('settings', 'online-prayer'); }
       else if (view === 'pairing') { show('settings', 'companion'); }
+      else if (view === 'about') { closeAbout(); }
       else {
         var backView = ['settings', 'inputs', 'prayer-day', 'radio', 'apps'].indexOf(view) >= 0 ? 'home' : view === 'input' ? 'bar' : 'input';
         if (backView === 'input' && media) { radioBeforeCall = false; stopAudio('stopped', true); } else { show(backView); }

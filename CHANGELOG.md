@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- LG webOS shows the installed version, developer credit and a GitHub feedback
+  QR code under About Miqat. Email feedback is currently disabled.
+
 - Miqat Phone shows download and transfer percentages during Android TV and LG
   setup, with separate status messages for installation and verification.
 - LG setup can remember the TV address and encrypt its Developer Mode
