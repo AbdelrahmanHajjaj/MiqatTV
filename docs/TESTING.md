@@ -307,6 +307,14 @@ closing by Done, actual Android Back or cancellation. Each path must expose toda
 full hero/countdown/tools and actual prayer times. The bilingual phone UI suite
 runs the same regression alongside calendar month/event/timezone tests. Calendar
 browsing stays inside the popup and no longer persists another date on Home.
+
+`phone-fasting` checks Hijri observance ranges and bilingual Settings controls on
+an owned emulator. It verifies that fasting alarms arm with prayer alerts off,
+claims Suhoor and Iftar using simulated due times based on local Fajr and Maghrib,
+checks their Android notification channel and confirms cancellation when the last
+fasting choice is turned off. Portable tests cover overlap, fasting exclusions
+and the Monday/Thursday option.
+
 The hosted-widget journey checks strip date toggles independently, modern/legacy
 bounds and full-height unclipped columns at small sizes and enlarged text. Refresh
 native bilingual picker PNGs whenever their XML or generated sample times change.

@@ -1,5 +1,21 @@
 # Validation evidence
 
+## Phone Hijri observances and fasting reminders — 23 November 2026
+
+Phone debug and instrumentation APKs build. Android lint reports zero errors
+and 39 warnings. All 22 companion JVM and 13 phone generator tests pass, along
+with shared source validation. The phone is the only Hijri catalog consumer.
+
+The focused bilingual check on the API 37 phone emulator covers every day of
+the tested Ramadan month, the third day of Eid al-Fitr, and the overlapping
+Eid al-Adha and Tashriq labels. The Settings switches save correctly in English
+and Arabic, with the suhoor offset visible and RTL controls in the Arabic
+capture. With prayer alerts off, the app arms fasting reminders, claims them at
+simulated due times and posts both localized notices on the fasting channel.
+Duplicate claims and cancellation after turning off the last fasting choice are
+checked. The existing phone migration/audio scheduling regression also passes.
+Real-time fasting notification delivery and physical phones remain unverified.
+
 ## Phone Quran Radio — 23 November 2026
 
 Debug phone and instrumentation APKs build. Android lint reports zero errors

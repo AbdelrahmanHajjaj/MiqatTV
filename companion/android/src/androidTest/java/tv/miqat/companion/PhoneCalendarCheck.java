@@ -232,7 +232,7 @@ final class PhoneCalendarCheck {
                 "Calendar navigation changed prayer settings");
     }
 
-    private static void events(Instrumentation test, MainActivity a, PhoneStore original) throws Exception {
+    static void events(Instrumentation test, MainActivity a, PhoneStore original) throws Exception {
         Map<String, String> values = new LinkedHashMap<>();
         values.put("prayer.zone", "Asia/Riyadh");
         values.put("prayer.hijri-offset", "0");
@@ -244,10 +244,11 @@ final class PhoneCalendarCheck {
         String event = PhoneHijriEvents.label(a, fixture, arafah, a.ar);
         PhoneUiCheck.check(!event.isEmpty(), "Arafah event missing from its Hijri date");
         long previous = fixture.day(arafah, -1).start;
-        PhoneHijriEvents.Entry soon = PhoneHijriEvents.upcoming(a, fixture, previous, a.ar);
-        PhoneUiCheck.check(soon != null && soon.offset == 1 && soon.label.equals(event),
-                "Upcoming event did not follow the next civil day");
-        PhoneUiCheck.check(PhoneHijriEvents.upcoming(a, fixture, fixture.day(arafah, -4).start, a.ar) == null,
+        String tarwiyah = PhoneHijriEvents.label(a, fixture, previous, a.ar);
+        PhoneHijriEvents.Entry soon = PhoneHijriEvents.upcoming(a, fixture, fixture.day(arafah, -2).start, a.ar);
+        PhoneUiCheck.check(soon != null && soon.offset == 1 && soon.label.equals(tarwiyah) && !tarwiyah.isEmpty(),
+                "Upcoming Hajj event did not follow the next civil day");
+        PhoneUiCheck.check(PhoneHijriEvents.upcoming(a, fixture, fixture.day(arafah, -5).start, a.ar) == null,
                 "Home showed an event beyond its three-day horizon");
         PhoneStore adjusted = fixture.changed(Collections.singletonMap("prayer.hijri-offset", "1"));
         String eid = PhoneHijriEvents.label(a, fixture, fixture.day(arafah, 1).start, a.ar);
@@ -259,7 +260,7 @@ final class PhoneCalendarCheck {
         date.set(android.icu.util.Calendar.HOUR_OF_DAY, 0);
         date.set(android.icu.util.Calendar.MINUTE, 30);
         PhoneStore otherZone = fixture.changed(Collections.singletonMap("prayer.zone", "America/New_York"));
-        PhoneUiCheck.check(PhoneHijriEvents.label(a, otherZone, date.getTimeInMillis(), a.ar).isEmpty(),
+        PhoneUiCheck.check(PhoneHijriEvents.label(a, otherZone, date.getTimeInMillis(), a.ar).equals(tarwiyah),
                 "Event label used another prayer timezone's day");
         PhoneStore before = a.phoneUi.settings;
         try {
@@ -281,6 +282,11 @@ final class PhoneCalendarCheck {
                         "Month event row did not select its day in place");
                 calendarTimes(a, root, fixture.day(arafah, 1));
                 root.findViewWithTag("calendar.day.11").performClick();
+                selected = root.findViewWithTag("calendar.selected.event");
+                PhoneUiCheck.check(selected != null
+                                && selected.getText().toString().contains(a.ar ? "أيام التشريق" : "Days of Tashriq"),
+                        "The second Eid al-Adha day lost its overlapping Tashriq label");
+                root.findViewWithTag("calendar.day.14").performClick();
                 PhoneUiCheck.check(root.findViewWithTag("calendar.selected.event") == null,
                         "Ordinary selected date retained a stale event label");
             });
@@ -292,6 +298,25 @@ final class PhoneCalendarCheck {
         }
         PhoneUiCheck.check(PhoneStore.read(a).values.equals(original.values),
                 "Browsing calendar events wrote prayer settings");
+        date.set(android.icu.util.Calendar.MONTH, 8);
+        date.set(android.icu.util.Calendar.DATE, 1);
+        long ramadan = PhoneCalendar.civilStamp(fixture, date);
+        int length = date.getActualMaximum(android.icu.util.Calendar.DATE);
+        for (int day = 1; day <= length; day++) {
+            String label = PhoneHijriEvents.label(a, fixture, fixture.day(ramadan, day - 1).start, a.ar);
+            int number = day;
+            String expected = String.format(Locale.ROOT,
+                    a.ar ? "اليوم %d من رمضان" : "Day %d of Ramadan", number);
+            String digits = fixture.value("display.digits");
+            expected = tv.miqat.core.DisplayText.INSTANCE.digits(expected,
+                    digits.equals("eastern") || digits.equals("auto") && a.ar);
+            PhoneUiCheck.check(label.startsWith(expected), "Ramadan day is unnumbered: " + day);
+        }
+        String thirdEid = PhoneHijriEvents.label(a, fixture, fixture.day(ramadan, length + 2).start, a.ar);
+        PhoneUiCheck.check(thirdEid.contains(a.ar ? "عيد الفطر" : "Eid al-Fitr"),
+                "The third Eid al-Fitr day was missing");
+        PhoneUiCheck.check(PhoneHijriEvents.label(a, fixture, fixture.day(ramadan, length + 3).start, a.ar).isEmpty(),
+                "Eid al-Fitr extended beyond the third holiday day");
     }
 
     private static void calendarTimes(

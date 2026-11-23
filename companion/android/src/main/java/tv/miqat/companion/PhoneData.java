@@ -15,6 +15,7 @@ final class PhoneData {
     private static volatile PhoneData cached;
     final JSONArray cities, voices, stations;
     final JSONObject source;
+    final int version;
     final LinkedHashMap<String, JSONObject> controls = new LinkedHashMap<>();
     final LinkedHashMap<String, String> defaults = new LinkedHashMap<>();
     private final Catalog catalog;
@@ -44,6 +45,7 @@ final class PhoneData {
         voices = source.getJSONArray("voices");
         stations = source.getJSONArray("stations");
         JSONObject contract = source.getJSONObject("contract");
+        version = contract.getInt("version");
         JSONArray general = contract.getJSONArray("controls");
         for (int i = 0; i < general.length(); i++) add(general.getJSONObject(i));
         JSONArray perPrayer = contract.getJSONArray("perPrayer");

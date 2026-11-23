@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "defaultCity": "cairo",
   "defaultFajrVoice": "chebae_fajr",
   "actions": [
@@ -13,6 +13,14 @@
     {"id":"radio.stop","section":"radio","label":"phone_radio_stop"}
   ],
   "controls": [
+    {"id":"fasting.suhoor","section":"fasting","kind":"toggle","label":"phone_suhoor","default":"false","since":8},
+    {"id":"fasting.suhoor-minutes","section":"fasting","kind":"number","label":"phone_suhoor_minutes","minimum":5,"maximum":120,"step":5,"default":"30","since":8},
+    {"id":"fasting.iftar","section":"fasting","kind":"toggle","label":"phone_iftar","default":"false","since":8},
+    {"id":"fasting.ramadan","section":"fasting","kind":"toggle","label":"phone_fasting_ramadan","default":"true","since":8},
+    {"id":"fasting.ashura","section":"fasting","kind":"toggle","label":"phone_fasting_ashura","default":"false","since":8},
+    {"id":"fasting.arafah","section":"fasting","kind":"toggle","label":"phone_fasting_arafah","default":"false","since":8},
+    {"id":"fasting.white-days","section":"fasting","kind":"toggle","label":"phone_fasting_white_days","default":"false","since":8},
+    {"id":"fasting.monday-thursday","section":"fasting","kind":"toggle","label":"phone_fasting_monday_thursday","default":"false","since":8},
     {"id":"prayer.method","section":"calculation","kind":"choice","label":"phone_method","choices":"methods","default":"EGYPTIAN"},
     {"id":"prayer.asr","section":"calculation","kind":"choice","label":"phone_asr","choices":["shafi","hanafi"],"default":"shafi"},
     {"id":"prayer.zone","section":"calculation","kind":"choice","label":"phone_zone","choices":"timezones","default":"system"},

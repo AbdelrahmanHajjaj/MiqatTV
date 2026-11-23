@@ -33,4 +33,13 @@ class HijriEventsTest {
         assertEquals(-1, HijriEvents.upcoming(events, arrayOf(intArrayOf(12, 10))))
         assertEquals(-1, HijriEvents.upcoming(events, emptyArray()))
     }
+
+    @Test fun rangesIncludeTheirLastDayAndRetainOverlappingObservances() {
+        val days = listOf(HijriEvent("eid", 12, 10, 13), HijriEvent("tashriq", 12, 11, 13))
+        assertEquals(listOf("eid"), HijriEvents.onDay(days, 12, 10).map { it.id })
+        assertEquals(listOf("eid", "tashriq"), HijriEvents.onDay(days, 12, 13).map { it.id })
+        assertNull(HijriEvents.find(days, 12, 14))
+        assertEquals(0, HijriEvents.upcoming(days, arrayOf(intArrayOf(12, 12))))
+        assertFailsWith<IllegalArgumentException> { HijriEvent("bad-range", 12, 10, 9) }
+    }
 }

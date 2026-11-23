@@ -19,6 +19,7 @@ final class PhoneAlarms {
             REFRESH = "tv.miqat.companion.REFRESH_ALARMS";
     static final String ALERTS = "phone-prayers",
             REMINDERS = "phone-reminders",
+            FASTING = "phone-fasting",
             PLAYBACK = "phone-adhan",
             SCREEN = "phone-adhan-screen",
             SILENT = "phone-silent",
@@ -80,9 +81,10 @@ final class PhoneAlarms {
 
     static void channels(Context c) throws Exception {
         NotificationManager manager = c.getSystemService(NotificationManager.class);
-        for (String id : new String[] {ALERTS, REMINDERS, ALERTS_VIBRATION, REMINDERS_VIBRATION}) {
+        for (String id : new String[] {ALERTS, REMINDERS, ALERTS_VIBRATION, REMINDERS_VIBRATION, FASTING}) {
             boolean vibrate = id.equals(ALERTS_VIBRATION) || id.equals(REMINDERS_VIBRATION);
-            String name = text(c, id.equals(ALERTS) || id.equals(ALERTS_VIBRATION) ? "phone_home" : "phone_audio");
+            String name = text(c, id.equals(FASTING) ? "phone_fasting"
+                    : id.equals(ALERTS) || id.equals(ALERTS_VIBRATION) ? "phone_home" : "phone_audio");
             if (vibrate) name += " · " + text(c, "phone_vibrate");
             NotificationChannel tone = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
             tone.setSound(android.net.Uri.parse("android.resource://" + c.getPackageName() + "/raw/miqat_short_tone"),
@@ -200,15 +202,19 @@ final class PhoneAlarms {
                 String state = status(c, settings);
                 PhonePlayback.applySettings(c);
                 if (!notifications(c)) PhonePlayback.stop(c);
-                if (!settings.enabled
-                        || !settings.anyAlerts()
-                        || !settings.locationReady
-                        || !notifications(c)) return state;
+                boolean prayers = settings.enabled && settings.anyAlerts();
+                boolean fasting = PhoneFasting.preferences(settings).getEnabled() && channel(c, FASTING);
+                if ((!prayers && !fasting) || !settings.locationReady || !notifications(c)) return state;
                 long now = System.currentTimeMillis();
                 double[][] days = settings.days(now);
-                ReminderEvent event = settings.nextEvent(days, now, handled(c));
+                String[] handled = handled(c);
+                ReminderEvent event = prayers ? settings.nextEvent(days, now, handled) : null;
+                if (fasting) {
+                    ReminderEvent fast = PhoneFasting.next(settings, now, handled);
+                    if (fast != null && (event == null || fast.getTime() < event.getTime())) event = fast;
+                }
                 if (event != null) arm(c, event, now);
-                else if (settings.anyAlerts()) {
+                else {
                     Calendar tomorrow = new GregorianCalendar(settings.zone());
                     tomorrow.setTimeInMillis(now);
                     tomorrow.add(Calendar.DAY_OF_MONTH, 1);
@@ -298,16 +304,19 @@ final class PhoneAlarms {
             if (raw.isEmpty() || raw.length() > 1024 || requested == null) return null;
             JSONObject value = new JSONObject(raw);
             String id = value.getString("id"), kind = value.getString("kind");
+            boolean fasting = PhoneFasting.kind(kind);
             int prayer = value.getInt("prayer");
             if (!id.equals(requested)
                     || !tv.miqat.core.PrayerRules.INSTANCE.isPrayer(prayer)
-                    || !Arrays.asList("call", "before", "after").contains(kind)
+                    || !fasting && !Arrays.asList("call", "before", "after").contains(kind)
                     || !PhonePrayerRules.INSTANCE.due(value.getDouble("time"), now)) return null;
             PhoneStore settings = PhoneStore.read(c);
-            if (!settings.enabled
-                    || !settings.locationReady
-                    || !settings.prayerEnabled(prayer)
-                    || !notifications(c)) return null;
+            if (!settings.locationReady || !notifications(c)) return null;
+            if (fasting ? !channel(c, FASTING) : !settings.enabled || !settings.prayerEnabled(prayer))
+                return null;
+            ReminderEvent event = new ReminderEvent(id, kind, prayer,
+                    value.getDouble("time"), value.getDouble("prayerTime"));
+            if (fasting && !PhoneFasting.matches(settings, event)) return null;
             List<String> claims = new ArrayList<>(Arrays.asList(handled(c)));
             if (claims.contains(id)) return null;
             claims.add(id);
@@ -316,14 +325,7 @@ final class PhoneAlarms {
                     .edit()
                     .putString("handled", new JSONArray(claims).toString())
                     .commit()) throw new java.io.IOException("Cannot save claim");
-            ReminderEvent event =
-                    new ReminderEvent(
-                            id,
-                            kind,
-                            prayer,
-                            value.getDouble("time"),
-                            value.getDouble("prayerTime"));
-            return settings.eventMode(event) > 0 ? event : null;
+            return fasting || settings.eventMode(event) > 0 ? event : null;
         }
     }
 
@@ -346,6 +348,10 @@ final class PhoneAlarms {
         try {
             channels(c);
             PhoneStore settings = PhoneStore.read(c);
+            if (PhoneFasting.kind(event.getKind())) {
+                notifyFasting(c, settings, event);
+                return;
+            }
             if (!settings.enabled || !settings.locationReady) return;
             int mode = settings.eventMode(event);
             if (mode == 0) return;
@@ -380,5 +386,20 @@ final class PhoneAlarms {
                     .putString("alarm-error", "phone_permission_missing")
                     .apply();
         }
+    }
+
+    private static void notifyFasting(Context c, PhoneStore settings, ReminderEvent event) {
+        if (!channel(c, FASTING) || !PhoneFasting.matches(settings, event)) return;
+        boolean suhoor = tv.miqat.companion.core.FastingRules.SUHOOR.equals(event.getKind());
+        String time = PhoneTime.at(settings, event.getPrayerTime(), arabic(c));
+        Notification notice = new Notification.Builder(c, FASTING)
+                .setSmallIcon(R.drawable.companion_icon_mihrab)
+                .setContentTitle(text(c, suhoor ? "phone_suhoor_notice" : "phone_iftar_notice"))
+                .setContentText(String.format(Locale.ROOT, text(c, suhoor ? "phone_suhoor_time" : "phone_iftar_time"), time))
+                .setContentIntent(open(c))
+                .setAutoCancel(true)
+                .setCategory(Notification.CATEGORY_REMINDER)
+                .build();
+        c.getSystemService(NotificationManager.class).notify(suhoor ? 42030 : 42031, notice);
     }
 }

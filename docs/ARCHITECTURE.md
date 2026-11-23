@@ -94,6 +94,9 @@ approximate inexact fallback otherwise, plus a daily recovery check when needed.
 claims eligible events before output. `PhonePlayback` is a private, non-sticky
 foreground service only during approved local playback, with focus loss, Stop,
 timeout and permission/settings cleanup. `PhoneUi` coordinates phone settings;
+the same alarm slot includes fasting notifications on their own Android channel.
+`PhoneFasting` supplies corrected Hijri dates, local weekdays and prayer times to
+the portable fasting rules and revalidates an event at delivery.
 PhoneHome, PhoneLocationUi, PhoneAppearance, PhoneOnboarding and PhoneSound own
 their respective native journeys. PairingUi/TvSettingsUi/TvRemoteUi/TvListUi own
 TV workflows, while transports keep networking/trust separate. QiblaUi owns
