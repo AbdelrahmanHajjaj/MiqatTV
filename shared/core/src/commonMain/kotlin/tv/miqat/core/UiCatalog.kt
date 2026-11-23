@@ -62,6 +62,7 @@ internal object UiCatalog {
         UiControl("device.remote", "device", "action", "remoteButtons", "action", "", emptyArray()),
         UiControl("device.health", "device", "action", "serviceHealth", "action", "", emptyArray()),
         UiControl("device.repair", "device", "toggle", "repairService", "immediate", "", emptyArray()),
+        UiControl("device.about", "device", "action", "aboutMiqat", "action", "", emptyArray()),
         UiControl("device.startup", "device", "toggle", "startupLauncher", "immediate", "", emptyArray()),
         UiControl("device.exit-input", "device", "action", "exitToInput", "action", "", emptyArray()),
         UiControl("tests.prayer", "tests", "choice", "testPrayer", "immediate", "", arrayOf("0", "2", "3", "4", "5")),

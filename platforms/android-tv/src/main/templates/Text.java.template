@@ -34,6 +34,13 @@ final class Text {
     String nextPrayer() { {{STRINGS:nextPrayer}} }
     String today() { {{STRINGS:today}} }
     String settings() { {{STRINGS:settings}} }
+    String aboutMiqat() { {{STRINGS:aboutMiqat}} }
+    String aboutVersion() { {{STRINGS:aboutVersion}} }
+    String aboutDeveloper() { {{STRINGS:aboutDeveloper}} }
+    String aboutSadaqah() { {{STRINGS:aboutSadaqah}} }
+    String aboutGithub() { {{STRINGS:aboutGithub}} }
+    String aboutEmail() { {{STRINGS:aboutEmail}} }
+    String aboutBrowserUnavailable() { {{STRINGS:aboutBrowserUnavailable}} }
     /** The saved city in this language; set by {@link Screen#loadText}. */
     String cityName = "";
     String city() { return cityName; }

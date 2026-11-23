@@ -18,7 +18,7 @@
     {"id":"blue","ar":"الأزرق","en":"Blue"}
   ],
   "actionRoutes": {
-    "device.companion":"tv-step", "pairing.open":"tv-step", "pairing.cancel":"tv-step", "pairing.approve":"tv-step", "pairing.reject":"tv-step", "pairing.revoke":"tv-step",
+    "device.about":"tv-step", "device.companion":"tv-step", "pairing.open":"tv-step", "pairing.cancel":"tv-step", "pairing.approve":"tv-step", "pairing.reject":"tv-step", "pairing.revoke":"tv-step",
     "prayer.offsets":"offsets", "prayer.today":"today", "prayer.online":"tv-step",
     "reminders.per-prayer":"prayer-day", "tests.open":"tests",
     "radio.play":"tv-action", "radio.stop":"tv-action", "display.open-bar":"tv-action", "display.open-clock":"tv-action",

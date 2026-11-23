@@ -28,6 +28,17 @@ final class PhoneUiCheck {
                     check(a.body.getLayoutDirection()==(lang.equals("ar")?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR),"Phone prayer direction");
                 });
                 capture(test,a,lang+"-phone-home",capture);
+                String installedVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+                on(test, () -> {
+                    a.tab("phone-settings");
+                    a.body.findViewWithTag("phone.section.about").performClick();
+                    TextView version = a.body.findViewWithTag("phone.about.version");
+                    check(version.getText().toString().contains(installedVersion), "About must show the installed phone version");
+                    check(a.body.findViewWithTag("phone.about.github").isEnabled(), "GitHub feedback must be available");
+                    check(!a.body.findViewWithTag("phone.about.email").isEnabled(), "Email feedback must be disabled");
+                    check(a.phoneUi.back() && a.body.findViewWithTag("phone.section.about") != null, "Back must return to settings");
+                    a.tab("prayers");
+                });
                 PhoneCalendarCheck.run(test,a);
                 if(test instanceof CompanionCheck && ((CompanionCheck)test).mapNetwork) PhoneCalendarCheck.mapNetwork(test,a,capture);
                 on(test,()->{

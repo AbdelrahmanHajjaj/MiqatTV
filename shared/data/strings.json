@@ -1,4 +1,11 @@
 {
+  "aboutMiqat": {"ar": "عن ميقات", "en": "About Miqat"},
+  "aboutVersion": {"ar": "الإصدار", "en": "Version"},
+  "aboutDeveloper": {"ar": "تطوير عبد الرحمن حجاج", "en": "Developed by Abdelrahman Hajjaj"},
+  "aboutSadaqah": {"ar": "أسأل الله أن ينفع بميقات ويجعله صدقة جارية.", "en": "I hope Miqat continues to benefit people as a sadaqah jariyah."},
+  "aboutGithub": {"ar": "الملاحظات عبر GitHub", "en": "Feedback on GitHub"},
+  "aboutEmail": {"ar": "الملاحظات عبر البريد الإلكتروني", "en": "Feedback by email"},
+  "aboutBrowserUnavailable": {"ar": "لا يوجد متصفح لفتح GitHub", "en": "No browser available to open GitHub"},
   "ref": {
     "ar": "النساء 103",
     "en": "An-Nisa 4:103",

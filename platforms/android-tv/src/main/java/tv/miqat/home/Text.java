@@ -35,6 +35,13 @@ final class Text {
     String nextPrayer() { return ar ? "الصلاة القادمة" : "NEXT PRAYER"; }
     String today() { return ar ? "مواقيت اليوم والقبلة" : "Today & Qibla"; }
     String settings() { return ar ? "الإعدادات" : "Settings"; }
+    String aboutMiqat() { return ar ? "عن ميقات" : "About Miqat"; }
+    String aboutVersion() { return ar ? "الإصدار" : "Version"; }
+    String aboutDeveloper() { return ar ? "تطوير عبد الرحمن حجاج" : "Developed by Abdelrahman Hajjaj"; }
+    String aboutSadaqah() { return ar ? "أسأل الله أن ينفع بميقات ويجعله صدقة جارية." : "I hope Miqat continues to benefit people as a sadaqah jariyah."; }
+    String aboutGithub() { return ar ? "الملاحظات عبر GitHub" : "Feedback on GitHub"; }
+    String aboutEmail() { return ar ? "الملاحظات عبر البريد الإلكتروني" : "Feedback by email"; }
+    String aboutBrowserUnavailable() { return ar ? "لا يوجد متصفح لفتح GitHub" : "No browser available to open GitHub"; }
     /** The saved city in this language; set by {@link Screen#loadText}. */
     String cityName = "";
     String city() { return cityName; }

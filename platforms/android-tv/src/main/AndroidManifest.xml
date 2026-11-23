@@ -86,6 +86,7 @@
         <activity android:name=".RemoteButtonsActivity" android:exported="false" android:excludeFromRecents="true" />
         <activity android:name=".PairingActivity" android:exported="false" android:excludeFromRecents="true"
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|uiMode|locale|layoutDirection" />
+        <activity android:name=".AboutActivity" android:exported="false" android:excludeFromRecents="true" />
         <activity
             android:name=".AllAppsActivity"
             android:exported="false"

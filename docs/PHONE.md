@@ -1,5 +1,9 @@
 # Miqat on Android phones
 
+Open **Settings → About Miqat** for the installed version and the GitHub
+feedback form. GitHub sign-in is required and reports are public. Email feedback
+is currently disabled.
+
 Miqat is a standalone Android 8+ prayer app with optional TV companion mode in
 **Your TVs**. Phone prayer times, alerts, calendar, Qibla and widgets do not need a
 TV or account. Prayer calculation and the city catalog work offline.

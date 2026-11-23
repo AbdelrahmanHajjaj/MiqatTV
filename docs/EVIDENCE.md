@@ -8,6 +8,15 @@ attenuation, mute and release, restored picture and volume settings, and the
 English and Arabic remote action. The browser mocks the decoder and Luna.
 The new presentation and newer-TV speaker output remain pending on hardware.
 
+## Android About Miqat — 23 November 2026
+
+Phone 0.5.21 and TV 0.7.3 debug builds, lint and instrumentation APK builds
+pass. The TV APK is 21,140,612 bytes. Canonical catalogs, companion generation,
+51 repository regressions, website preview tests/build, and LG ES5/service and
+mocked browser suites pass. The feedback form parses as YAML. Native About
+checks compile for both languages. Device execution and a live GitHub submission
+remain pending.
+
 ## LG adhan HDMI isolation — 23 November 2026
 
 The Edge browser regression reproduced unmuted HDMI with the previous LG app

@@ -9,6 +9,10 @@ LG adhan HDMI isolation is unreleased. On legacy hardware the owner observed
 the HDMI picture cut and return. Physical acceptance of the opaque page and
 separate-stream behavior on newer TVs is pending.
 
+About Miqat on Android phone and TV shows the installed app version, developer
+credit and a GitHub feedback form. Email stays disabled until a public address
+is chosen. No network client is added to either app.
+
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Routine CI has no phone/TV emulator jobs; retain
 build/lint, portable/JVM/browser and package/signature gates. Native device suites

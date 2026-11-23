@@ -22,7 +22,7 @@ export function shortTone() {
 }
 export function generatePhone() {
   const contract=read('shared/data/phone-ui-contract.json'),cities=read('shared/data/cities.json'),voices=read('shared/data/voices.json');
-  const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=read('companion/strings.json');
+  const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=phoneText(read('shared/data/strings.json'));
   const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
     prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
   if(contract.version!==9||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
@@ -41,7 +41,7 @@ export function generatePhone() {
     } else if(control.kind!=='toggle'||!['true','false'].includes(control.default))throw Error('Invalid phone control kind: '+id);
   }
   for(const action of contract.actions??[]) {
-    if(typeof action.id!=='string'||ids.has(action.id)||!['audio','radio'].includes(action.section)||!text[action.label]?.en||!text[action.label]?.ar)throw Error('Invalid phone action: '+action.id);
+    if(typeof action.id!=='string'||ids.has(action.id)||!['about','audio','radio'].includes(action.section)||!text[action.label]?.en||!text[action.label]?.ar)throw Error('Invalid phone action: '+action.id);
     ids.add(action.id);
   }
   const hijriEvents=read('shared/data/hijri-events.json'),eventIds=new Set();
@@ -61,6 +61,10 @@ export function generatePhone() {
   validateStations(stations);
   return {contract,cities,voices,stations,backgrounds,hijriEvents,prayerVerse:read('shared/data/sacred-text.json').prayerVerse};
 }
+function phoneText(strings) {
+  return {...read('companion/strings.json'), ...Object.fromEntries(Object.entries(strings).filter(([key]) => key.startsWith('about')))};
+}
+
 export function generate(platforms = ['android','lg']) {
   const controls = read('shared/data/ui-contract.json'), strings = read('shared/data/strings.json');
   const contract = read('companion/contract.json');
@@ -147,7 +151,7 @@ export function generate(platforms = ['android','lg']) {
     favourites:pair('التطبيقات المفضلة','Favourite apps'),apps:pair('التطبيقات','Apps'),remote:pair('أزرار الريموت','Remote buttons'),pairing:label('companionPhones')};
   const commands=read('companion/protocol/lan.json').commands;
   for(const id of commands)if(!all.some(c=>c.id===id&&c.kind==='action'))throw Error('Unknown canonical command: '+id);
-  return {version:1,setupPlatforms:read('shared/data/tv-platforms.json'),commands,profiles,demoSystemLanguage:'ar',sections,colors,themeKeys:read('shared/design/appearance.json').colors,themeSurfaces:read('shared/design/appearance.json').surfaces,themes:themeData,appOptions,prayerNames:strings.prayerNames,text:read('companion/strings.json'), cities:cities.map(c=>({id:c.id,method:c.method,asr:c.hanafi?'hanafi':'shafi'}))};
+  return {version:1,setupPlatforms:read('shared/data/tv-platforms.json'),commands,profiles,demoSystemLanguage:'ar',sections,colors,themeKeys:read('shared/design/appearance.json').colors,themeSurfaces:read('shared/design/appearance.json').surfaces,themes:themeData,appOptions,prayerNames:strings.prayerNames,text:phoneText(strings), cities:cities.map(c=>({id:c.id,method:c.method,asr:c.hanafi?'hanafi':'shafi'}))};
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
