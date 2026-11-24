@@ -125,8 +125,9 @@ struct AndroidTVRecovery {
 
         struct App: Decodable { let p: String; let fav: Int }
         struct Key: Decodable { let p: String }
-        let apps = try await provider([App].self, path: "apps")
-        let keys = try await provider([Key].self, path: "keys")
+        let provider = AndroidTVSetupProvider(shell: shell)
+        let apps = try await provider.query([App].self, path: "apps")
+        let keys = try await provider.query([Key].self, path: "keys")
         let favorites = Set(apps.filter { $0.fav >= 0 }.map(\.p))
         let redirects = Set(keys.map(\.p))
         let screensaver = try await setting("screensaver_components") ?? ""
@@ -186,12 +187,6 @@ struct AndroidTVRecovery {
         let rows = response.split(whereSeparator: \.isNewline)
         guard rows.allSatisfy({ $0.hasPrefix("package:") }) else { throw Failure.unconfirmed }
         return Set(rows.map { String($0.dropFirst("package:".count)) })
-    }
-
-    private func provider<Value: Decodable>(_ type: Value.Type, path: String) async throws -> Value {
-        let text = try await shell("content query --uri content://tv.miqat.home.setup/\(path)")
-        guard text.hasPrefix("Row: 0 json=") else { throw Failure.cleanupNotReady }
-        return try JSONDecoder().decode(type, from: Data(text.dropFirst("Row: 0 json=".count).utf8))
     }
 
     func export() async throws -> Data {

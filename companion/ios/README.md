@@ -67,6 +67,10 @@ Miqat checks each option after applying it. Once Miqat is the active Home,
 Review the selection before turning apps off. Restore or export the saved
 setup to re-enable apps turned off by this iPhone.
 
+**Personalise Android TV** sets the TV's prayer city, language, Adhan,
+spoken reminders and ordered Home favourites before companion pairing.
+Miqat reads back changes to verify the save.
+
 The Android TV development flow currently uses classic network debugging.
 Use the desktop guide above for wireless-code pairing and CVTE setup.
 

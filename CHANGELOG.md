@@ -17,6 +17,7 @@
 - The iPhone development target offers the optional Android TV radio, startup and Wi-Fi name controls.
 - iPhone Android TV setup backups can be saved to Files and restored with the desktop tool.
 - The iPhone development target adds reviewed Android TV cleanup and recovery for disabled apps.
+- The iPhone development target adds Android TV prayer preferences and Home favourites during setup.
 - The iPhone development target adds LG Developer Mode setup, installation and pairing handoff.
 - Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
   Select a downloaded Development package in Advanced.

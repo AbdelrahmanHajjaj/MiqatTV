@@ -15,6 +15,7 @@ final class AndroidTVSetup: ObservableObject {
     @Published private(set) var cleanupCandidates: [AndroidTVCleanup.Candidate]?
     @Published var cleanupSelection: Set<String> = []
     @Published private(set) var cleanupResult: Int?
+    @Published var personalization: AndroidTVPersonalization.Snapshot?
     private var client: AndroidADB?
     private var task: Task<Void, Never>?
 
@@ -108,6 +109,26 @@ final class AndroidTVSetup: ObservableObject {
         }
     }
 
+    func reviewPersonalization() {
+        guard let client, installed != nil, !busy else { return }
+        run("tv_adb_personal_loading") {
+            let current = try await Self.personalizer(client).load()
+            try Task.checkCancellation()
+            self.personalization = current
+        }
+    }
+
+    func savePersonalization(_ draft: AndroidTVPersonalization.Draft, from baseline: AndroidTVPersonalization.Snapshot) {
+        guard let client, !busy, personalization?.id == baseline.id else { return }
+        run("tv_adb_personal_saving") {
+            try await Self.personalizer(client).save(draft, from: baseline)
+            try Task.checkCancellation()
+            self.personalization = nil
+            self.resetCleanup()
+            self.status = "tv_adb_personal_saved"
+        }
+    }
+
     func apply(_ option: AndroidTVOptions.Step) {
         guard let client, installed != nil, !busy else { return }
         run("tv_adb_applying_option") {
@@ -152,6 +173,11 @@ final class AndroidTVSetup: ObservableObject {
         return AndroidTVRecovery { command in try await installer.shell(command) }
     }
 
+    private static func personalizer(_ client: AndroidADB) -> AndroidTVPersonalization {
+        let installer = installer(client)
+        return AndroidTVPersonalization(provider: .init { try await installer.shell($0) })
+    }
+
     private func resetConnection() {
         if let client { Task { await client.close() } }
         client = nil
@@ -160,6 +186,7 @@ final class AndroidTVSetup: ObservableObject {
         optionStatus = [:]
         recoveryBackup = nil
         resetCleanup()
+        personalization = nil
     }
 
     private func resetCleanup() {
@@ -191,6 +218,18 @@ final class AndroidTVSetup: ObservableObject {
                 if !Task.isCancelled { status = "tv_adb_setup_unsupported" }
             } catch AndroidTVRecovery.Failure.cleanupNotReady {
                 if !Task.isCancelled { status = "tv_adb_cleanup_unavailable" }
+            } catch AndroidTVPersonalization.Failure.changed {
+                guard !Task.isCancelled else { return }
+                personalization = nil
+                status = "tv_adb_personal_changed"
+            } catch AndroidTVPersonalization.Failure.unavailable {
+                guard !Task.isCancelled else { return }
+                personalization = nil
+                status = "tv_adb_personal_unavailable"
+            } catch AndroidTVPersonalization.Failure.unconfirmed {
+                guard !Task.isCancelled else { return }
+                personalization = nil
+                status = "tv_adb_personal_unconfirmed"
             } catch {
                 guard !Task.isCancelled else { return }
                 resetConnection()

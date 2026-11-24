@@ -2392,3 +2392,10 @@ selected apps. Each planned disable is saved first. The desktop tool
 re-enables only listed apps that are still off. Windows passed 27 desktop and
 14 companion tests, verified the bundled catalogue bytes, and parsed six
 Swift files. The Swift cleanup fixture and physical TV checks remain pending.
+
+Android setup personalisation now reads the TV's cities and apps, then saves
+its prayer city, language, Adhan, spoken reminder and ordered favourites.
+The code checks for an intervening change and confirms readback. Windows
+parsed seven affected Swift files and passed 14 companion checks. The Apple
+fixture covers serialization, confirmed save, stale drafts, unavailable apps
+and missing readback. Apple execution and TV acceptance remain pending.

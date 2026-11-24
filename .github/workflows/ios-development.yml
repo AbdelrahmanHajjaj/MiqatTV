@@ -71,11 +71,13 @@ jobs:
             companion/ios/Sources/AndroidTVPackage.swift companion/ios/Sources/AndroidTVInstallation.swift \
             companion/ios/Sources/AndroidTVRecovery.swift companion/ios/Sources/AndroidTVCleanup.swift \
             companion/ios/Sources/AndroidTVOptions.swift \
+            companion/ios/Sources/AndroidTVPersonalization.swift \
             companion/ios/Sources/LgPackage.swift companion/ios/Sources/LGInstallation.swift \
             companion/ios/Sources/TVRelease.swift companion/ios/Sources/TVPackageDownload.swift \
             companion/ios/checks/tv-download/lg-installation.swift companion/ios/checks/tv-download/android-installation.swift \
             companion/ios/checks/tv-download/android-recovery.swift companion/ios/checks/tv-download/android-cleanup.swift \
             companion/ios/checks/tv-download/android-options.swift \
+            companion/ios/checks/tv-download/android-personalization.swift \
             companion/ios/checks/tv-download/main.swift -o "$RUNNER_TEMP/tv-download-check"
           "$RUNNER_TEMP/tv-download-check" "$RUNNER_TEMP/ipk-fixtures" "$RUNNER_TEMP/apk-fixtures" \
             tools/setup-steps.txt "$RUNNER_TEMP/ios-recovery.json"

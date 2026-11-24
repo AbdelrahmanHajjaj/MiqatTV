@@ -125,6 +125,9 @@ struct TVPackageView: View {
         .onChange(of: android.recoveryBackup) { _, backup in
             exportingRecovery = backup != nil
         }
+        .sheet(item: $android.personalization) { draft in
+            AndroidTVPersonalizationView(setup: android, preferences: preferences, snapshot: draft)
+        }
         .fileExporter(isPresented: Binding(get: { exportingRecovery }, set: { presented in
             exportingRecovery = presented
             if !presented { android.finishRecoveryExport() }
@@ -181,6 +184,7 @@ struct TVPackageView: View {
                             Button(preferences.text("cancel"), role: .cancel) {}
                         }
                     androidOptions
+                    Button(preferences.text("tv_adb_personal")) { android.reviewPersonalization() }.disabled(task != nil)
                     androidCleanup
                 } else {
                     Text(preferences.text("lg_not_installed")).foregroundStyle(.secondary)
@@ -199,7 +203,7 @@ struct TVPackageView: View {
                 Button(preferences.text("lg_connect")) { android.connect() }.disabled(task != nil || importing)
             }
             if let status = android.status { Text(preferences.text(status)).foregroundStyle(.secondary) }
-            if ["lg_installed", "lg_launched", "tv_adb_configured"].contains(android.status ?? "") {
+            if ["lg_installed", "lg_launched", "tv_adb_configured", "tv_adb_personal_saved"].contains(android.status ?? "") {
                 NavigationLink(preferences.text("tv_already")) { TVPairing(preferences: preferences) }
             }
         }
