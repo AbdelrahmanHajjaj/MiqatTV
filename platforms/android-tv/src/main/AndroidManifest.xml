@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Opens Android's user-confirmed uninstall screen from All apps. -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- Quran Radio and manual prayer comparisons use the network. Radio also keeps the CPU/Wi-Fi
          awake under the screensaver and provides level bars
          (RECORD_AUDIO, granted with pm grant at install) and the TV's sleep timer (WRITE_SECURE_SETTINGS, also
@@ -87,6 +88,8 @@
         <activity android:name=".PairingActivity" android:exported="false" android:excludeFromRecents="true"
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|uiMode|locale|layoutDirection" />
         <activity android:name=".AboutActivity" android:exported="false" android:excludeFromRecents="true" />
+        <activity android:name="tv.miqat.companion.about.UpdateConfirmation" android:exported="false"
+            android:theme="@android:style/Theme.NoDisplay" />
         <activity
             android:name=".AllAppsActivity"
             android:exported="false"

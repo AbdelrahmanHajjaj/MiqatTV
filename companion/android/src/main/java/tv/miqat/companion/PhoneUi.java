@@ -280,8 +280,8 @@ final class PhoneUi {
             String title = a.t(data.actionLabel("about.check-updates"));
             a.views.button(a.body, title, () -> AboutUpdates.show(a, a.views.dialog(), a.ar, new AboutUpdates.Labels(
                     title, a.t("aboutCheckingUpdates"), a.t("aboutNoUpdate"), a.t("aboutNewUpdate"),
-                    a.t("aboutUpdateFailed"), a.t("aboutViewRelease"), a.t("back")),
-                    this::openAboutLink)).setTag("phone.about.check-updates");
+                    a.t("aboutUpdateFailed"), a.t("aboutInstallUpdate"), a.t("aboutDownloadingUpdate"),
+                    a.t("aboutInstallUpdateFailed"), a.t("back")))).setTag("phone.about.check-updates");
         }
         a.views.button(a.body, a.t(data.actionLabel("about.github")),
                 () -> openAboutLink(AboutMiqat.FEEDBACK_URL)).setTag("phone.about.github");

@@ -69,7 +69,7 @@ test('companion copy is bilingual and compact/mihrab positions remain independen
   }
   const manifest=readFileSync(new URL('android/src/main/AndroidManifest.xml',import.meta.url),'utf8');
   assert.match(manifest,/<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/);
-  assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','ACCESS_BACKGROUND_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','USE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','MODIFY_AUDIO_SETTINGS','USE_FULL_SCREEN_INTENT','VIBRATE'].map(x=>'android.permission.'+x));
+  assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','REQUEST_INSTALL_PACKAGES','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','ACCESS_BACKGROUND_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','USE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','MODIFY_AUDIO_SETTINGS','USE_FULL_SCREEN_INTENT','VIBRATE'].map(x=>'android.permission.'+x));
 });
 
 test('new branding settings reach both profiles with canonical scenes and immediate opacity',()=>{

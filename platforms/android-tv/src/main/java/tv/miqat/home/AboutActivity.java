@@ -66,27 +66,8 @@ public final class AboutActivity extends Screen {
 
     private void checkForUpdates() {
         AboutUpdates.show(this, new AlertDialog.Builder(this), rtl, new AboutUpdates.Labels(t.aboutCheckUpdates(), t.aboutCheckingUpdates(),
-                t.aboutNoUpdate(), t.aboutNewUpdate(), t.aboutUpdateFailed(), t.aboutViewRelease(), t.back()),
-                this::showReleaseQr);
-    }
-
-    private void showReleaseQr(String url) {
-        AlertDialog.Builder release = new AlertDialog.Builder(this)
-                .setTitle(t.aboutViewRelease()).setPositiveButton(t.back(), null);
-        try {
-            ImageView image = new ImageView(this);
-            image.setContentDescription(t.aboutViewRelease());
-            drawQr(image, url);
-            FrameLayout layout = new FrameLayout(this);
-            int size = Math.min(Ui.ipx(360), getResources().getDisplayMetrics().widthPixels / 4);
-            layout.addView(image, new FrameLayout.LayoutParams(size, size, Gravity.CENTER));
-            release.setView(layout);
-        } catch (Exception failure) {
-            Log.w("MiqatAbout", "Release QR is unavailable", failure);
-            release.setMessage(url);
-        }
-        release.show().getWindow().getDecorView()
-                .setLayoutDirection(rtl ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+                t.aboutNoUpdate(), t.aboutNewUpdate(), t.aboutUpdateFailed(), t.aboutInstallUpdate(),
+                t.aboutDownloadingUpdate(), t.aboutInstallUpdateFailed(), t.back()));
     }
 
     private void drawQr(ImageView image, String url) throws Exception {
