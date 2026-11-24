@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.function.Consumer;
 import javax.net.ssl.HttpsURLConnection;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,12 +22,12 @@ import org.json.JSONObject;
 /** Fetches public stable release metadata only when a user opens the check. */
 public final class AboutUpdates {
     private static final String METADATA = "https://abdelrahmanhajjaj.github.io/MiqatTV/updates.json";
-    private static final String RELEASE = "https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/";
+    private static final String DOWNLOAD = "https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/download/";
     private static final int MAX_BYTES = 4096;
     private static final int TIMEOUT_MS = 5000;
 
     public record Labels(String title, String checking, String current, String available,
-                         String failed, String viewRelease, String close) {}
+                         String failed, String install, String downloading, String installFailed, String close) {}
     record Result(long code, String version, String url) {}
 
     private AboutUpdates() {}
@@ -57,15 +56,17 @@ public final class AboutUpdates {
     }
 
     @SuppressWarnings("deprecation")
-    public static void show(Activity activity, AlertDialog.Builder builder, boolean rtl, Labels labels,
-                            Consumer<String> openRelease) {
+    static long code(PackageInfo info) {
+        return Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode;
+    }
+
+    public static void show(Activity activity, AlertDialog.Builder builder, boolean rtl, Labels labels) {
         if (!available(activity)) return;
         PackageInfo installed = AboutMiqat.packageInfo(activity);
-        long installedCode = Build.VERSION.SDK_INT >= 28 ? installed.getLongVersionCode() : installed.versionCode;
         AlertDialog dialog = builder
                 .setTitle(labels.title()).setMessage(labels.checking())
                 .setNegativeButton(labels.close(), null)
-                .setPositiveButton(labels.viewRelease(), null).show();
+                .setPositiveButton(labels.install(), null).show();
         dialog.getWindow().getDecorView().setLayoutDirection(rtl ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
         new Thread(() -> {
@@ -79,17 +80,54 @@ public final class AboutUpdates {
             activity.runOnUiThread(() -> {
                 if (activity.isFinishing() || activity.isDestroyed() || !dialog.isShowing()) return;
                 if (found == null) dialog.setMessage(labels.failed());
-                else if (found.code() <= installedCode) dialog.setMessage(labels.current());
+                else if (found.code() <= code(installed)) dialog.setMessage(labels.current());
                 else {
                     dialog.setMessage(labels.available() + " · \u2066" + found.version() + "\u2069");
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.VISIBLE);
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
-                        dialog.dismiss();
-                        openRelease.accept(found.url());
-                    });
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> download(activity, dialog, found, labels));
                 }
             });
         }, "miqat-update-check").start();
+    }
+
+    private static void download(Activity activity, AlertDialog dialog, Result update, Labels labels) {
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        dialog.setMessage(labels.downloading());
+        Thread job = new Thread(() -> {
+            int session;
+            try {
+                session = UpdatePackage.stage(activity.getApplicationContext(), update);
+            } catch (IOException | PackageManager.NameNotFoundException | RuntimeException failure) {
+                activity.runOnUiThread(() -> {
+                    if (!activity.isFinishing() && !activity.isDestroyed()) installFailed(dialog, labels);
+                });
+                return;
+            }
+            activity.runOnUiThread(() -> {
+                PackageInstaller installer = activity.getPackageManager().getPackageInstaller();
+                if (activity.isFinishing() || activity.isDestroyed() || !dialog.isShowing()
+                        || !dialog.getWindow().getDecorView().hasWindowFocus()) {
+                    installer.abandonSession(session);
+                    dialog.dismiss();
+                    return;
+                }
+                try {
+                    UpdatePackage.confirm(activity, session, labels.installFailed());
+                    dialog.dismiss();
+                } catch (IOException | RuntimeException failure) {
+                    installer.abandonSession(session);
+                    installFailed(dialog, labels);
+                }
+            });
+        }, "miqat-update-download");
+        dialog.setOnDismissListener(ignored -> job.interrupt());
+        job.start();
+    }
+
+    private static void installFailed(AlertDialog dialog, Labels labels) {
+        if (!dialog.isShowing()) return;
+        dialog.setMessage(labels.installFailed());
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
     }
 
     static Result read(String json, String appId) throws IOException, JSONException {
@@ -103,7 +141,12 @@ public final class AboutUpdates {
                 || !(value instanceof Integer) || ((Integer) value) < 1) {
             throw new IOException("Invalid stable release metadata");
         }
-        return new Result((Integer) value, version, RELEASE + tag);
+        String asset = switch (appId) {
+            case "tv.miqat.companion" -> "miqat-phone.apk";
+            case "tv.miqat.home" -> "miqat.apk";
+            default -> throw new IOException("Unknown Android update package");
+        };
+        return new Result((Integer) value, version, DOWNLOAD + tag + "/" + asset);
     }
 
     private static String stableMetadata() throws IOException {

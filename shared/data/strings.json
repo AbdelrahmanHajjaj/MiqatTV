@@ -11,7 +11,9 @@
   "aboutNoUpdate": {"ar": "لا يوجد إصدار مستقر أحدث.", "en": "No newer stable version is available."},
   "aboutNewUpdate": {"ar": "يتوفر تحديث", "en": "Update available"},
   "aboutUpdateFailed": {"ar": "تعذر التحقق من التحديثات. حاول مرة أخرى.", "en": "Couldn’t check for updates. Try again."},
-  "aboutViewRelease": {"ar": "عرض الإصدار", "en": "View release"},
+  "aboutInstallUpdate": {"ar": "تنزيل وتثبيت", "en": "Download and install"},
+  "aboutDownloadingUpdate": {"ar": "جارٍ تنزيل التحديث…", "en": "Downloading update…"},
+  "aboutInstallUpdateFailed": {"ar": "تعذر تنزيل التحديث أو تثبيته. حاول مرة أخرى.", "en": "Couldn’t download or install the update. Try again."},
   "ref": {
     "ar": "النساء 103",
     "en": "An-Nisa 4:103",

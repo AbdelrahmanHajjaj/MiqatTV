@@ -25,7 +25,8 @@ browser preview mirrors it. Email stays disabled
 until a public address is chosen.
 
 Sideloaded Android phone and TV builds can explicitly check the stable update
-metadata on GitHub Pages from About. Installation remains user-driven.
+metadata on GitHub Pages from About. Download and install fetches the signed
+update for the installed app and opens Android's confirmation screen.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Validate is PR-only. Build provides Development

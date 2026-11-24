@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Staging sets app versions and Android version codes automatically for Production.
+- Sideloaded Miqat Phone and Android TV can download updates from About and
+  open Android's installation confirmation.
 
 ## v0.7.8
 

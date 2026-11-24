@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -33,6 +34,8 @@
         </activity>
         <activity android:name=".PhoneAdhanScreen" android:exported="false" android:directBootAware="true" android:excludeFromRecents="true" />
         <activity android:name=".ScanActivity" android:exported="false" />
+        <activity android:name="tv.miqat.companion.about.UpdateConfirmation" android:exported="false"
+            android:theme="@android:style/Theme.NoDisplay" />
         <activity android:name=".SetupActivity" android:exported="false"
             android:theme="@style/Theme.Installer"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode" />

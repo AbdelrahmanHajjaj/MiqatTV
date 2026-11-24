@@ -46,7 +46,9 @@ final class Text {
     String aboutNoUpdate() { {{STRINGS:aboutNoUpdate}} }
     String aboutNewUpdate() { {{STRINGS:aboutNewUpdate}} }
     String aboutUpdateFailed() { {{STRINGS:aboutUpdateFailed}} }
-    String aboutViewRelease() { {{STRINGS:aboutViewRelease}} }
+    String aboutInstallUpdate() { {{STRINGS:aboutInstallUpdate}} }
+    String aboutDownloadingUpdate() { {{STRINGS:aboutDownloadingUpdate}} }
+    String aboutInstallUpdateFailed() { {{STRINGS:aboutInstallUpdateFailed}} }
     /** The saved city in this language; set by {@link Screen#loadText}. */
     String cityName = "";
     String city() { return cityName; }

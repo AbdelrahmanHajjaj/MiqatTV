@@ -1,5 +1,14 @@
 # Validation evidence
 
+## Android in-app update
+
+Both Android apps and their instrumentation compiled. The isolated API 37
+phone fixture rejected a mismatched version, staged a newer same-signed APK,
+and opened Android's source permission prompt. Enabling that permission resumed
+the same session at Android's Update prompt. Play Protect requested an external
+scan of the debug APK, so installation stopped there. Physical upgrades remain
+unverified.
+
 ## Automatic release versions
 
 A read-only rehearsal against GitHub resolved `v0.7.9-staging.1` to version

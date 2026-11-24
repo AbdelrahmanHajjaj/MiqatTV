@@ -14,6 +14,8 @@ with explicit opt-in. See EVIDENCE.md for validation.
 WORK.md owns the next action.
 
 Sideloaded phone builds offer a manual Production version check in About Miqat.
+Download and install verifies the APK against the installed app before opening
+Android's confirmation screen.
 Miqat Phone TV setup selects Production or Staging public downloads. Development
 packages use the local file picker. See [Releasing](RELEASING.md).
 Release-signed installs with the update check can detect code 40 in Production.
