@@ -1,4 +1,5 @@
 import SwiftUI
+import MiqatKit
 import UniformTypeIdentifiers
 
 struct AdhanSettings: View {
@@ -8,7 +9,8 @@ struct AdhanSettings: View {
         Form {
             AdhanSelectionRows(preferences: preferences, selection: $preferences.adhan.selection)
             NavigationLink(preferences.prayerNames()[0]) {
-                AdhanVoicePicker(preferences: preferences, voice: $preferences.adhan.fajrVoice)
+                AdhanVoicePicker(preferences: preferences, voice: $preferences.adhan.fajrVoice,
+                                 fallbackVoice: PhoneData.defaultFajrVoice)
             }
             Toggle(preferences.text("phone_full_screen"), isOn: $preferences.adhan.showScreen)
         }
@@ -56,17 +58,23 @@ struct AdhanSelectionRows: View {
 }
 
 struct AdhanVoicePicker: View {
+    private enum Naming {
+        case importing(URL)
+        case renaming(String)
+    }
+
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var library: AdhanLibrary
     @EnvironmentObject private var audio: PhoneAdhan
     let preferences: PhonePreferences
     @Binding var voice: String
     var inheritedVoice: String?
+    var fallbackVoice = AdhanPreferences.defaultVoice
     @State private var draft = ""
     @State private var query = ""
     @State private var filePicker = false
     @State private var importTask: Task<Void, Never>?
-    @State private var edit: AdhanLibrary.Recording?
+    @State private var naming: Naming?
     @State private var editName = ""
     @State private var removing: AdhanLibrary.Recording?
     @State private var failed = false
@@ -79,7 +87,10 @@ struct AdhanVoicePicker: View {
                 ForEach(library.records.filter { matches($0.id) }) { record in
                     voiceRow(record.id)
                         .contextMenu {
-                            Button(preferences.text("phone_audio_import_name")) { editName = record.name; edit = record }
+                            Button(preferences.text("phone_audio_import_name")) {
+                                editName = record.name
+                                naming = .renaming(record.id)
+                            }
                             Button(preferences.text("remove"), role: .destructive) { removing = record }
                         }
                 }
@@ -103,19 +114,15 @@ struct AdhanVoicePicker: View {
         .fileImporter(isPresented: $filePicker, allowedContentTypes: [.audio]) { result in
             guard case .success(let url) = result else { return }
             failed = false
-            importTask = Task {
-                do { draft = try await library.importFile(url) }
-                catch { failed = !Task.isCancelled }
-                importTask = nil
-            }
+            editName = AdhanLibrary.suggestedName(for: url, fallback: preferences.text("phone_audio_import_default"))
+            naming = .importing(url)
         }
         .alert(preferences.text("phone_audio_import_name"), isPresented: Binding(
-            get: { edit != nil }, set: { if !$0 { edit = nil } }
-        )) {
+            get: { naming != nil }, set: { if !$0 { naming = nil } }
+        ), presenting: naming) { target in
             TextField(preferences.text("phone_audio_name"), text: $editName)
-            Button(preferences.text("done")) {
-                if let edit { do { try library.rename(edit.id, name: editName) } catch { failed = true } }
-            }
+            Button(preferences.text("done")) { saveName(for: target) }
+                .disabled(RecordingName.shared.validated(value: editName) == nil)
             Button(preferences.text("cancel"), role: .cancel) {}
         }
         .alert(preferences.text("remove"), isPresented: Binding(
@@ -126,10 +133,27 @@ struct AdhanVoicePicker: View {
                 audio.stop(previewOnly: true)
                 do {
                     try library.remove(removing.id)
-                    if draft == removing.id { draft = PhoneData.defaultFajrVoice }
+                    if draft == removing.id { draft = inheritedVoice == nil ? fallbackVoice : "inherit" }
                 } catch { failed = true }
             }
             Button(preferences.text("cancel"), role: .cancel) {}
+        }
+    }
+
+    private func saveName(for target: Naming) {
+        let name = editName
+        failed = false
+        switch target {
+        case .renaming(let id):
+            do { try library.rename(id, name: name) }
+            catch { failed = true }
+        case .importing(let url):
+            importTask = Task {
+                do { draft = try await library.importFile(url, name: name) }
+                catch is CancellationError {}
+                catch { failed = true }
+                importTask = nil
+            }
         }
     }
 

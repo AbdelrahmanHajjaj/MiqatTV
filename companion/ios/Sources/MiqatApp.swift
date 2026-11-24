@@ -68,6 +68,7 @@ struct MiqatApp: App {
                 radio.refreshMetadata(prefs)
             }
             .onChange(of: notifications.permission) { _, _ in refreshAlerts() }
+            .onReceive(library.removedRecording, perform: removeVoiceReferences)
             .onOpenURL { url in if url.scheme == "miqat" && url.host == "prayer" { tab = "prayer" } }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
@@ -112,6 +113,16 @@ struct MiqatApp: App {
         notifications.refresh(preferences: store.preferences, schedule: schedule)
     }
 
+    private func removeVoiceReferences(_ id: String) {
+        var prefs = store.preferences
+        if prefs.adhan.selection.voice == id { prefs.adhan.selection.voice = AdhanPreferences.defaultVoice }
+        if prefs.adhan.fajrVoice == id { prefs.adhan.fajrVoice = PhoneData.defaultFajrVoice }
+        for index in prefs.prayerAlerts.indices where prefs.prayerAlerts[index].audio.voice == id {
+            prefs.prayerAlerts[index].audio.voice = "inherit"
+        }
+        if prefs != store.preferences { store.save(prefs) }
+    }
+
     private func presentAdhan(_ request: AdhanNotification, tapped: Bool) -> Bool {
         if tapped { tab = "prayer" }
         if playingAdhan == request.claimID && adhan.prayer != nil {
@@ -123,7 +134,7 @@ struct MiqatApp: App {
         let index = request.prayer
         let settings = prefs.prayerAlerts[index]
         let selection = prefs.adhan.forPrayer(index, settings: settings)
-        let fallback = index == 0 ? PhoneData.defaultFajrVoice : PhoneData.defaults["reminders.voice"] ?? "almalki"
+        let fallback = index == 0 ? PhoneData.defaultFajrVoice : AdhanPreferences.defaultVoice
         let voice = library.url(selection.voice) != nil ? selection.voice : fallback
         guard let url = library.url(voice) else { return false }
         let prayerTime = Date(timeIntervalSince1970: request.time / 1000)

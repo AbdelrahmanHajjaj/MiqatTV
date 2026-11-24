@@ -2477,3 +2477,12 @@ pauses active media, and a lost audio session stops Adhan. Windows passed
 Kotlin playback-policy and 14 generator checks and parsed the changed Swift
 files. The iPhone lock screen, audio routes, system commands and swipe still
 need native acceptance.
+
+iPhone Files import now prompts for a recording name and uses the same
+Kotlin validation as Android. It checks the byte limit during reading,
+requires audio-only content, and preserves an unreadable library index.
+Deleting a selected recording restores its default, Fajr or per-prayer
+voice slot. Windows passed the shared naming fixture, Android phone Java
+compilation, 14 companion generator checks and Swift syntax checks. Files
+permission, media decoding, corrupt-index recovery and deletion across slots
+still need iPhone validation.

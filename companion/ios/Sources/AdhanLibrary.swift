@@ -2,6 +2,7 @@ import AVFoundation
 import Combine
 import CryptoKit
 import Foundation
+import MiqatKit
 
 struct AdhanVoice: Identifiable, Decodable {
     let id: String
@@ -18,7 +19,8 @@ struct AdhanSelection: Codable, Equatable {
 }
 
 struct AdhanPreferences: Codable, Equatable {
-    var selection = AdhanSelection(voice: PhoneData.defaults["reminders.voice"] ?? "almalki")
+    static var defaultVoice: String { PhoneData.defaults["reminders.voice"] ?? "almalki" }
+    var selection = AdhanSelection(voice: Self.defaultVoice)
     var fajrVoice = PhoneData.defaultFajrVoice
     var showScreen = false
 
@@ -38,20 +40,16 @@ final class AdhanLibrary: ObservableObject {
         var name: String
     }
 
-    enum ImportError: Error { case unsupported, tooLarge }
-    private static let maximumBytes = 20 * 1024 * 1024
+    enum ImportError: Error { case unsupported, tooLarge, invalidName, unreadableIndex }
+    nonisolated private static let maximumBytes = 20 * 1024 * 1024
     private static let storage = URL.applicationSupportDirectory.appending(path: "Adhan", directoryHint: .isDirectory)
     private let index = AdhanLibrary.storage.appending(path: "library.json")
+    private var resetVersion = UUID()
+    let removedRecording = PassthroughSubject<String, Never>()
     @Published private(set) var records: [Recording] = []
 
     init() {
-        if let data = try? Data(contentsOf: index),
-           let saved = try? JSONDecoder().decode([Recording].self, from: data) {
-            records = saved.filter {
-                $0.filename == URL(fileURLWithPath: $0.filename).lastPathComponent
-                    && FileManager.default.fileExists(atPath: Self.storage.appending(path: $0.filename).path)
-            }
-        }
+        records = (try? readIndex()) ?? []
     }
 
     func url(_ voice: String) -> URL? {
@@ -68,36 +66,41 @@ final class AdhanLibrary: ObservableObject {
         return preferences.text("phone_inherit")
     }
 
-    func importFile(_ source: URL) async throws -> String {
-        let accessed = source.startAccessingSecurityScopedResource()
-        defer { if accessed { source.stopAccessingSecurityScopedResource() } }
-        let values = try source.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
-        let ext = source.pathExtension.lowercased()
-        guard values.isRegularFile == true, let size = values.fileSize, size > 0,
-              size <= Self.maximumBytes else { throw ImportError.tooLarge }
-        guard !ext.isEmpty, ext.count <= 10, ext.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else {
-            throw ImportError.unsupported
+    static func suggestedName(for source: URL, fallback: String) -> String {
+        let draft = source.deletingPathExtension().lastPathComponent.unicodeScalars.map {
+            $0.value < 32 || (127...159).contains($0.value) ? " " : String($0)
+        }.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+        var name = ""
+        var size = 0
+        for character in draft {
+            let length = String(character).utf16.count
+            guard size + length <= 80 else { break }
+            name.append(character)
+            size += length
         }
-        let temp = URL.temporaryDirectory.appending(path: UUID().uuidString).appendingPathExtension(ext)
-        try FileManager.default.copyItem(at: source, to: temp)
-        defer { try? FileManager.default.removeItem(at: temp) }
-        let asset = AVURLAsset(url: temp)
-        let duration = try await asset.load(.duration).seconds
-        let tracks = try await asset.loadTracks(withMediaType: .audio)
-        guard duration.isFinite, duration >= 0.001, duration <= 600, !tracks.isEmpty,
-              (try? AVAudioPlayer(contentsOf: temp)) != nil else { throw ImportError.unsupported }
-        let data = try Data(contentsOf: temp, options: .mappedIfSafe)
-        guard data.count <= Self.maximumBytes else { throw ImportError.tooLarge }
+        return RecordingName.shared.validated(value: name) ?? fallback
+    }
+
+    func importFile(_ source: URL, name: String) async throws -> String {
+        guard let name = RecordingName.shared.validated(value: name) else { throw ImportError.invalidName }
+        let version = resetVersion
+        let (data, ext) = try await Self.prepareAudio(source)
         try Task.checkCancellation()
+        guard version == resetVersion else { throw CancellationError() }
+        let current = try readIndex()
         let id = "custom-" + SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-        if records.contains(where: { $0.id == id }) { return id }
+        if let existing = current.firstIndex(where: { $0.id == id }) {
+            var next = current
+            next[existing].name = name
+            try save(next)
+            return id
+        }
         let file = id + "." + ext
         try prepareDirectory()
         let output = Self.storage.appending(path: file)
         try data.write(to: output, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         do {
-            let name = String(source.deletingPathExtension().lastPathComponent.prefix(96))
-            try save(records + [Recording(id: id, filename: file, name: name)])
+            try save(current + [Recording(id: id, filename: file, name: name)])
         } catch {
             try? FileManager.default.removeItem(at: output)
             throw error
@@ -105,31 +108,77 @@ final class AdhanLibrary: ObservableObject {
         return id
     }
 
+    nonisolated private static func prepareAudio(_ source: URL) async throws -> (Data, String) {
+        let accessed = source.startAccessingSecurityScopedResource()
+        defer { if accessed { source.stopAccessingSecurityScopedResource() } }
+        let values = try source.resourceValues(forKeys: [.isRegularFileKey])
+        let ext = source.pathExtension.lowercased()
+        guard values.isRegularFile == true, !ext.isEmpty, ext.count <= 10,
+              ext.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else {
+            throw ImportError.unsupported
+        }
+        let input = try FileHandle(forReadingFrom: source)
+        defer { try? input.close() }
+        var data = Data()
+        while let chunk = try input.read(upToCount: 65536), !chunk.isEmpty {
+            try Task.checkCancellation()
+            guard data.count + chunk.count <= maximumBytes else { throw ImportError.tooLarge }
+            data.append(chunk)
+        }
+        guard !data.isEmpty else { throw ImportError.unsupported }
+        let temp = URL.temporaryDirectory.appending(path: UUID().uuidString).appendingPathExtension(ext)
+        try data.write(to: temp, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        defer { try? FileManager.default.removeItem(at: temp) }
+        let asset = AVURLAsset(url: temp)
+        let duration = try await asset.load(.duration).seconds
+        let tracks = try await asset.loadTracks(withMediaType: .audio)
+        let video = try await asset.loadTracks(withMediaType: .video)
+        guard duration.isFinite, duration >= 0.001, duration <= 600, !tracks.isEmpty,
+              video.isEmpty,
+              (try? AVAudioPlayer(contentsOf: temp)) != nil else { throw ImportError.unsupported }
+        return (data, ext)
+    }
+
     func rename(_ id: String, name: String) throws {
-        let value = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(96))
-        guard !value.isEmpty, let record = records.firstIndex(where: { $0.id == id }) else { return }
-        var next = records
+        guard let value = RecordingName.shared.validated(value: name) else { throw ImportError.invalidName }
+        var next = try readIndex()
+        guard let record = next.firstIndex(where: { $0.id == id }) else { return }
         next[record].name = value
         try save(next)
     }
 
     func remove(_ id: String) throws {
-        guard let record = records.first(where: { $0.id == id }) else { return }
+        let current = try readIndex()
+        guard let record = current.first(where: { $0.id == id }) else { return }
         let original = Self.storage.appending(path: record.filename)
-        let staged = Self.storage.appending(path: UUID().uuidString)
-        try FileManager.default.moveItem(at: original, to: staged)
+        try save(current.filter { $0.id != id })
         do {
-            try save(records.filter { $0.id != id })
+            try FileManager.default.removeItem(at: original)
         } catch {
-            try FileManager.default.moveItem(at: staged, to: original)
+            try save(current)
             throw error
         }
-        try FileManager.default.removeItem(at: staged)
+        removedRecording.send(id)
     }
 
     func reset() throws {
         if FileManager.default.fileExists(atPath: Self.storage.path) { try FileManager.default.removeItem(at: Self.storage) }
+        resetVersion = UUID()
         records = []
+    }
+
+    private func readIndex() throws -> [Recording] {
+        let data: Data
+        do { data = try Data(contentsOf: index) }
+        catch let error as CocoaError where [.fileReadNoSuchFile, .fileNoSuchFile].contains(error.code) { return [] }
+        guard data.count <= 1_048_576, let saved = try? JSONDecoder().decode([Recording].self, from: data),
+              Set(saved.map(\.id)).count == saved.count,
+              saved.allSatisfy({
+                  $0.id.range(of: #"\Acustom-[0-9a-f]{64}\z"#, options: .regularExpression) != nil
+                      && $0.filename == URL(fileURLWithPath: $0.filename).lastPathComponent
+                      && $0.filename.hasPrefix($0.id + ".")
+              }) else { throw ImportError.unreadableIndex }
+        return saved.filter { FileManager.default.fileExists(atPath: Self.storage.appending(path: $0.filename).path) }
     }
 
     private func prepareDirectory() throws {
@@ -141,7 +190,9 @@ final class AdhanLibrary: ObservableObject {
     }
 
     private func save(_ next: [Recording]) throws {
-        try JSONEncoder().encode(next).write(to: index, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        let data = try JSONEncoder().encode(next)
+        guard data.count <= 1_048_576 else { throw ImportError.unreadableIndex }
+        try data.write(to: index, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         records = next
     }
 }
