@@ -1,12 +1,20 @@
 package tv.miqat.companion.core
 
+import tv.miqat.core.DisplayText
 import tv.miqat.core.PrayerRules
-import tv.miqat.core.ReminderEvent
 import tv.miqat.core.PrayerSelection
+import tv.miqat.core.ReminderEvent
 
 /** Phone policy only; shells supply astronomy, civil days, clocks and durable claims. */
 object PhonePrayerRules {
     const val LATE_WINDOW_MS = 120000.0
+    private val decimalCoordinate = Regex("[+-]?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
+
+    fun parseCoordinate(value: String): Double? {
+        val text = DisplayText.digits(value.trim(), eastern = false).replace('٫', '.').replace('−', '-')
+        if (!decimalCoordinate.matches(text)) return null
+        return text.toDoubleOrNull()?.takeIf { it.isFinite() }
+    }
 
     fun volumeIndex(percent: Int, maximum: Int): Int {
         require(percent in 0..100 && maximum > 0)

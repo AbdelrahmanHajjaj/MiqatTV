@@ -163,6 +163,7 @@ struct LocationSettings: View {
                     location.cancel()
                     showCoordinates = true
                 }
+                LabeledContent(preferences.text("phone_zone"), value: preferences.zone.identifier)
                 Button(preferences.text("phone_confirm_location")) { preferences.locationConfirmed = true }
                     .disabled(preferences.locationConfirmed || location.pending)
             }
@@ -284,11 +285,8 @@ struct AdvancedLocation: View {
     @State private var zone = ""
 
     private var coordinates: PhonePreferences.Coordinates? {
-        let parser = NumberFormatter()
-        parser.locale = Locale(identifier: preferences.arabic ? "ar-EG" : "en-US")
-        parser.numberStyle = .decimal
-        guard let lat = Double(latitude) ?? parser.number(from: latitude)?.doubleValue,
-              let lng = Double(longitude) ?? parser.number(from: longitude)?.doubleValue else { return nil }
+        guard let lat = PhonePrayerRules.shared.parseCoordinate(value: latitude)?.doubleValue,
+              let lng = PhonePrayerRules.shared.parseCoordinate(value: longitude)?.doubleValue else { return nil }
         let point = PhonePreferences.Coordinates(latitude: lat, longitude: lng)
         return point.valid ? point : nil
     }
@@ -308,7 +306,7 @@ struct AdvancedLocation: View {
                 Button(preferences.text("cancel")) { dismiss() }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button(preferences.text("done")) {
+                Button(preferences.text("apply")) {
                     guard let coordinates else { return }
                     var next = preferences
                     if coordinates != next.coordinates { next.custom = coordinates }
@@ -319,7 +317,7 @@ struct AdvancedLocation: View {
                     }
                     next.zoneID = zone
                     preferences = next
-                    dismiss()
+                    if preferences == next { dismiss() }
                 }
                 .disabled(coordinates == nil)
             }

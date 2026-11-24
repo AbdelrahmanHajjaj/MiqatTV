@@ -7,6 +7,15 @@ class PhonePrayerRulesTest {
     private val none = IntArray(6)
     private val times = doubleArrayOf(600000.0, 900000.0, 1200000.0, 1800000.0, 2400000.0, 3000000.0)
 
+    @Test fun manualCoordinatesParseLocalizedDecimalsWithoutAcceptingPartialInput() {
+        assertEquals(-30.25, PhonePrayerRules.parseCoordinate(" −٣٠٫٢٥ "))
+        assertEquals(31.5, PhonePrayerRules.parseCoordinate("۳۱.۵"))
+        assertEquals(0.5, PhonePrayerRules.parseCoordinate("+5e-1"))
+        for (invalid in listOf("", "-", "30north", "3,000", "NaN", "30f", "1e999")) {
+            assertNull(PhonePrayerRules.parseCoordinate(invalid), invalid)
+        }
+    }
+
     @Test fun volumeUsesTheStreamMaximumAndAvailableSteps() {
         assertEquals(11,PhonePrayerRules.volumeIndex(70,15))
         assertEquals(5,PhonePrayerRules.volumeIndex(70,7))

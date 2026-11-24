@@ -52,6 +52,11 @@ new Android releases to this pinned baseline before expanding the queue.
 3. On a fresh install, select **Set up later** before confirming a location.
    Finish Your style, then verify Home still offers location confirmation and
    no prayer alerts are scheduled. Verify the same flow with Arabic enabled.
+4. In custom location, enter `٣٠٫٠٤٤٤` and `٣١٫٢٣٥٧` with `Africa/Cairo` while
+   the phone uses `America/New_York`. Cancel and verify the old selection stays.
+   Reopen, verify Apply is disabled for `30abc`, then apply the valid values.
+   Confirm the location again and compare the offline Cairo timetable and civil
+   date with Android at the same instant.
 
 ## Platform differences to verify
 

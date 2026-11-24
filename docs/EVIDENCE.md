@@ -2262,6 +2262,11 @@ optional fields. The four touched Swift sources parsed on Windows and all 14
 companion generator checks passed, including bilingual copy. The native
 [first-use regression](IOS-WORK.md#first-use-regression-on-iphone) is pending.
 
+The manual iPhone coordinate editor uses the Kotlin phone parser for localized
+digits and rejects partial or non-finite values. The companion JVM suite passed
+its parser regression. The Swift editor parsed and all 14 generator checks
+passed. Native apply/cancel and fixed-timezone acceptance remain open.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both
