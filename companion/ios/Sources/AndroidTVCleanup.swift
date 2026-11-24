@@ -7,6 +7,11 @@ enum AndroidTVCleanup {
         let suggested: Bool
     }
 
+    struct Review: Sendable {
+        let candidates: [Candidate]
+        let disabledEarlier: [String]
+    }
+
     static let bundled: [Candidate] = {
         guard let file = Bundle.main.url(forResource: "android-clean-catalog", withExtension: "tsv"),
               let text = try? String(contentsOf: file, encoding: .utf8) else { return [] }

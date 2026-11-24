@@ -12,13 +12,23 @@ enum AndroidCleanupCheck {
             "com.android.systemui", "tv.miqat.home", "com.example;reboot",
         ]
         let catalogue = AndroidTVCleanup.catalog(rows.map { $0 + "\t10\t0\tads\tnote" }.joined(separator: "\n"))
-        let offered = try await service.cleanupReview(catalog: catalogue)
-        precondition(Set(offered.map(\.id)) == ["com.example.optional", "com.example.hardware", "com.google.android.tungsten.setupwraith"])
-        let selected = Set(offered.map(\.id))
+        let review = try await service.cleanupReview(catalog: catalogue)
+        let offered = review.candidates
+        precondition(Set(offered.map(\.id)) == [
+            "com.example.optional", "com.example.hardware", "com.google.android.tungsten.setupwraith", "com.example.backon",
+        ])
+        precondition(review.disabledEarlier == ["com.example.earlier"])
+        precondition(offered.first(where: { $0.id == "com.example.backon" })?.suggested == true)
+        try await service.undoCleanup(review.disabledEarlier)
+        let earlier = await tv.history
+        precondition(earlier == ["com.example.backon", "com.android.systemui"])
+        let selected = Set(offered.map(\.id)).subtracting(["com.example.backon"])
         let turnedOff = try await service.clean(selected, catalog: catalogue)
         precondition(turnedOff == 1)
         let disabled = await tv.disabled
-        precondition(disabled == ["com.example.optional"])
+        precondition(disabled == ["com.example.optional", "com.android.systemui"])
+        let updated = await tv.history
+        precondition(updated.contains("com.example.optional"))
         let backup = try await service.export()
         let exported = try JSONSerialization.jsonObject(with: backup) as? [String: Any]
         precondition(exported?["disabledBySetup"] as? [String] == ["com.example.optional"])
@@ -26,7 +36,9 @@ enum AndroidCleanupCheck {
         let enabled = await tv.enabled
         precondition(enabled.contains("com.example.optional"))
         let after = await tv.disabled
-        precondition(after.isEmpty)
+        precondition(after == ["com.android.systemui"])
+        let retained = await tv.history
+        precondition(retained == ["com.example.backon", "com.android.systemui"])
 
         await tv.changeHome()
         do {
@@ -34,7 +46,7 @@ enum AndroidCleanupCheck {
             preconditionFailure("Do not clean with another Home active.")
         } catch AndroidTVRecovery.Failure.cleanupNotReady {}
         let unchanged = await tv.disabled
-        precondition(unchanged.isEmpty)
+        precondition(unchanged == ["com.android.systemui"])
         print("Android cleanup fixture protected selected apps and verified journaled disable and restore.")
     }
 
@@ -43,9 +55,10 @@ enum AndroidCleanupCheck {
         var home = "tv.miqat.home/.MainActivity"
         var enabled: Set<String> = [
             "tv.miqat.home", "com.example.optional", "com.example.favorite", "com.example.remote",
-            "com.example.screen", "com.example.hardware", "com.google.android.tungsten.setupwraith", "com.android.systemui",
+            "com.example.screen", "com.example.hardware", "com.google.android.tungsten.setupwraith", "com.example.backon",
         ]
-        var disabled: Set<String> = []
+        var disabled: Set<String> = ["com.example.earlier", "com.android.systemui"]
+        var history: Set<String> = ["com.example.earlier", "com.example.backon", "com.android.systemui"]
 
         init(path: URL) { self.path = path }
 
@@ -77,13 +90,27 @@ enum AndroidCleanupCheck {
                 enabled.remove("com.example.optional")
                 disabled.insert("com.example.optional")
                 return "com.example.optional new state: disabled-user"
-            case "pm enable --user 0 com.example.optional":
-                disabled.remove("com.example.optional")
-                enabled.insert("com.example.optional")
-                return "com.example.optional new state: enabled"
+            case "pm enable --user 0 com.example.optional", "pm enable --user 0 com.example.earlier":
+                let name = String(command.split(separator: " ").last!)
+                disabled.remove(name)
+                enabled.insert(name)
+                return "\(name) new state: enabled"
             default:
                 if command.hasPrefix("cmd package resolve-activity ") { return home }
                 if command.hasPrefix("am start -W ") { return "Status: ok" }
+                if command.contains("head -c 32769") { return history.sorted().joined(separator: "\n") }
+                if command.contains("grep -qxF 'com.example.optional'") {
+                    precondition(disabled.contains("com.example.optional"))
+                    history.insert("com.example.optional")
+                    return ""
+                }
+                if command.contains("grep -vxF") {
+                    for name in ["com.example.earlier", "com.example.optional"] where command.contains("-e '\(name)'") {
+                        precondition(enabled.contains(name))
+                        history.remove(name)
+                    }
+                    return ""
+                }
                 preconditionFailure("Unexpected cleanup command.")
             }
         }

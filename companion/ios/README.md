@@ -68,7 +68,10 @@ sleep-timer permissions, startup on supported models, or Wi-Fi name display.
 Miqat checks each option after applying it. Once Miqat is the active Home,
 **Review TV apps** uses the bundled cleanup catalogue to offer optional apps.
 Review the selection before turning apps off. Restore or export the saved
-setup to re-enable apps turned off by this iPhone.
+setup to re-enable apps turned off by this iPhone. **Apps turned off earlier**
+uses the TV's cleanup history to show apps still off from another Miqat
+installer. **Turn these apps back on** restores those apps. The review also
+suggests previously cleaned apps that the TV has turned back on.
 
 **Personalise Android TV** sets the TV's prayer city, language, Adhan,
 spoken reminders and ordered Home favourites before companion pairing.

@@ -8,7 +8,8 @@ credentials. Verify it against a local Developer Mode fixture. Classic Android
 TV installation and Home/remote setup with a recovery journal are wired.
 Android cleanup, recovery export and guided personalisation are wired.
 Wireless pairing and its separate TLS debugging connection are wired into the
-Android setup screen. Verify Apple fixtures and port the TV-wide cleanup history.
+Android setup screen. The app reads and updates the TV-wide cleanup history.
+Verify the unsigned Apple build and run the native acceptance queue.
 
 Updated: 2026-11-24. Stable v0.7.7 contains phone 0.5.23/code 39,
 Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed

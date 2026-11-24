@@ -2425,3 +2425,10 @@ passed 37 companion JVM tests, including rejection of plaintext CONNECT after
 STLS, two native crypto fixtures, 14 canonical generator checks and resource
 staging. Five touched Swift files parsed. Xcode compilation, Local Network
 permission, TV GUID readback and APK installation on a TV remain pending.
+
+The iPhone cleanup review reads the shared Android installer history. It
+distinguishes apps still disabled from apps that have since turned on, allows
+confirmed undo, and preserves unrelated entries. The macOS fixture now covers
+both cases, protected entries, new disables and local restore. Windows parsed
+five affected Swift files, passed 14 generator and 27 desktop recovery tests,
+and staged the resource bundle. The Swift fixture and hardware check are pending.

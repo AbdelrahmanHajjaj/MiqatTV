@@ -23,6 +23,7 @@ struct AndroidTVRecovery {
     private static let remote = "tv.miqat.home/.RemoteKeys"
     private static let servicesName = "enabled_accessibility_services"
     private static let enabledName = "accessibility_enabled"
+    private static let cleanupFile = "/data/local/tmp/miqat-cleaned.txt"
     private let shell: @Sendable (String) async throws -> String
     private let directory: URL
 
@@ -77,11 +78,8 @@ struct AndroidTVRecovery {
         let file = journalURL(device)
         guard var journal = try load(file, device: device), journal.hasChanges else { throw Failure.noRecord }
         if let disabled = journal.disabledBySetup, !disabled.isEmpty {
-            let stillDisabled = try await packages("-d")
-            for package in disabled where stillDisabled.contains(package) {
-                _ = try await shell("pm enable --user 0 \(package)")
-                guard try await packages("-e").contains(package) else { throw Failure.unconfirmed }
-            }
+            try await reenable(Set(disabled))
+            try await forgetCleanup(Set(disabled).intersection(try await cleanupHistory()))
         }
         if journal.homeChanged {
             let live = try await currentHome()
@@ -114,7 +112,7 @@ struct AndroidTVRecovery {
         try save(journal, to: file)
     }
 
-    func cleanupReview(catalog: [AndroidTVCleanup.Candidate]) async throws -> [AndroidTVCleanup.Candidate] {
+    func cleanupReview(catalog: [AndroidTVCleanup.Candidate]) async throws -> AndroidTVCleanup.Review {
         let home = try await currentHome()
         let installed = try await packages("")
         guard Self.sameHome(home, Self.miqat), !installed.contains(where: { $0.hasPrefix("com.cvte.") }) else {
@@ -122,6 +120,8 @@ struct AndroidTVRecovery {
         }
         let enabled = try await packages("-e")
         guard enabled.contains(AndroidTVPackage.packageID) else { throw Failure.cleanupNotReady }
+        let history = try await cleanupHistory()
+        let disabledEarlier = history.intersection(try await packages("-d")).sorted()
 
         struct App: Decodable { let p: String; let fav: Int }
         struct Key: Decodable { let p: String }
@@ -131,16 +131,55 @@ struct AndroidTVRecovery {
         let favorites = Set(apps.filter { $0.fav >= 0 }.map(\.p))
         let redirects = Set(keys.map(\.p))
         let screensaver = try await setting("screensaver_components") ?? ""
-        return catalog.filter {
-            enabled.contains($0.id) && !favorites.contains($0.id) && !redirects.contains($0.id)
-                && !screensaver.contains($0.id + "/")
+        let extra = history.subtracting(catalog.map(\.id)).sorted().map {
+            AndroidTVCleanup.Candidate(id: $0, kind: "background", suggested: true)
         }
+        let candidates = (catalog + extra).compactMap { app -> AndroidTVCleanup.Candidate? in
+            let name = app.id
+            guard enabled.contains(name), !favorites.contains(name), !redirects.contains(name),
+                  !screensaver.contains(name + "/") else { return nil }
+            return AndroidTVCleanup.Candidate(id: name, kind: app.kind, suggested: history.contains(name) || app.suggested)
+        }
+        return .init(candidates: candidates, disabledEarlier: disabledEarlier)
+    }
+
+    func undoCleanup(_ reviewed: [String]) async throws {
+        let history = try await cleanupHistory()
+        let selected = Set(reviewed)
+        guard !selected.isEmpty, selected.isSubset(of: history) else { throw Failure.cleanupNotReady }
+        let device = try await deviceID()
+        let journalFile = journalURL(device)
+        let journal = try load(journalFile, device: device)
+        try await reenable(selected)
+        if var saved = journal {
+            saved.disabledBySetup = saved.disabledBySetup?.filter { !selected.contains($0) }
+            try save(saved, to: journalFile)
+        }
+        try await forgetCleanup(selected)
+    }
+
+    private func reenable(_ selected: Set<String>) async throws {
+        let disabled = try await packages("-d")
+        for name in selected.sorted() where disabled.contains(name) {
+            _ = try await shell("pm enable --user 0 \(name)")
+            guard try await packages("-e").contains(name) else { throw Failure.unconfirmed }
+        }
+    }
+
+    private func forgetCleanup(_ selected: Set<String>) async throws {
+        guard !selected.isEmpty else { return }
+        let file = Self.cleanupFile
+        let options = selected.sorted().map { "-e " + Self.quote($0) }.joined(separator: " ")
+        let filter = "grep -vxF \(options) \(file) > \"$tmp\"; rc=$?; [ \"$rc\" -le 1 ]"
+        _ = try await shell("[ ! -L \(file) ] && tmp=$(mktemp \(file).XXXXXX) && "
+                            + "{ { \(filter); } && mv \"$tmp\" \(file) || { rm -f \"$tmp\"; false; }; }")
+        guard try await cleanupHistory().isDisjoint(with: selected) else { throw Failure.unconfirmed }
     }
 
     func clean(_ selection: Set<String>, catalog: [AndroidTVCleanup.Candidate]) async throws -> Int {
         guard !selection.isEmpty, selection.count <= 128 else { throw Failure.cleanupNotReady }
         let review = try await cleanupReview(catalog: catalog)
-        let available = Set(review.map(\.id))
+        let available = Set(review.candidates.map(\.id))
         guard selection.isSubset(of: available), selection.allSatisfy(AndroidTVCleanup.safePackage) else {
             throw Failure.cleanupNotReady
         }
@@ -176,9 +215,23 @@ struct AndroidTVRecovery {
             guard result.contains("disabled-user"), try await packages("-d").contains(name) else {
                 throw Failure.unconfirmed
             }
+            let file = Self.cleanupFile
+            let quoted = Self.quote(name)
+            _ = try await shell("[ ! -L \(file) ] && { grep -qxF \(quoted) \(file) 2>/dev/null "
+                                + "|| printf '%s\\n' \(quoted) >> \(file); }")
+            guard try await cleanupHistory().contains(name) else { throw Failure.unconfirmed }
             count += 1
         }
         return count
+    }
+
+    private func cleanupHistory() async throws -> Set<String> {
+        let file = Self.cleanupFile
+        let content = try await shell("[ ! -L \(file) ] && { if [ -e \(file) ]; then [ -f \(file) ] && head -c 32769 \(file); fi; }")
+        guard content.utf8.count <= 32768 else { throw Failure.cleanupNotReady }
+        let entries = Set(content.split(whereSeparator: \.isNewline).map(String.init).filter(AndroidTVCleanup.safePackage))
+        guard entries.count <= 128 else { throw Failure.cleanupNotReady }
+        return entries
     }
 
     private func packages(_ flags: String) async throws -> Set<String> {

@@ -26,6 +26,7 @@ final class AndroidTVSetup: ObservableObject {
     @Published private(set) var optionStatus: [AndroidTVOptions.ID: Bool] = [:]
     @Published private(set) var recoveryBackup: Data?
     @Published private(set) var cleanupCandidates: [AndroidTVCleanup.Candidate]?
+    @Published private(set) var cleanupDisabledEarlier: [String] = []
     @Published var cleanupSelection: Set<String> = []
     @Published private(set) var cleanupResult: Int?
     @Published var personalization: AndroidTVPersonalization.Snapshot?
@@ -169,10 +170,22 @@ final class AndroidTVSetup: ObservableObject {
         guard let client, installed != nil, !busy else { return }
         resetCleanup()
         run("tv_adb_cleanup_loading") {
-            let list = try await Self.recovery(client).cleanupReview(catalog: AndroidTVCleanup.bundled)
+            let review = try await Self.recovery(client).cleanupReview(catalog: AndroidTVCleanup.bundled)
             try Task.checkCancellation()
-            self.cleanupCandidates = list
-            self.cleanupSelection = Set(list.filter(\.suggested).map(\.id))
+            self.cleanupCandidates = review.candidates
+            self.cleanupDisabledEarlier = review.disabledEarlier
+            self.cleanupSelection = Set(review.candidates.filter(\.suggested).map(\.id))
+        }
+    }
+
+    func undoCleanup() {
+        guard let client, !busy, !cleanupDisabledEarlier.isEmpty else { return }
+        let reviewed = cleanupDisabledEarlier
+        run("tv_adb_restoring") {
+            try await Self.recovery(client).undoCleanup(reviewed)
+            try Task.checkCancellation()
+            self.resetCleanup()
+            self.status = "tv_adb_cleanup_restored"
         }
     }
 
@@ -272,6 +285,7 @@ final class AndroidTVSetup: ObservableObject {
 
     private func resetCleanup() {
         cleanupCandidates = nil
+        cleanupDisabledEarlier = []
         cleanupSelection = []
         cleanupResult = nil
     }

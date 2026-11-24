@@ -29,6 +29,7 @@ struct TVPackageView: View {
     @State private var selectedOption: AndroidTVOptions.Step?
     @State private var exportingRecovery = false
     @State private var confirmingCleanup = false
+    @State private var confirmingCleanupUndo = false
 
     init(preferences: PhonePreferences, setup: TVPackagePlatform? = nil, host: String = "", port: Int = 5555,
          wireless: Bool = false, pairingPort: Int? = nil) {
@@ -119,6 +120,7 @@ struct TVPackageView: View {
             confirmingRestore = false
             selectedOption = nil
             confirmingCleanup = false
+            confirmingCleanupUndo = false
             stopSetup()
         }
         .onChange(of: connected) { _, connected in
@@ -244,6 +246,17 @@ struct TVPackageView: View {
             Button(preferences.text("tv_adb_cleanup_scan")) { android.reviewCleanup() }
             if let count = android.cleanupResult {
                 LabeledContent(preferences.text("tv_adb_cleanup_disabled"), value: String(count))
+            }
+            if !android.cleanupDisabledEarlier.isEmpty {
+                DisclosureGroup(preferences.text("tv_adb_cleanup_earlier")) {
+                    ForEach(android.cleanupDisabledEarlier, id: \.self) { name in Text(name) }
+                    Button(preferences.text("tv_adb_cleanup_undo")) { confirmingCleanupUndo = true }
+                        .confirmationDialog(preferences.text("tv_adb_cleanup_undo"), isPresented: $confirmingCleanupUndo,
+                                            titleVisibility: .visible) {
+                            Button(preferences.text("tv_adb_cleanup_undo")) { android.undoCleanup() }
+                            Button(preferences.text("cancel"), role: .cancel) {}
+                        }
+                }
             }
             if let candidates = android.cleanupCandidates {
                 if candidates.isEmpty {
