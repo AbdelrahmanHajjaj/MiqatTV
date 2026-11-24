@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Search for a prayer timezone in the iPhone custom coordinates editor.
+
 - The landing page shows the Miqat Signature look on both devices. Refreshed phone and companion screenshots hide emulator notification icons.
 
 - Added a Miqat iPhone development target with shared Kotlin prayer rules,

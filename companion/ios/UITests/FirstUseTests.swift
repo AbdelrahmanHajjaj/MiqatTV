@@ -9,10 +9,7 @@ final class FirstUseTests: XCTestCase {
             .waitForExistence(timeout: 10))
         tap(app.descendants(matching: .any)["miqat.location.city"].firstMatch)
 
-        let search = app.searchFields.firstMatch
-        if !search.isHittable { app.swipeDown() }
-        tap(search)
-        search.typeText("London")
+        search("London", in: app)
         tap(app.buttons["London"])
         tap(app.buttons["miqat.location.confirm"])
         let continueSetup = app.buttons["Continue"]
@@ -51,6 +48,76 @@ final class FirstUseTests: XCTestCase {
     @MainActor
     func testDenyNotificationsDuringSetup() {
         checkNotificationChoice(allow: false)
+    }
+
+    @MainActor
+    func testCustomCoordinatesAndTimeZone() {
+        let app = launch()
+        tap(app.buttons["Get started"])
+        let custom = app.buttons["Custom coordinates"]
+        let latitude = app.textFields["Latitude"]
+        let longitude = app.textFields["Longitude"]
+        let apply = app.buttons["Apply"]
+        let zonePicker = app.descendants(matching: .any)["miqat.location.timezone"].firstMatch
+
+        tap(custom)
+        XCTAssertTrue(latitude.waitForExistence(timeout: 10))
+        let originalLatitude = latitude.value as? String
+        let originalZoneLabel = zonePicker.label
+        let originalZoneValue = zonePicker.value as? String
+        replace(latitude, with: "30.0501")
+        tap(zonePicker)
+        search("Africa/Cairo", in: app)
+        tap(app.buttons["Africa/Cairo"])
+        tap(app.buttons["Cancel"])
+
+        tap(custom)
+        XCTAssertTrue(latitude.waitForExistence(timeout: 10))
+        XCTAssertEqual(latitude.value as? String, originalLatitude)
+        XCTAssertEqual(zonePicker.label, originalZoneLabel)
+        XCTAssertEqual(zonePicker.value as? String, originalZoneValue)
+
+        replace(latitude, with: "999")
+        XCTAssertFalse(apply.isEnabled)
+        replace(latitude, with: "30.0501")
+        replace(longitude, with: "31.2401")
+        XCTAssertTrue(apply.isEnabled)
+        tap(zonePicker)
+        search("Africa/Cairo", in: app)
+        tap(app.buttons["Africa/Cairo"])
+        tap(apply)
+        XCTAssertTrue(app.staticTexts["Africa/Cairo"].waitForExistence(timeout: 10))
+        tap(app.buttons["miqat.location.confirm"])
+        XCTAssertTrue(app.buttons["Continue"].isEnabled)
+        tap(app.buttons["Skip"])
+
+        app.terminate()
+        app.launch()
+        tap(app.buttons["Finish setting up Miqat"])
+        XCTAssertTrue(app.staticTexts["Africa/Cairo"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Continue"].isEnabled)
+        tap(custom)
+        XCTAssertTrue(latitude.waitForExistence(timeout: 10))
+        XCTAssertEqual(latitude.value as? String, "30.0501")
+        XCTAssertEqual(longitude.value as? String, "31.2401")
+    }
+
+    @MainActor
+    private func search(_ text: String, in app: XCUIApplication) {
+        let field = app.searchFields.firstMatch
+        if !field.isHittable { app.swipeDown() }
+        tap(field)
+        field.typeText(text)
+    }
+
+    @MainActor
+    private func replace(_ field: XCUIElement, with text: String) {
+        tap(field)
+        guard let old = field.value as? String else {
+            XCTFail("Missing coordinate field value")
+            return
+        }
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count) + text)
     }
 
     @MainActor

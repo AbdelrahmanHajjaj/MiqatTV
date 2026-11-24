@@ -303,10 +303,13 @@ struct AdvancedLocation: View {
         Form {
             TextField(preferences.text("phone_latitude"), text: $latitude).keyboardType(.numbersAndPunctuation)
             TextField(preferences.text("phone_longitude"), text: $longitude).keyboardType(.numbersAndPunctuation)
-            Picker(preferences.text("phone_zone"), selection: $zone) {
-                Text(preferences.text("phone_system")).tag("")
-                ForEach(TimeZone.knownTimeZoneIdentifiers, id: \.self) { Text($0).tag($0) }
+            NavigationLink {
+                PrayerTimeZonePicker(preferences: preferences, zone: $zone)
+            } label: {
+                LabeledContent(preferences.text("phone_zone"),
+                               value: zone.isEmpty ? preferences.text("phone_system") : zone)
             }
+            .accessibilityIdentifier("miqat.location.timezone")
         }
         .navigationTitle(preferences.text("phone_custom_location"))
         .toolbar {
@@ -335,5 +338,37 @@ struct AdvancedLocation: View {
             longitude = String(preferences.coordinates.longitude)
             zone = preferences.zoneID
         }
+    }
+}
+
+private struct PrayerTimeZonePicker: View {
+    @Environment(\.dismiss) private var dismiss
+    let preferences: PhonePreferences
+    @Binding var zone: String
+    @State private var query = ""
+
+    var body: some View {
+        let zones = ([""] + TimeZone.knownTimeZoneIdentifiers).filter {
+            query.isEmpty || label($0).localizedStandardContains(query)
+        }
+        List(zones, id: \.self) { id in
+            Button {
+                zone = id
+                dismiss()
+            } label: {
+                HStack {
+                    Text(label(id))
+                    Spacer()
+                    if id == zone { Image(systemName: "checkmark").accessibilityHidden(true) }
+                }
+            }
+            .accessibilityAddTraits(id == zone ? .isSelected : [])
+        }
+        .navigationTitle(preferences.text("phone_zone"))
+        .searchable(text: $query, prompt: preferences.text("phone_search"))
+    }
+
+    private func label(_ id: String) -> String {
+        id.isEmpty ? preferences.text("phone_system") : id
     }
 }

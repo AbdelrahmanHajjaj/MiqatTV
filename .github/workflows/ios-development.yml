@@ -210,8 +210,8 @@ jobs:
             sim_test build-for-testing
             xcrun simctl privacy "$device" revoke location "$bundle"
             sim_test -only-testing:MiqatUITests/FirstUseTests/testManualCityWithLocationDenied test-without-building
-            # Neither notification choice may inherit a prior app install or permission.
-            for scenario in testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup; do
+            # Each case starts with a fresh app install and permissions.
+            for scenario in testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup testCustomCoordinatesAndTimeZone; do
               xcrun simctl shutdown "$device"
               xcrun simctl erase "$device"
               boot_and_install
