@@ -159,9 +159,12 @@ struct TVSetupDiscoveryView: View {
                 }
             }
             ForEach(discovery.ports) { port in
-                if port.id.type == .classic, let host = port.privateIPv4 {
+                if let host = port.privateIPv4 {
                     NavigationLink {
-                        TVPackageView(preferences: preferences, setup: .android, host: host, port: port.number)
+                        TVPackageView(preferences: preferences, setup: .android, host: host,
+                                      port: port.id.type == .pairing ? otherPort(for: host, type: .wireless) ?? 0 : port.number,
+                                      wireless: port.id.type != .classic, pairingPort: port.id.type == .pairing
+                                      ? port.number : otherPort(for: host, type: .pairing))
                     } label: { entry(port) }
                 } else {
                     entry(port).textSelection(.enabled)
@@ -173,6 +176,11 @@ struct TVSetupDiscoveryView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { discovery.reset() }
         }
+    }
+
+    private func otherPort(for host: String, type: TVSetupDiscovery.Service) -> Int? {
+        let matches = discovery.ports.filter { $0.privateIPv4 == host && $0.id.type == type }
+        return matches.count == 1 ? matches.first?.number : nil
     }
 
     private func entry(_ port: TVSetupDiscovery.Port) -> some View {

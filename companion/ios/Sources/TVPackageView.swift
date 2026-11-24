@@ -30,10 +30,12 @@ struct TVPackageView: View {
     @State private var exportingRecovery = false
     @State private var confirmingCleanup = false
 
-    init(preferences: PhonePreferences, setup: TVPackagePlatform? = nil, host: String = "", port: Int = 5555) {
+    init(preferences: PhonePreferences, setup: TVPackagePlatform? = nil, host: String = "", port: Int = 5555,
+         wireless: Bool = false, pairingPort: Int? = nil) {
         self.preferences = preferences
         self.setup = setup
-        _android = StateObject(wrappedValue: AndroidTVSetup(address: host, port: port))
+        _android = StateObject(wrappedValue: AndroidTVSetup(address: host, port: port, wireless: wireless,
+                                                           pairingPort: pairingPort))
         _platform = State(initialValue: setup ?? .android)
     }
 
@@ -152,20 +154,38 @@ struct TVPackageView: View {
 
     private var androidConnection: some View {
         Section {
-            DisclosureGroup(preferences.text("tv_adb_enable")) {
-                Text(preferences.text("tv_adb_steps"))
-            }
             if !android.connected {
+                Picker(preferences.text("tv_adb_connection_type"), selection: $android.wireless) {
+                    Text(preferences.text("tv_find_classic")).tag(false)
+                    Text(preferences.text("tv_find_wireless")).tag(true)
+                }
+                .disabled(android.busy || android.wirelessApproval != nil)
+                .onChange(of: android.wireless) { _, _ in android.pairingCode = "" }
+                DisclosureGroup(preferences.text("tv_adb_enable")) {
+                    Text(preferences.text(android.wireless ? "tv_adb_wireless_steps" : "tv_adb_steps"))
+                }
                 TextField(preferences.text("lg_address"), text: $android.address)
                     .keyboardType(.numbersAndPunctuation)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .environment(\.layoutDirection, .leftToRight)
-                    .disabled(android.busy)
-                TextField(preferences.text("tv_adb_port"), text: $android.port)
+                    .disabled(android.busy || android.wirelessApproval != nil)
+                    .onChange(of: android.address) { _, _ in android.pairingCode = "" }
+                TextField(preferences.text(android.wireless ? "tv_adb_wireless_port" : "tv_adb_port"),
+                          text: android.wireless ? $android.wirelessPort : $android.port)
                     .keyboardType(.numberPad)
                     .environment(\.layoutDirection, .leftToRight)
-                    .disabled(android.busy)
+                    .disabled(android.busy || android.wirelessApproval != nil)
+                if android.wireless && !android.paired {
+                    TextField(preferences.text("tv_adb_pairing_port"), text: $android.pairingPort)
+                        .keyboardType(.numberPad)
+                        .environment(\.layoutDirection, .leftToRight)
+                        .disabled(android.busy)
+                    SecureField(preferences.text("tv_adb_pairing_code"), text: $android.pairingCode)
+                        .keyboardType(.numberPad)
+                        .environment(\.layoutDirection, .leftToRight)
+                        .disabled(android.busy)
+                }
             }
             if let stage = android.stage {
                 if let value = android.fraction { ProgressView(preferences.text(stage), value: value) }
@@ -199,6 +219,9 @@ struct TVPackageView: View {
                 Button(preferences.text("tv_adb_export")) { android.prepareRecoveryBackup() }
                     .disabled(task != nil)
                 Button(preferences.text("lg_disconnect")) { stopSetup() }
+            } else if android.wireless && !android.paired {
+                Button(preferences.text("tv_adb_pair_wireless")) { android.pair() }
+                    .disabled(task != nil || importing || android.pairingCode.isEmpty)
             } else {
                 Button(preferences.text("lg_connect")) { android.connect() }.disabled(task != nil || importing)
             }
@@ -206,6 +229,13 @@ struct TVPackageView: View {
             if ["lg_installed", "lg_launched", "tv_adb_configured", "tv_adb_personal_saved"].contains(android.status ?? "") {
                 NavigationLink(preferences.text("tv_already")) { TVPairing(preferences: preferences) }
             }
+        }
+        .alert(item: $android.wirelessApproval) { candidate in
+            Alert(title: Text(preferences.text("tv_adb_wireless_approve")),
+                  message: Text(preferences.text("tv_adb_wireless_approve_info") + "\n\n"
+                                + candidate.endpoint + "\n" + candidate.fingerprint),
+                  primaryButton: .default(Text(preferences.text("lg_connect"))) { android.approveWireless(candidate) },
+                  secondaryButton: .cancel(Text(preferences.text("cancel"))))
         }
     }
 

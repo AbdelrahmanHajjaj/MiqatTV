@@ -7,7 +7,8 @@ actor AndroidADB {
         case address, timeout, incomplete, invalidPacket, authorization, wirelessRequired, refused, busy
     }
 
-    private let connection: NWConnection
+    private let connection: NWConnection?
+    private let wireless: AndroidADBSocket?
     private var version = InstallerAdb.shared.legacyVersion
     private var payloadLimit: Int32 = 4096
     private var authorized = false
@@ -16,11 +17,18 @@ actor AndroidADB {
     private static let queue = DispatchQueue(label: "tv.miqat.ios.android-adb")
 
     private init(host: String, port: NWEndpoint.Port) {
-        connection = NWConnection(host: NWEndpoint.Host(host), port: port, using: .tcp)
+        let connection = NWConnection(host: NWEndpoint.Host(host), port: port, using: .tcp)
+        self.connection = connection
+        wireless = nil
         connection.start(queue: Self.queue)
     }
 
-    deinit { connection.cancel() }
+    private init(wireless: AndroidADBSocket) {
+        self.wireless = wireless
+        connection = nil
+    }
+
+    deinit { connection?.cancel(); wireless?.cancel() }
 
     static func open(host: String, port: Int,
                      approvalRequested: @Sendable @escaping () async -> Void) async throws -> AndroidADB {
@@ -36,9 +44,28 @@ actor AndroidADB {
         }
     }
 
+    static func openWireless(host: String, port: Int) async throws -> (client: AndroidADB, digest: Data) {
+        guard TVEndpoint.isPrivateIPv4(host), let port = UInt16(exactly: port), port > 0 else {
+            throw Failure.address
+        }
+        let socket = AndroidADBSocket()
+        let client = AndroidADB(wireless: socket)
+        do {
+            let digest = try await timed(.seconds(30)) {
+                try await socket.perform { try socket.connect(host: host, port: port, deadline: .now() + .seconds(30)) }
+                return try await client.upgrade(socket)
+            }
+            return (client, digest)
+        } catch {
+            await client.close()
+            throw error
+        }
+    }
+
     func close() {
         authorized = false
-        connection.cancel()
+        connection?.cancel()
+        wireless?.cancel()
     }
 
     func exchange(_ destination: String, input: URL? = nil,
@@ -72,9 +99,7 @@ actor AndroidADB {
                                version: version)
                 await approvalRequested()
             case .connected:
-                version = handshake.version
-                payloadLimit = handshake.payloadLimit
-                authorized = true
+                accept(handshake)
                 return
             case .wirelessRequired:
                 throw Failure.wirelessRequired
@@ -82,6 +107,28 @@ actor AndroidADB {
                 throw Failure.authorization
             }
         }
+    }
+
+    private func upgrade(_ socket: AndroidADBSocket) async throws -> Data {
+        let handshake = ClassicAdbHandshake()
+        try await send(handshake.hello(), version: version)
+        let request = try await receive(handshake: true)
+        guard handshake.receive(packet: request) == .wirelessRequired else { throw Failure.authorization }
+        try await send(request, version: version)
+        let digest = try await socket.perform {
+            try socket.startTLS(identity: AndroidADBIdentity.load(), deadline: .now() + .seconds(30))
+            return try socket.peerDigest()
+        }
+        let banner = try await receive(handshake: true)
+        guard handshake.receiveOverTls(packet: banner) == .connected else { throw Failure.authorization }
+        accept(handshake)
+        return digest
+    }
+
+    private func accept(_ handshake: ClassicAdbHandshake) {
+        version = handshake.version
+        payloadLimit = handshake.payloadLimit
+        authorized = true
     }
 
     private func exchangeStream(_ destination: String, input: URL?,
@@ -170,7 +217,10 @@ actor AndroidADB {
             throw Failure.invalidPacket
         }
         let message = Data(adbBytes: header) + Data(adbBytes: packet.payload)
-        let connection = self.connection
+        if let wireless {
+            return try await wireless.perform { try wireless.write(message, deadline: .now() + .seconds(30)) }
+        }
+        guard let connection else { throw Failure.incomplete }
         try await withTaskCancellationHandler {
             try Task.checkCancellation()
             try await withCheckedThrowingContinuation { (reply: CheckedContinuation<Void, Error>) in
@@ -184,7 +234,10 @@ actor AndroidADB {
 
     private func read(_ length: Int) async throws -> Data {
         if length == 0 { return Data() }
-        let connection = self.connection
+        if let wireless {
+            return try await wireless.perform { try wireless.read(length, deadline: .now() + .seconds(30)) }
+        }
+        guard let connection else { throw Failure.incomplete }
         return try await withTaskCancellationHandler {
             try Task.checkCancellation()
             return try await withCheckedThrowingContinuation { reply in

@@ -5,8 +5,6 @@ import MiqatKit
 struct AndroidADBPairing {
     enum Failure: Error { case address, code, timeout, connection, identity, malformed, authentication }
 
-    private static let queue = DispatchQueue(label: "tv.miqat.ios.adb-pairing")
-
     static func pair(host: String, port: Int, code: String) async throws -> String {
         guard TVEndpoint.isPrivateIPv4(host), let port = UInt16(exactly: port), port > 0 else {
             throw Failure.address
@@ -15,21 +13,11 @@ struct AndroidADBPairing {
         guard wire.password(code: code, exporter: KotlinByteArray(size: wire.exporterSize)) != nil else {
             throw Failure.code
         }
-        let socket = AndroidADBPairingSocket()
-        return try await withTaskCancellationHandler {
-            try Task.checkCancellation()
-            let guid: String = try await withCheckedThrowingContinuation { continuation in
-                queue.async {
-                    do { continuation.resume(returning: try execute(host: host, port: port, code: code, socket: socket)) }
-                    catch { continuation.resume(throwing: error) }
-                }
-            }
-            try Task.checkCancellation()
-            return guid
-        } onCancel: { socket.cancel() }
+        let socket = AndroidADBSocket()
+        return try await socket.perform { try execute(host: host, port: port, code: code, socket: socket) }
     }
 
-    private static func execute(host: String, port: UInt16, code: String, socket: AndroidADBPairingSocket) throws -> String {
+    private static func execute(host: String, port: UInt16, code: String, socket: AndroidADBSocket) throws -> String {
         let deadline = DispatchTime.now() + .seconds(30)
         let identity = try AndroidADBIdentity.load()
         try socket.connect(host: host, port: port, deadline: deadline)
@@ -80,13 +68,13 @@ struct AndroidADBPairing {
         return guid
     }
 
-    private static func send(_ data: Data, frame: AdbPairingFrame, on socket: AndroidADBPairingSocket,
+    private static func send(_ data: Data, frame: AdbPairingFrame, on socket: AndroidADBSocket,
                              deadline: DispatchTime) throws {
         guard data.count == Int(frame.payloadSize) else { throw Failure.malformed }
         try socket.write(Data(adbBytes: AdbPairingWire.shared.header(frame: frame)) + data, deadline: deadline)
     }
 
-    private static func receive(_ frame: AdbPairingFrame, on socket: AndroidADBPairingSocket,
+    private static func receive(_ frame: AdbPairingFrame, on socket: AndroidADBSocket,
                                 deadline: DispatchTime) throws -> Data {
         let wire = AdbPairingWire.shared
         let header = try socket.read(Int(wire.headerSize), deadline: deadline)
@@ -96,8 +84,9 @@ struct AndroidADBPairing {
 }
 
 // All SSL operations run serially. Cancellation only shuts down the socket.
-private final class AndroidADBPairingSocket: @unchecked Sendable {
+final class AndroidADBSocket: @unchecked Sendable {
     private typealias Failure = AndroidADBPairing.Failure
+    private let queue = DispatchQueue(label: "tv.miqat.ios.adb-socket")
     private let lock = NSLock()
     private var fd: Int32 = -1
     private var stopped = false
@@ -106,6 +95,17 @@ private final class AndroidADBPairingSocket: @unchecked Sendable {
     deinit {
         if let tls { miqat_adb_tls_free(tls) }
         if fd >= 0 { _ = Darwin.close(fd) }
+    }
+
+    func perform<Value: Sendable>(_ operation: @escaping @Sendable () throws -> Value) async throws -> Value {
+        try await withTaskCancellationHandler {
+            try Task.checkCancellation()
+            let value: Value = try await withCheckedThrowingContinuation { continuation in
+                queue.async { continuation.resume(with: Result(catching: operation)) }
+            }
+            try Task.checkCancellation()
+            return value
+        } onCancel: { self.cancel() }
     }
 
     func cancel() {
@@ -169,13 +169,25 @@ private final class AndroidADBPairingSocket: @unchecked Sendable {
         return material
     }
 
+    func peerDigest() throws -> Data {
+        var digest = [UInt8](repeating: 0, count: 32)
+        guard miqat_adb_tls_peer_digest(tls, &digest) == 1 else { throw Failure.identity }
+        return Data(digest)
+    }
+
     func read(_ count: Int, deadline: DispatchTime) throws -> Data {
+        if count == 0 { return Data() }
         var data = Data(count: count)
         try data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
             guard let first = bytes.bindMemory(to: UInt8.self).baseAddress else { throw Failure.malformed }
             var offset = 0
             while offset < count {
-                let read = try advance(until: deadline) { miqat_adb_tls_read(tls, first + offset, Int32(count - offset)) }
+                let read: Int32
+                if let tls {
+                    read = try advance(until: deadline) { miqat_adb_tls_read(tls, first + offset, Int32(count - offset)) }
+                } else {
+                    read = try raw(events: POLLIN, until: deadline) { recv(fd, first + offset, count - offset, 0) }
+                }
                 offset += Int(read)
             }
         }
@@ -183,13 +195,32 @@ private final class AndroidADBPairingSocket: @unchecked Sendable {
     }
 
     func write(_ data: Data, deadline: DispatchTime) throws {
+        if data.isEmpty { return }
         try data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
             guard let first = bytes.bindMemory(to: UInt8.self).baseAddress else { throw Failure.malformed }
             var offset = 0
             while offset < bytes.count {
-                let written = try advance(until: deadline) { miqat_adb_tls_write(tls, first + offset, Int32(bytes.count - offset)) }
+                let written: Int32
+                if let tls {
+                    written = try advance(until: deadline) {
+                        miqat_adb_tls_write(tls, first + offset, Int32(bytes.count - offset))
+                    }
+                } else {
+                    written = try raw(events: POLLOUT, until: deadline) { Darwin.send(fd, first + offset, bytes.count - offset, 0) }
+                }
                 offset += Int(written)
             }
+        }
+    }
+
+    private func raw(events: Int32, until deadline: DispatchTime, _ operation: () -> Int) throws -> Int32 {
+        while true {
+            try check(deadline)
+            let count = operation()
+            if count > 0 { return Int32(count) }
+            if count < 0 && errno == EINTR { continue }
+            guard count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK) else { throw Failure.connection }
+            try wait(for: events, until: deadline)
         }
     }
 

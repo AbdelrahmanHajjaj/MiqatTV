@@ -3,8 +3,21 @@ import SwiftUI
 
 @MainActor
 final class AndroidTVSetup: ObservableObject {
+    struct WirelessApproval: Identifiable {
+        let id = UUID()
+        let endpoint: String
+        let fingerprint: String
+        fileprivate let client: AndroidADB
+    }
+
     @Published var address: String
     @Published var port: String
+    @Published var wireless: Bool
+    @Published var wirelessPort: String
+    @Published var pairingPort: String
+    @Published var pairingCode = ""
+    @Published var wirelessApproval: WirelessApproval?
+    @Published private var pairedHost: String?
     @Published private(set) var connected = false
     @Published private(set) var installed: UInt64?
     @Published private(set) var status: String?
@@ -17,34 +30,99 @@ final class AndroidTVSetup: ObservableObject {
     @Published private(set) var cleanupResult: Int?
     @Published var personalization: AndroidTVPersonalization.Snapshot?
     private var client: AndroidADB?
+    private var pairedGUID: String?
     private var task: Task<Void, Never>?
 
     var busy: Bool { stage != nil }
+    var paired: Bool { pairedHost == host }
+    private var host: String { address.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-    init(address: String = "", port: Int = 5555) {
+    init(address: String = "", port: Int = 5555, wireless: Bool = false, pairingPort: Int? = nil) {
         self.address = address
-        self.port = String(port)
+        self.port = wireless ? "5555" : String(port)
+        self.wireless = wireless
+        wirelessPort = wireless && port > 0 ? String(port) : ""
+        self.pairingPort = pairingPort.map { String($0) } ?? ""
+    }
+
+    func pair() {
+        guard wireless, !connected, !busy, wirelessApproval == nil else { return }
+        let host = self.host
+        guard TVEndpoint.isPrivateIPv4(host), let port = Int(pairingPort), (1...65535).contains(port) else {
+            status = "tv_adb_invalid_address"
+            return
+        }
+        let code = pairingCode
+        pairingCode = ""
+        pairedHost = nil
+        pairedGUID = nil
+        run("tv_adb_pairing") {
+            do {
+                let guid = try await AndroidADBPairing.pair(host: host, port: port, code: code)
+                try Task.checkCancellation()
+                self.pairedGUID = guid
+                self.pairedHost = host
+                self.status = "tv_adb_paired"
+            } catch {
+                if !Task.isCancelled { self.status = "tv_adb_pairing_failed" }
+            }
+        }
     }
 
     func connect() {
-        guard !connected, !busy else { return }
-        let host = address.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard TVEndpoint.isPrivateIPv4(host), let number = Int(port), (1...65535).contains(number) else {
+        guard !connected, !busy, wirelessApproval == nil else { return }
+        let host = self.host
+        let wireless = self.wireless
+        let guid = pairedGUID
+        guard !wireless || (paired && guid != nil) else {
+            status = "tv_adb_wireless_required"
+            return
+        }
+        guard TVEndpoint.isPrivateIPv4(host), let number = Int(wireless ? wirelessPort : port),
+              (1...65535).contains(number), !wireless || number != Int(pairingPort) else {
             status = "tv_adb_invalid_address"
             return
         }
         run("tv_adb_connecting") {
-            let opened = try await AndroidADB.open(host: host, port: number) { await self.requestApproval() }
-            do {
-                let version = try await Self.installer(opened).installedVersion()
-                try Task.checkCancellation()
-                self.client = opened
-                self.installed = version
-                self.connected = true
-            } catch {
-                await opened.close()
-                throw error
+            if wireless, let guid {
+                let candidate = try await AndroidADB.openWireless(host: host, port: number)
+                do {
+                    let found = try await Self.installer(candidate.client).shell("getprop persist.adb.wifi.guid")
+                    guard found == guid else { throw AndroidADB.Failure.authorization }
+                    try Task.checkCancellation()
+                    self.wirelessApproval = WirelessApproval(
+                        endpoint: "\(host):\(number)",
+                        fingerprint: candidate.digest.map { String(format: "%02X", $0) }.joined(separator: ":"),
+                        client: candidate.client
+                    )
+                } catch {
+                    await candidate.client.close()
+                    throw error
+                }
+            } else {
+                let opened = try await AndroidADB.open(host: host, port: number) { await self.requestApproval() }
+                try await self.finishConnect(opened)
             }
+        }
+    }
+
+    func approveWireless(_ candidate: WirelessApproval) {
+        guard !connected, !busy, wireless, paired,
+              candidate.endpoint == "\(host):\(Int(wirelessPort) ?? 0)" else { return }
+        wirelessApproval = nil
+        run("tv_adb_connecting") { try await self.finishConnect(candidate.client) }
+    }
+
+    private func finishConnect(_ opened: AndroidADB) async throws {
+        do {
+            let version = try await Self.installer(opened).installedVersion()
+            try Task.checkCancellation()
+            client = opened
+            installed = version
+            connected = true
+        } catch {
+            await opened.close()
+            throw error
         }
     }
 
@@ -157,6 +235,7 @@ final class AndroidTVSetup: ObservableObject {
         task?.cancel()
         task = nil
         resetConnection()
+        pairingCode = ""
         stage = nil
         fraction = nil
         status = "lg_reconnect"
@@ -180,6 +259,8 @@ final class AndroidTVSetup: ObservableObject {
 
     private func resetConnection() {
         if let client { Task { await client.close() } }
+        if let candidate = wirelessApproval { Task { await candidate.client.close() } }
+        wirelessApproval = nil
         client = nil
         connected = false
         installed = nil

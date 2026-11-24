@@ -13,6 +13,7 @@
 - The iPhone development target can inspect and share local Miqat Android TV APKs and LG webOS IPKs.
 - The iPhone development target can find advertised Android TV debugging and pairing ports.
 - The iPhone development target adds Android TV APK installation through classic network debugging.
+- The iPhone development target adds six-digit Android TV Wireless debugging setup.
 - The iPhone development target can configure Android TV Home and remote buttons and restore its saved changes.
 - The iPhone development target offers the optional Android TV radio, startup and Wi-Fi name controls.
 - iPhone Android TV setup backups can be saved to Files and restored with the desktop tool.

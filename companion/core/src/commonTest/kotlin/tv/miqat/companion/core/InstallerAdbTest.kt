@@ -82,6 +82,21 @@ class InstallerAdbTest {
         assertEquals(AdbHandshakeAction.REJECT, wireless.receive(challenge()))
     }
 
+    @Test
+    fun wirelessAcceptsConnectOnlyAfterStartTls() {
+        val upgrade = AdbPacket(AdbCommand.START_TLS, InstallerAdb.legacyVersion, 0, byteArrayOf())
+        val connected = peer(InstallerAdb.currentVersion, 8192)
+        val wireless = ClassicAdbHandshake()
+        assertEquals(AdbHandshakeAction.WIRELESS_REQUIRED, wireless.receive(upgrade))
+        assertEquals(AdbHandshakeAction.CONNECTED, wireless.receiveOverTls(connected))
+        assertEquals(8192, wireless.payloadLimit)
+        val plaintext = ClassicAdbHandshake()
+        assertEquals(AdbHandshakeAction.WIRELESS_REQUIRED, plaintext.receive(upgrade))
+        assertEquals(AdbHandshakeAction.REJECT, plaintext.receive(connected))
+        assertEquals(AdbHandshakeAction.REJECT, plaintext.receiveOverTls(connected))
+        assertEquals(AdbHandshakeAction.REJECT, ClassicAdbHandshake().receiveOverTls(connected))
+    }
+
 
     @Test
     fun newPeerCanOmitHandshakeChecksumAndLegacyPeerCannotOmitBannerChecksum() {

@@ -2416,3 +2416,12 @@ verification, the ADB exporter, peer digest and encrypted peer exchange.
 The transport library and upstream notice installed to a scratch build
 directory. Swift syntax checks passed. The Apple adapter and the distinct
 wireless debugging STLS connection remain unverified. No TV was contacted.
+
+The Android TV setup screen now exposes code pairing and the separate wireless
+debugging port. Discovered endpoints can fill either field. The installer
+requires a TLS upgrade, checks the TV GUID from pairing and asks the user to
+confirm the debugging endpoint before showing installation actions. Windows
+passed 37 companion JVM tests, including rejection of plaintext CONNECT after
+STLS, two native crypto fixtures, 14 canonical generator checks and resource
+staging. Five touched Swift files parsed. Xcode compilation, Local Network
+permission, TV GUID readback and APK installation on a TV remain pending.

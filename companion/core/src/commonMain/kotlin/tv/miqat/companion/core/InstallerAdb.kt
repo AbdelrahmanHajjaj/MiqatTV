@@ -82,7 +82,7 @@ object InstallerAdb {
 enum class AdbHandshakeAction { SIGN, OFFER_KEY, CONNECTED, WIRELESS_REQUIRED, REJECT }
 
 class ClassicAdbHandshake {
-    private enum class Phase { HELLO, SIGNED, OFFERED, FINISHED }
+    private enum class Phase { HELLO, SIGNED, OFFERED, UPGRADING, FINISHED }
 
     private var phase = Phase.HELLO
     var version = InstallerAdb.legacyVersion
@@ -96,7 +96,7 @@ class ClassicAdbHandshake {
     )
 
     fun receive(packet: AdbPacket): AdbHandshakeAction {
-        if (phase == Phase.FINISHED) return AdbHandshakeAction.REJECT
+        if (phase == Phase.FINISHED || phase == Phase.UPGRADING) return finish(null)
         when (packet.command) {
             AdbCommand.AUTH -> {
                 if (packet.first == 1 && packet.second == 0 && packet.payload.size == 20) {
@@ -113,27 +113,32 @@ class ClassicAdbHandshake {
                     }
                 }
             }
-            AdbCommand.CONNECT -> {
-                val banner = packet.payload.decodeToString()
-                if (phase != Phase.HELLO && packet.first >= InstallerAdb.legacyVersion && packet.second >= 4096 &&
-                    packet.payload.size in 9..4096 && banner.startsWith("device:") && banner.indexOf(':', 7) >= 7
-                ) {
-                    phase = Phase.FINISHED
-                    version = minOf(packet.first, InstallerAdb.currentVersion)
-                    payloadLimit = minOf(packet.second, InstallerAdb.maximumPayload)
-                    return AdbHandshakeAction.CONNECTED
-                }
-            }
+            AdbCommand.CONNECT -> return finish(packet.takeIf { phase != Phase.HELLO })
             AdbCommand.START_TLS -> {
-                if (packet.first == InstallerAdb.legacyVersion && packet.second == 0 && packet.payload.isEmpty()) {
-                    phase = Phase.FINISHED
+                if (phase == Phase.HELLO && packet.first == InstallerAdb.legacyVersion &&
+                    packet.second == 0 && packet.payload.isEmpty()
+                ) {
+                    phase = Phase.UPGRADING
                     return AdbHandshakeAction.WIRELESS_REQUIRED
                 }
             }
             else -> Unit
         }
+        return finish(null)
+    }
+
+    fun receiveOverTls(packet: AdbPacket): AdbHandshakeAction = finish(packet.takeIf { phase == Phase.UPGRADING })
+
+    private fun finish(packet: AdbPacket?): AdbHandshakeAction {
         phase = Phase.FINISHED
-        return AdbHandshakeAction.REJECT
+        if (packet == null || packet.command != AdbCommand.CONNECT || packet.first < InstallerAdb.legacyVersion ||
+            packet.second < 4096 || packet.payload.size !in 9..4096
+        ) return AdbHandshakeAction.REJECT
+        val banner = packet.payload.decodeToString()
+        if (!banner.startsWith("device:") || banner.indexOf(':', 7) < 7) return AdbHandshakeAction.REJECT
+        version = minOf(packet.first, InstallerAdb.currentVersion)
+        payloadLimit = minOf(packet.second, InstallerAdb.maximumPayload)
+        return AdbHandshakeAction.CONNECTED
     }
 }
 
