@@ -2235,3 +2235,13 @@ offline astronomy adapter checks passed on Windows. The astronomy fixture
 matches the Android Cairo vector and verifies one application of offsets for
 every method and explicit polar unavailability. Apple linking, simulator UI
 and device behavior are still open in [IOS-WORK.md](IOS-WORK.md).
+
+A follow-up comparison compiled Android's pinned Java astronomy and evaluated
+570 equivalent schedules from the iOS Adhan adapter. Cairo, New York, London,
+Tokyo and São Paulo covered all 19 methods, both Asr schools and all three
+high-latitude options. All six prayer times matched at the minute in every
+case. The Android civil-zone/DST fixture and shared compact QR vectors passed.
+Host-side staging verified all 13 approved recordings against shared hashes.
+All Swift app/widget sources parsed in the host syntax check. The Xcode project
+references, scheme XML, Info plists and App Group entitlement parsed as well.
+These checks did not compile SwiftUI, link the Apple framework or launch the app.

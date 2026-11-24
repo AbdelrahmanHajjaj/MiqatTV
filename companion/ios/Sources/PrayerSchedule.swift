@@ -1,8 +1,10 @@
 import Foundation
 import JavaScriptCore
 import MiqatKit
+import WidgetKit
 
 final class PrayerSchedule {
+    static let shared = PrayerSchedule()
     private let js = JSContext()!
     private var lastDay: Date?
     private var lastLocation: PhonePreferences?
@@ -67,6 +69,32 @@ final class PrayerSchedule {
 
     private var displayDay: DisplayDay?
     private var displayPreferences: PhonePreferences?
+
+    func publishWidget(preferences: PhonePreferences) {
+        guard let file = WidgetSnapshot.file else { return }
+        let calendar = Self.civilCalendar(preferences)
+        let today = calendar.startOfDay(for: .now)
+        let days = (-1...8).compactMap { offset -> WidgetSnapshot.Day? in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: today),
+                  let times = day(at: date, prefs: preferences) else { return nil }
+            return .init(start: date, times: times, hijri: preferences.hijriDate(date), gregorian: preferences.gregorianDate(date))
+        }
+        let appearance = PhoneAppearance.catalog.themes[preferences.theme] ?? PhoneAppearance.catalog.themes["mihrab"]
+        let snapshot = WidgetSnapshot(days: days, names: preferences.prayerNames(), arabic: preferences.arabic,
+            eastern: preferences.digits == "eastern" || (preferences.digits == "auto" && preferences.arabic),
+            clock: preferences.clock, timezone: preferences.zone.identifier, colors: appearance?.colors ?? [:])
+        do {
+            let data = try JSONEncoder().encode(snapshot)
+            try data.write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            var localFile = file
+            var attributes = URLResourceValues()
+            attributes.isExcludedFromBackup = true
+            try localFile.setResourceValues(attributes)
+            WidgetCenter.shared.reloadAllTimelines()
+        } catch {
+            // Widget continues using the last complete snapshot.
+        }
+    }
 
     struct DisplayDay {
         let start: Date

@@ -1,3 +1,6 @@
+import AVFoundation
+import CoreLocation
+import MiqatKit
 import SwiftUI
 import UserNotifications
 
@@ -6,22 +9,34 @@ import UserNotifications
 struct MiqatApp: App {
     @UIApplicationDelegateAdaptor(PhoneApplicationDelegate.self) private var delegate
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject private var store = PhoneStore()
-    @StateObject private var notifications = PrayerNotifications()
+    @StateObject private var store = PhoneStore.shared
+    @StateObject private var notifications = PrayerNotifications.shared
+    @StateObject private var library = AdhanLibrary()
+    @StateObject private var adhan = PhoneAdhan()
+    @StateObject private var radio = QuranRadio()
+    @StateObject private var tvs = PairedTVs()
     @State private var tab = "prayer"
     @State private var setup = false
-    @State private var schedule = PrayerSchedule()
+    @State private var showAdhan = false
+    private let schedule = PrayerSchedule.shared
+
+    private var settings: Binding<PhonePreferences> {
+        Binding(get: { store.preferences }, set: store.save)
+    }
 
     var body: some Scene {
         WindowGroup {
             TabView(selection: $tab) {
                 NavigationStack {
-                    PrayerHome(preferences: $store.preferences, schedule: schedule)
+                    PrayerHome(preferences: settings, schedule: schedule)
                 }
                 .tabItem { Label(store.preferences.text("phone_home"), systemImage: "sun.horizon") }
                 .tag("prayer")
+                NavigationStack { YourTVs(preferences: store.preferences) }
+                    .tabItem { Label(store.preferences.text("tvs"), systemImage: "tv") }
+                    .tag("tvs")
                 NavigationStack {
-                    PhoneSettings(preferences: $store.preferences, schedule: schedule, notifications: notifications,
+                    PhoneSettings(preferences: settings, schedule: schedule, notifications: notifications,
                                   startSetup: { setup = true })
                 }
                 .tabItem { Label(store.preferences.text("settings"), systemImage: "gearshape") }
@@ -32,42 +47,115 @@ struct MiqatApp: App {
             .modifier(PhoneDisplayScale(preferences: store.preferences))
             .sheet(isPresented: $setup) {
                 NavigationStack {
-                    PhoneSetup(preferences: $store.preferences, schedule: schedule, notifications: notifications)
+                    PhoneSetup(preferences: settings, schedule: schedule, notifications: notifications)
                 }
                 .interactiveDismissDisabled()
             }
             .onAppear {
                 if !store.preferences.setupStarted { setup = true }
+                delegate.foregroundAdhan = playAdhan
+                adhan.onPlayback = { radio.pause(forAdhan: true) }
             }
-            .onChange(of: store.preferences, initial: true) { _, _ in refreshAlerts() }
+            .fullScreenCover(isPresented: $showAdhan) { AdhanPlayback(preferences: store.preferences) }
+            .onChange(of: adhan.prayer) { _, prayer in
+                if prayer == nil { showAdhan = false }
+                else if store.preferences.adhan.showScreen && !setup { showAdhan = true }
+            }
+            .onChange(of: store.preferences, initial: true) { _, prefs in
+                delegate.travel.update(prefs)
+                refreshAlerts()
+                radio.refreshMetadata(prefs)
+            }
             .onChange(of: notifications.permission) { _, _ in refreshAlerts() }
-            .onChange(of: scenePhase) { _, phase in if phase == .active { refreshAlerts() } }
+            .onOpenURL { url in if url.scheme == "miqat" && url.host == "prayer" { tab = "prayer" } }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    delegate.travel.update(store.preferences)
+                    delegate.travel.refresh(store.preferences)
+                    refreshAlerts()
+                }
+                if phase == .background { adhan.stop(previewOnly: true) }
+            }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
                 refreshAlerts()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)) { event in
+                if (event.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt) == AVAudioSession.InterruptionType.began.rawValue {
+                    adhan.stop()
+                    if radio.wantsPlay { radio.pause() }
+                }
+            }
+            .environmentObject(adhan)
+            .environmentObject(library)
+            .environmentObject(radio)
+            .environmentObject(tvs)
+            .environment(\.requestBackgroundLocation, { delegate.travel.requestBackground() })
+            .alert(store.preferences.text("phone_save_failed"), isPresented: $store.saveFailed) {
+                Button(store.preferences.text("done"), role: .cancel) {}
             }
         }
     }
 
     private func refreshAlerts() {
+        schedule.publishWidget(preferences: store.preferences)
         notifications.refresh(preferences: store.preferences, schedule: schedule)
+    }
+
+    private func playAdhan(_ index: Int) -> Bool {
+        let prefs = store.preferences
+        guard [0, 2, 3, 4, 5].contains(index) else { return false }
+        let settings = prefs.prayerAlerts[index]
+        let selection = prefs.adhan.forPrayer(index, settings: settings)
+        let fallback = index == 0 ? PhoneData.defaultFajrVoice : PhoneData.defaults["reminders.voice"] ?? "almalki"
+        let voice = library.url(selection.voice) != nil ? selection.voice : fallback
+        guard let url = library.url(voice) else { return false }
+        return adhan.play(url: url, name: library.name(voice, preferences: prefs), selection: selection, prayer: index)
     }
 }
 
+@MainActor
 final class PhoneApplicationDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    var foregroundAdhan: ((Int) -> Bool)?
+    let travel = TravelLocation()
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        travel.authorizationChanged = { [weak self] in self?.travel.update(PhoneStore.shared.preferences) }
+        travel.didLocate = { fix in
+            let store = PhoneStore.shared
+            var prefs = store.preferences
+            guard prefs.locationConfirmed, prefs.automaticLocation || prefs.travelRefresh else { return }
+            let point = fix.coordinate
+            let existing = prefs.coordinates
+            if LocationRules.shared.distanceKm(latitude: existing.latitude, longitude: existing.longitude,
+                otherLatitude: point.latitude, otherLongitude: point.longitude) < 5 { return }
+            prefs.cityID = PhoneData.closestCity(latitude: point.latitude, longitude: point.longitude).id
+            prefs.custom = .init(latitude: point.latitude, longitude: point.longitude)
+            prefs.zoneID = ""
+            store.save(prefs)
+            PrayerNotifications.shared.refresh(preferences: store.preferences, schedule: PrayerSchedule.shared)
+            PrayerSchedule.shared.publishWidget(preferences: store.preferences)
+        }
+        travel.update(PhoneStore.shared.preferences)
         return true
     }
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async
         -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound]
+        guard let index = notification.request.content.userInfo["adhanPrayer"] as? Int else {
+            return [.banner, .list, .sound]
+        }
+        let played = await MainActor.run { self.foregroundAdhan?(index) ?? false }
+        return played ? [.banner, .list] : [.banner, .list, .sound]
     }
 }
 
 struct PrayerHome: View {
+    @EnvironmentObject private var audio: PhoneAdhan
+    @EnvironmentObject private var radio: QuranRadio
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
+    @State private var showPlayback = false
+    @State private var showRadio = false
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -147,6 +235,25 @@ struct PrayerHome: View {
                     } else {
                         Text(preferences.text("phone_unavailable")).foregroundStyle(.secondary)
                     }
+                    if audio.prayer != nil {
+                        Button { showPlayback = true } label: {
+                            Label(preferences.text("phone_adhan_controls"), systemImage: "waveform")
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    if radio.hasSession {
+                        Button {
+                            if radio.wantsPlay { radio.pause() }
+                            else if let station = RadioStation.catalog.first(where: { $0.id == preferences.radioStation }) {
+                                audio.stop(previewOnly: true)
+                                radio.play(station: station, preferences: preferences)
+                            }
+                        } label: {
+                            Label(preferences.text(radio.wantsPlay ? "phone_pause" : "phone_resume"),
+                                  systemImage: radio.wantsPlay ? "pause.fill" : "play.fill")
+                        }
+                        .disabled(audio.prayer != nil)
+                    }
                 }
                 .padding()
                 .frame(maxWidth: 640)
@@ -155,6 +262,24 @@ struct PrayerHome: View {
         }
         .navigationTitle(preferences.text("phone_home"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            NavigationLink {
+                QiblaView(preferences: preferences)
+            } label: {
+                Image(systemName: "location.north.line").accessibilityLabel(preferences.text("phone_qibla"))
+            }
+            Button { showRadio = true } label: {
+                Image(systemName: "radio").accessibilityLabel(preferences.text("phone_radio"))
+            }
+        }
+        .sheet(isPresented: $showPlayback) { AdhanPlayback(preferences: preferences) }
+        .sheet(isPresented: $showRadio) {
+            NavigationStack {
+                RadioSettings(preferences: $preferences).toolbar {
+                    Button(preferences.text("done")) { showRadio = false }
+                }
+            }
+        }
     }
 }
 

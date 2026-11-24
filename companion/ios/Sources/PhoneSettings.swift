@@ -1,11 +1,15 @@
 import SwiftUI
 
 struct PhoneSettings: View {
+    @EnvironmentObject private var library: AdhanLibrary
+    @EnvironmentObject private var audio: PhoneAdhan
+    @EnvironmentObject private var radio: QuranRadio
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
     @ObservedObject var notifications: PrayerNotifications
     let startSetup: () -> Void
     @State private var reset = false
+    @State private var resetFailed = false
 
     var body: some View {
         Form {
@@ -47,10 +51,20 @@ struct PhoneSettings: View {
         .navigationTitle(preferences.text("phone_settings"))
         .alert(preferences.text("phone_reset"), isPresented: $reset) {
             Button(preferences.text("phone_reset"), role: .destructive) {
-                notifications.cancelTest()
-                preferences = PhonePreferences()
+                do {
+                    audio.stop()
+                    radio.stop()
+                    try library.reset()
+                    notifications.cancelTest()
+                    preferences = PhonePreferences()
+                } catch { resetFailed = true }
             }
             Button(preferences.text("cancel"), role: .cancel) {}
+        } message: {
+            Text(preferences.text("phone_reset_confirm"))
+        }
+        .alert(preferences.text("phone_save_failed"), isPresented: $resetFailed) {
+            Button(preferences.text("done"), role: .cancel) {}
         }
     }
 }

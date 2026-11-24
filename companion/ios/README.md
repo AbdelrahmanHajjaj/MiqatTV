@@ -23,4 +23,8 @@ iPhone simulator. The Xcode process needs Node and JDK 17 on its PATH. The build
 phase compiles the framework and copies canonical data and license notices into
 the application bundle.
 
+The app and widget targets use the `group.tv.miqat.ios` App Group to share
+an offline prayer timetable. A signed widget check needs both targets in a
+development team with that group enabled. Signing identities stay local.
+
 [Parity queue and validation status](../../docs/IOS-WORK.md).

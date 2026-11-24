@@ -10,6 +10,8 @@ struct PrayerAlert: Codable, Equatable {
     var after = 0
     var days = 127
     var dayModes = Array(repeating: -1, count: 7)
+    var useDefaultAudio = true
+    var audio = AdhanSelection(voice: "inherit")
 
     var valid: Bool {
         (0...4).contains(mode) && (0...60).contains(before) && (0...60).contains(after)
@@ -43,6 +45,7 @@ struct FastingAlerts: Codable, Equatable {
 
 @MainActor
 final class PrayerNotifications: ObservableObject {
+    static let shared = PrayerNotifications()
     @Published private(set) var permission = UNAuthorizationStatus.notDetermined
     @Published private(set) var scheduleFailed = false
     private let center = UNUserNotificationCenter.current()
@@ -75,12 +78,16 @@ final class PrayerNotifications: ObservableObject {
         center.removePendingNotificationRequests(withIdentifiers: [Self.testID])
     }
 
-    func test(preferences: PhonePreferences) async -> Date? {
+    func test(preferences: PhonePreferences, adhan: Bool = false) async -> Date? {
         guard !Task.isCancelled, await authorize(), !Task.isCancelled else { return nil }
         let when = Date.now.addingTimeInterval(30)
         let content = UNMutableNotificationContent()
-        content.title = preferences.text("phone_test_notification")
+        content.title = preferences.text(adhan ? "phone_test_adhan" : "phone_test_notification")
         content.sound = Self.shortSound
+        if adhan {
+            let settings = await center.notificationSettings()
+            if settings.soundSetting == .enabled { content.userInfo["adhanPrayer"] = 2 }
+        }
         do {
             try await center.add(UNNotificationRequest(identifier: Self.testID, content: content,
                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: 30, repeats: false)))
@@ -115,6 +122,9 @@ final class PrayerNotifications: ObservableObject {
             content.title = plan.title
             content.body = plan.body
             content.sound = plan.audible ? Self.shortSound : nil
+            if plan.fullAdhan && permissions.soundSetting == .enabled {
+                content.userInfo["adhanPrayer"] = Int(plan.event.prayer)
+            }
             do {
                 try await center.add(UNNotificationRequest(identifier: Self.schedulePrefix + plan.event.id, content: content,
                     trigger: UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)))
@@ -129,6 +139,7 @@ final class PrayerNotifications: ObservableObject {
         let title: String
         let body: String
         let audible: Bool
+        var fullAdhan = false
     }
 
     private static func plans(_ prefs: PhonePreferences, schedule: PrayerSchedule, now: Date) -> [Plan] {
@@ -161,7 +172,11 @@ final class PrayerNotifications: ObservableObject {
                     guard mode > 0 else { continue }
                     let key = event.kind == "before" ? "phone_advance_title" : event.kind == "after" ? "phone_after_title" : "phone_adhan_title"
                     let title = prefs.text(key).replacingOccurrences(of: "%s", with: prefs.prayerNames()[index])
-                    plans.append(.init(event: event, title: title, body: prefs.time(times[index]), audible: mode == 1 || mode == 2))
+                    let fullAdhan = mode == 2 && event.kind == "call"
+                    let audible = mode == 1 || (mode == 2 && (!fullAdhan
+                        || prefs.adhan.forPrayer(index, settings: alerts[index]).level > 0))
+                    plans.append(.init(event: event, title: title, body: prefs.time(times[index]),
+                                       audible: audible, fullAdhan: fullAdhan && audible))
                 }
             }
             plans.append(contentsOf: fastingPlans(prefs, calendar: calendar, date: date, times: times, weekday: weekday)

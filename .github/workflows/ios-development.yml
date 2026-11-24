@@ -52,3 +52,5 @@ jobs:
           test -f "$app/cities.json"
           test -f "$app/adhan.js"
           test -f "$app/Notices/Adhan.txt"
+          test -f "$app/Adhan/chebae_fajr.mp3"
+          test -f "$app/PlugIns/MiqatPrayerWidget.appex/Info.plist"

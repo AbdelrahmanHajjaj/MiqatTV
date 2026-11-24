@@ -32,6 +32,9 @@ struct AlertSettings: View {
                         PrayerAlertSettings(preferences: $preferences, schedule: schedule, index: index)
                     }
                 }
+                NavigationLink(preferences.text("phone_default_audio_title")) {
+                    AdhanSettings(preferences: $preferences)
+                }
             }
             Section(preferences.text("phone_quiet_title")) {
                 Toggle(preferences.text("phone_quiet_enabled"), isOn: $preferences.quietHours.enabled)
@@ -54,12 +57,11 @@ struct AlertSettings: View {
                             Button(preferences.text("phone_test_cancel")) { cancelTest() }
                         } else {
                             Text(preferences.text("phone_test_sent"))
-                            Button(preferences.text("phone_test_notification")) { startTest() }
+                            testButtons
                         }
                     }
                 } else {
-                    Button(preferences.text("phone_test_notification")) { startTest() }
-                        .disabled(testTask != nil)
+                    testButtons
                 }
                 if testFailed { Text(preferences.text("phone_test_failed")).foregroundStyle(.secondary) }
             }
@@ -70,10 +72,18 @@ struct AlertSettings: View {
         }
     }
 
-    private func startTest() {
+    private var testButtons: some View {
+        Group {
+            Button(preferences.text("phone_test_notification")) { startTest(adhan: false) }
+            Button(preferences.text("phone_test_adhan")) { startTest(adhan: true) }
+        }
+        .disabled(testTask != nil)
+    }
+
+    private func startTest(adhan: Bool) {
         testFailed = false
         testTask = Task {
-            testDate = await notifications.test(preferences: preferences)
+            testDate = await notifications.test(preferences: preferences, adhan: adhan)
             testFailed = !Task.isCancelled && testDate == nil
             testTask = nil
         }
@@ -87,6 +97,7 @@ struct AlertSettings: View {
 }
 
 struct PrayerAlertSettings: View {
+    @EnvironmentObject private var audio: PhoneAdhan
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
     let index: Int
@@ -112,6 +123,13 @@ struct PrayerAlertSettings: View {
                             date: plain?.addingTimeInterval(Double(setting.after.wrappedValue * 60)))
             }
             .disabled(!setting.enabled.wrappedValue)
+            Section(preferences.text("phone_adhan")) {
+                Toggle(preferences.text("phone_default_audio"), isOn: setting.useDefaultAudio)
+                AdhanSelectionRows(preferences: preferences, selection: setting.audio,
+                    inherit: index == 0 ? preferences.adhan.fajrVoice : preferences.adhan.selection.voice,
+                    defaultLevelAndLength: setting.useDefaultAudio.wrappedValue ? preferences.adhan.selection : nil)
+            }
+            .disabled(!setting.enabled.wrappedValue)
             Section(preferences.text("phone_weekdays")) {
                 ForEach(0..<7, id: \.self) { weekday in
                     let bit = 1 << weekday
@@ -134,6 +152,7 @@ struct PrayerAlertSettings: View {
             .disabled(!setting.enabled.wrappedValue)
         }
         .navigationTitle(preferences.prayerNames()[index])
+        .onDisappear { audio.stop(previewOnly: true) }
     }
 
     private func timeStepper(_ label: String, value: Binding<Int>, range: ClosedRange<Int>, date: Date?) -> some View {

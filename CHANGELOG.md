@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a Miqat iPhone development target with shared Kotlin prayer rules,
+  a native Prayer screen, Hijri calendar, Qibla, alerts and companion views.
+  The [iOS parity queue](docs/IOS-WORK.md) tracks remaining build and device checks.
 - Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
   Select a downloaded Development package in Advanced.
 - Development and Staging builds run on demand. Production promotion tests

@@ -2,18 +2,34 @@ import CoreLocation
 import MiqatKit
 import SwiftUI
 
+private struct BackgroundLocationRequestKey: EnvironmentKey {
+    static let defaultValue: () -> Void = {}
+}
+
+extension EnvironmentValues {
+    var requestBackgroundLocation: () -> Void {
+        get { self[BackgroundLocationRequestKey.self] }
+        set { self[BackgroundLocationRequestKey.self] = newValue }
+    }
+}
+
 final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published private(set) var pending = false
     @Published private(set) var failed = false
     @Published private(set) var fix: CLLocation?
+    @Published private(set) var heading: CLHeading?
+    @Published private(set) var authorizationStatus = CLAuthorizationStatus.notDetermined
     private let manager = CLLocationManager()
     private var timeout: Task<Void, Never>?
     private var requested = false
+    private var compass = false
 
-    override init() {
+    init(compass: Bool = false) {
+        self.compass = compass
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        manager.desiredAccuracy = compass ? kCLLocationAccuracyBest : kCLLocationAccuracyHundredMeters
+        authorizationStatus = manager.authorizationStatus
     }
 
     func find() {
@@ -21,6 +37,7 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
         pending = true
         failed = false
         fix = nil
+        heading = nil
         if manager.authorizationStatus == .notDetermined {
             manager.requestWhenInUseAuthorization()
         } else {
@@ -32,20 +49,31 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
         timeout?.cancel()
         timeout = nil
         manager.stopUpdatingLocation()
+        manager.stopUpdatingHeading()
         pending = false
         requested = false
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        authorizationStatus = manager.authorizationStatus
         if pending { startIfAuthorized() }
+        else if compass && requested &&
+                    (manager.accuracyAuthorization != .fullAccuracy ||
+                     ![.authorizedAlways, .authorizedWhenInUse].contains(manager.authorizationStatus)) {
+            fix = nil
+            heading = nil
+            fail()
+        }
     }
 
     private func startIfAuthorized() {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
             guard !requested else { return }
+            if compass && manager.accuracyAuthorization != .fullAccuracy { fail(); return }
             requested = true
             manager.startUpdatingLocation()
+            if compass && CLLocationManager.headingAvailable() { manager.startUpdatingHeading() }
             timeout = Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(20))
                 guard !Task.isCancelled else { return }
@@ -59,13 +87,26 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard pending, let latest = locations.last,
+        guard (pending || (compass && requested)), let latest = locations.last,
+              !compass || (manager.accuracyAuthorization == .fullAccuracy && latest.horizontalAccuracy <= 1000),
               LocationRules.shared.usableLocation(latitude: latest.coordinate.latitude,
                  longitude: latest.coordinate.longitude, accuracyMetres: latest.horizontalAccuracy,
                  ageMs: -latest.timestamp.timeIntervalSinceNow * 1000) else { return }
-        cancel()
+        if compass {
+            timeout?.cancel()
+            pending = false
+            if fix != nil { return }
+        } else {
+            cancel()
+        }
         fix = latest
     }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateHeading heading: CLHeading) {
+        if compass && requested { self.heading = heading }
+    }
+
+    func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool { compass }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         guard pending, (error as? CLError)?.code != .locationUnknown else { return }
@@ -79,11 +120,14 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
 }
 
 struct LocationSettings: View {
+    @Environment(\.requestBackgroundLocation) private var requestBackgroundLocation
+    @Environment(\.openURL) private var openURL
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
     var setup = false
     @StateObject private var location = PhoneLocation()
     @State private var showCoordinates = false
+    @State private var allowBackground = false
 
     var body: some View {
         Form {
@@ -110,6 +154,23 @@ struct LocationSettings: View {
                 }
                 Button(preferences.text("phone_confirm_location")) { preferences.locationConfirmed = true }
                     .disabled(preferences.locationConfirmed)
+            }
+            Section {
+                Toggle(preferences.text("phone_travel_refresh"), isOn: $preferences.travelRefresh)
+                    .disabled(!preferences.locationConfirmed)
+                Toggle(preferences.text("phone_automatic_location"), isOn: Binding(
+                    get: { preferences.automaticLocation },
+                    set: { enabled in
+                        if enabled { allowBackground = true }
+                        else { preferences.automaticLocation = false }
+                    }
+                ))
+                .disabled(!preferences.locationConfirmed)
+                if preferences.automaticLocation && location.authorizationStatus != .authorizedAlways {
+                    Button(preferences.text("phone_location_settings")) {
+                        if let settings = URL(string: UIApplication.openSettingsURLString) { openURL(settings) }
+                    }
+                }
             }
             Section {
                 Picker(preferences.text("phone_method"), selection: $preferences.method) {
@@ -143,12 +204,17 @@ struct LocationSettings: View {
         .sheet(isPresented: $showCoordinates) {
             NavigationStack { AdvancedLocation(preferences: $preferences) }
         }
+        .alert(preferences.text("phone_background_location_title"), isPresented: $allowBackground) {
+            Button(preferences.text("done")) {
+                preferences.automaticLocation = true
+                requestBackgroundLocation()
+            }
+            Button(preferences.text("cancel"), role: .cancel) {}
+        } message: { Text(preferences.text("phone_background_location_body")) }
         .onChange(of: location.fix) { _, fix in
             guard let fix else { return }
             let coordinates = fix.coordinate
-            let closest = PhoneData.cities.min { a, b in
-                distance(a, to: coordinates) < distance(b, to: coordinates)
-            } ?? PhoneData.defaultCity
+            let closest = PhoneData.closestCity(latitude: coordinates.latitude, longitude: coordinates.longitude)
             var next = preferences.select(city: closest)
             next.custom = .init(latitude: coordinates.latitude, longitude: coordinates.longitude)
             preferences = next
@@ -162,10 +228,6 @@ struct LocationSettings: View {
         .onDisappear { location.cancel() }
     }
 
-    private func distance(_ city: City, to location: CLLocationCoordinate2D) -> Double {
-        LocationRules.shared.distanceKm(latitude: location.latitude, longitude: location.longitude,
-                                       otherLatitude: city.lat, otherLongitude: city.lng)
-    }
 }
 
 struct CityPicker: View {
@@ -236,6 +298,8 @@ struct AdvancedLocation: View {
                     if coordinates != next.coordinates { next.custom = coordinates }
                     if next.coordinates != preferences.coordinates || zone != preferences.zoneID {
                         next.locationConfirmed = false
+                        next.automaticLocation = false
+                        next.travelRefresh = false
                     }
                     next.zoneID = zone
                     preferences = next

@@ -38,21 +38,26 @@ struct CalculationMethod: Identifiable, Codable {
 }
 
 enum PhoneData {
-    private struct SacredText: Decodable { let prayerVerse: [String] }
+    private struct SacredText: Decodable { let prayerVerse: [String]; let adhanCall: String }
     private struct PhoneContract: Decodable {
         struct Control: Decodable { let id: String; let `default`: String }
         let defaultCity: String
+        let defaultFajrVoice: String
         let controls: [Control]
     }
 
     static let cities: [City] = load("cities")
     static let methods: [CalculationMethod] = load("methods")
+    static let voices: [AdhanVoice] = load("voices")
     static let phoneStrings: [String: Localized<String>] = load("phone-strings")
     static let sharedStrings = try! JSONSerialization.jsonObject(with: resource("strings", "json")) as! [String: Any]
-    static let verse = load("sacred-text", as: SacredText.self).prayerVerse.joined(separator: " ")
+    private static let sacredText = load("sacred-text", as: SacredText.self)
+    static let verse = sacredText.prayerVerse.joined(separator: " ")
+    static let adhanCall = sacredText.adhanCall
     static let feedback: [String: URL] = load("feedback")
     private static let contract: PhoneContract = load("phone-ui-contract")
     static let defaultCity = cities.first(where: { $0.id == contract.defaultCity })!
+    static let defaultFajrVoice = contract.defaultFajrVoice
     static let defaults = Dictionary(uniqueKeysWithValues: contract.controls.map { ($0.id, $0.default) })
 
     static func load<Value: Decodable>(_ name: String, as type: Value.Type = Value.self) -> Value {
@@ -71,6 +76,14 @@ enum PhoneData {
 
     static func list(_ key: String, arabic: Bool) -> [String] {
         (sharedStrings[key] as? [String: [String]])?[arabic ? "ar" : "en"] ?? []
+    }
+
+    static func closestCity(latitude: Double, longitude: Double) -> City {
+        func distance(to city: City) -> Double {
+            LocationRules.shared.distanceKm(latitude: latitude, longitude: longitude,
+                                           otherLatitude: city.lat, otherLongitude: city.lng)
+        }
+        return cities.min { distance(to: $0) < distance(to: $1) } ?? defaultCity
     }
 }
 
@@ -99,6 +112,10 @@ struct PhonePreferences: Codable, Equatable {
     var prayerAlerts = Array(repeating: PrayerAlert(), count: 6)
     var quietHours = QuietHours()
     var fastingAlerts = FastingAlerts()
+    var adhan = AdhanPreferences()
+    var radioStation = "cairo"
+    var automaticLocation = false
+    var travelRefresh = false
 
     struct Coordinates: Codable, Equatable {
         let latitude: Double
@@ -119,6 +136,7 @@ struct PhonePreferences: Codable, Equatable {
             && prayerAlerts.count == 6 && prayerAlerts.allSatisfy(\.valid)
             && prayerAlerts[1].before == 0 && prayerAlerts[1].after == 0
             && quietHours.valid && fastingAlerts.valid
+            && adhan.selection.valid && prayerAlerts.allSatisfy { $0.audio.valid }
     }
 
     func text(_ key: String) -> String { PhoneData.text(key, arabic: arabic) }
@@ -134,24 +152,38 @@ struct PhonePreferences: Codable, Equatable {
         next.method = city.method
         next.hanafi = city.hanafi
         next.locationConfirmed = false
+        next.automaticLocation = false
+        next.travelRefresh = false
         return next
     }
 }
 
+@MainActor
 final class PhoneStore: ObservableObject {
-    private static let key = "prayer.preferences"
-    @Published var preferences: PhonePreferences {
-        didSet {
-            if let data = try? JSONEncoder().encode(preferences) {
-                UserDefaults.standard.set(data, forKey: Self.key)
-            }
-        }
-    }
+    static let shared = PhoneStore()
+    private static let directory = URL.applicationSupportDirectory.appending(path: "Prayer", directoryHint: .isDirectory)
+    private static let file = directory.appending(path: "preferences.json")
+    @Published private(set) var preferences: PhonePreferences
+    @Published var saveFailed = false
 
-    init() {
-        let loaded = UserDefaults.standard.data(forKey: Self.key).flatMap {
+    private init() {
+        let loaded = (try? Data(contentsOf: Self.file)).flatMap {
             try? JSONDecoder().decode(PhonePreferences.self, from: $0)
         }
         preferences = loaded.flatMap { $0.valid ? $0 : nil } ?? PhonePreferences()
+    }
+
+    func save(_ value: PhonePreferences) {
+        do {
+            var directory = Self.directory
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            var attributes = URLResourceValues()
+            attributes.isExcludedFromBackup = true
+            try directory.setResourceValues(attributes)
+            try JSONEncoder().encode(value).write(to: Self.file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            preferences = value
+        } catch {
+            saveFailed = true
+        }
     }
 }
