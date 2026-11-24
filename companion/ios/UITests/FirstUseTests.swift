@@ -59,6 +59,7 @@ final class FirstUseTests: XCTestCase {
         let longitude = app.textFields["Longitude"]
         let apply = app.buttons["Apply"]
         let zonePicker = app.descendants(matching: .any)["miqat.location.timezone"].firstMatch
+        let savedZone = app.descendants(matching: .any)["miqat.location.saved-timezone"].firstMatch
 
         tap(custom)
         XCTAssertTrue(latitude.waitForExistence(timeout: 10))
@@ -85,8 +86,10 @@ final class FirstUseTests: XCTestCase {
         tap(zonePicker)
         search("Africa/Cairo", in: app)
         tap(app.buttons["Africa/Cairo"])
+        XCTAssertEqual(zonePicker.value as? String, "Africa/Cairo")
         tap(apply)
-        XCTAssertTrue(app.staticTexts["Africa/Cairo"].waitForExistence(timeout: 10))
+        XCTAssertTrue(savedZone.waitForExistence(timeout: 10))
+        XCTAssertEqual(savedZone.value as? String, "Africa/Cairo")
         tap(app.buttons["miqat.location.confirm"])
         XCTAssertTrue(app.buttons["Continue"].isEnabled)
         tap(app.buttons["Skip"])
@@ -94,7 +97,8 @@ final class FirstUseTests: XCTestCase {
         app.terminate()
         app.launch()
         tap(app.buttons["Finish setting up Miqat"])
-        XCTAssertTrue(app.staticTexts["Africa/Cairo"].waitForExistence(timeout: 10))
+        XCTAssertTrue(savedZone.waitForExistence(timeout: 10))
+        XCTAssertEqual(savedZone.value as? String, "Africa/Cairo")
         XCTAssertTrue(app.buttons["Continue"].isEnabled)
         tap(custom)
         XCTAssertTrue(latitude.waitForExistence(timeout: 10))

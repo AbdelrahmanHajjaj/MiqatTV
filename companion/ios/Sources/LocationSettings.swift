@@ -172,6 +172,10 @@ struct LocationSettings: View {
                     showCoordinates = true
                 }
                 LabeledContent(preferences.text("phone_zone"), value: preferences.zone.identifier)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(preferences.text("phone_zone"))
+                    .accessibilityValue(preferences.zone.identifier)
+                    .accessibilityIdentifier("miqat.location.saved-timezone")
                 Button(preferences.text("phone_confirm_location")) { preferences.locationConfirmed = true }
                     .disabled(preferences.locationConfirmed || location.pending)
                     .accessibilityIdentifier("miqat.location.confirm")
@@ -309,6 +313,7 @@ struct AdvancedLocation: View {
                 LabeledContent(preferences.text("phone_zone"),
                                value: zone.isEmpty ? preferences.text("phone_system") : zone)
             }
+            .accessibilityValue(zone.isEmpty ? preferences.text("phone_system") : zone)
             .accessibilityIdentifier("miqat.location.timezone")
         }
         .navigationTitle(preferences.text("phone_custom_location"))
