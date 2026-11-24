@@ -1,4 +1,5 @@
 name: Promote to Production
+run-name: Promote to Production · ${{ inputs.staging_tag || 'Latest Staging' }}
 
 on:
   workflow_dispatch:
@@ -111,7 +112,7 @@ jobs:
           retention-days: 7
 
   publish:
-    name: Publish verified Production packages
+    name: Publish Production · ${{ needs.source.outputs.production }}
     needs: [source, simulation, website]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
