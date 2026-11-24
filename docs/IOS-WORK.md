@@ -36,6 +36,8 @@ new Android releases to this pinned baseline before expanding the queue.
   and canonical data. Keep Android and TV clients independent of iOS.
 - Local host is Windows. It can run portable Gradle and resource checks.
   Apple framework linkage, SwiftUI and device behavior require macOS/Xcode.
+  A local Git bundle can transfer the committed port to an existing Mac clone
+  at the documented base. [Apple build and import steps](../companion/ios/README.md#build-on-apple-silicon)
 - GitHub CLI authentication returned HTTP 401. Git's credential manager passed
   a non-interactive dry run. Automatic approval review blocked the actual push
   pending explicit authorization to send the branch to the GitHub remote.

@@ -8,6 +8,17 @@ shell in JavaScriptCore. The Kotlin core handles rounding and prayer selection.
 
 ## Build on Apple silicon
 
+To use a local Git bundle, start from a Miqat clone that contains the port base
+`e0c46d3`. Fetch the committed feature branch into that clone, then create its
+worktree. Use the path to the bundle you received.
+
+```sh
+git bundle verify /path/to/miqat-ios.bundle
+git fetch /path/to/miqat-ios.bundle refs/heads/feature/ios-app-port:refs/heads/feature/ios-app-port
+git worktree add ../Miqat-iOS feature/ios-app-port
+cd ../Miqat-iOS
+```
+
 Use Xcode 16.3 with the repository's Kotlin 2.2.10 toolchain, plus CMake,
 JDK 17 and Node 24. Both targets build for arm64. From the repo root:
 
