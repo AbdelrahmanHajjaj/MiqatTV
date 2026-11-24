@@ -5,7 +5,7 @@ struct YourTVs: View {
     @EnvironmentObject private var store: PairedTVs
     let preferences: PhonePreferences
     @State private var forget: PairedTV?
-    @State private var error = false
+    @State private var forgetFailed = false
     @AppStorage("show-demo-tvs") private var demo = false
     @AppStorage("demo-tv-name-android") private var androidName = "Android / Google TV"
     @AppStorage("demo-tv-name-lg") private var lgName = "LG webOS"
@@ -34,7 +34,7 @@ struct YourTVs: View {
                     NavigationLink(lgName) { TVDetails(preferences: preferences, tv: nil, profile: "lg", demoName: $lgName) }
                 }
             }
-            if error || store.inaccessible {
+            if forgetFailed || store.inaccessible {
                 Text(preferences.text("phone_save_failed")).foregroundStyle(.secondary)
             }
         }
@@ -44,7 +44,13 @@ struct YourTVs: View {
             get: { forget != nil }, set: { if !$0 { forget = nil } }
         )) {
             Button(preferences.text("forget_tv"), role: .destructive) {
-                if let forget { do { try store.remove(forget) } catch { error = true } }
+                guard let forget else { return }
+                do {
+                    try store.remove(forget)
+                    forgetFailed = false
+                } catch {
+                    forgetFailed = true
+                }
             }
             Button(preferences.text("cancel"), role: .cancel) {}
         }
