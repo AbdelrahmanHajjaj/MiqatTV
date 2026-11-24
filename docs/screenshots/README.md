@@ -1,6 +1,6 @@
 # Product screenshots
 
-Current set: 23 November 2026. Screenshots show the standalone Android phone,
+Current set: 25 November 2026. Screenshots show the standalone Android phone,
 its TV companion mode, Android TV and LG webOS in English and Arabic. Canonical
 PNGs here are unmodified captures with sanitized Cairo/demo fixtures; they contain
 no real household addresses, credentials, private recordings or pairing QR codes.
@@ -12,10 +12,10 @@ the public website.
 
 | Files, with `-en.png` / `-ar.png` | Source |
 | --- | --- |
-| `phone-home` | PhoneJourneyCheck's completed Home fixture with countdown seconds. |
-| `phone-calendar` | Ramadan day 12 selected in the native calendar during the v0.7.4 review. |
-| `phone-fasting` | PhoneFastingCheck's day-before, suhoor and iftar settings in the v0.7.4 review. |
-| `phone-radio` | Native Quran Radio popup on Home from the PR #22 review. |
+| `phone-home` | PhoneHomeCheck's completed Cairo Home fixture with the Mihrab palette, Miqat Signature background and countdown seconds. |
+| `phone-calendar` | PhoneHomeCheck's native Hijri calendar with Arafah selected. |
+| `phone-fasting` | PhoneFastingCheck's day-before, suhoor and iftar settings. |
+| `phone-radio` | PhoneRadioCheck's native Quran Radio popup with the Cairo fixture station. |
 | `phone-prayer` | PhonePolishCheck's per-prayer adjustment and reminder previews. |
 | `phone-voices` | PhoneLibraryCheck's named demonstration audio library. |
 | `phone-location` | PhoneUiCheck's real Location settings. |
@@ -26,13 +26,10 @@ the public website.
 | `android-home` | Native Android TV Home from the 0.7.2 UI-alignment review. |
 | `lg-home` | LG browser-test's aligned Home capture from the 0.2.30 review. |
 
-Earlier phone captures use Miqat 0.5.18/code 34 on an Android 14/API 34 Google APIs
-emulator at 1080×2400, density 420. Fixtures provide dates, locations, themes,
-audio names, sensor headings and demo TVs.
-Radio, Ramadan and fasting captures use phone 0.5.19/code 35 review builds on the
-Android API 37 emulator at 1080×2400 with Cairo selected.
-Home, prayer adjustments, the Qibla map and Circle widget configuration use the
-0.5.22/code 38 review build on the same portrait emulator.
+Phone and companion captures use Miqat 0.7.9/code 7009001 on an Android API 37
+emulator at 1080×2400, density 420. Fixtures supply dates, locations, audio names,
+sensor headings and demo TVs. The emulator's status bar hides notification icons
+during capture.
 
 Android TV 0.7.2/code 13 captures use native Views in a landscape API 34 Google APIs
 emulator at 1920×1080/density 160. Original PNGs include its system navigation
@@ -63,3 +60,6 @@ state and private information before copying the selected PNGs here. Keep raw
 capture sets and logs under ignored state/. Follow [testing](../TESTING.md) for
 LG `--capture` and native TV checks, and [site instructions](../../site/README.md)
 for responsive review/social-card regeneration.
+
+On an owned Android emulator, hide notification icons before capturing with
+`adb -s "$PHONE" shell cmd statusbar send-disable-flag notification-icons`.
