@@ -21,7 +21,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | 8 | Approved voices including Fajr, named audio library/import and CRUD, previews, per-prayer selection, level/length and playback controls, foreground Adhan screen | Coded. Packaged 13 checksum-verified voices. Native playback, interruptions, imported audio and reset checks pending. See delivery differences below. |
 | 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Coded with the canonical HTTPS stations. Device streaming, audio interruption and remote transport controls pending. |
 | 10 | Independent Qibla fix, true-north compass, numeric fallback, explicit map with route/pan/zoom/recenter | Coded with Core Location and an explicit Apple MapKit view. Test simulator fallback and a physical iPhone heading. |
-| 11 | Home widgets, adaptive/strip/daily/circle presentations, settings per instance, date options, countdown and ring | WidgetKit target and configurable timelines coded. Verify signed App Group transfer, each widget family, timer rollover and per-instance choices. |
+| 11 | Home widgets, adaptive/strip/daily/circle presentations, settings per instance, date options, countdown and ring | WidgetKit target and configurable timelines coded. Each placement can follow the phone theme or select a canonical palette and 0–100% background opacity. Verify signed App Group transfer, each widget family, timer rollover and per-instance choices. |
 | 12 | About, feedback, update action, independent local storage and prayer reset | About, GitHub feedback, protected prayer settings and reset coded. iOS update action remains open until there is a stable iOS distribution channel. |
 | 13 | Your TVs, demo, QR pairing/approval, pinned identity, independent credentials, settings/conflicts, Home/inputs/radio/Adhan/forget | Added Android TV custom palette and app redirect editing. Both editors use the original TV snapshot. iPhone demos use the shared Kotlin settings endpoint and simulate failures, reconnect, inputs and media locally. Android and LG previews show representative TV layout, palette, scenes and clock. Native rendering, demo, TLS, Keychain, cancellation and conflict fixtures remain pending. |
 | 14 | Android/Google TV and LG setup, channels, local APK/IPK, download/transfer progress, verification, install/recovery, separate credentials | Deferred. Android's installer cannot run on iOS as-is. A native authenticated ADB/SSH port with the same trust, package and recovery checks remains required. |
@@ -52,6 +52,6 @@ new Android releases to this pinned baseline before expanding the queue.
   horizon and refreshes them on app entry or a supported location/time change.
   Verify rescheduling after long periods away and permission changes.
 - Significant-change location updates replace Android's periodic location job.
-  WidgetKit owns refresh timing and the available widget sizes. Per-instance
-  corners, arbitrary opacity, the full theme catalog and Android's pin flow
-  remain gaps. Apple controls the dynamic countdown and ring refresh cadence.
+  WidgetKit owns refresh timing and the available widget sizes. Widget photos,
+  Android corner shapes and Android's pin flow remain gaps. iOS rendering modes
+  can also affect the selected palette and background visibility.

@@ -79,10 +79,16 @@ final class PrayerSchedule {
                   let times = day(at: date, prefs: preferences) else { return nil }
             return .init(start: date, times: times, hijri: preferences.hijriDate(date), gregorian: preferences.gregorianDate(date))
         }
-        let appearance = PhoneAppearance.catalog.themes[preferences.theme] ?? PhoneAppearance.catalog.themes["mihrab"]
+        let appearance = PhoneAppearance.catalog
+        let names = PhoneAppearance.themeNames(preferences)
+        let palettes = appearance.themeOrder.enumerated().compactMap { index, id -> WidgetSnapshot.Palette? in
+            guard let theme = appearance.themes[id] else { return nil }
+            return .init(id: id, name: names.indices.contains(index) ? names[index] : id, colors: theme.colors)
+        }
+        let colors = appearance.themes[preferences.theme]?.colors ?? appearance.themes["mihrab"]?.colors ?? [:]
         let snapshot = WidgetSnapshot(days: days, names: preferences.prayerNames(), arabic: preferences.arabic,
             eastern: preferences.digits == "eastern" || (preferences.digits == "auto" && preferences.arabic),
-            clock: preferences.clock, timezone: preferences.zone.identifier, colors: appearance?.colors ?? [:])
+            clock: preferences.clock, timezone: preferences.zone.identifier, colors: colors, palettes: palettes)
         do {
             let data = try JSONEncoder().encode(snapshot)
             try data.write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])

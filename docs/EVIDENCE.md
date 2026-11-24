@@ -2270,3 +2270,9 @@ and display settings, with synthetic clock and prayer times. The host branding
 check, Swift syntax check, and staging of the canonical geometry, demo locale
 and both TV layout catalogs passed. Apple layout assertions and visual checks
 remain pending.
+
+The iOS widget appearance source now supports independent canonical palette
+selection and 0–100% background opacity. The host Swift syntax check passed
+and all 20 projected palettes had bilingual names and the needed widget
+colors. The Apple workflow includes a snapshot decoding and appearance check.
+Widget configuration and system rendering remain pending on Apple hardware.

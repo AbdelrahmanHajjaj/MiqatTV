@@ -18,8 +18,8 @@ struct PrayerWidgetOptions: WidgetConfigurationIntent {
     @Parameter(title: "Hijri date", default: true) var hijri: Bool
     @Parameter(title: "Gregorian date", default: false) var gregorian: Bool
     @Parameter(title: "Larger text", default: false) var large: Bool
-    @Parameter(title: "Use phone theme", default: true) var theme: Bool
-    @Parameter(title: "Show background", default: true) var background: Bool
+    @Parameter(title: "Theme") var palette: PrayerWidgetPalette?
+    @Parameter(title: "Background opacity (%)", default: 100, inclusiveRange: (0, 100)) var opacityPercent: Int
 }
 
 struct PrayerWidgetEntry: TimelineEntry {
@@ -47,12 +47,12 @@ struct PrayerWidgetProvider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: PrayerWidgetOptions, in context: Context) async -> PrayerWidgetEntry {
-        .init(date: .now, snapshot: load(), options: configuration)
+        .init(date: .now, snapshot: WidgetSnapshot.load(), options: configuration)
     }
 
     func timeline(for configuration: PrayerWidgetOptions, in context: Context) async -> Timeline<PrayerWidgetEntry> {
         let now = Date.now
-        let snapshot = load()
+        let snapshot = WidgetSnapshot.load()
         let horizon = now.addingTimeInterval(36 * 3600)
         var updates = Set([now])
         for day in snapshot?.days ?? [] {
@@ -63,13 +63,6 @@ struct PrayerWidgetProvider: AppIntentTimelineProvider {
         }
         let entries = updates.sorted().map { PrayerWidgetEntry(date: $0, snapshot: snapshot, options: configuration) }
         return Timeline(entries: entries, policy: .after(horizon))
-    }
-
-    private func load() -> WidgetSnapshot? {
-        guard let url = WidgetSnapshot.file, let data = try? Data(contentsOf: url),
-              let snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data),
-              snapshot.names.count == 6, snapshot.days.allSatisfy({ $0.times.count == 6 }) else { return nil }
-        return snapshot
     }
 }
 
@@ -102,7 +95,7 @@ struct PrayerWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.layoutDirection, entry.snapshot?.arabic == true ? .rightToLeft : .leftToRight)
         .containerBackground(for: .widget) { color("lapis-900", fallback: Color(red: 0.04, green: 0.18, blue: 0.20))
-            .opacity(entry.options.background ? 1 : 0.6) }
+            .opacity(WidgetSnapshot.opacity(percent: entry.options.opacityPercent)) }
         .widgetURL(URL(string: "miqat://prayer"))
     }
 
@@ -184,7 +177,7 @@ struct PrayerWidgetView: View {
     }
 
     private func color(_ key: String, fallback: Color) -> Color {
-        guard entry.options.theme, let hex = entry.snapshot?.colors[key],
+        guard let hex = entry.snapshot?.colors(for: entry.options.palette?.id)[key],
               let value = UInt32(hex.dropFirst(), radix: 16) else { return fallback }
         return Color(red: Double((value >> 16) & 255) / 255, green: Double((value >> 8) & 255) / 255,
                      blue: Double(value & 255) / 255)
