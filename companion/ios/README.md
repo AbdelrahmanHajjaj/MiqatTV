@@ -27,6 +27,18 @@ phase compiles the framework and copies canonical data and license notices into
 the application bundle. Run both transport dependency preparation scripts
 with `iphoneos` before building for an iPhone.
 
+After a successful [iOS development build](../../.github/workflows/ios-development.yml),
+download and extract `Miqat-iOS-Simulator.zip` on an Apple silicon Mac. Boot
+an iOS 17 or later iPhone simulator. From the folder containing `Miqat.app`, run:
+
+```sh
+xcrun simctl install booted Miqat.app
+xcrun simctl launch booted tv.miqat.ios
+```
+
+The artifact is an unsigned simulator build. Use the local Xcode targets and
+development signing for iPhone and signed App Group checks.
+
 The app and widget targets use the `group.tv.miqat.ios` App Group to share
 an offline prayer timetable. A signed widget check needs both targets in a
 development team with that group enabled. Signing identities stay local.

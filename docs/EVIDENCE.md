@@ -2251,6 +2251,11 @@ other artwork exports were byte-identical. Local checks verified the catalog
 metadata, PNG format and workflow YAML. The Apple build checks the compiled
 asset catalog and the primary icon name in the bundled plist.
 
+The macOS workflow now packages the checked simulator bundle as one ZIP to
+preserve executable permissions. Windows checks confirmed that the workflow
+parses and that the archive path and launch identifier agree with the iPhone
+guide. Archive creation, upload and simulator launch await the Apple run.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both
