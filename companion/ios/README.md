@@ -19,8 +19,10 @@ git worktree add ../Miqat-iOS feature/ios-app-port
 cd ../Miqat-iOS
 ```
 
-Use Xcode 16.3 with the repository's Kotlin 2.2.10 toolchain, plus CMake,
-JDK 17 and Node 24. Both targets build for arm64. From the repo root:
+Use Xcode 16.3 with the iOS 18.4 simulator runtime, plus CMake, JDK 17 and
+Node 24. Xcode needs the runtime to compile the asset catalog for either
+target, even for an unsigned build. If it is missing, install it with
+`xcodebuild -downloadPlatform iOS -buildVersion 18.4`. From the repo root:
 
 ```sh
 npm --prefix companion/ios ci --ignore-scripts
