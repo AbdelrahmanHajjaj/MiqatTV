@@ -19,7 +19,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | 6 | Prayer alerts, enablement, mode, timing previews, weekday inclusion/overrides, quiet hours, before/after, explicit tests, permission and recovery | The planner keeps matching absolute-time requests and can replenish the queue in offline Background App Refresh. Weekday overrides follow the prayer's local date and quiet hours follow the reminder's delivery time, including across midnight. Run the Apple notification fixture, permission regression, timezone-change, delivery and background expiration checks. |
 | 7 | Fasting eve, Suhoor and Iftar, choices, exclusions and overlapping selections | Uses Kotlin fasting rules. The iOS calendar adapter restores each civil day's true start and preserves the eve reminder's minute through a skipped hour. The Apple fixture covers spring, fall, half-hour and skipped-day transitions. Check independent delivery on iOS. |
 | 8 | Approved voices including Fajr, named audio library/import and CRUD, previews, per-prayer selection, level/length and playback controls, foreground Adhan screen | Packaged 13 checksum-verified voices. Named imports share Android's validation. Active Adhan shows the scheduled time and recording on its controls and publishes progress to Now Playing. Home opens the controls from a full-width shortcut. Verify Files lifecycle, playback controls, motion, system controls and headphone removal. |
-| 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Uses canonical HTTPS stations. Stream completion and terminal failures can reconnect up to four times. Thirty seconds of stable playback restores the budget. Verify the radio regression below, including audio ownership during Adhan and headphone removal. |
+| 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Uses canonical HTTPS stations. Stream completion and terminal failures can reconnect up to four times with Android's increasing retry delays. Thirty seconds of stable playback restores the budget. Verify the radio regression below, including audio ownership during Adhan and headphone removal. |
 | 10 | Independent Qibla fix, true-north compass, numeric fallback, explicit map with route/pan/zoom/recenter | Compass and map share the displayed bearing. The phone-relative arrow waits for reliable true north. Run the Qibla regression below and check sighted and VoiceOver operation on a physical iPhone. |
 | 11 | Home widgets, adaptive/strip/daily/circle presentations, settings per instance, date options, countdown and ring | The app stages prayer transitions from Kotlin and can replenish an installed widget during offline background refresh. Expired data offers an app refresh, with no Circle countdown updates until there is a target. Verify the Apple fixture, signed App Group transfer, timer and date rollover, medium timetable fit and per-instance choices. |
 | 12 | About, feedback, update action, independent local storage and prayer reset | About, GitHub feedback, protected prayer settings and reset coded. iOS update action remains open until there is a stable iOS distribution channel. |
@@ -99,10 +99,11 @@ unavailable until confirmation.
 
 With a controllable HTTPS stream in a local development fixture, end the
 stream normally and then fail it mid-playback. In each case check that Miqat
-reconnects and shows Station unavailable after four failed retries. Recover the
+waits 1.5, 3, 4.5 and 6 seconds before successive reconnect attempts and shows
+Station unavailable after four failed retries. Recover the
 stream, keep it playing for at least 30 seconds, and interrupt it again to
-check that the full retry budget is available. Pause, switch stations or start
-Adhan during a failure and verify a late callback cannot restart the old player.
+check that the full retry budget is available. Pause, stop, switch stations or
+start Adhan during a retry delay and verify the old stream stays closed.
 Repeat an interruption while locked and verify the system playback controls.
 
 ## Adhan playback presentation on iPhone

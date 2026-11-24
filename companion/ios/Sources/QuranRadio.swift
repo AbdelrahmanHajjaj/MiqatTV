@@ -29,7 +29,7 @@ final class QuranRadio: ObservableObject {
     private var retries = 0
     private static let maxRetries = 4
 
-    var wantsPlay: Bool { player != nil }
+    var wantsPlay: Bool { player != nil || status == "phone_radio_retrying" }
     var hasSession: Bool { status != nil }
 
     func play(station: RadioStation, preferences: PhonePreferences) {
@@ -138,11 +138,17 @@ final class QuranRadio: ObservableObject {
     }
 
     private func retry() {
+        closeStream()
         if retries < Self.maxRetries {
             retries += 1
-            connect("phone_radio_retrying")
+            status = "phone_radio_retrying"
+            metadata()
+            let delay = Duration.milliseconds(1500 * retries)
+            timeout = Task { [weak self] in
+                try? await Task.sleep(for: delay)
+                if !Task.isCancelled { self?.connect("phone_radio_connecting") }
+            }
         } else {
-            closeStream()
             status = "phone_radio_failed"
             metadata()
         }

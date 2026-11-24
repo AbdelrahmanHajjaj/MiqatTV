@@ -2292,6 +2292,9 @@ The iPhone radio observes completion and terminal errors for the current
 player item. A stable connection replenishes the four-retry budget. The Swift
 source parsed and all 14 generator checks passed. Terminal stream callbacks,
 retry exhaustion and lock-screen transport await the native radio regression.
+The reconnect schedule now follows Android's 1.5-second increase per attempt.
+Swift syntax and whitespace checks passed. Native timing and cancellation are
+in the radio regression queue.
 
 The iPhone Adhan screen displays the same scheduled title as Now Playing.
 Home uses a full-width playback shortcut and respects both Reduce Motion
