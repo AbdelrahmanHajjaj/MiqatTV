@@ -12,6 +12,7 @@ struct YourTVs: View {
         List {
             Section {
                 NavigationLink(preferences.text("pair")) { TVPairing(preferences: preferences) }
+                NavigationLink(preferences.text("tv_public_download")) { TVPackageView(preferences: preferences) }
                 Toggle(preferences.text("demo"), isOn: $demo)
             }
             Section {

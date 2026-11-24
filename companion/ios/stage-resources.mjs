@@ -12,7 +12,7 @@ if (!destination) throw new Error('Missing iOS resource destination');
 mkdirSync(join(destination, 'Notices'), { recursive: true });
 for (const name of [
   'cities', 'methods', 'strings', 'sacred-text', 'phone-ui-contract', 'feedback',
-  'hijri-events', 'stations', 'voices',
+  'hijri-events', 'stations', 'voices', 'tv-platforms',
 ]) {
   copyFileSync(join(root, 'shared/data', name + '.json'), join(destination, name + '.json'));
 }

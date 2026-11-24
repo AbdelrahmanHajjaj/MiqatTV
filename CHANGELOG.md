@@ -9,6 +9,7 @@
 - The iPhone companion demo can simulate disconnection, a failed save, HDMI selection, radio and Adhan controls.
 - The iPhone companion TV preview reflects countdown placement, prayer rows, favourites, and TV language and clock settings.
 - iPhone prayer widgets can use a different Miqat palette, scene and background opacity for each placement.
+- The iPhone development target can download and share verified Miqat TV packages from Production and Staging.
 - Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
   Select a downloaded Development package in Advanced.
 - Development and Staging builds run on demand. Production promotion tests

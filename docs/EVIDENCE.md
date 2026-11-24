@@ -2282,3 +2282,10 @@ or load an original Miqat scene. The host verified the widget resource phase
 resolves to all eight canonical JPEGs, their bilingual labels and the changed
 Swift syntax. The Apple build checks embedded JPEG bytes and the snapshot
 selection fixture. Widget scene rendering and memory behavior remain unverified.
+
+The iPhone TV download flow stages canonical Android TV and LG choices and
+bilingual status labels. Host checks passed for these resources and the Swift
+sources parsed. The Apple check exercises fixture release selection, checksum
+fallback, origin checks and stream integrity with valid, truncated, oversized
+and altered packages. SHA-256 execution, network cancellation and the Files
+handoff remain unverified on Apple hardware. No TV was contacted.

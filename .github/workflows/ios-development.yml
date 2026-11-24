@@ -55,6 +55,13 @@ jobs:
           swiftc companion/ios/Sources/WidgetSnapshot.swift companion/ios/checks/widget-appearance/main.swift \
             -o "$RUNNER_TEMP/widget-appearance-check"
           "$RUNNER_TEMP/widget-appearance-check"
+      - name: Check TV package download policy
+        env:
+          DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+        run: |
+          swiftc -parse-as-library companion/ios/Sources/TVRelease.swift companion/ios/Sources/TVPackageDownload.swift \
+            companion/ios/checks/tv-download/main.swift -o "$RUNNER_TEMP/tv-download-check"
+          "$RUNNER_TEMP/tv-download-check"
       - name: Link Kotlin and build the unsigned simulator app
         env:
           DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer

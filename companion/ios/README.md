@@ -27,4 +27,10 @@ The app and widget targets use the `group.tv.miqat.ios` App Group to share
 an offline prayer timetable. A signed widget check needs both targets in a
 development team with that group enabled. Signing identities stay local.
 
+In **Your TVs → Download latest TV build**, choose Android/Google TV or LG and
+select Production or Staging. Miqat checks the release's SHA-256 and file size
+before offering the package to share or save to Files. Use the existing
+[Android TV setup](../../docs/ANDROID-SETUP.md) or [LG setup](../../docs/WEBOS.md)
+to install the package on a TV.
+
 [Parity queue and validation status](../../docs/IOS-WORK.md).
