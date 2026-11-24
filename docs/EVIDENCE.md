@@ -32,6 +32,16 @@ release signing identities.
 The Production dispatch now supplies publication approval. Workflow lint,
 the main-only preflight and the candidate and promotion regressions passed.
 
+[Production run 45380665301](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45380665301)
+passed Android TV simulation, LG browser simulation and website preparation.
+Phone companion instrumentation failed while rendering `adhan.quiet-input`
+because the generated catalog lacked a bilingual `adhan` section title.
+The catalog regression reproduced the missing title and passes with the fix.
+The public feed still reports v0.7.7, and `v0.7.8-staging.2` retains phone
+version code 39. The next phone candidate uses code 40 for in-place updates.
+The local phone and instrumentation APKs built, and APK inspection confirmed
+`tv.miqat.companion` 0.5.24/code 40. The Android TV catalog regenerated.
+
 ## Stable v0.7.7 — 24 November 2026
 
 [PR #39](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/39) passed its required

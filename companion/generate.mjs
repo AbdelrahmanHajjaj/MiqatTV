@@ -146,7 +146,7 @@ export function generate(platforms = ['android','lg']) {
   const colors=Object.fromEntries(Object.entries(tokens.color).filter(([,v])=>v.$type==='color' && /^#[0-9a-f]{6}$/i.test(v.$value)).map(([k,v])=>[k,v.$value]));
   const themeData={mihrab:{version:1,colors}};
   for(const id of themes.filter(x=>!['mihrab','custom'].includes(x))) themeData[id]=read('shared/design/assets/themes/'+id+'.json');
-  const sections={prayer:label('sectionPrayer'),reminders:label('sectionReminders'),radio:label('sectionRadio'),display:label('sectionDisplay'),appearance:label('sectionAppearance'),
+  const sections={prayer:label('sectionPrayer'),reminders:label('sectionReminders'),adhan:label('adhanRow'),radio:label('sectionRadio'),display:label('sectionDisplay'),appearance:label('sectionAppearance'),
     network:pair('الشبكة','Network'),device:label('sectionDevice'),tests:pair('اختبارات التلفاز','TV tests'),offsets:label('prayerOffsets'),'prayer-day':pair('الأذان لكل صلاة','Adhan per prayer'),
     favourites:pair('التطبيقات المفضلة','Favourite apps'),apps:pair('التطبيقات','Apps'),remote:pair('أزرار الريموت','Remote buttons'),pairing:label('companionPhones')};
   const commands=read('companion/protocol/lan.json').commands;
