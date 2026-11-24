@@ -26,7 +26,6 @@ final class QuranRadio: ObservableObject {
     private var station: RadioStation?
     private var preferences: PhonePreferences?
     private var retries = 0
-    private var commandTargets: [(MPRemoteCommand, Any)] = []
 
     var wantsPlay: Bool { player != nil }
     var hasSession: Bool { status != nil }
@@ -48,8 +47,7 @@ final class QuranRadio: ObservableObject {
         closeStream()
         status = forAdhan ? "phone_radio_adhan" : "phone_radio_paused"
         if forAdhan {
-            removeCommands()
-            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            PhoneRemotePlayback.shared.end(.radio)
         } else {
             metadata()
         }
@@ -58,10 +56,9 @@ final class QuranRadio: ObservableObject {
     func stop() {
         guard hasSession else { return }
         closeStream()
-        removeCommands()
+        PhoneRemotePlayback.shared.end(.radio)
         station = nil
         status = nil
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
     private func connect(_ message: String) {
@@ -98,7 +95,15 @@ final class QuranRadio: ObservableObject {
                 }
             }
         }
-        useCommands()
+        PhoneRemotePlayback.shared.begin(.radio) { [weak self] action in
+            guard let self else { return }
+            switch action {
+            case .play: self.resume()
+            case .pause: self.pause()
+            case .toggle: if self.wantsPlay { self.pause() } else { self.resume() }
+            case .stop: self.stop()
+            }
+        }
         metadata()
         source.play()
         armTimeout()
@@ -142,43 +147,8 @@ final class QuranRadio: ObservableObject {
             MPNowPlayingInfoPropertyIsLiveStream: true,
             MPNowPlayingInfoPropertyPlaybackRate: status == "phone_radio_live" ? 1 : 0,
         ]
-        if preferences.showArtwork, let url = Bundle.main.url(forResource: preferences.background,
-            withExtension: preferences.background == "miqat_signature" ? "png" : "jpg"),
-           let image = UIImage(contentsOfFile: url.path) {
-            info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-        }
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-    }
-
-    private func useCommands() {
-        guard commandTargets.isEmpty else { return }
-        let commands = MPRemoteCommandCenter.shared()
-        commandTargets = [
-            (commands.playCommand, commands.playCommand.addTarget { [weak self] _ in
-                Task { @MainActor in self?.resume() }
-                return .success
-            }),
-            (commands.pauseCommand, commands.pauseCommand.addTarget { [weak self] _ in
-                Task { @MainActor in self?.pause() }
-                return .success
-            }),
-            (commands.togglePlayPauseCommand, commands.togglePlayPauseCommand.addTarget { [weak self] _ in
-                Task { @MainActor in
-                    guard let self else { return }
-                    if self.wantsPlay { self.pause() } else { self.resume() }
-                }
-                return .success
-            }),
-            (commands.stopCommand, commands.stopCommand.addTarget { [weak self] _ in
-                Task { @MainActor in self?.stop() }
-                return .success
-            }),
-        ]
-    }
-
-    private func removeCommands() {
-        for (command, target) in commandTargets { command.removeTarget(target) }
-        commandTargets = []
+        if let artwork = PhoneRemotePlayback.artwork(preferences) { info[MPMediaItemPropertyArtwork] = artwork }
+        PhoneRemotePlayback.shared.publish(info, for: .radio)
     }
 
     private func resume() {

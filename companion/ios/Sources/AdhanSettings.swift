@@ -177,18 +177,30 @@ struct AdhanPlayback: View {
             if let prayer = audio.prayer { Text(preferences.prayerNames()[prayer]).font(.title) }
             if let name = audio.name { Text(name).foregroundStyle(.secondary) }
             TimelineView(.periodic(from: .now, by: 0.25)) { _ in ProgressView(value: audio.progress) }
-            HStack(spacing: 22) {
-                Button(preferences.text(audio.paused ? "phone_resume" : "phone_pause")) { audio.togglePause() }
-                Button(preferences.text("phone_stop"), role: .destructive) { audio.stop(); dismiss() }
-            }
-            .buttonStyle(.bordered)
+            Button(preferences.text(audio.paused ? "phone_resume" : "phone_pause")) { audio.togglePause() }
+                .buttonStyle(.bordered)
             Button(preferences.text("back")) { confirm = true }
+            Button(role: .destructive, action: stopAndClose) {
+                Label(preferences.text("phone_swipe_stop"), systemImage: "chevron.up")
+                    .frame(minHeight: 44)
+            }
+            .accessibilityLabel(preferences.text("phone_stop_close"))
+            .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded { drag in
+                let travel = drag.translation
+                if travel.height <= -44 && -travel.height > abs(travel.width) { stopAndClose() }
+            })
         }
         .padding(28)
+        .interactiveDismissDisabled()
         .onChange(of: audio.name) { _, name in if name == nil { dismiss() } }
         .alert(preferences.text("phone_stop_close"), isPresented: $confirm) {
-            Button(preferences.text("phone_stop"), role: .destructive) { audio.stop(); dismiss() }
-            Button(preferences.text("cancel"), role: .cancel) {}
+            Button(preferences.text("phone_stop"), role: .destructive, action: stopAndClose)
+            Button(preferences.text("phone_keep_playing"), role: .cancel) {}
         }
+    }
+
+    private func stopAndClose() {
+        audio.stop()
+        dismiss()
     }
 }

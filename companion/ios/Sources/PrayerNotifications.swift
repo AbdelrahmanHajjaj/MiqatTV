@@ -51,7 +51,6 @@ final class PrayerNotifications: ObservableObject {
     private let center = UNUserNotificationCenter.current()
     private var pending: Task<Void, Never>?
     private static let schedulePrefix = "miqat.schedule."
-    private static let testID = "miqat.test"
     static let shortSound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "miqat_short_tone.wav"))
 
     func authorize() async -> Bool {
@@ -75,8 +74,8 @@ final class PrayerNotifications: ObservableObject {
     }
 
     func cancelTest() {
-        center.removePendingNotificationRequests(withIdentifiers: [Self.testID])
-        center.removeDeliveredNotifications(withIdentifiers: [Self.testID])
+        center.removePendingNotificationRequests(withIdentifiers: [AdhanNotification.testID])
+        center.removeDeliveredNotifications(withIdentifiers: [AdhanNotification.testID])
     }
 
     func test(preferences: PhonePreferences, adhan: Bool = false) async -> Date? {
@@ -93,7 +92,7 @@ final class PrayerNotifications: ObservableObject {
             }
         }
         do {
-            try await center.add(UNNotificationRequest(identifier: Self.testID, content: content,
+            try await center.add(UNNotificationRequest(identifier: AdhanNotification.testID, content: content,
                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: 30, repeats: false)))
             if Task.isCancelled { cancelTest(); return nil }
             return when
@@ -104,7 +103,7 @@ final class PrayerNotifications: ObservableObject {
         let now = Date.now
         let rules = PhonePrayerRules.shared
         guard rules.due(time: request.time, now: now.timeIntervalSince1970 * 1000) else { return false }
-        if request.identifier == Self.testID {
+        if request.isTest {
             guard request.prayer == 2 else { return false }
         } else {
             guard preferences.locationConfirmed, preferences.alertsEnabled, preferences.valid else { return false }

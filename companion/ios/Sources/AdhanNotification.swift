@@ -1,6 +1,7 @@
 import UserNotifications
 
 struct AdhanNotification: Sendable {
+    static let testID = "miqat.test"
     let identifier: String
     let prayer: Int
     let time: Double
@@ -15,4 +16,5 @@ struct AdhanNotification: Sendable {
     }
 
     var claimID: String { "\(identifier):\(time)" }
+    var isTest: Bool { identifier == Self.testID }
 }

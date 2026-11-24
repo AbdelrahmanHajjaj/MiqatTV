@@ -1,6 +1,7 @@
 import AVFoundation
 import Combine
 import Foundation
+import MediaPlayer
 import MiqatKit
 
 @MainActor
@@ -10,10 +11,13 @@ final class PhoneAdhan: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published private(set) var paused = false
     private var player: AVAudioPlayer?
     private var cutoff: TimeInterval = 0
+    private var mediaTitle: String?
+    private var artwork: MPMediaItemArtwork?
     private var stopTask: Task<Void, Never>?
     var onPlayback: (() -> Void)?
 
-    func play(url: URL, name: String, selection: AdhanSelection, prayer: Int? = nil) -> Bool {
+    func play(url: URL, name: String, selection: AdhanSelection, prayer: Int? = nil,
+              mediaTitle: String? = nil, artwork: MPMediaItemArtwork? = nil) -> Bool {
         guard selection.level > 0, self.prayer == nil || prayer != nil else { return false }
         stop()
         do {
@@ -31,6 +35,20 @@ final class PhoneAdhan: NSObject, ObservableObject, AVAudioPlayerDelegate {
             guard next.play() else { stop(); return false }
             self.name = name
             self.prayer = prayer
+            self.mediaTitle = mediaTitle
+            self.artwork = artwork
+            if mediaTitle != nil {
+                PhoneRemotePlayback.shared.begin(.adhan) { [weak self] action in
+                    guard let self else { return }
+                    switch action {
+                    case .play: self.setPaused(false)
+                    case .pause: self.setPaused(true)
+                    case .toggle: self.togglePause()
+                    case .stop: self.stop()
+                    }
+                }
+                publishPlayback()
+            }
             armCutoff()
             return true
         } catch { stop(); return false }
@@ -41,17 +59,27 @@ final class PhoneAdhan: NSObject, ObservableObject, AVAudioPlayerDelegate {
         return min(1, player.currentTime / cutoff)
     }
 
-    func togglePause() {
-        guard let player else { return }
-        if paused {
-            guard player.play() else { stop(); return }
-            paused = false
-            armCutoff()
-        } else {
+    func togglePause() { setPaused(!paused) }
+
+    func pauseForRouteChange() {
+        if prayer == nil { stop(previewOnly: true) }
+        else { setPaused(true) }
+    }
+
+    private func setPaused(_ value: Bool) {
+        guard let player, paused != value else { return }
+        if value {
             player.pause()
             stopTask?.cancel()
             paused = true
+        } else {
+            do { try AVAudioSession.sharedInstance().setActive(true) }
+            catch { stop(); return }
+            guard player.play() else { stop(); return }
+            paused = false
+            armCutoff()
         }
+        publishPlayback()
     }
 
     func stop(previewOnly: Bool = false) {
@@ -60,10 +88,27 @@ final class PhoneAdhan: NSObject, ObservableObject, AVAudioPlayerDelegate {
         stopTask = nil
         player.stop()
         self.player = nil
+        mediaTitle = nil
+        artwork = nil
+        PhoneRemotePlayback.shared.end(.adhan)
         name = nil
         prayer = nil
         paused = false
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    private func publishPlayback() {
+        guard let player, let name, let mediaTitle else { return }
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: mediaTitle,
+            MPMediaItemPropertyArtist: name,
+            MPMediaItemPropertyAlbumTitle: "Miqat",
+            MPMediaItemPropertyPlaybackDuration: cutoff,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: min(player.currentTime, cutoff),
+            MPNowPlayingInfoPropertyPlaybackRate: paused ? 0 : 1,
+        ]
+        if let artwork { info[MPMediaItemPropertyArtwork] = artwork }
+        PhoneRemotePlayback.shared.publish(info, for: .adhan)
     }
 
     private func armCutoff() {

@@ -81,9 +81,18 @@ struct MiqatApp: App {
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
                 refreshAlerts()
             }
-            .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)) { event in
+            .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)
+                .receive(on: RunLoop.main)) { event in
                 if (event.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt) == AVAudioSession.InterruptionType.began.rawValue {
                     adhan.stop()
+                    if radio.wantsPlay { radio.pause() }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)
+                .receive(on: RunLoop.main)) { event in
+                if (event.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt)
+                    == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue {
+                    adhan.pauseForRouteChange()
                     if radio.wantsPlay { radio.pause() }
                 }
             }
@@ -117,7 +126,11 @@ struct MiqatApp: App {
         let fallback = index == 0 ? PhoneData.defaultFajrVoice : PhoneData.defaults["reminders.voice"] ?? "almalki"
         let voice = library.url(selection.voice) != nil ? selection.voice : fallback
         guard let url = library.url(voice) else { return false }
-        guard adhan.play(url: url, name: library.name(voice, preferences: prefs), selection: selection, prayer: index) else {
+        let prayerTime = Date(timeIntervalSince1970: request.time / 1000)
+        let title = request.isTest ? prefs.text("phone_test_adhan")
+            : prefs.prayerNames()[index] + " · " + prefs.time(prayerTime)
+        guard adhan.play(url: url, name: library.name(voice, preferences: prefs), selection: selection,
+                         prayer: index, mediaTitle: title, artwork: PhoneRemotePlayback.artwork(prefs)) else {
             return false
         }
         playingAdhan = request.claimID

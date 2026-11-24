@@ -2469,3 +2469,11 @@ observance rules, checked the reference Ramadan, Eid, Arafah and Hijri rollover
 dates with Intl Umm al-Qura, and parsed the changed Swift sources and workflow.
 Apple Foundation date conversion, the new Swift fixture and the native RTL
 and LTR calendar interactions remain pending.
+
+Adhan and Quran Radio now share ownership of the iPhone's Now Playing
+commands and metadata. Starting Adhan invalidates queued radio commands.
+The Adhan screen offers swipe or tap to stop. An output device disconnect
+pauses active media, and a lost audio session stops Adhan. Windows passed
+Kotlin playback-policy and 14 generator checks and parsed the changed Swift
+files. The iPhone lock screen, audio routes, system commands and swipe still
+need native acceptance.
