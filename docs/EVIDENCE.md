@@ -2369,3 +2369,11 @@ journal write failure, an interrupted restore, retry, independent changes and
 CVTE deferral. Windows parsed all six changed Swift sources, passed the 14
 companion checks and staged the 21 bilingual Android setup labels. Apple
 execution and a real TV check remain pending.
+
+The iPhone installer packages the bundled Android setup catalogue and applies
+the three optional groups individually after consent: radio permissions, vendor
+startup flags and Wi-Fi-name permission. It verifies before and after attempting
+each change. Windows verified the staged file byte-for-byte, parsed all six
+touched Swift sources and passed the 14 companion checks. The Apple fixture
+covers missing checks, an existing grant, a successful change and a TV that
+does not confirm a startup flag. Apple execution and device checks are pending.

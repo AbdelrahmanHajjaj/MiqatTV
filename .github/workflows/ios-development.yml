@@ -10,6 +10,7 @@ on:
       - 'shared/**'
       - 'gradle/**'
       - 'gradlew'
+      - 'tools/setup-steps.txt'
 
 permissions:
   contents: read
@@ -66,12 +67,14 @@ jobs:
           swiftc -parse-as-library -import-objc-header companion/ios/Miqat-Bridging-Header.h -lz \
             companion/ios/Sources/AndroidTVPackage.swift companion/ios/Sources/AndroidTVInstallation.swift \
             companion/ios/Sources/AndroidTVRecovery.swift \
+            companion/ios/Sources/AndroidTVOptions.swift \
             companion/ios/Sources/LgPackage.swift companion/ios/Sources/LGInstallation.swift \
             companion/ios/Sources/TVRelease.swift companion/ios/Sources/TVPackageDownload.swift \
             companion/ios/checks/tv-download/lg-installation.swift companion/ios/checks/tv-download/android-installation.swift \
             companion/ios/checks/tv-download/android-recovery.swift \
+            companion/ios/checks/tv-download/android-options.swift \
             companion/ios/checks/tv-download/main.swift -o "$RUNNER_TEMP/tv-download-check"
-          "$RUNNER_TEMP/tv-download-check" "$RUNNER_TEMP/ipk-fixtures" "$RUNNER_TEMP/apk-fixtures"
+          "$RUNNER_TEMP/tv-download-check" "$RUNNER_TEMP/ipk-fixtures" "$RUNNER_TEMP/apk-fixtures" tools/setup-steps.txt
       - name: Link Kotlin and build the unsigned simulator app
         env:
           DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
@@ -84,6 +87,7 @@ jobs:
           test -x "$app/Miqat"
           test -f "$app/cities.json"
           test -f "$app/adhan.js"
+          cmp tools/setup-steps.txt "$app/android-setup-steps.txt"
           test -f "$app/Notices/Adhan.txt"
           test -f "$app/Notices/libssh2.txt"
           test -f "$app/Notices/OpenSSL.txt"

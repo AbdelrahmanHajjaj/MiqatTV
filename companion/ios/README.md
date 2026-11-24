@@ -57,6 +57,9 @@ the installed version before launching Miqat. To set Miqat as Home and enable
 its remote-button service, choose **Set up Home and remote buttons**. The
 iPhone saves the prior configuration before applying changes. Reconnect to the
 same TV and choose **Restore saved TV setup** to undo those changes.
+Under **Optional TV setup**, you can enable the TV app's radio level and
+sleep-timer permissions, startup on supported models, or Wi-Fi name display.
+Miqat checks each option after applying it.
 
 The Android TV development flow currently uses classic network debugging.
 Use the desktop guide above for wireless-code pairing, CVTE setup, package

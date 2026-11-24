@@ -10,6 +10,7 @@ final class AndroidTVSetup: ObservableObject {
     @Published private(set) var status: String?
     @Published private(set) var stage: String?
     @Published private(set) var fraction: Double?
+    @Published private(set) var optionStatus: [AndroidTVOptions.ID: Bool] = [:]
     private var client: AndroidADB?
     private var task: Task<Void, Never>?
 
@@ -48,6 +49,7 @@ final class AndroidTVSetup: ObservableObject {
             try await Self.installer(client).install(package.url, version: version) { await self.report($0) }
             try Task.checkCancellation()
             self.installed = UInt64(version)
+            self.optionStatus = [:]
             self.status = "lg_installed"
         }
     }
@@ -79,6 +81,15 @@ final class AndroidTVSetup: ObservableObject {
         }
     }
 
+    func apply(_ option: AndroidTVOptions.Step) {
+        guard let client, installed != nil, !busy else { return }
+        run("tv_adb_applying_option") {
+            let confirmed = try await option.apply(using: Self.installer(client))
+            try Task.checkCancellation()
+            self.optionStatus[option.id] = confirmed
+        }
+    }
+
     func disconnect() {
         task?.cancel()
         task = nil
@@ -104,6 +115,7 @@ final class AndroidTVSetup: ObservableObject {
         client = nil
         connected = false
         installed = nil
+        optionStatus = [:]
     }
 
     private func run(_ label: String, operation: @escaping @MainActor () async throws -> Void) {

@@ -26,6 +26,7 @@ struct TVPackageView: View {
     @State private var confirmingForget = false
     @State private var confirmingSetup = false
     @State private var confirmingRestore = false
+    @State private var selectedOption: AndroidTVOptions.Step?
 
     init(preferences: PhonePreferences, setup: TVPackagePlatform? = nil, host: String = "", port: Int = 5555) {
         self.preferences = preferences
@@ -112,6 +113,7 @@ struct TVPackageView: View {
             confirmingForget = false
             confirmingSetup = false
             confirmingRestore = false
+            selectedOption = nil
             stopSetup()
         }
         .onChange(of: connected) { _, connected in
@@ -164,6 +166,7 @@ struct TVPackageView: View {
                             Button(preferences.text("tv_adb_configure")) { android.configureTV() }
                             Button(preferences.text("cancel"), role: .cancel) {}
                         }
+                    androidOptions
                 } else {
                     Text(preferences.text("lg_not_installed")).foregroundStyle(.secondary)
                 }
@@ -182,6 +185,26 @@ struct TVPackageView: View {
             if ["lg_installed", "lg_launched", "tv_adb_configured"].contains(android.status ?? "") {
                 NavigationLink(preferences.text("tv_already")) { TVPairing(preferences: preferences) }
             }
+        }
+    }
+
+    private var androidOptions: some View {
+        DisclosureGroup(preferences.text("tv_adb_optional")) {
+            ForEach(AndroidTVOptions.bundled) { option in
+                Button(preferences.arabic ? option.ar : option.en) { selectedOption = option }
+                if let verified = android.optionStatus[option.id] {
+                    Text(preferences.text(verified ? "tv_adb_option_verified" : "tv_adb_option_unconfirmed"))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .disabled(task != nil)
+        .confirmationDialog(preferences.text(selectedOption?.id.confirmation ?? "tv_adb_optional"),
+                            isPresented: Binding(get: { selectedOption != nil }, set: { if !$0 { selectedOption = nil } }),
+                            titleVisibility: .visible, presenting: selectedOption) { option in
+            Button(preferences.arabic ? option.ar : option.en) { android.apply(option) }
+            Button(preferences.text("cancel"), role: .cancel) {}
         }
     }
 
@@ -246,6 +269,7 @@ struct TVPackageView: View {
     }
 
     private func stopSetup() {
+        selectedOption = nil
         if setup == .lg { lg.disconnect() }
         if setup == .android { android.disconnect() }
         task?.cancel()

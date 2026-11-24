@@ -59,13 +59,22 @@ struct AndroidTVInstallation {
     }
 
     func shell(_ command: String) async throws -> String {
+        let result = try await shellResult(command)
+        guard result.code == 0 else { throw Failure.unreadableStatus }
+        return result.output
+    }
+
+    func shellResult(_ command: String) async throws -> (output: String, code: Int) {
         try Task.checkCancellation()
         let stream = "shell:\(command); printf '\\nMIQAT_RC=%s\\n' \"$?\""
         let response = Self.text(try await exchange(stream, nil) { _ in })
-        let trailer = "\nMIQAT_RC=0"
-        if response == "MIQAT_RC=0" { return "" }
-        guard response.hasSuffix(trailer) else { throw Failure.unreadableStatus }
-        return String(response.dropLast(trailer.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+        let marker = "MIQAT_RC="
+        guard let trailer = response.split(whereSeparator: \.isNewline).last, trailer.hasPrefix(marker),
+              let code = Int(trailer.dropFirst(marker.count)), (0...255).contains(code) else {
+            throw Failure.unreadableStatus
+        }
+        let output = String(response.dropLast(trailer.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+        return (output, code)
     }
 
     private static func text(_ bytes: Data) -> String {

@@ -17,6 +17,7 @@ for (const name of [
   copyFileSync(join(root, 'shared/data', name + '.json'), join(destination, name + '.json'));
 }
 copyFileSync(join(root, 'companion/strings.json'), join(destination, 'phone-strings.json'));
+copyFileSync(join(root, 'tools/setup-steps.txt'), join(destination, 'android-setup-steps.txt'));
 const { themes, profiles, sections, themeKeys, themeSurfaces, demoSystemLanguage } = generate();
 const { backgrounds, voices } = generatePhone();
 const themeOrder = JSON.parse(readFileSync(join(root, 'shared/design/themes.json'), 'utf8'));
