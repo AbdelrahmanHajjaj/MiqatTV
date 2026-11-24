@@ -135,11 +135,14 @@ jobs:
           xcodebuild -project companion/ios/Miqat.xcodeproj -scheme Miqat \
             -configuration Debug -sdk "$MIQAT_BUILD_SDK" -destination "$MIQAT_BUILD_DESTINATION" \
             -derivedDataPath state/ios-build CODE_SIGNING_ALLOWED=NO build
+      - name: Verify Apple binaries and packaged resources
+        run: |
+          set -x
           app="state/ios-build/Build/Products/Debug-$MIQAT_BUILD_SDK/Miqat.app"
           widget="$app/PlugIns/MiqatPrayerWidget.appex"
           for binary in "$app/Miqat" "$widget/MiqatPrayerWidget"; do
             test -x "$binary"
-            xcrun lipo -verify_arch arm64 "$binary"
+            xcrun lipo "$binary" -verify_arch arm64
             platform=$(xcrun vtool -show-build "$binary" | awk '$1 == "platform" { print $2 }')
             test "$platform" = "$MIQAT_BINARY_PLATFORM"
           done
