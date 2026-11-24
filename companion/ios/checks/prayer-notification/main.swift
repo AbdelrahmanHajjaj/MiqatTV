@@ -18,4 +18,14 @@ precondition(!shifted.matches(pending))
 let old = UNNotificationRequest(identifier: id, content: pending.content,
                                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: 3600, repeats: false))
 precondition(!adhan.matches(old))
-print("Identical absolute alerts are retained, and changed or older relative requests are replaced.")
+
+var calendar = Calendar(identifier: .gregorian)
+calendar.timeZone = TimeZone(secondsFromGMT: 7200)!
+let prayer = ISO8601DateFormatter().date(from: "2026-11-21T22:04:00Z")!.timeIntervalSince1970 * 1000
+let before = PrayerNotificationRequest.localTiming(prayerTime: prayer, eventTime: prayer - 300000, calendar: calendar)
+precondition(before.weekday == 0 && before.minute == 1439)
+let call = PrayerNotificationRequest.localTiming(prayerTime: prayer, eventTime: prayer, calendar: calendar)
+precondition(call.weekday == 0 && call.minute == 4)
+let after = PrayerNotificationRequest.localTiming(prayerTime: prayer - 300000, eventTime: prayer, calendar: calendar)
+precondition(after.weekday == 6 && after.minute == 4)
+print("Absolute alerts, prayer weekdays and quiet-hour times across midnight passed.")

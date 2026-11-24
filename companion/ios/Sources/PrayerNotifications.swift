@@ -193,27 +193,28 @@ final class PrayerNotifications: ObservableObject {
             if prefs.alertsEnabled, let times {
                 let alerts = prefs.prayerAlerts
                 let modes = alerts.enumerated().map { index, setting -> Int in
-                    guard index != 1, (setting.days & (1 << weekday)) != 0 else { return 0 }
-                    return Int(PhonePrayerRules.shared.effectiveMode(mode: Int32(setting.mode),
-                        enabled: setting.enabled, dayMode: Int32(setting.dayModes[weekday])))
+                    index != 1 && setting.enabled ? setting.mode : 0
                 }
                 let events = PhonePrayerRules.shared.futureDayEvents(times: PrayerSchedule.kotlinTimes(times), now: nowMs,
                     modes: kotlinInts(modes), before: kotlinInts(alerts.map(\.before)),
                     after: kotlinInts(alerts.map(\.after)))
                 for event in events {
                     let index = Int(event.prayer)
-                    let eventDate = Date(timeIntervalSince1970: event.time / 1000)
-                    let minute = calendar.component(.hour, from: eventDate) * 60 + calendar.component(.minute, from: eventDate)
+                    let alert = alerts[index]
+                    let timing = PrayerNotificationRequest.localTiming(prayerTime: event.prayerTime,
+                        eventTime: event.time, calendar: calendar)
+                    let dayMode = PhonePrayerRules.shared.effectiveMode(mode: Int32(alert.mode),
+                        enabled: alert.enabled, dayMode: Int32(alert.dayModes[timing.weekday]))
                     let quiet = prefs.quietHours
-                    let mode = ReminderRules.shared.alertMode(mode: Double(modes[index]), weekday: Double(weekday),
-                        daysMask: Double(alerts[index].days), minute: Double(minute), quiet: quiet.enabled,
+                    let mode = ReminderRules.shared.alertMode(mode: Double(dayMode), weekday: Double(timing.weekday),
+                        daysMask: Double(alert.days), minute: Double(timing.minute), quiet: quiet.enabled,
                         start: Double(quiet.start), end: Double(quiet.end), quietMode: Double(quiet.mode))
                     guard mode > 0 else { continue }
                     let key = event.kind == "before" ? "phone_advance_title" : event.kind == "after" ? "phone_after_title" : "phone_adhan_title"
                     let title = prefs.text(key).replacingOccurrences(of: "%s", with: prefs.prayerNames()[index])
                     let fullAdhan = mode == 2 && event.kind == "call"
                     let audible = mode == 1 || (mode == 2 && (!fullAdhan
-                        || prefs.adhan.forPrayer(index, settings: alerts[index]).level > 0))
+                        || prefs.adhan.forPrayer(index, settings: alert).level > 0))
                     plans.append(.init(event: event, title: title, body: prefs.time(times[index]),
                                        audible: audible, fullAdhan: fullAdhan && audible))
                 }

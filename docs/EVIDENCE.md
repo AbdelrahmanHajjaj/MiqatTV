@@ -2277,6 +2277,12 @@ permission recovery. The sound warning uses the audible requests in the queued
 schedule. The changed Swift files parsed and all 14 generator checks passed.
 Real notification permission and sound changes await the native regression.
 
+The iPhone reminder planner now uses a prayer's actual local weekday, matching
+Android when an astronomical time or its offset crosses midnight. It uses the
+reminder's local delivery minute for quiet hours. On Windows, Swift syntax
+checks passed and the independent date check confirmed the Apple fixture's
+Saturday/Sunday inputs. The Swift fixture still awaits macOS execution.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

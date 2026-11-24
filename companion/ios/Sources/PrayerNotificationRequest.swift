@@ -13,6 +13,13 @@ struct PrayerNotificationRequest {
 
     var date: Date { Date(timeIntervalSince1970: time / 1000) }
 
+    static func localTiming(prayerTime: Double, eventTime: Double, calendar: Calendar) -> (weekday: Int, minute: Int) {
+        let prayer = Date(timeIntervalSince1970: prayerTime / 1000)
+        let event = Date(timeIntervalSince1970: eventTime / 1000)
+        return (calendar.component(.weekday, from: prayer) - 1,
+                calendar.component(.hour, from: event) * 60 + calendar.component(.minute, from: event))
+    }
+
     func matches(_ pending: UNNotificationRequest) -> Bool {
         guard pending.identifier == id, let trigger = pending.trigger as? UNCalendarNotificationTrigger,
               !trigger.repeats, trigger.nextTriggerDate() == date else { return false }
