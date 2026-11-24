@@ -1,5 +1,8 @@
 # Miqat phone app delivery ledger
 
+The Android APK is the feature baseline for the approved iPhone port. See the
+[iOS parity queue](IOS-WORK.md) for active work and Apple acceptance.
+
 Updated: 2026-11-24. Stable v0.7.7 includes phone 0.5.23/code 39 with TV
 setup and recovery, Quran Radio, Hijri ranges, and opt-in day-before,
 suhoor and iftar alerts.

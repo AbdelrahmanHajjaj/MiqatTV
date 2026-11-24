@@ -37,6 +37,15 @@ class PhonePrayerRulesTest {
         assertEquals(2, PhonePrayerRules.nextEvent(arrayOf(times), 0.0, modes, before, none, emptyArray())!!.prayer)
     }
 
+    @Test fun batchIncludesEveryFutureReminderWithoutReplayingOneAlreadyDue() {
+        val before = intArrayOf(5, 0, 0, 0, 0, 0)
+        val after = intArrayOf(10, 0, 0, 0, 0, 0)
+        val events = PhonePrayerRules.futureDayEvents(times, times[0], modes, before, after)
+        assertEquals(listOf("after", "call", "call", "call", "call"), events.map { it.kind })
+        assertEquals(listOf(0, 2, 3, 4, 5), events.map { it.prayer })
+        assertEquals(listOf(1200000.0, 1200000.0, 1800000.0, 2400000.0, 3000000.0), events.map { it.time })
+    }
+
     @Test fun claimsAndLateWindowPreventReplaysButAllowOnTimeRecovery() {
         val call = PhonePrayerRules.nextEvent(arrayOf(times), 600001.0, modes, none, none, emptyArray())!!
         assertEquals(0, call.prayer)

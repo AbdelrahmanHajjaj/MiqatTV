@@ -1,0 +1,54 @@
+name: iOS development build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/ios-app-port]
+    paths:
+      - '.github/workflows/ios-development.yml'
+      - 'companion/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'gradlew'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-development-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apple:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: companion/ios/package-lock.json
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v5.4.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Check iOS resources and astronomy
+        run: |
+          npm --prefix companion/ios ci --ignore-scripts
+          node companion/ios/astronomy.test.mjs
+      - name: Link Kotlin and build the unsigned simulator app
+        env:
+          DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+        run: |
+          xcodebuild -project companion/ios/Miqat.xcodeproj -scheme Miqat \
+            -configuration Debug -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath state/ios-build CODE_SIGNING_ALLOWED=NO build
+          app=state/ios-build/Build/Products/Debug-iphonesimulator/Miqat.app
+          test -x "$app/Miqat"
+          test -f "$app/cities.json"
+          test -f "$app/adhan.js"
+          test -f "$app/Notices/Adhan.txt"

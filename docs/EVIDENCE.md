@@ -2226,3 +2226,12 @@ permission/OEM behavior and scheduled delivery were not accepted. Dates use
 browser Umm al-Qura; prayer times are illustrative fixtures, not calculations.
 Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
+## iPhone port development checkpoint
+
+On 2026-11-24, branch `feature/ios-app-port` configured the Kotlin iOS device
+and simulator framework tasks and added a native iOS application target.
+Companion JVM tests, its 13 catalog generator checks, resource staging and the
+offline astronomy adapter checks passed on Windows. The astronomy fixture
+matches the Android Cairo vector and verifies one application of offsets for
+every method and explicit polar unavailability. Apple linking, simulator UI
+and device behavior are still open in [IOS-WORK.md](IOS-WORK.md).

@@ -53,6 +53,18 @@ object PhonePrayerRules {
         return next.takeIf { it.nextTime > now }
     }
 
+    /** Batch of future events for shells that hand off a bounded schedule to the OS. */
+    fun futureDayEvents(times: DoubleArray, now: Double, modes: IntArray, before: IntArray,
+        after: IntArray): List<ReminderEvent> = buildList {
+        val days = arrayOf(times)
+        val seen = mutableListOf<String>()
+        while (true) {
+            val event = nextEvent(days, now, modes, before, after, seen.toTypedArray()) ?: break
+            seen.add(event.id)
+            if (event.time > now) add(event)
+        }
+    }
+
     /** A weekday override changes sound only; it can never enable a disabled prayer. */
     fun effectiveMode(mode: Int, enabled: Boolean, dayMode: Int): Int {
         require(mode in 0..4 && dayMode in -1..4)
