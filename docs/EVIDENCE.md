@@ -2399,3 +2399,11 @@ The code checks for an intervening change and confirms readback. Windows
 parsed seven affected Swift files and passed 14 companion checks. The Apple
 fixture covers serialization, confirmed save, stale drafts, unavailable apps
 and missing readback. Apple execution and TV acceptance remain pending.
+
+The Kotlin wireless ADB codec covers version-one framing, six-digit input,
+TLS channel binding and fixed-size peer information. All 36 JVM tests passed
+on Windows. The pinned, separately prefixed BoringSSL adapter built with MSVC
+and Ninja. Its native fixture rejected wrong codes, a different TLS exporter
+and a changed authentication tag, and matched an independent AES-GCM vector.
+No pairing was sent to a TV. The native TLS connection, certificate identity
+and installer handoff are still pending.
