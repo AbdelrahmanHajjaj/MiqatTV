@@ -36,8 +36,9 @@ xcrun simctl install booted Miqat.app
 xcrun simctl launch booted tv.miqat.ios
 ```
 
-The artifact is an unsigned simulator build. Use the local Xcode targets and
-development signing for iPhone and signed App Group checks.
+The workflow builds both the Simulator and iPhone SDK targets without signing.
+It uploads the simulator app for local testing. Use the local Xcode targets
+and development signing for iPhone and signed App Group checks.
 
 The app and widget targets use the `group.tv.miqat.ios` App Group to share
 an offline prayer timetable. A signed widget check needs both targets in a

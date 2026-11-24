@@ -2309,6 +2309,12 @@ unconfirmed location. The Swift sources and fixture parsed on Windows, and all
 14 generator checks and bilingual resource staging passed. Signed widget
 refresh and display still need native acceptance.
 
+The Apple workflow now builds the arm64 simulator and unsigned iPhone targets
+independently. Both jobs check the app bundle and embedded widget. Windows
+passed actionlint, Xcode workflow configuration and App Group plist checks,
+and the offline astronomy smoke test. Both Xcode builds and signed
+installation remain pending.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both
