@@ -170,20 +170,56 @@ final class UiScaleDeviceCheck {
             pageBounds(screen, size);
         });
         if (screen instanceof MainActivity && size > 110) {
-            View initial = screen.getCurrentFocus();
-            View[] nodes = (View[]) UiContractDeviceCheck.field(screen, "nodes");
+            String scenario = "Home focus " + language + " " + size + "%"
+                + " countdown=" + Prefs.of(screen).getInt("home_countdown", 0)
+                + " side=" + Prefs.of(screen).getInt("home_side", 0)
+                + " bar=" + Prefs.of(screen).getInt("home_bar", 0);
+            HomeFocus start = homeFocus(test, screen, null);
             key(test, screen, KeyEvent.KEYCODE_DPAD_UP);
+            HomeFocus up = homeFocus(test, screen, start.view());
             check(Arrays.asList(FavouriteChoice.QIBLA, FavouriteChoice.WIFI, FavouriteChoice.SETTINGS, FavouriteChoice.RADIO, FavouriteChoice.INPUTS)
-                .contains(Arrays.asList(nodes).indexOf(screen.getCurrentFocus())), "Large Home Up reaches top controls");
+                .contains(up.slot()), "Large Home Up reaches top controls\n" + scenario + "\nstart: " + start.detail() + "\nafter Up: " + up.detail());
             SystemClock.sleep(200); test.waitForIdleSync();
             UiContractDeviceCheck.onMain(test, () -> pageBounds(screen, size));
             capture(test, language, size, "home-header");
+            HomeFocus beforeDown = homeFocus(test, screen, start.view());
             key(test, screen, KeyEvent.KEYCODE_DPAD_DOWN);
-            check(screen.getCurrentFocus() == initial, "Large Home returns to its app");
+            HomeFocus down = homeFocus(test, screen, start.view());
+            check(down.view() == start.view(), "Large Home returns to its app\n" + scenario
+                + "\nstart: " + start.detail() + "\nafter Up: " + up.detail()
+                + "\nbefore Down: " + beforeDown.detail() + "\nafter Down: " + down.detail());
+            Bundle progress = new Bundle();
+            progress.putString("stream", scenario + " slots " + start.slot() + " -> " + up.slot() + " -> " + down.slot() + "\n");
+            test.sendStatus(0, progress);
+            View[] nodes = (View[]) UiContractDeviceCheck.field(screen, "nodes");
             for (int i = 0; i < 20 && screen.getCurrentFocus() != nodes[FavouriteChoice.ALL]; i++) key(test, screen, KeyEvent.KEYCODE_DPAD_DOWN);
             check(screen.getCurrentFocus() == nodes[FavouriteChoice.ALL], "Large Home Down reaches All apps");
             UiContractDeviceCheck.onMain(test, () -> pageBounds(screen, size));
         }
+    }
+
+    private record HomeFocus(View view, int slot, String detail) {}
+
+    private static HomeFocus homeFocus(Instrumentation test, Screen screen, View origin) {
+        HomeFocus[] snapshot = new HomeFocus[1];
+        UiContractDeviceCheck.onMain(test, () -> {
+            View view = screen.getCurrentFocus();
+            View[] nodes = (View[]) UiContractDeviceCheck.field(screen, "nodes");
+            int slot = view == null ? -1 : Arrays.asList(nodes).indexOf(view);
+            int favourites = (int) UiContractDeviceCheck.field(screen, "favouriteCount");
+            int recents = (int) UiContractDeviceCheck.field(screen, "recentCount");
+            int lastFav = (int) UiContractDeviceCheck.field(screen, "lastFav");
+            int columns = ((HomeLayout) UiContractDeviceCheck.field(screen, "home")).columns;
+            int downTarget = slot < 0 ? -1 : FavouriteChoice.homeMove(slot, favourites, recents, columns, lastFav, 0, 1);
+            String detail = "slot=" + slot + " view=" + System.identityHashCode(view)
+                + " root=" + System.identityHashCode(screen.root) + " windowFocus=" + screen.hasWindowFocus()
+                + " lastFavourite=" + lastFav + " favourites=" + favourites + " recents=" + recents
+                + " columns=" + columns + " downTarget=" + downTarget + " path=" + parents(view);
+            if (origin != null) detail += " originSlot=" + Arrays.asList(nodes).indexOf(origin)
+                + " originAttached=" + origin.isAttachedToWindow();
+            snapshot[0] = new HomeFocus(view, slot, detail);
+        });
+        return snapshot[0];
     }
 
     private static void capture(Instrumentation test, String language, int size, String name) throws Exception {
