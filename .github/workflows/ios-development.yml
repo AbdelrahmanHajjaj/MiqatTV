@@ -2,6 +2,11 @@ name: iOS development build
 
 on:
   workflow_dispatch:
+    inputs:
+      simulator_launch:
+        description: Install and launch Miqat on a fresh iPhone simulator
+        type: boolean
+        default: false
   push:
     branches: [feature/ios-app-port]
     paths:
@@ -167,6 +172,25 @@ jobs:
           for scene in shared/design/assets/backgrounds/*.jpg; do
             cmp "$scene" "$widget/backgrounds/${scene##*/}"
           done
+      - name: Check first launch on an iPhone simulator
+        if: github.event_name == 'workflow_dispatch' && inputs.simulator_launch && matrix.sdk == 'iphonesimulator'
+        timeout-minutes: 5
+        run: |
+          app="state/ios-build/Build/Products/Debug-iphonesimulator/Miqat.app"
+          device=$(xcrun simctl create 'Miqat launch check' \
+            com.apple.CoreSimulator.SimDeviceType.iPhone-16 \
+            com.apple.CoreSimulator.SimRuntime.iOS-18-4)
+          trap 'xcrun simctl shutdown "$device" || true; xcrun simctl delete "$device"' EXIT
+          xcrun simctl boot "$device"
+          xcrun simctl bootstatus "$device" -b
+          xcrun simctl install "$device" "$app"
+          bundle=tv.miqat.ios
+          launch=$(xcrun simctl launch "$device" "$bundle")
+          printf '%s\n' "$launch"
+          pid=${launch##*: }
+          case "$pid" in ''|*[!0-9]*) exit 1 ;; esac
+          sleep 5
+          ps -p "$pid" -o comm= | grep -E '(^|[[:space:]]|/)Miqat$'
       - name: Package simulator build
         if: matrix.sdk == 'iphonesimulator'
         run: ditto -c -k --keepParent state/ios-build/Build/Products/Debug-iphonesimulator/Miqat.app "$RUNNER_TEMP/Miqat-iOS-Simulator.zip"

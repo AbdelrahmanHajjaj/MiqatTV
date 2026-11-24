@@ -53,6 +53,12 @@ The workflow builds both the Simulator and iPhone SDK targets without signing.
 It uploads the simulator app for local testing. Use the local Xcode targets
 and development signing for iPhone and signed App Group checks.
 
+For a targeted first-launch check, dispatch the development workflow with
+`simulator_launch=true`. The check uses a fresh iPhone 16 simulator to install
+the built app and confirm the process stays alive. Follow the
+[first-use steps](../../docs/IOS-WORK.md#first-use-regression-on-iphone) for
+onboarding, offline prayer times, and permission behavior.
+
 The app and widget targets use the `group.tv.miqat.ios` App Group to share
 an offline prayer timetable. A signed widget check needs both targets in a
 development team with that group enabled. Signing identities stay local.
