@@ -41,10 +41,10 @@ enum TVPackageDownload {
         let bytes = try await source(release.url, session: client, limit: release.size)
         let ready = try await stage(bytes, release: release, digest: digest, report: report)
         do {
-            if platform == .lg {
-                return Package(url: ready.url, tag: ready.tag, version: try LgPackage.version(of: ready.url))
-            }
-            return ready
+            let version: String
+            if platform == .lg { version = try LgPackage.version(of: ready.url) }
+            else { version = try AndroidTVPackage.version(of: ready.url) }
+            return Package(url: ready.url, tag: ready.tag, version: version)
         } catch {
             ready.discard()
             throw error

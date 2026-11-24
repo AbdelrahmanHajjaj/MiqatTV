@@ -11,9 +11,10 @@ struct TVPackageView: View {
 
     private static let platforms: [Platform] = PhoneData.load("tv-platforms")
     let preferences: PhonePreferences
-    private let setupLG: Bool
+    private let setup: TVPackagePlatform?
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var lg = LGSetup()
+    @StateObject private var android: AndroidTVSetup
     @State private var platform: TVPackagePlatform
     @State private var channel = TVPackageChannel.production
     @State private var task: Task<Void, Never>?
@@ -24,16 +25,29 @@ struct TVPackageView: View {
     @State private var confirmingInstall = false
     @State private var confirmingForget = false
 
-    init(preferences: PhonePreferences, setupLG: Bool = false) {
+    init(preferences: PhonePreferences, setup: TVPackagePlatform? = nil, host: String = "", port: Int = 5555) {
         self.preferences = preferences
-        self.setupLG = setupLG
-        _platform = State(initialValue: setupLG ? .lg : .android)
+        self.setup = setup
+        _android = StateObject(wrappedValue: AndroidTVSetup(address: host, port: port))
+        _platform = State(initialValue: setup ?? .android)
+    }
+
+    private var connected: Bool { setup == .lg ? lg.connected : android.connected }
+    private var setupBusy: Bool { setup == .lg ? lg.busy : android.busy }
+    private var title: String {
+        switch setup {
+        case .lg: "lg_intro"
+        case .android: "tv_adb_setup"
+        case nil: "tv_public"
+        }
     }
 
     var body: some View {
         Form {
-            if setupLG {
+            if setup == .lg {
                 lgConnection
+            } else if setup == .android {
+                androidConnection
             } else {
                 Picker(preferences.text("tv_platform"), selection: $platform) {
                     ForEach(TVPackagePlatform.allCases, id: \.self) { value in
@@ -49,7 +63,7 @@ struct TVPackageView: View {
                     Text(preferences.text("tv_channel_" + value.rawValue)).tag(value)
                 }
             }
-            .disabled(task != nil || lg.busy)
+            .disabled(task != nil || setupBusy)
             if let progress {
                 switch progress {
                 case .lookup: ProgressView(preferences.text("tv_public_lookup"))
@@ -59,44 +73,45 @@ struct TVPackageView: View {
             }
             if let status { Text(preferences.text(status)).foregroundStyle(.secondary) }
             if let package {
-                LabeledContent(package.url.lastPathComponent, value: setupLG ? (package.version ?? package.tag) : package.tag)
-                if setupLG {
+                LabeledContent(package.url.lastPathComponent, value: setup != nil ? (package.version ?? package.tag) : package.tag)
+                if setup != nil {
                     Button(preferences.text("lg_install")) { confirmingInstall = true }
-                        .disabled(!lg.connected || lg.busy || package.version == nil)
+                        .disabled(!connected || setupBusy || package.version == nil)
                         .confirmationDialog(preferences.text("lg_install_confirm"), isPresented: $confirmingInstall,
                                             titleVisibility: .visible) {
-                            Button(preferences.text("lg_install")) { lg.install(package) }
+                            Button(preferences.text("lg_install")) {
+                                if setup == .lg { lg.install(package) }
+                                else { android.install(package) }
+                            }
                             Button(preferences.text("cancel"), role: .cancel) {}
                         }
                 }
-                ShareLink(item: package.url).disabled(lg.busy)
+                ShareLink(item: package.url).disabled(setupBusy)
             }
             if let task {
                 Button(preferences.text("cancel")) { task.cancel() }
-            } else if !lg.busy {
+            } else if !setupBusy {
                 Button(preferences.text("tv_public_download")) { start() }
-                    .disabled(setupLG && !lg.connected)
+                    .disabled(setup != nil && !connected)
                 Button(preferences.text("tv_local")) { importing = true }
             }
         }
-        .navigationTitle(preferences.text(setupLG ? "lg_intro" : "tv_public"))
+        .navigationTitle(preferences.text(title))
         .onChange(of: platform) { _, _ in clearPackage() }
         .onChange(of: channel) { _, _ in clearPackage() }
-        .onAppear { if setupLG { lg.refreshIdentity() } }
+        .onAppear { if setup == .lg { lg.refreshIdentity() } }
         .onDisappear {
-            if setupLG { lg.disconnect() }
-            task?.cancel()
+            stopSetup()
             clearPackage()
         }
         .onChange(of: scenePhase) { _, phase in
-            guard setupLG, phase == .background else { return }
+            guard setup != nil, phase == .background else { return }
             confirmingInstall = false
             confirmingForget = false
-            lg.disconnect()
-            task?.cancel()
+            stopSetup()
         }
-        .onChange(of: lg.connected) { _, connected in
-            if setupLG && connected && package == nil && !importing && task == nil { start() }
+        .onChange(of: connected) { _, connected in
+            if setup != nil && connected && package == nil && !importing && task == nil { start() }
         }
         .alert(item: $lg.approval) { candidate in
             Alert(title: Text(preferences.text("lg_trust")),
@@ -108,6 +123,46 @@ struct TVPackageView: View {
             switch result {
             case .success(let url): importLocal(url)
             case .failure: status = "tv_local_invalid"
+            }
+        }
+    }
+
+    private var androidConnection: some View {
+        Section {
+            DisclosureGroup(preferences.text("tv_adb_enable")) {
+                Text(preferences.text("tv_adb_steps"))
+            }
+            if !android.connected {
+                TextField(preferences.text("lg_address"), text: $android.address)
+                    .keyboardType(.numbersAndPunctuation)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .environment(\.layoutDirection, .leftToRight)
+                    .disabled(android.busy)
+                TextField(preferences.text("tv_adb_port"), text: $android.port)
+                    .keyboardType(.numberPad)
+                    .environment(\.layoutDirection, .leftToRight)
+                    .disabled(android.busy)
+            }
+            if let stage = android.stage {
+                if let value = android.fraction { ProgressView(preferences.text(stage), value: value) }
+                else { ProgressView(preferences.text(stage)) }
+                Button(preferences.text("cancel")) { android.disconnect() }
+            } else if android.connected {
+                LabeledContent(preferences.text("lg_address"), value: android.address)
+                if let version = android.installed {
+                    LabeledContent(preferences.text("tv_adb_version"), value: String(version))
+                    Button(preferences.text("lg_launch")) { android.launch() }.disabled(task != nil)
+                } else {
+                    Text(preferences.text("lg_not_installed")).foregroundStyle(.secondary)
+                }
+                Button(preferences.text("lg_disconnect")) { stopSetup() }
+            } else {
+                Button(preferences.text("lg_connect")) { android.connect() }.disabled(task != nil || importing)
+            }
+            if let status = android.status { Text(preferences.text(status)).foregroundStyle(.secondary) }
+            if android.status == "lg_installed" || android.status == "lg_launched" {
+                NavigationLink(preferences.text("tv_already")) { TVPairing(preferences: preferences) }
             }
         }
     }
@@ -172,8 +227,14 @@ struct TVPackageView: View {
         status = nil
     }
 
+    private func stopSetup() {
+        if setup == .lg { lg.disconnect() }
+        if setup == .android { android.disconnect() }
+        task?.cancel()
+    }
+
     private func start() {
-        guard task == nil, !setupLG || (lg.connected && !lg.busy) else { return }
+        guard task == nil, setup == nil || (connected && !setupBusy) else { return }
         clearPackage()
         progress = .lookup
         let selection = (platform, channel)
@@ -197,7 +258,7 @@ struct TVPackageView: View {
     }
 
     private func importLocal(_ url: URL) {
-        guard task == nil, !lg.busy else { return }
+        guard task == nil, !setupBusy else { return }
         clearPackage()
         progress = .verifying
         let selection = platform

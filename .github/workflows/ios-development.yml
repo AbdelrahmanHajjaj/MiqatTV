@@ -57,17 +57,17 @@ jobs:
           swiftc companion/ios/Sources/WidgetSnapshot.swift companion/ios/checks/widget-appearance/main.swift \
             -o "$RUNNER_TEMP/widget-appearance-check"
           "$RUNNER_TEMP/widget-appearance-check"
-      - name: Check TV packages and LG installation sequence
+      - name: Check TV packages and installation sequences
         env:
           DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
         run: |
           python3 -S -B companion/ios/checks/tv-download/ipk-fixtures.py "$RUNNER_TEMP/ipk-fixtures"
           python3 -S -B companion/ios/checks/tv-download/apk-fixtures.py "$RUNNER_TEMP/apk-fixtures"
           swiftc -parse-as-library -import-objc-header companion/ios/Miqat-Bridging-Header.h -lz \
-            companion/ios/Sources/AndroidTVPackage.swift \
+            companion/ios/Sources/AndroidTVPackage.swift companion/ios/Sources/AndroidTVInstallation.swift \
             companion/ios/Sources/LgPackage.swift companion/ios/Sources/LGInstallation.swift \
             companion/ios/Sources/TVRelease.swift companion/ios/Sources/TVPackageDownload.swift \
-            companion/ios/checks/tv-download/lg-installation.swift \
+            companion/ios/checks/tv-download/lg-installation.swift companion/ios/checks/tv-download/android-installation.swift \
             companion/ios/checks/tv-download/main.swift -o "$RUNNER_TEMP/tv-download-check"
           "$RUNNER_TEMP/tv-download-check" "$RUNNER_TEMP/ipk-fixtures" "$RUNNER_TEMP/apk-fixtures"
       - name: Link Kotlin and build the unsigned simulator app

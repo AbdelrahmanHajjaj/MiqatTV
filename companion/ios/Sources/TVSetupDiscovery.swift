@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import SwiftUI
 
@@ -25,6 +26,7 @@ final class TVSetupDiscovery: NSObject, ObservableObject, NetServiceBrowserDeleg
         let id: Key
         let address: String
         let number: Int
+        let privateIPv4: String?
     }
 
     enum Search: Equatable {
@@ -110,7 +112,8 @@ final class TVSetupDiscovery: NSObject, ObservableObject, NetServiceBrowserDeleg
               (1...65535).contains(service.port) else { return }
         let address = hostname.hasSuffix(".") ? String(hostname.dropLast()) : hostname
         guard address.lowercased().hasSuffix(".local") else { return }
-        let port = Port(id: key, address: address, number: service.port)
+        let localAddress = service.addresses?.lazy.compactMap(Self.ipv4Address).first
+        let port = Port(id: key, address: address, number: service.port, privateIPv4: localAddress)
         ports.removeAll { $0.id == key }
         ports.append(port)
         ports.sort { ($0.address, $0.number, $0.id.name) < ($1.address, $1.number, $1.id.name) }
@@ -120,6 +123,17 @@ final class TVSetupDiscovery: NSObject, ObservableObject, NetServiceBrowserDeleg
         let name = service.type.hasSuffix(".") ? String(service.type.dropLast()) : service.type
         guard let type = Service(rawValue: name) else { return nil }
         return Key(name: service.name, type: type)
+    }
+
+    private static func ipv4Address(_ data: Data) -> String? {
+        guard data.count == MemoryLayout<sockaddr_in>.size else { return nil }
+        var address = sockaddr_in()
+        _ = withUnsafeMutableBytes(of: &address) { data.copyBytes(to: $0) }
+        guard address.sin_family == sa_family_t(AF_INET) else { return nil }
+        var bytes = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
+        guard inet_ntop(AF_INET, &address.sin_addr, &bytes, socklen_t(INET_ADDRSTRLEN)) != nil else { return nil }
+        let host = String(cString: bytes)
+        return TVEndpoint.isPrivateIPv4(host) ? host : nil
     }
 }
 
@@ -145,14 +159,12 @@ struct TVSetupDiscoveryView: View {
                 }
             }
             ForEach(discovery.ports) { port in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(port.id.name)
-                    Text(preferences.text(port.id.type.title))
-                        .foregroundStyle(.secondary)
-                    Text(verbatim: "\(port.address):\(port.number)")
-                        .font(.footnote.monospaced())
-                        .environment(\.layoutDirection, .leftToRight)
-                        .textSelection(.enabled)
+                if port.id.type == .classic, let host = port.privateIPv4 {
+                    NavigationLink {
+                        TVPackageView(preferences: preferences, setup: .android, host: host, port: port.number)
+                    } label: { entry(port) }
+                } else {
+                    entry(port).textSelection(.enabled)
                 }
             }
         }
@@ -160,6 +172,16 @@ struct TVSetupDiscoveryView: View {
         .onDisappear { discovery.reset() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { discovery.reset() }
+        }
+    }
+
+    private func entry(_ port: TVSetupDiscovery.Port) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(port.id.name)
+            Text(preferences.text(port.id.type.title)).foregroundStyle(.secondary)
+            Text(verbatim: "\(port.privateIPv4 ?? port.address):\(port.number)")
+                .font(.footnote.monospaced())
+                .environment(\.layoutDirection, .leftToRight)
         }
     }
 }

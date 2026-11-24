@@ -3,6 +3,7 @@ import Foundation
 enum AndroidTVPackage {
     enum Invalid: Error { case archive }
 
+    static let packageID = "tv.miqat.home"
     static let maximumSize = 200 * 1024 * 1024
     private static let manifestLimit = 1024 * 1024
     private static let manifestName = Array("AndroidManifest.xml".utf8)
@@ -144,7 +145,7 @@ enum AndroidTVPackage {
                 }
             }
         }
-        guard package == "tv.miqat.home", let versionCode, versionCode > 0 else { throw Invalid.archive }
+        guard package == packageID, let versionCode, versionCode > 0 else { throw Invalid.archive }
         return String((UInt64(versionMajor ?? 0) << 32) | UInt64(versionCode))
     }
 

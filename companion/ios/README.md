@@ -48,7 +48,15 @@ identity from the same screen.
 
 In **Your TVs → Find Android TV**, start a search to see the local addresses
 and ports advertised by Android TV for network debugging and wireless pairing.
-Allow Miqat to use the local network when iOS prompts. Use the setup guide
-above if a TV shows its debugging address only on its own screen.
+Allow Miqat to use the local network when iOS prompts. A classic network
+debugging result can open the install screen with its address and port filled
+in. You can also open **Your TVs → Install Miqat on Android TV** and enter the
+TV's private IPv4 address and debugging port directly. After the TV approves
+the connection, select a build or local APK, confirm installation and check
+the installed version before launching Miqat.
+
+The Android TV development flow currently supports classic network debugging.
+Use the desktop guide above for wireless-code pairing and TV changes such as
+launcher setup or recovery.
 
 [Parity queue and validation status](../../docs/IOS-WORK.md).

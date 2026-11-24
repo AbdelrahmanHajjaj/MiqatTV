@@ -2351,3 +2351,12 @@ The JVM suite passed all 33 tests. Two additions compare wire public keys
 against JVM big-integer arithmetic and reject malformed DER. Windows parsed
 the four touched Swift files. iOS Keychain generation, signature use, direct
 ADB authorization, install/recovery and wireless TLS remain unverified.
+
+The iPhone classic Android setup screen has a manual endpoint and a handoff
+from Bonjour classic results. The install flow checks the package ID and
+version code, refuses downgrades, streams a regular package-manager update and
+checks the code reported by the TV before launch. Windows parsed nine Swift
+files, passed the 14 companion checks and used Android build tools to inspect
+the Miqat APK fixture. The Apple fixture covers existing and fresh installs,
+changed selection, downgrade, Android signer rejection, stale installed
+version and unreadable status. Swift execution and TV behavior are pending.
