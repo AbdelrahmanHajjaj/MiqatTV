@@ -201,7 +201,7 @@ struct AdhanPlayback: View {
         let accent = PhoneAppearance.color("gold-400", preferences: preferences)
         VStack(spacing: 18) {
             Text(PhoneData.adhanCall).font(.largeTitle)
-            if let prayer = audio.prayer { Text(preferences.prayerNames()[prayer]).font(.title) }
+            if let title = audio.mediaTitle { Text(title).font(.title).multilineTextAlignment(.center) }
             if let name = audio.name { Text(name).foregroundStyle(.secondary) }
             TimelineView(.periodic(from: .now, by: 0.25)) { _ in ProgressView(value: audio.progress) }
             Button(preferences.text(audio.paused ? "phone_resume" : "phone_pause")) { audio.togglePause() }
@@ -223,7 +223,8 @@ struct AdhanPlayback: View {
         .foregroundStyle(ink)
         .tint(accent)
         .background {
-            PhoneBackdrop(ground: ground, scene: preferences.background, shade: 0.82).ignoresSafeArea()
+            PhoneBackdrop(ground: ground, scene: preferences.showArtwork ? preferences.background : "plain",
+                          shade: 0.82).ignoresSafeArea()
         }
         .interactiveDismissDisabled()
         .onChange(of: audio.name) { _, name in if name == nil { dismiss() } }

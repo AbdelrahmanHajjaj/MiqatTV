@@ -212,6 +212,7 @@ final class PhoneApplicationDelegate: NSObject, UIApplicationDelegate, UNUserNot
 }
 
 struct PrayerHome: View {
+    @Environment(\.accessibilityReduceMotion) private var systemReducesMotion
     @EnvironmentObject private var audio: PhoneAdhan
     @EnvironmentObject private var radio: QuranRadio
     @EnvironmentObject private var notifications: PrayerNotifications
@@ -304,13 +305,7 @@ struct PrayerHome: View {
                             Text(preferences.text("phone_alerts_off")).foregroundStyle(.secondary)
                         }
                     }
-                    if !preview && audio.prayer != nil {
-                        Button { showPlayback = true } label: {
-                            Label(preferences.text("phone_adhan_controls"), systemImage: "waveform")
-                                .foregroundStyle(ground)
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
+                    if !preview && audio.prayer != nil { adhanControls }
                     if !preview && radio.hasSession {
                         Button {
                             if radio.wantsPlay { radio.pause() }
@@ -374,6 +369,23 @@ struct PrayerHome: View {
             Text(preferences.hijriDate(date)).font(.headline)
             Text(preferences.gregorianDate(date)).font(.subheadline)
         }
+    }
+
+    private var adhanControls: some View {
+        Button { showPlayback = true } label: {
+            HStack {
+                Image(systemName: audio.paused ? "pause.fill" : "waveform")
+                    .symbolEffect(.pulse, isActive: !audio.paused && !systemReducesMotion && !preferences.reduceMotion)
+                    .accessibilityHidden(true)
+                Text(audio.mediaTitle ?? preferences.text("phone_adhan_controls"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .foregroundStyle(ground)
+            .padding(.vertical, 6)
+        }
+        .buttonStyle(.borderedProminent)
+        .accessibilityValue(preferences.text(audio.paused ? "phone_paused" : "phone_playing"))
+        .accessibilityHint(preferences.text("phone_adhan_controls"))
     }
 
     private var cityAction: some View {

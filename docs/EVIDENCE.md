@@ -2293,6 +2293,11 @@ player item. A stable connection replenishes the four-retry budget. The Swift
 source parsed and all 14 generator checks passed. Terminal stream callbacks,
 retry exhaustion and lock-screen transport await the native radio regression.
 
+The iPhone Adhan screen displays the same scheduled title as Now Playing.
+Home uses a full-width playback shortcut and respects both Reduce Motion
+settings. The touched Swift sources parsed and all 14 generator checks passed.
+Artwork, layout, VoiceOver and animation still need native acceptance.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

@@ -9,9 +9,9 @@ final class PhoneAdhan: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published private(set) var name: String?
     @Published private(set) var prayer: Int?
     @Published private(set) var paused = false
+    @Published private(set) var mediaTitle: String?
     private var player: AVAudioPlayer?
     private var cutoff: TimeInterval = 0
-    private var mediaTitle: String?
     private var artwork: MPMediaItemArtwork?
     private var stopTask: Task<Void, Never>?
     var onPlayback: (() -> Void)?
