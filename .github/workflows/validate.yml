@@ -3,15 +3,17 @@ name: Validate
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      channel:
+        type: string
+        required: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: validate-${{ github.event.pull_request.number || github.ref }}
+  group: validate-${{ inputs.channel || 'pr' }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -32,8 +34,12 @@ jobs:
           fetch-depth: 0
       - name: Lint workflow definitions
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
-      - name: Test check selection and merge gate
-        run: python3 -S -B -m unittest discover -s tests -p test_ci.py -v
+      - name: Test CI and release gates
+        run: |
+          python3 -S -B -m unittest discover -s tests -p test_ci.py -v
+          python3 -S -B -m unittest discover -s tests -p test_release*.py -v
+          python3 -S -B -m unittest discover -s tests -p test_delivery.py -v
+          python3 -S -B -m unittest discover -s tests -p test_stable_promotion.py -v
       - name: Check PR whitespace
         if: github.event_name == 'pull_request'
         env:
@@ -42,6 +48,8 @@ jobs:
         run: git diff --check "$BASE_SHA...$HEAD_SHA"
       - name: Select affected consumers
         id: select
+        env:
+          BUILD_CHANNEL: ${{ inputs.channel }}
         run: python3 -S -B tools/ci.py select
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: contains(toJSON(steps.select.outputs), 'true')
@@ -108,17 +116,21 @@ jobs:
           python3 tools/check_apk_media.py platforms/android-tv/build/outputs/apk/release/app-release-unsigned.apk
       - name: Run Java and setup/recovery regressions
         run: python3 -S -B -m unittest discover -s tests -v
-      - name: Collect full-audio APKs
-        if: github.event_name != 'pull_request'
+      - name: Collect the selected Android TV APK
+        if: inputs.channel != ''
+        env:
+          CHANNEL: ${{ inputs.channel }}
         run: |
           mkdir -p state/builds/android
-          cp platforms/android-tv/build/outputs/apk/debug/app-debug.apk state/builds/android/miqat.apk
-          cp platforms/android-tv/build/outputs/apk/release/app-release-unsigned.apk state/builds/android/miqat-release-unsigned.apk
-          cp platforms/android-tv/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk state/builds/android/miqat-android-test.apk
+          if [[ "$CHANNEL" == development ]]; then
+            cp platforms/android-tv/build/outputs/apk/debug/app-debug.apk state/builds/android/miqat.apk
+          else
+            cp platforms/android-tv/build/outputs/apk/release/app-release-unsigned.apk state/builds/android/miqat.apk
+          fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: github.event_name != 'pull_request'
+        if: inputs.channel != ''
         with:
-          name: android-builds
+          name: android-tv-${{ inputs.channel }}
           path: state/builds/android/
           if-no-files-found: error
           retention-days: 7
@@ -158,25 +170,19 @@ jobs:
         run: |
           sha256sum --check shared/media/SHA256SUMS
           npm --prefix platforms/webos test
-      - name: Check runner Edge for the existing browser suite
-        run: microsoft-edge --version
-      - run: npm --prefix platforms/webos run test:browser
+      - name: Check LG startup and bilingual Settings in a browser
+        if: github.event_name == 'pull_request'
+        run: npm --prefix platforms/webos run test:browser -- --smoke
       - name: Package full-audio LG app and service
         run: |
           mkdir -p state/builds/webos
           npm exec --yes --package=@webos-tools/cli@3.2.6 -- ares-package platforms/webos/build/app platforms/webos/build/service --outdir state/builds/webos --no-minify
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: github.event_name != 'pull_request'
+        if: inputs.channel != ''
         with:
-          name: webos-build
+          name: lg-${{ inputs.channel }}
           path: state/builds/webos/*.ipk
           if-no-files-found: error
-          retention-days: 7
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: failure()
-        with:
-          name: lg-browser-evidence
-          path: state/webos-port/
           retention-days: 7
 
   preview:
@@ -209,24 +215,54 @@ jobs:
           npm --prefix site run tokens:check
       - run: npm --prefix site test
       - run: npm --prefix site run build
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        if: github.ref == 'refs/heads/main'
-        with:
-          path: site/dist
-          retention-days: 7
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: github.event_name != 'pull_request'
-        with:
-          name: browser-preview
-          path: site/dist/
-          if-no-files-found: error
-          retention-days: 7
+      - run: npm --prefix site run test:browser -- --showcase-only
 
   companion:
-    name: Companion
+    name: Miqat Phone
     needs: changes
     if: needs.changes.outputs.companion == 'true'
-    uses: ./.github/workflows/companion.yml
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Verify and build with approved shared recordings
+        run: |
+          node companion/generate.test.mjs
+          node companion/qr.test.cjs
+          node companion/android-shared/check.mjs
+          ./gradlew -p companion/core check jvmJar --no-daemon
+          ./gradlew :companion:assembleDebug :companion:lintDebug :companion:assembleDebugAndroidTest :companion:assembleRelease :companion:lintRelease --no-daemon
+          python3 tools/check_apk_media.py companion/android/build/outputs/apk/debug/companion-debug.apk
+          python3 tools/check_apk_media.py companion/android/build/outputs/apk/release/companion-release-unsigned.apk
+      - name: Collect the Development phone APK
+        if: inputs.channel == 'development'
+        run: |
+          mkdir -p state/builds/phone
+          cp companion/android/build/outputs/apk/debug/companion-debug.apk state/builds/phone/miqat-phone.apk
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: inputs.channel == 'development'
+        with:
+          name: phone-development
+          path: state/builds/phone/miqat-phone.apk
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: inputs.channel == 'staging'
+        with:
+          name: phone-staging
+          path: companion/android/build/outputs/apk/release/companion-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 7
 
   required:
     name: Required checks
@@ -242,24 +278,3 @@ jobs:
         env:
           RESULTS: ${{ toJSON(needs) }}
         run: python3 -S -B tools/ci.py require
-
-  pages:
-    name: GitHub Pages
-    if: github.ref == 'refs/heads/main'
-    needs: [required, preview]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: github-pages
-      cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy the validated site
-        id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

@@ -37,7 +37,7 @@ final class LgSetup {
     private ProgressBar stageBar;
 
     LgSetup(MainActivity activity) {
-        this(activity, "latest");
+        this(activity, "production");
     }
 
     LgSetup(MainActivity activity, String channel) {
@@ -117,7 +117,7 @@ final class LgSetup {
             connect.addView(a.views.text(a.t("lg_save_failed"), 14, a.accent));
         if (selected != null)
             connect.addView(a.views.text("Miqat " + selected.version + " · IPK", 16, a.ink));
-        if (preview) connect.addView(a.views.text(a.t("tv_public_preview"), 13, a.muted));
+        if (preview) connect.addView(a.views.text(a.t("tv_public_staging"), 13, a.muted));
         if (message.startsWith("tv_public_"))
             a.views
                     .button(connect, a.t("tv_public_download"), this::download)
@@ -411,7 +411,7 @@ final class LgSetup {
                                 cached.toPath(),
                                 StandardCopyOption.ATOMIC_MOVE,
                                 StandardCopyOption.REPLACE_EXISTING);
-                        return new Object[] {LgPackage.read(cached), asset.preview};
+                        return new Object[] {LgPackage.read(cached), asset.staging};
                     } catch (PublicRelease.Unavailable unavailable) {
                         return null;
                     }

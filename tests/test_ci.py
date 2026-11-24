@@ -43,15 +43,25 @@ class CiChecks(unittest.TestCase):
                                check=True, capture_output=True)
                 self.assertEqual(dict(line.split("=") for line in output.read_text().splitlines()),
                                  {name: "true" for name in JOBS})
+            output.write_text("")
+            subprocess.run([sys.executable, "-S", "-B", str(script), "select"], cwd=root,
+                           env={**os.environ, "GITHUB_EVENT_PATH": str(event),
+                                "GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_OUTPUT": str(output),
+                                "BUILD_CHANNEL": "staging"}, check=True, capture_output=True)
+            self.assertEqual(dict(line.split("=") for line in output.read_text().splitlines()),
+                             {name: str(name != "preview").lower() for name in JOBS})
 
     def test_affected_consumers(self):
         cases = [
             (["docs/CI.md", "README.md"], set()),
             (["site/src/lib/test.ts"], {"preview"}),
+            (["docs/screenshots/phone-home-ar.png"], {"preview"}),
             (["platforms/android-tv/build.gradle"], {"android"}),
             (["platforms/webos/app/index.html"], {"webos"}),
             (["installer/runtime/build.gradle"], {"android", "companion"}),
             (["companion/contract.json"], set(JOBS) - {"core"}),
+            (["companion/android/src/main/java/tv/miqat/companion/PhoneHome.java"], {"companion"}),
+            (["companion/android-shared/check.mjs"], set(JOBS) - {"core"}),
             (["shared/core/rules.kt"], set(JOBS)),
             (["shared/media/adhan/test.mp3"], set(JOBS)),
             (["tools/catalogs.mjs"], set(JOBS)),

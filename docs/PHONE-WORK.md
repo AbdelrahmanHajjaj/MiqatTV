@@ -13,7 +13,9 @@ platforms. LG continues after first-time SSH approval and can save a passphrase
 with explicit opt-in. See EVIDENCE.md for validation.
 WORK.md owns the next action.
 
-Sideloaded phone builds add a manual stable version check in About Miqat.
+Sideloaded phone builds offer a manual Production version check in About Miqat.
+Miqat Phone TV setup selects Production or Staging public downloads. Development
+packages use the local file picker. See [Releasing](RELEASING.md).
 
 About Miqat shows the installed phone app version, developer credit
 and GitHub feedback. Email feedback stays disabled pending a public address.

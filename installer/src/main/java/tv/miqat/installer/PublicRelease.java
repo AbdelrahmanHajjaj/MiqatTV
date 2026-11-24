@@ -18,10 +18,10 @@ public final class PublicRelease {
     public interface Progress { void on(long done,long total); }
     public static final class Asset {
         public final String name,tag;
-        public final boolean preview;
+        public final boolean staging;
         final String url,digest,sums;
         final long size;
-        Asset(String name,String tag,boolean preview,String url,String digest,String sums,long size){this.name=name;this.tag=tag;this.preview=preview;this.url=url;this.digest=digest;this.sums=sums;this.size=size;}
+        Asset(String name,String tag,boolean staging,String url,String digest,String sums,long size){this.name=name;this.tag=tag;this.staging=staging;this.url=url;this.digest=digest;this.sums=sums;this.size=size;}
         public File download(File directory,Progress progress)throws IOException {
             String expected=digest;
             if(expected.isEmpty())expected=checksum(text(sums,262144),name);
@@ -31,24 +31,25 @@ public final class PublicRelease {
         }
     }
     public static Asset latest(boolean lg)throws IOException {
-        return latest(lg,"latest");
+        return latest(lg,"production");
     }
     public static Asset latest(boolean lg,String channel)throws IOException {
         // shortcut: inspect the newest 30 releases; revisit if platform releases diverge that far.
         return parse(text("https://api.github.com/repos/"+REPO+"/releases?per_page=30",2*1024*1024),lg,channel);
     }
     static Asset parse(String text,boolean lg)throws IOException {
-        return parse(text,lg,"latest");
+        return parse(text,lg,"production");
     }
     static Asset parse(String text,boolean lg,String channel)throws IOException {
-        if(!channel.equals("latest")&&!channel.equals("stable")&&!channel.equals("preview"))throw new IOException("Unknown release channel");
+        if(!channel.equals("production")&&!channel.equals("staging"))throw new IOException("Unknown release channel");
         try {
             JSONArray releases=new JSONArray(text);JSONObject chosen=null;String published="";
             for(int i=0;i<releases.length();i++){
                 JSONObject release=releases.getJSONObject(i);String date=release.optString("published_at","");
                 if(release.optBoolean("draft",true)||!date.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z"))continue;
-                boolean preview=release.getBoolean("prerelease");
-                if(channel.equals("stable")&&preview||channel.equals("preview")&&!preview)continue;
+                boolean staging=release.getBoolean("prerelease");
+                if(staging!=channel.equals("staging"))continue;
+                if(staging&&!release.getString("tag_name").matches("v\\d+\\.\\d+\\.\\d+-staging\\.[1-9]\\d*"))continue;
                 JSONArray assets=release.getJSONArray("assets");boolean found=false;
                 for(int j=0;j<assets.length();j++)if(packageName(assets.getJSONObject(j).getString("name"),lg))found=true;
                 if(found&&(chosen==null||date.compareTo(published)>0)){chosen=release;published=date;}

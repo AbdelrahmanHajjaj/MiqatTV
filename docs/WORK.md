@@ -27,9 +27,10 @@ Sideloaded Android phone and TV builds can explicitly check the stable update
 metadata on GitHub Pages from About. Installation remains user-driven.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
-android-release environment. Routine CI has no phone/TV emulator jobs; retain
-build/lint, portable/JVM/browser and package/signature gates. Native device suites
-remain targeted manual checks.
+android-release environment. Validate is PR-only. Build provides Development
+artifacts and signed Staging prereleases. Production verifies a pinned Staging
+candidate with Device simulation and deploys its screenshots and update metadata.
+See [CI](CI.md) and [Releasing](RELEASING.md).
 
 Transition from debug signing requires one fresh install and removes local data;
 later signed releases preserve identity. Keep an off-device signing recovery copy.

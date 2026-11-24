@@ -3,6 +3,7 @@ import type { Lang } from './text';
 import updates from './stable-release.json';
 export const REPO = 'https://github.com/AbdelrahmanHajjaj/MiqatTV';
 export const RELEASE_TAG = updates.tag;
+export const LG_ASSET = updates.lgAsset;
 
 type L = Record<Lang, string>;
 export type Page = {

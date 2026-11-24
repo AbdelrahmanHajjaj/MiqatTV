@@ -170,6 +170,6 @@
     <string name="public_unavailable">لا تتوفر حزمة ميقات للتلفاز منشورة بعد. حاول لاحقًا أو اختر ملف APK محليًا من الخيارات المتقدمة.</string>
     <string name="public_preview">إصدار معاينة منشور</string>
     <string name="downgrade_kept">النسخة المثبتة أحدث أو تعذّر التحقق من إصدارها. تم الاحتفاظ بها وبإعداداتها.</string>
-    <string name="install_preview_version">ميقات %1$s · إصدار معاينة منشور. أبقِ هذه الشاشة مفتوحة.</string>
+    <string name="install_staging_version">ميقات %1$s · إصدار تجريبي. أبقِ هذه الشاشة مفتوحة.</string>
     <string name="local_package_selected">تم اختيار APK محلي. الخيارات المتقدمة ← استخدام التنزيل العام يعيد التنزيل التلقائي.</string>
 </resources>

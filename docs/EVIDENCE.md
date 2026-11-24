@@ -1,5 +1,19 @@
 # Validation evidence
 
+## On-demand builds and Production promotion
+
+Local checks passed for the four workflow definitions with actionlint, 58
+Python/Java regressions, canonical sources and phone generators. Miqat Phone
+debug and release APKs built and passed lint. The native test APK compiled and
+both app variants contained all 25 approved recordings. LG ES5/service tests
+and focused bilingual browser checks passed. The static website and its
+bilingual browser smoke checks passed, including all three package links and
+update metadata.
+
+GitHub-hosted Device simulation and live publication/deployment require a
+published Staging candidate. Local build checks did not boot an emulator or
+operate any physical devices.
+
 ## Stable v0.7.7 — 24 November 2026
 
 [PR #39](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/39) passed its required

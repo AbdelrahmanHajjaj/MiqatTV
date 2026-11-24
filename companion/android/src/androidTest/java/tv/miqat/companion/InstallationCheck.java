@@ -202,8 +202,8 @@ final class InstallationCheck {
                 phone.tvSetup.open();
                 phone.body.findViewWithTag("setup.platform.android").performClick();
                 CompanionCheck.check(
-                        phone.body.findViewWithTag("setup.channel.latest").isSelected(),
-                        "Latest release must be the default");
+                        phone.body.findViewWithTag("setup.channel.production").isSelected(),
+                        "Production must be the default");
                 phone.getWindow().getDecorView().findViewWithTag("setup.continue").performClick();
             });
             Activity installer = test.waitForMonitorWithTimeout(monitor, 5000);

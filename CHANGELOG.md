@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
+  Select a downloaded Development package in Advanced.
+- Development and Staging builds run on demand. Production promotion tests
+  the selected Staging candidate and publishes its website and screenshots.
+
 ## v0.7.7
 
 - Miqat Phone shows seconds in the next-prayer countdown and previews adjusted

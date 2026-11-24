@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import type { Lang } from '../lib/text';
-import { REPO, RELEASE_TAG } from '../lib/site';
+import { LG_ASSET, REPO, RELEASE_TAG } from '../lib/site';
 import widgetStrip from '../../../companion/android/src/main/res/drawable-nodpi/widget_preview_strip.png';
 import widgetStripAr from '../../../companion/android/src/main/res/drawable-ar-nodpi/widget_preview_strip.png';
 
@@ -51,7 +51,7 @@ const L = ar ? {
   downloads: [
     ['miqat-phone.apk', 'هاتف أندرويد', 'مواقيت الصلاة، وتذكيرات الصيام، وإذاعة القرآن، والتحكّم بالتلفاز.', 'تنزيل لأندرويد', 'docs/PHONE.md'],
     ['miqat.apk', 'Android TV / Google TV', 'مواقيت الصلاة وتطبيقاتك المفضّلة على شاشة التلفاز الرئيسية.', 'تنزيل لأندرويد TV', 'docs/ANDROID-SETUP.md'],
-    ['tv.miqat.webos_0.2.32_all.ipk', 'LG webOS', 'مواقيت الصلاة والأذان وإذاعة القرآن على تلفاز LG.', 'تنزيل لتلفاز LG', 'docs/WEBOS.md'],
+    [LG_ASSET, 'LG webOS', 'مواقيت الصلاة والأذان وإذاعة القرآن على تلفاز LG.', 'تنزيل لتلفاز LG', 'docs/WEBOS.md'],
   ],
 } : {
   eyebrow: 'MIQAT · ميقات', title: ['Prayer times for', 'your phone and TV'],
@@ -88,7 +88,7 @@ const L = ar ? {
   downloads: [
     ['miqat-phone.apk', 'Android phone', 'Prayer times, fasting reminders, Quran radio and TV controls.', 'Download for Android', 'docs/PHONE.md'],
     ['miqat.apk', 'Android TV / Google TV', 'Prayer times and your favourite apps on the TV Home screen.', 'Download for Android TV', 'docs/ANDROID-SETUP.md'],
-    ['tv.miqat.webos_0.2.32_all.ipk', 'LG webOS', 'Prayer times, Adhan and Quran radio on your LG TV.', 'Download for LG', 'docs/WEBOS.md'],
+    [LG_ASSET, 'LG webOS', 'Prayer times, Adhan and Quran radio on your LG TV.', 'Download for LG', 'docs/WEBOS.md'],
   ],
 };
 ---

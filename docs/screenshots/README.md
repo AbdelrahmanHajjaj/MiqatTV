@@ -4,6 +4,9 @@ Current set: 23 November 2026. Screenshots show the standalone Android phone,
 its TV companion mode, Android TV and LG webOS in English and Arabic. Canonical
 PNGs here are unmodified captures with sanitized Cairo/demo fixtures; they contain
 no real household addresses, credentials, private recordings or pairing QR codes.
+Staging archives the approved set and this provenance from the candidate
+commit. Production promotes the archive with the packages and reuses it for
+the public website.
 
 ## Sources
 

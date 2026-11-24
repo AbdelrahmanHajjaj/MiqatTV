@@ -1,52 +1,54 @@
 # Releases
 
-[Validate](CI.md) builds Miqat for Android phones, Android TV and LG webOS.
-The phone includes standalone prayers and TV companion mode. Each main commit must pass its applicable core, Android build/lint, LG and
-website checks before its artifacts can enter the draft publication workflow.
+Miqat ships **Miqat Phone**, Android TV and LG webOS. TV companion mode is part
+of the standalone Android phone app. [CI](CI.md) describes the PR gate.
 
-## Create a draft
+| Channel | Where to get it | Android signing |
+| --- | --- | --- |
+| **Development** | Artifacts on an on-demand Build run | Development key |
+| **Staging** | GitHub prerelease tagged `vMAJOR.MINOR.PATCH-staging.N` | Persistent release keys |
+| **Production** | GitHub's Latest release and the public website | The same signed Staging APKs |
 
-1. Open [Draft build release](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/publish.yml)
-   on GitHub and click **Run workflow** on `main`. Leave both inputs blank to use
-   the newest successful Validate run for that commit and the first unused
-   preview tag for the next patch after the latest stable release.
-2. To override either default, enter a successful Validate run ID for that same
-   commit or an unused tag such as `v0.7.7-preview.1`. If validation is missing
-   or its artifacts expired, run Validate on `main` first.
-3. Inspect the draft assets and SHA256SUMS, source commit, validation link and
-   signing configuration. Publish the existing draft as a prerelease after
-   review. GitHub Actions uploads all build assets.
+## Development or Staging build
 
-The draft contains three packages and their SHA256SUMS:
+1. Open [Build](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/build.yml).
+2. Select **development** for a branch review build. Download
+   `phone-development`, `android-tv-development` and `lg-development` from the
+   run. These artifacts expire after seven days.
+3. Select **staging** on `main` to publish a signed prerelease. Build allocates
+   the first unused Staging tag for the next Production patch. It verifies the
+   Android identities and packaged audio and records the source SHA and Build
+   run in the release notes.
 
-| Asset | Purpose |
-| --- | --- |
-| `miqat-phone.apk` | Standalone Android prayers and optional TV companion/setup mode. |
-| `miqat.apk` | Android TV / Google TV launcher. |
-| `tv.miqat.webos_<version>_all.ipk` | LG webOS app and service. |
+The Staging prerelease contains `miqat-phone.apk`, `miqat.apk`,
+`tv.miqat.webos_<version>_all.ipk`, `screenshots.zip` and `SHA256SUMS`.
+The screenshot archive contains the reviewed bilingual PNGs and provenance
+tracked under [docs/screenshots](screenshots/README.md) at the candidate commit.
 
-All come from the same successful current-main Validate run. Validation compiles
-and lints the Android release variants, then the publisher signs those unsigned
-APKs. Instrumentation/debug APKs are excluded. The publisher refuses stale,
-failed, PR/fork or other-workflow runs. It creates an unpublished draft prerelease.
+## Production promotion
 
-## Promote a verified preview to stable
+1. Open [Promote to Production](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/promote.yml)
+   on `main`. Leave **Staging tag** blank for the most recently published
+   Staging candidate, or enter a full tag such as `v0.7.8-staging.2`.
+2. Select the publication approval and run the workflow. It pins the tag,
+   source and asset digests before running **Device simulation**. In parallel
+   it prepares and verifies the website using the candidate's screenshots and
+   signed versions. A failed prerequisite blocks publication.
+3. After both pass, the workflow publishes the Production tag at the same
+   source commit with the same assets and deploys the verified site. The
+   production tag drops the `-staging.N` suffix. About Miqat checks the
+   Production version served at `/updates.json`.
 
-With owner approval, run [Promote stable release](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/promote.yml)
-on main with the published preview tag. Leave **Verify only** unchecked to
-publish. GitHub Actions checks the preview's validation run, asset authors,
-checksums and Android signing identities. It uploads the verified packages
-and SHA256SUMS to a stable draft, compares the uploaded bytes to the preview
-and publishes the stable tag at the same source commit as Latest.
+For checks alone, open [Device simulation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/device-simulation.yml)
+on `main` with the same optional tag. It produces Android native and LG
+browser-mock evidence. Promotion calls it automatically, so a separate run is
+optional. Follow the platform guides for physical-device acceptance.
 
-For a verification run, select **Verify only**. If an upload stops partway,
-rerun promotion with the same preview tag. The workflow checks the existing
-draft assets and uploads the missing files.
-
-Update website download links and current guides after publication.
-Set the tag and both APK version names/codes in `site/src/lib/stable-release.json`
-from the verified published artifacts. GitHub Pages serves this as `updates.json`.
-An installed copy of the same signed preview already has the stable binaries.
+Retry failed jobs in the same Production run to keep the candidate pinned. If
+you need to start a new run, enter the original Staging tag. A partial upload
+resumes against matching assets. If publication succeeded and Pages failed,
+retry the Pages job while its artifact is retained. A stale run cannot deploy
+over a newer Production release.
 
 ## Persistent Android signing
 
@@ -56,12 +58,12 @@ fingerprints, aliases and package IDs. Preserve these identities for updates.
 
 GitHub's `android-release` environment allows the `main` branch only. It contains
 `MIQAT_SIGNING_KEYSTORE_BASE64` and `MIQAT_SIGNING_PASSWORD` as encrypted secrets.
-PR validation has no access to them. Only the manual publisher decodes the key
+PR validation has no access to them. Only the Staging job decodes the key
 into its private runner temporary directory, signs the validated release APKs,
 and deletes the temporary keystore on success/failure. Signing material never
 enters a cache or artifact.
 
-The publisher checks signatures, package IDs and non-debuggable release mode with
+Staging checks signatures, package IDs and non-debuggable release mode with
 `tools/check_android_release.py`, then verifies exact packaged audio and hashes
 the signed outputs. A missing key, unexpected signer or debug APK fails delivery.
 
@@ -89,30 +91,25 @@ then verify:
 python3 tools/check_android_release.py "$ANDROID_HOME/build-tools/35.0.0" state/release/miqat.apk state/release/miqat-phone.apk
 ```
 
-Moving from the old debug-signed previews requires a fresh install once. Removing
-an Android app removes its local data, including phone settings/imported audio;
-keep original recordings and installer recovery records before switching.
-Future release APKs keep the same signing keys. Debug review builds retain their
-separate development key. Publishing a preview and building in release mode are
-independent: signed release-mode APKs may still be labelled prerelease on GitHub.
+Moving from a debug-signed Development package to Staging or Production requires
+a fresh install. Removing an Android app removes its local data, including phone
+settings and imported audio. Keep original recordings and installer recovery
+records before switching. Staging and Production share the signing identities.
 
-## Versioning and publication
+## Versioning
 
 Phone versions live in `companion/android/build.gradle`, Android TV versions in
-`platforms/android-tv/build.gradle`.
-LG's version must match package.json, its lockfile, appinfo.json and service/package.json.
-Increase version codes for distributed updates, retain the new Miqat identities
-and chosen signing key, and never replace a published version's binaries.
+`platforms/android-tv/build.gradle`. LG's version must match package.json, its
+lockfile, appinfo.json and service/package.json. Increase version codes when
+shipping changed APKs. Preserve app identities and signing keys. Published
+packages are immutable.
 
-The reviewed media set is included under shared/media/ with maintainer approval
-and its own attribution; see [third-party notices](THIRD-PARTY.md). Private
-originals and device data stay ignored. Follow [TESTING.md](TESTING.md) and record
-the results.
+Miqat Phone TV setup offers **Production** and **Staging** public downloads.
+For a Development build, download the Actions artifact and select its APK or
+IPK through **Advanced** in TV setup.
 
-Miqat Phone’s TV setup offers public Latest, Stable and Preview download
-channels and can install local packages under Advanced. See [build/install](BUILD.md).
-
-When publishing an app release, update availability copy in README, PHONE.md and
-the bilingual website, and check the package links and [screenshot provenance](screenshots/README.md).
-Public app release publication and physical-device deployment require separate
+Follow [Testing](TESTING.md) and record evidence in [EVIDENCE.md](EVIDENCE.md).
+Keep README, the app guides and both website languages aligned with the shipped
+features, and record [screenshot provenance](screenshots/README.md).
+Public release publication and physical-device deployment require separate
 explicit authorization.

@@ -246,8 +246,8 @@ installs default to 12-hour time; saved explicit choices are retained.
 ## Your TVs
 
 **Set up my TV** and **Pair a new TV** use Android/Google TV or LG webOS preparation,
-then Latest/Stable/Preview public release selection or Advanced local APK/IPK.
-Choose Stable for the current release, Preview for previews, or Advanced for a local package.
+then choose **Production** or **Staging** for public downloads. Use **Advanced**
+to install a local APK or IPK, including a Development build.
 
 Android reuses the guarded ADB installer/recovery runtime. LG uses Developer Mode,
 explicit SSH host-key approval, package size/SHA-256 checks and downgrade refusal;

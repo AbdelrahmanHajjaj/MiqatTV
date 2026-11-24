@@ -10,10 +10,10 @@ Your TVs owns optional household-LAN setup, pairing, settings and remote control
 `installer/runtime` is reused by that phone app and the optional standalone
 installer. [Architecture](ARCHITECTURE.md) owns these boundaries.
 
-Use feature branches and normal PR merges. Validate checks affected consumers;
-GitHub Pages publishes the validated website from main. Draft build release
-creates an unpublished candidate from successful current-main artifacts. See
-[CI and website deployment](CI.md) and [release procedure](RELEASING.md).
+Use feature branches and normal PR merges. Validate checks affected consumers
+on PRs. Build creates Development artifacts or a Staging candidate on demand.
+Promote to Production runs Device simulation, promotes the verified packages
+and deploys the release website. See [CI](CI.md) and [Releasing](RELEASING.md).
 
 The fresh Miqat history began with the approved platform foundation on
 17 November 2026; phone and companion work is now integrated. Original MIT and

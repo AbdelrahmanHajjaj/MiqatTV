@@ -10,7 +10,7 @@ import org.json.*;
 final class TvSetup {
     private final MainActivity a;
     private String platform = "";
-    String channel = "latest";
+    String channel = "production";
     private int step;
     private boolean local;
 
@@ -20,7 +20,7 @@ final class TvSetup {
 
     void restore(Bundle state) {
         platform = state.getString("setup-platform", "");
-        channel = state.getString("setup-channel", "latest");
+        channel = "staging".equals(state.getString("setup-channel")) ? "staging" : "production";
         step = Math.max(0, Math.min(1, state.getInt("setup-step")));
         if (!(platform.equals("android") || platform.equals("lg"))) {
             platform = "";
@@ -39,7 +39,7 @@ final class TvSetup {
     void open() {
         step = 0;
         platform = "";
-        channel = "latest";
+        channel = "production";
         local = false;
         a.navigate("tv-setup");
     }
@@ -80,7 +80,7 @@ final class TvSetup {
                             "",
                             () -> {
                                 if (!platform.equals(id)) {
-                                    channel = "latest";
+                                    channel = "production";
                                     local = false;
                                 }
                                 platform = id;
@@ -153,7 +153,7 @@ final class TvSetup {
             return;
         }
         java.util.List<Choices.Option> channels = new java.util.ArrayList<>();
-        for (String id : new String[] {"latest", "stable", "preview"})
+        for (String id : new String[] {"production", "staging"})
             channels.add(new Choices.Option(id, a.t("tv_channel_" + id)));
         a.views.segmentedChoices(
                 a.body,
