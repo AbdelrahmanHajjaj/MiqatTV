@@ -66,6 +66,8 @@ struct DownloadCheck {
         try await checkLocalPackage(at: CommandLine.arguments[1], platform: .lg, valid: ["valid.ipk": "0.2.28"])
         try await checkLocalPackage(at: CommandLine.arguments[2], platform: .android,
                                     valid: ["valid.apk": "42", "stored-utf16.apk": "8589934634"])
+        let lgFixture = URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true).appending(path: "valid.ipk")
+        try await LGInstallationCheck.run(lgFixture)
     }
 
     static func checkLocalPackage(at path: String, platform: TVPackagePlatform, valid: [String: String]) async throws {

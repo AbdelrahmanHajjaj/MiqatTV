@@ -3,9 +3,9 @@ import Foundation
 enum LgPackage {
     enum Invalid: Error { case archive }
 
+    static let packageID = "tv.miqat.webos"
     static let maximumSize = 200 * 1024 * 1024
     private static let controlLimit = 1024 * 1024
-    private static let versionPattern = "^[0-9]{1,8}(?:\\.[0-9]{1,8}){1,3}$"
     private static let archiveMagic = Data("!<arch>\n".utf8)
 
     static func version(of url: URL) throws -> String {
@@ -76,9 +76,21 @@ enum LgPackage {
             let value = line[line.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
             guard fields.updateValue(value, forKey: key) == nil else { throw Invalid.archive }
         }
-        guard fields["Package"] == "tv.miqat.webos", let version = fields["Version"],
-              version.range(of: versionPattern, options: .regularExpression) != nil else { throw Invalid.archive }
+        guard fields["Package"] == packageID, let version = fields["Version"] else { throw Invalid.archive }
+        _ = try versionComponents(version)
         return version
+    }
+
+    static func versionComponents(_ version: String) throws -> [Int] {
+        let segments = version.split(separator: ".", omittingEmptySubsequences: false)
+        guard (2...4).contains(segments.count) else { throw Invalid.archive }
+        let numbers = try segments.map { segment in
+            guard (1...8).contains(segment.utf8.count),
+                  segment.utf8.allSatisfy({ (48...57).contains($0) }),
+                  let value = Int(segment) else { throw Invalid.archive }
+            return value
+        }
+        return numbers + Array(repeating: 0, count: 4 - numbers.count)
     }
 
     private static func number(_ field: Data, radix: Int, limit: Int) throws -> Int {

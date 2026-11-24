@@ -2311,3 +2311,12 @@ and passed the 14 companion generator tests and Swift syntax parsing. On an
 iPhone, check Local Network permission, a TV entering/leaving its pairing
 screen, the 15-second deadline and background cancellation. The Windows check
 did not run those paths or contact a TV.
+
+The Swift LG installation sequence now checks the installed version before
+uploading, compares the remote IPK digest, waits for terminal install status,
+and reads the installed version again before removing its temporary upload.
+Windows parsed the changed Swift sources, generated the nine IPK inputs and
+passed the three Android IPK tests. The Apple workflow fixture covers success,
+changed content, downgrade, corrupt transfer, failed or missing status, and
+a stale installed version. That Swift fixture is pending Xcode execution.
+The sequence has no production SSH caller yet. No TV was contacted.
