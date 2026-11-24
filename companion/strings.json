@@ -1,4 +1,6 @@
 {
+  "phone_clock_hour":{"en":"Hour","ar":"الساعة"},
+  "phone_clock_minute":{"en":"Minute","ar":"الدقيقة"},
   "phone_fasting":{"en":"Fasting reminders","ar":"تذكيرات الصيام"},
   "phone_fasting_eve":{"en":"Day-before reminder","ar":"التذكير في اليوم السابق"},
   "phone_fasting_eve_time":{"en":"Day-before reminder time","ar":"وقت التذكير في اليوم السابق"},

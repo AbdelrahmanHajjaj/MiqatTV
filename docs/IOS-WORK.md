@@ -95,6 +95,12 @@ while iOS uses English and verify the weekday names and digits follow Miqat's
 preferences. Repeat before confirming a location and check time previews stay
 unavailable until confirmation.
 
+Set Miqat to 24-hour time and Eastern digits on a phone using 12-hour time.
+Edit both quiet-hour boundaries and the day-before fasting time. Save midnight
+and 23:59, then relaunch and check the saved values. Switch Miqat to 12-hour
+time and Western digits. Check midnight and noon show distinct periods, then
+change the values and cancel. Repeat in Arabic with VoiceOver.
+
 ## Radio reconnect regression on iPhone
 
 With a controllable HTTPS stream in a local development fixture, end the

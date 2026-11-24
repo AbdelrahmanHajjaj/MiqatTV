@@ -2233,6 +2233,11 @@ source plist and locale values were checked on Windows and the workflow lint
 passed. The Apple build now checks the bundled values. The Home Screen and
 widget gallery labels still need a native check.
 
+Quiet hours and the day-before fasting reminder use Miqat's clock and digit
+settings in the time editor. Swift syntax, all 14 phone generator checks and
+canonical iOS resource staging passed. The native regression covers midnight,
+noon, 23:59, cancel, Arabic and VoiceOver.
+
 On 2026-11-24, branch `feature/ios-app-port` configured the Kotlin iOS device
 and simulator framework tasks and added a native iOS application target.
 Companion JVM tests, its 13 catalog generator checks, resource staging and the

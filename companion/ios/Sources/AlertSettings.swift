@@ -201,15 +201,67 @@ struct PrayerClockPicker: View {
     let preferences: PhonePreferences
     let label: String
     @Binding var minute: Int
+    @State private var editing = false
+    @State private var hour = 0
+    @State private var minuteWithinHour = 0
 
     var body: some View {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        return DatePicker(preferences.text(label), selection: Binding(
-            get: { Date(timeIntervalSince1970: Double(minute * 60)) },
-            set: { date in minute = calendar.component(.hour, from: date) * 60 + calendar.component(.minute, from: date) }
-        ), displayedComponents: .hourAndMinute)
-        .environment(\.calendar, calendar)
-        .environment(\.timeZone, calendar.timeZone)
+        let clockFormat = formatter(preferences.clock == "24" ? "HH:mm" : "h:mm a")
+        Button {
+            hour = minute / 60
+            minuteWithinHour = minute % 60
+            editing = true
+        } label: {
+            LabeledContent(preferences.text(label), value: formatted(minute, with: clockFormat))
+        }
+        .sheet(isPresented: $editing) {
+            NavigationStack {
+                let hourFormat = formatter(preferences.clock == "24" ? "HH" : "h a")
+                HStack(spacing: 0) {
+                    Picker(preferences.text("phone_clock_hour"), selection: $hour) {
+                        ForEach(0..<24) { value in
+                            Text(formatted(value * 60, with: hourFormat)).tag(value)
+                        }
+                    }
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                    .clipped()
+                    Picker(preferences.text("phone_clock_minute"), selection: $minuteWithinHour) {
+                        ForEach(0..<60) { value in
+                            Text(preferences.displayDigits(String(format: "%02d", value))).tag(value)
+                        }
+                    }
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                    .clipped()
+                }
+                .padding()
+                .pickerStyle(.wheel)
+                .navigationTitle(preferences.text(label))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(preferences.text("cancel")) { editing = false }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(preferences.text("done")) {
+                            minute = hour * 60 + minuteWithinHour
+                            editing = false
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
+    }
+
+    private func formatter(_ pattern: String) -> DateFormatter {
+        let format = DateFormatter()
+        format.locale = Locale(identifier: preferences.arabic ? "ar-EG" : "en-US")
+        format.timeZone = TimeZone(secondsFromGMT: 0)
+        format.dateFormat = pattern
+        return format
+    }
+
+    private func formatted(_ minute: Int, with format: DateFormatter) -> String {
+        preferences.displayDigits(format.string(from: Date(timeIntervalSince1970: Double(minute * 60))))
     }
 }
