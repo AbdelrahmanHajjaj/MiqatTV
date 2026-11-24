@@ -28,7 +28,7 @@ node companion/ios/astronomy.test.mjs
 sh companion/ios/prepare-ssh.sh iphonesimulator
 sh companion/ios/prepare-adb-crypto.sh iphonesimulator
 xcodebuild -project companion/ios/Miqat.xcodeproj -scheme Miqat \
-  -configuration Debug -destination 'generic/platform=iOS Simulator' \
+  -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath state/ios-build CODE_SIGNING_ALLOWED=NO build
 ```
 

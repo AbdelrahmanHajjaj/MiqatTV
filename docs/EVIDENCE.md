@@ -2354,6 +2354,12 @@ manifest. Plist parsing and workflow lint passed. Both unsigned Apple builds
 check the packaged manifest. The archive privacy report and dependency review
 remain pending for distribution.
 
+The Apple workflow selects the SDK independently from the destination and
+checks the app and widget Mach-O platform and arm64 slice. Windows validated
+the simulator and device Gradle dependency configurations, workflow lint and
+shell syntax. The runner lists both Xcode 16.3 SDKs. Mach-O verification needs
+the first macOS build.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both
