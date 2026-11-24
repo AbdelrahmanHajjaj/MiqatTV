@@ -6,7 +6,10 @@
     objects = {
         A10000000000000000000001 = {
             isa = PBXProject;
-            attributes = { LastUpgradeCheck = 1640; };
+            attributes = {
+                LastUpgradeCheck = 1640;
+                TargetAttributes = { A10000000000000000000034 = { TestTargetID = A10000000000000000000003; }; };
+            };
             buildConfigurationList = A10000000000000000000009;
             compatibilityVersion = "Xcode 16.0";
             developmentRegion = en;
@@ -16,11 +19,11 @@
             productRefGroup = A10000000000000000000004;
             projectDirPath = "";
             projectRoot = "";
-            targets = (A10000000000000000000003, A10000000000000000000016, );
+            targets = (A10000000000000000000003, A10000000000000000000016, A10000000000000000000034, );
         };
         A10000000000000000000002 = {
             isa = PBXGroup;
-            children = (A10000000000000000000005, A10000000000000000000017, A10000000000000000000004, );
+            children = (A10000000000000000000005, A10000000000000000000017, A10000000000000000000035, A10000000000000000000004, );
             sourceTree = "<group>";
         };
         A10000000000000000000003 = {
@@ -37,7 +40,7 @@
         };
         A10000000000000000000004 = {
             isa = PBXGroup;
-            children = (A10000000000000000000008, A10000000000000000000018, );
+            children = (A10000000000000000000008, A10000000000000000000018, A10000000000000000000036, );
             name = Products;
             sourceTree = "<group>";
         };
@@ -220,6 +223,67 @@
             lastKnownFileType = folder;
             path = ../../shared/design/assets/backgrounds;
             sourceTree = SOURCE_ROOT;
+        };
+        A10000000000000000000034 = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = A10000000000000000000038;
+            buildPhases = (A10000000000000000000037, );
+            buildRules = ();
+            dependencies = (A10000000000000000000040, );
+            fileSystemSynchronizedGroups = (A10000000000000000000035, );
+            name = MiqatUITests;
+            productName = MiqatUITests;
+            productReference = A10000000000000000000036;
+            productType = "com.apple.product-type.bundle.ui-testing";
+        };
+        A10000000000000000000035 = {
+            isa = PBXFileSystemSynchronizedRootGroup;
+            path = UITests;
+            sourceTree = "<group>";
+        };
+        A10000000000000000000036 = {
+            isa = PBXFileReference;
+            explicitFileType = wrapper.cfbundle;
+            path = MiqatUITests.xctest;
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        A10000000000000000000037 = {
+            isa = PBXSourcesBuildPhase;
+            buildActionMask = 2147483647;
+            files = ();
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        A10000000000000000000038 = {
+            isa = XCConfigurationList;
+            buildConfigurations = (A10000000000000000000039, );
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        A10000000000000000000039 = {
+            isa = XCBuildConfiguration;
+            name = Debug;
+            buildSettings = {
+                GENERATE_INFOPLIST_FILE = YES;
+                IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+                PRODUCT_BUNDLE_IDENTIFIER = tv.miqat.ios.uitests;
+                PRODUCT_NAME = "$(TARGET_NAME)";
+                SUPPORTED_PLATFORMS = iphonesimulator;
+                SWIFT_VERSION = 5.0;
+                TARGETED_DEVICE_FAMILY = 1;
+                TEST_TARGET_NAME = Miqat;
+            };
+        };
+        A10000000000000000000040 = {
+            isa = PBXTargetDependency;
+            target = A10000000000000000000003;
+            targetProxy = A10000000000000000000041;
+        };
+        A10000000000000000000041 = {
+            isa = PBXContainerItemProxy;
+            containerPortal = A10000000000000000000001;
+            proxyType = 1;
+            remoteGlobalIDString = A10000000000000000000003;
+            remoteInfo = Miqat;
         };
     };
     rootObject = A10000000000000000000001;

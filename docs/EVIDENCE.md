@@ -2311,6 +2311,14 @@ Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
 
+On iPhone 16 Simulator with iOS 18.4, XCTest at `54a54a9` confirmed the location
+denial message, searched the bundled catalog for London, confirmed the city,
+and preserved the alert opt-out through Skip and relaunch. The journey finished
+with all six prayer rows visible. Both unsigned Apple builds also passed.
+The runner remained network-connected, and the UI test did not compare
+displayed minutes or cover notification authorization.
+[First-use XCTest](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45492818410/job/138795362406)
+
 The manual simulator launch check passed at `4e11076`. GitHub Actions installed
 Miqat on a fresh iPhone 16 with iOS 18.4 and verified the launched process
 was still running five seconds later. Onboarding and offline prayer times
