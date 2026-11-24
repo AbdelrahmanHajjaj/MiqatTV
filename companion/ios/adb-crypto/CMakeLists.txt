@@ -8,6 +8,10 @@ include(FetchContent)
 set(BUILD_TESTING OFF CACHE BOOL "Skip BoringSSL's upstream test suite" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static pairing libraries" FORCE)
 set(BORINGSSL_PREFIX MiqatADB CACHE STRING "Isolate ADB crypto from OpenSSL used by LG SSH" FORCE)
+if(IOS)
+    # BoringSSL's unused bssl tool has no iOS bundle install destination.
+    set(CMAKE_MACOSX_BUNDLE OFF)
+endif()
 
 FetchContent_Declare(boringssl
     URL https://codeload.github.com/google/boringssl/tar.gz/5ec099107553142e9cb34dfe52f3c5bb42c9b7fb
