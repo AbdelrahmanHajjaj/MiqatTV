@@ -22,8 +22,9 @@ of the standalone Android phone app. [CI](CI.md) describes the PR gate.
 
 The Actions run title shows its channel and branch. Open the run's **Summary**
 for **Built app versions**, including both Android version codes. A Staging
-run also links the published release tag. An individual app's version is
-independent of the release tag.
+run also links the published release tag. Build allocates the bundle tag and
+Staging suffix automatically. Each app keeps the version and Android version
+code configured in its source.
 
 The Staging prerelease contains `miqat-phone.apk`, `miqat.apk`,
 `tv.miqat.webos_<version>_all.ipk`, `screenshots.zip` and `SHA256SUMS`.

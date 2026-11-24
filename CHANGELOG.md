@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.7.8
 
 - Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
   Select a downloaded Development package in Advanced.
