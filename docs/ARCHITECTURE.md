@@ -73,7 +73,7 @@ repository. Sony Android/Google TV uses the Android shell.
 TV shells own rendering, persistence and LAN transport. See [protocol boundaries](COMPANION-LAN.md)
 and [companion delivery history](COMPANION-WORK.md).
 
-The Android companion also hosts `installer/runtime` through a private setup
+Miqat Phone also hosts `installer/runtime` through a private setup
 activity. Installation credentials and recovery records live in the phone
 app’s private storage, separately from ordinary companion LAN credentials. LG phone setup uses its own foreground SSH transport, explicit
 host-key approval and local IPK verification. The SSH private key stays in

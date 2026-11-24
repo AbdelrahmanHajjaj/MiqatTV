@@ -24,9 +24,10 @@ Research reviewed on 22 November 2026:
 
 Miqat applies these patterns to its own features and screenshots. Do not copy
 competitor wording, ratings, awards or unimplemented features.
-`src/lib/stable-release.json` owns the public release tag and Android version
-codes used by the download links and manual update checks. Update it from the
-published artifacts and verify the three device links and `/updates.json`.
+`src/lib/stable-release.json` provides the local build baseline. Production
+promotion generates the public tag, LG asset filename and Android version
+metadata from the verified packages. It reuses the approved screenshots from
+the Staging release and checks all three device links and `/updates.json`.
 
 ## Content and assets
 

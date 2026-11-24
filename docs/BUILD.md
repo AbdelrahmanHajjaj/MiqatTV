@@ -73,12 +73,11 @@ before publishing replacements.
 
 ## CI builds
 
-[Validate](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/validate.yml)
-produces full-audio APK and LG IPK artifacts after building and testing the source.
-Artifacts expire after seven days. They are test builds; Android uses a CI debug
-signing key that can differ between runs. The release workflow signs validated
-release variants with persistent Miqat keys. See [release signing](RELEASING.md#persistent-android-signing)
-and [CI and draft publication](CI.md) before distributing an update.
+[Build](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/build.yml)
+produces full-audio phone and TV packages. Select **Development** for a branch
+build with seven-day artifacts. Android uses a CI debug key that can differ
+between runs. Select **Staging** on main for a signed prerelease. See
+[Releasing](RELEASING.md) and [CI](CI.md).
 
 ## Fresh installation
 

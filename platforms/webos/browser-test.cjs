@@ -167,7 +167,9 @@ const server = http.createServer((req, res) => {
     await page.evaluate(() => document.fonts.ready);
     await inputRestored();
     const beforeSpacing = await page.evaluate(() => localStorage.getItem('fixture'));
-    for (const lang of ['ar', 'en']) for (const uiScale of [110,80,90,100,120,130,140,150]) {
+    const smoke = process.argv.includes('--smoke');
+    const scales = smoke ? [110] : [110,80,90,100,120,130,140,150];
+    for (const lang of ['ar', 'en']) for (const uiScale of scales) {
       await page.evaluate(({lang,uiScale}) => localStorage.setItem('fixture', JSON.stringify({prefs:window.Miqat.prefs({lang,uiScale}),input:'HDMI_1'})), {lang,uiScale});
       await page.reload(); await inputRestored(); await page.keyboard.press('Enter');
       await page.locator('[data-action=home]').click(); await page.locator('[data-action=settings]').click();
@@ -230,7 +232,11 @@ const server = http.createServer((req, res) => {
     }
     await page.evaluate(original => original===null ? localStorage.removeItem('fixture') : localStorage.setItem('fixture', original), beforeSpacing);
     await page.reload(); await inputRestored();
-    console.log('PASS: Settings spacing, About version/QR/return focus and appearance bounds in both languages at every supported size.');
+    console.log('PASS: Settings spacing, About version/QR/return focus and appearance bounds in both languages.');
+    if(smoke) {
+      assert.deepEqual(errors, []);
+      return;
+    }
     if(process.argv.includes('--settings-layout')) return;
     async function preservingSettings() {
       const original = await page.evaluate(() => localStorage.getItem('fixture'));

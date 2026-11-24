@@ -125,31 +125,25 @@ what the owner saw or heard. A result for one TV/firmware does not certify a bra
 
 ## Review
 
-The Validate workflow selects affected PR consumers using tools/ci.py; shared,
-workflow/tooling and unknown paths select all consumers. Ordinary documentation
-changes run workflow/selection/whitespace checks. Packaged notices and generated
-docs/UI-GAPS.md still select all consumers. Main and manual Validate runs execute
-the automated suite: core JVM/JS/Java and canonical checks, Android TV builds
-and lint, Python/Java regressions, complete LG ES5/service/browser tests and
-packaging, preview suite/build, and Companion portable/host-JVM checks and builds.
-Routine CI does not launch Android emulators or run native instrumentation.
-Those suites remain available for targeted manual checks when requested.
-Required checks verifies every selected job
-succeeded and every unselected job skipped. Failures, cancellation, missing
-selection or unexpected skips fail the gate. No workflow-level PR path filter
-can leave the required status pending.
+Validate selects affected PR consumers with `tools/ci.py`. Shared sources,
+workflows, tooling, packaged notices, generated UI gaps and unknown paths
+select all jobs. Product screenshot PNGs select Preview. Ordinary documentation
+selects workflow, gate and whitespace checks only. **Required checks** requires
+every selected job to succeed and every unselected job to skip. No workflow-level
+PR path filter can leave the required status pending.
 
-GitHub jobs use separate workspaces; generators stay sequential within each job.
-CI artifacts contain the reviewed audio and expire after seven days.
-After Required checks passes on main, GitHub Pages deploys the tested preview
-artifact. PRs skip deployment. See [CI.md](CI.md) for protection, website deployment,
-artifacts and draft publishing.
+On-demand Development and Staging Build runs use the automated package checks.
+Routine PR and Build jobs compile Android instrumentation and run host tests
+without booting emulators. **Device simulation** runs the native phone/TV
+instrumentation and full LG browser suite on a Staging candidate. Production
+calls it before publication and deploys Pages after publishing the verified
+release. See [CI](CI.md) and [Releasing](RELEASING.md).
 
 Use the [PR template](../.github/pull_request_template.md). Record commands, outcomes,
 evidence type, skipped checks and remaining risk. Keep raw private logs under state/
 and concise results in [EVIDENCE.md](EVIDENCE.md).
 
-## Companion
+## Miqat Phone and TV companion mode
 
 Run [phone checks](../companion/README.md), shared core and affected shell/preview
 checks. Native UI/LAN suites use owned emulators. QR validation uses
@@ -222,9 +216,8 @@ not public downloads.
 On Apple-silicon macOS with Xcode 16.4, use `-PmiqatApple=true` for the two core
 builds and run `macosArm64Test compileKotlinIosArm64 compileKotlinIosSimulatorArm64`.
 The opt-in targets keep Windows/Android/ES5 builds independent of Apple tooling.
-The bounded **Apple core** workflow runs common rule tests as native macOS code
-and compiles both iOS library variants. It boots no iOS simulator and does not
-establish an iPhone application, signed installation or background-audio result.
+These local commands run common rule tests as native macOS code and compile
+both iOS library variants. They provide library portability evidence only.
 Target declarations follow [Kotlin's hierarchy documentation](https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-hierarchy.html).
 The runner/toolchain is recorded in [GitHub's macOS 15 ARM64 image](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md).
 
@@ -397,7 +390,7 @@ includes these checks; no system restriction is disabled.
 
 Native TV header navigation must wait for loaded tiles and take its readiness
 check and key assertions in one UI-thread snapshot; a queued catalog refresh can
-otherwise clear the list between checks. Run the prayer/UI sequence used by CI
+otherwise clear the list between checks. Run the Device simulation prayer/UI sequence
 when validating a fresh installation, and require instrumentation code -1 with
 no preference-restoration warning. Native notification checks expand only a
 collapsed header: Android 14's row expansion action can toggle an already-
@@ -446,5 +439,5 @@ The hosted multi-widget journey distinguishes Add during first configuration
 from Update on re-entry, retaining immediate saves and independent instances.
 For Circle, it checks that selecting 120% enlarges the configuration preview
 and the hosted widget.
-The CI runtime verifies SystemUI dismissibility and actual dismissal cleanup;
+The phone runtime suite verifies SystemUI dismissibility and actual dismissal cleanup;
 it does not prescribe a touch gesture for different Android/OEM implementations.

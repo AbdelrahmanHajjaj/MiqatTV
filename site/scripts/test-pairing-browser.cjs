@@ -12,7 +12,8 @@ const server=http.createServer((request,response)=>{
   try{
     const metadata = await fetch('http://127.0.0.1:'+server.address().port+'/MiqatTV/updates.json');
     assert.equal(metadata.status, 200, 'the static build exposes the manual update manifest');
-    assert.deepEqual(await metadata.json(), require('../src/lib/stable-release.json'));
+    const release=require('../src/lib/stable-release.json');
+    assert.deepEqual(await metadata.json(), release);
     browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'msedge',headless:true});
     for(const language of ['ar','en'])for(const width of [390,900,1440]){
       page=await browser.newPage({viewport:{width,height:1000}});const errors=[];
@@ -26,6 +27,10 @@ const server=http.createServer((request,response)=>{
       await page.keyboard.press('ArrowDown');await page.waitForFunction(()=>scrollY>0);
       assert.equal(await page.locator('.tv :focus').count(),0,'off-screen TV must not steal page arrow keys');
       for(const id of ['phone','companion','android-tv','lg-webos','get-miqat'])assert.equal(await page.locator('#'+id).count(),1);
+      for(const asset of ['miqat-phone.apk','miqat.apk',release.lgAsset]){
+        const download='https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/download/'+release.tag+'/'+asset;
+        assert.equal(await page.locator('#get-miqat a[href="'+download+'"]').count(),1);
+      }
       for(const image of await page.locator('main img').all()){
         await image.scrollIntoViewIfNeeded();await image.evaluate(el=>el.decode());
       }

@@ -320,7 +320,7 @@ public final class CompanionCheck extends Instrumentation {
                     activity.body.findViewWithTag("setup.platform.lg").performClick();
                     check(activity.page.equals("lg-setup"), "LG setup entry");
                     check(activity.body.findViewWithTag("setup.instruction.5") != null
-                                    && activity.body.findViewWithTag("setup.channel.latest") != null,
+                                    && activity.body.findViewWithTag("setup.channel.production") != null,
                             "LG guide and selected release must share the connection page");
                     EditText address = activity.body.findViewWithTag("lg.host");
                     EditText phrase = activity.body.findViewWithTag("lg.passphrase");

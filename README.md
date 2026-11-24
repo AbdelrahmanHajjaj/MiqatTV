@@ -68,7 +68,8 @@ See the next prayer across the room, hear the Adhan and listen to Quran radio on
 | `miqat.apk` | Android TV app. |
 | `tv.miqat.webos_…_all.ipk` | LG webOS app and service. |
 
-In the phone app's TV setup, choose **Stable** for the current release.
+In Miqat Phone TV setup, choose **Production** for the public release or
+**Staging** to test a candidate.
 Android APKs use persistent release keys. Moving from an older debug-signed build
 requires one fresh install, which removes local settings and imported audio.
 

@@ -48,7 +48,7 @@ Android resources from shared sources. Phone-only controls live in `shared/data/
 retain their existing shared contract.
 
 **Your TVs → Set up my TV** and **Pair a new TV** open the common platform
-chooser, preparation guide and latest/stable/preview channel selection. Advanced
+chooser, preparation guide and Production/Staging channel selection. Advanced
 switches to local APK/IPK selection. Android uses the shared installer runtime
 with optional reviewed cleanup/recovery and the phone's selected theme/language.
 LG uses Developer Mode, explicit SSH host-key approval and verified public/local

@@ -14,6 +14,8 @@ def affected(paths):
         if path in ("LICENSE", "docs/CLEANYOURTV-LICENSE.txt", "docs/THIRD-PARTY.md",
                     "docs/UI-GAPS.md"):
             jobs.update(JOBS)
+        elif path.startswith("docs/screenshots/") and path.endswith(".png"):
+            jobs.add("preview")
         elif path.startswith("docs/") or path in (
                 "README.md", "AGENTS.md", "CONTRIBUTING.md", "CHANGELOG.md",
                 ".github/pull_request_template.md"):
@@ -30,6 +32,8 @@ def affected(paths):
                 jobs.update(JOBS)
         elif path.startswith("installer/"):
             jobs.update(("android", "companion"))
+        elif path.startswith(("companion/android/", "companion/core/")):
+            jobs.add("companion")
         elif path.startswith("companion/"):
             # TV shells and preview consume the companion contract, QR and LAN sources.
             jobs.update(("android", "webos", "preview", "companion"))
@@ -63,6 +67,8 @@ if __name__ == "__main__":
                 pr["base"]["sha"] + "..." + pr["head"]["sha"],
             ]).decode("utf-8").split("\0")
             selected = affected(path for path in paths if path)
+        elif os.environ.get("BUILD_CHANNEL") in ("development", "staging"):
+            selected.remove("preview")
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
             for name in JOBS:
                 print(name + "=" + str(name in selected).lower(), file=output)

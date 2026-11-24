@@ -31,6 +31,7 @@ def check_apk(apk, build_tools):
     if apk.name == 'miqat.apk' and not 0 < apk.stat().st_size < 25_000_000:
         raise ValueError('Android TV release APK must be under 25 MB')
     print(f'Verified release APK: {apk.name}, {version} ({code}), {expected["certificateSha256"]}')
+    return version, code
 
 
 if __name__ == '__main__':

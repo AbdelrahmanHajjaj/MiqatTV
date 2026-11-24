@@ -1,8 +1,9 @@
-"""Stable promotion keeps the verified preview bytes across retries."""
+"""Production preserves the verified Staging assets across retries."""
 from hashlib import sha256
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from zipfile import ZipFile
 from unittest.mock import call, patch
 
 from tools import promote_release as promotion
@@ -12,11 +13,10 @@ class StablePromotionChecks(unittest.TestCase):
     repository = "example/miqat"
     source = "1" * 40
     stable = "v0.7.8"
-    preview = "v0.7.8-preview.1"
 
     def packages(self, directory):
         payloads = {"miqat.apk": b"tv", "miqat-phone.apk": b"phone",
-                    "tv.miqat.webos_0.2.33_all.ipk": b"lg"}
+                    "tv.miqat.webos_0.2.33_all.ipk": b"lg", "screenshots.zip": b"images"}
         sums = "".join(f"{sha256(data).hexdigest()}  {name}\n"
                        for name, data in payloads.items())
         payloads["SHA256SUMS"] = sums.encode()
@@ -52,8 +52,9 @@ class StablePromotionChecks(unittest.TestCase):
             partial = self.release({"miqat.apk": manifest["miqat.apk"]})
             complete = self.release(manifest)
             previous = {"tag_name": "v0.7.7"}
-            with patch.object(promotion, "read_api", side_effect=[
-                    [[partial]], previous, complete, previous, self.release(manifest, draft=False)]), \
+            with patch.object(promotion, "releases", return_value=[partial]), \
+                    patch.object(promotion, "read_api", side_effect=[
+                        previous, complete, previous, self.release(manifest, draft=False)]), \
                     patch.object(promotion, "tag_commit", side_effect=[None, None, self.source]), \
                     patch.object(promotion.subprocess, "check_call") as gh:
                 promotion.publish(self.repository, self.stable, self.source, manifest, directory, "notes")
@@ -70,13 +71,14 @@ class StablePromotionChecks(unittest.TestCase):
             manifest = self.packages(directory)
             complete = self.release(manifest)
             previous = {"tag_name": "v0.7.7"}
-            with patch.object(promotion, "read_api", side_effect=[
-                    [[]], previous, self.release({}), complete, previous,
+            with patch.object(promotion, "releases", return_value=[]), \
+                    patch.object(promotion, "read_api", side_effect=[
+                    previous, self.release({}), complete, previous,
                     self.release(manifest, draft=False)]) as api, \
                     patch.object(promotion, "tag_commit", side_effect=[None, None, self.source]), \
                     patch.object(promotion.subprocess, "check_call") as gh:
                 promotion.publish(self.repository, self.stable, self.source, manifest, directory, "notes")
-            draft = api.call_args_list[2].args
+            draft = api.call_args_list[1].args
             self.assertEqual(draft[:3], (f"repos/{self.repository}/releases", "-X", "POST"))
             self.assertIn("draft=true", draft)
             self.assertIn(f"target_commitish={self.source}", draft)
@@ -85,27 +87,29 @@ class StablePromotionChecks(unittest.TestCase):
     def test_inconsistent_draft_is_left_untouched(self):
         manifest = {"miqat.apk": (2, sha256(b"tv").hexdigest())}
         draft = self.release({"miqat.apk": (2, sha256(b"xx").hexdigest())})
-        with patch.object(promotion, "read_api", return_value=[[draft]]), \
+        with patch.object(promotion, "releases", return_value=[draft]), \
                 patch.object(promotion, "tag_commit", return_value=None), \
                 patch.object(promotion.subprocess, "check_call") as gh:
-            with self.assertRaisesRegex(ValueError, "does not match this preview"):
+            with self.assertRaisesRegex(ValueError, "does not match this Staging candidate"):
                 promotion.publish(self.repository, self.stable, self.source, manifest, Path("."), "notes")
             gh.assert_not_called()
 
-    def test_verify_only_does_not_publish(self):
-        run = {"status": "completed", "conclusion": "success", "head_branch": "main",
-               "head_sha": self.source, "path": ".github/workflows/validate.yml",
-               "head_repository": {"full_name": self.repository}, "event": "push"}
-        preview = self.release({}, tag_name=self.preview, draft=False, prerelease=True,
-                               body=f"Validation: https://github.com/{self.repository}/actions/runs/10")
-        with patch.object(promotion, "read_api", side_effect=[
-                preview, {"merge_base_commit": {"sha": self.source}}, run]), \
-                patch.object(promotion, "tag_commit", return_value=self.source), \
-                patch.object(promotion, "verify_files"), patch.object(promotion, "check_apk"), \
-                patch.dict("os.environ", {"ANDROID_HOME": "sdk"}), \
-                patch.object(promotion.subprocess, "check_call") as gh, \
-                patch.object(promotion, "publish") as publish:
-            promotion.promote(self.repository, self.source, self.preview, verify_only=True)
-        self.assertEqual(gh.call_count, 1)
-        self.assertEqual(gh.call_args.args[0][:3], ["gh", "release", "download"])
-        publish.assert_not_called()
+    def test_website_rejects_a_screenshot_swap(self):
+        with TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            relative = "docs/screenshots/phone-home-en.png"
+            source = directory / relative
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"approved image")
+            archive = directory / "screenshots.zip"
+
+            def pack(data):
+                with ZipFile(archive, "w") as output:
+                    output.writestr(relative, data)
+
+            with patch.object(promotion.subprocess, "check_output", return_value=(relative + "\0").encode()):
+                pack(b"approved image")
+                promotion.use_screenshots(directory, archive)
+                pack(b"modified image")
+                with self.assertRaisesRegex(ValueError, "differs from its approved source"):
+                    promotion.use_screenshots(directory, archive)

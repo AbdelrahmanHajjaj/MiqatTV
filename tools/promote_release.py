@@ -1,98 +1,100 @@
-"""Promote the verified bytes of an Actions-built prerelease."""
+"""Verify Staging bytes and promote the same assets to Production."""
 from hashlib import file_digest
 import json
+from fnmatch import fnmatchcase
 import os
 from pathlib import Path
 import re
 import subprocess
-from tempfile import TemporaryDirectory
+import sys
+from zipfile import ZipFile
 
-from tools.check_android_release import check_apk
-from tools.release_source import gh_api, validate_run
+from tools.check_android_release import CERTIFICATES, check_apk
+from tools.release_source import BOT, asset_manifest, read_api, releases, stable_version, tag_commit
 
 
 APKS = {"miqat.apk", "miqat-phone.apk"}
-BOT = "github-actions[bot]"
-STABLE_TAG = r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+SCREENSHOTS = "screenshots.zip"
 
 
-def stable_version(tag):
-    match = re.fullmatch(STABLE_TAG, tag)
-    if not match:
-        raise ValueError("Expected a stable vMAJOR.MINOR.PATCH tag")
-    return tuple(map(int, match.groups()))
-
-
-def read_api(endpoint, *args):
-    return json.loads(gh_api(endpoint, *args))
-
-
-def tag_commit(repo, tag):
-    refs = read_api(f"{repo}/git/matching-refs/tags/{tag}")
-    for ref in refs:
-        if ref["ref"] == f"refs/tags/{tag}":
-            if ref["object"]["type"] != "commit":
-                raise ValueError(f"{tag} must point directly to its source commit")
-            return ref["object"]["sha"]
-    return None
-
-
-def asset_manifest(release):
-    manifest = {}
-    for asset in release["assets"]:
-        name, size, digest = asset["name"], asset["size"], asset.get("digest") or ""
-        if (name in manifest or asset["state"] != "uploaded" or size <= 0
-                or not re.fullmatch(r"sha256:[a-f0-9]{64}", digest)):
-            raise ValueError(f"Invalid GitHub release asset: {name}")
-        manifest[name] = (size, digest.removeprefix("sha256:"))
-    return manifest
-
-
-def verify_files(directory, manifest):
-    names = set(manifest)
-    lg = names - APKS - {"SHA256SUMS"}
-    if (not (APKS | {"SHA256SUMS"}) <= names or len(lg) != 1
-            or not re.fullmatch(r"tv\.miqat\.webos_\d+\.\d+\.\d+_all\.ipk", next(iter(lg)))
-            or {file.name for file in directory.iterdir()} != names):
-        raise ValueError("Expected both APKs, the LG IPK and SHA256SUMS")
+def verify_assets(directory, manifest):
+    if {file.name for file in directory.iterdir()} != set(manifest):
+        raise ValueError("Downloaded files do not match the expected Staging assets")
     for name, (size, digest) in manifest.items():
         path = directory / name
         with path.open("rb") as file:
             if path.stat().st_size != size or file_digest(file, "sha256").hexdigest() != digest:
-                raise ValueError(f"Download differs from the preview asset: {name}")
+                raise ValueError(f"Download differs from the Staging asset: {name}")
+
+
+def verify_files(directory, manifest):
+    names = set(manifest)
+    required = APKS | {"SHA256SUMS", SCREENSHOTS}
+    lg = names - required
+    if (not required <= names or len(lg) != 1
+            or not re.fullmatch(r"tv\.miqat\.webos_\d+\.\d+\.\d+_all\.ipk", next(iter(lg)))):
+        raise ValueError("Expected both APKs, the LG IPK, screenshots.zip and SHA256SUMS")
+    verify_assets(directory, manifest)
     sums = {}
     for line in (directory / "SHA256SUMS").read_text(encoding="utf-8").splitlines():
-        match = re.fullmatch(r"([a-f0-9]{64}) [ *](?:\./)?([^/\\]+)", line)
+        match = re.fullmatch(r"([a-f0-9]{64}) [ *]([^/\\]+)", line)
         if not match or match[2] in sums:
             raise ValueError("Invalid or duplicate SHA256SUMS entry")
         sums[match[2]] = match[1]
-    if sums != {name: manifest[name][1] for name in APKS | lg}:
-        raise ValueError("SHA256SUMS does not match the three verified packages")
+    if sums != {name: manifest[name][1] for name in names - {"SHA256SUMS"}}:
+        raise ValueError("SHA256SUMS does not match the verified Staging assets")
 
 
-def release_notes(stable, preview_tag, validation_url, repository):
-    changelog = Path(__file__).resolve().parents[1] / "CHANGELOG.md"
-    match = re.search(rf"^## {re.escape(stable)}(?:[ \t]+[^\n]+)?\n(.*?)(?=^## |\Z)",
-                      changelog.read_text(encoding="utf-8"), re.M | re.S)
-    summary = match[1].strip() if match else "Miqat for Android phones, Android TV and LG webOS."
-    return (f"{summary}\n\n[Validation]({validation_url}) and "
-            f"[signed preview](https://github.com/{repository}/releases/tag/{preview_tag}).\n\n"
-            "SHA256SUMS covers all three packages. Both APKs use Miqat's persistent release keys.")
+def use_screenshots(candidate, archive):
+    paths = subprocess.check_output(
+        ["git", "-C", str(candidate), "ls-files", "-z", "docs/screenshots"]
+    ).decode().strip("\0").split("\0")
+    with ZipFile(archive) as images:
+        files = [entry for entry in images.infolist() if not entry.is_dir()]
+        if not paths[0] or sorted(entry.filename for entry in files) != sorted(paths):
+            raise ValueError("Staging screenshot archive differs from the source inventory")
+        for entry in files:
+            source = candidate / entry.filename
+            if entry.file_size != source.stat().st_size or images.read(entry) != source.read_bytes():
+                raise ValueError(f"Staging screenshot differs from its approved source: {entry.filename}")
+        for entry in files:
+            (candidate / entry.filename).write_bytes(images.read(entry))
+
+
+def prepare_website(candidate, directory, production):
+    use_screenshots(candidate, directory / SCREENSHOTS)
+    build_tools = Path(os.environ["ANDROID_HOME"]) / "build-tools/35.0.0"
+    certificates = json.loads(CERTIFICATES.read_text(encoding="utf-8"))
+    android = {}
+    for name, expected in certificates.items():
+        version, code = check_apk(directory / name, build_tools)
+        android[expected["applicationId"]] = {"versionCode": code, "versionName": version}
+    lg_asset, = directory.glob("*.ipk")
+    metadata = {"tag": production, "lgAsset": lg_asset.name, "android": android}
+    (candidate / "site/src/lib/stable-release.json").write_text(
+        json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def release_notes(staging, repository):
+    return (f"Miqat Phone, Android TV and LG webOS.\n\n"
+            f"[Verified Staging candidate](https://github.com/{repository}/releases/tag/{staging}).\n\n"
+            "SHA256SUMS covers the packages and approved release screenshots. "
+            "Both APKs use Miqat's persistent release keys.\n")
 
 
 def publish(repository, stable, source, manifest, directory, notes):
     repo = f"repos/{repository}"
-    pages = read_api(f"{repo}/releases?per_page=100", "--paginate", "--slurp")
-    releases = [release for page in pages for release in page if release["tag_name"] == stable]
+    matches = [release for release in releases(repo) if release["tag_name"] == stable]
     tag = tag_commit(repo, stable)
     if tag and tag != source:
         raise ValueError(f"{stable} already tags a different commit")
-    if releases:
-        release, = releases
+    if matches:
+        release, = matches
         uploaded = asset_manifest(release)
         if (release["target_commitish"] != source or release["prerelease"]
                 or any(manifest.get(name) != asset for name, asset in uploaded.items())):
-            raise ValueError(f"The existing release {stable} does not match this preview")
+            raise ValueError(f"The existing release {stable} does not match this Staging candidate")
         if not release["draft"]:
             if tag != source or uploaded != manifest:
                 raise ValueError(f"The published release {stable} is incomplete")
@@ -118,7 +120,7 @@ def publish(repository, stable, source, manifest, directory, notes):
     stored = read_api(f"{repo}/releases/{release['id']}")
     if (not stored["draft"] or stored["prerelease"] or stored["target_commitish"] != source
             or asset_manifest(stored) != manifest):
-        raise ValueError("Stable draft differs from the preview")
+        raise ValueError("Stable draft differs from the Staging candidate")
     if tag_commit(repo, stable) not in (None, source):
         raise ValueError(f"{stable} points to a different commit")
     if stable_version(stable) <= stable_version(read_api(f"{repo}/releases/latest")["tag_name"]):
@@ -131,47 +133,31 @@ def publish(repository, stable, source, manifest, directory, notes):
         raise ValueError("Published release does not match the verified draft")
 
 
-def promote(repository, head, preview_tag, verify_only):
-    match = re.fullmatch(rf"({STABLE_TAG})-preview\.[1-9]\d*", preview_tag)
-    if not match:
-        raise ValueError("Use a signed preview tag such as v0.7.7-preview.2")
-    stable = match[1]
-    repo = f"repos/{repository}"
-    preview = read_api(f"{repo}/releases/tags/{preview_tag}")
-    if preview["draft"] or not preview["prerelease"] or preview["author"]["login"] != BOT:
-        raise ValueError("Choose a published preview created by the GitHub Actions draft workflow")
-    source = tag_commit(repo, preview_tag)
-    if not source or source != preview["target_commitish"]:
-        raise ValueError("Preview tag differs from its recorded source")
-    comparison = read_api(f"{repo}/compare/{source}...{head}")
-    if comparison["merge_base_commit"]["sha"] != source:
-        raise ValueError("Preview source is not on main")
-    validation = re.search(rf"^Validation: (https://github\.com/{re.escape(repository)}"
-                           r"/actions/runs/([1-9]\d*))$", preview["body"], re.M)
-    if not validation:
-        raise ValueError("Preview has no recorded validation run")
-    validate_run(read_api(f"{repo}/actions/runs/{validation[2]}"), repository, source, preview_tag)
-    if any(asset["uploader"]["login"] != BOT for asset in preview["assets"]):
-        raise ValueError("Preview assets must have been uploaded by GitHub Actions")
-    manifest = asset_manifest(preview)
-    with TemporaryDirectory(dir=os.environ.get("RUNNER_TEMP")) as temporary:
-        directory = Path(temporary)
-        subprocess.check_call(["gh", "release", "download", preview_tag, "--repo", repository,
-                               "--dir", temporary, "--pattern", "*"])
-        verify_files(directory, manifest)
-        build_tools = Path(os.environ["ANDROID_HOME"]) / "build-tools/35.0.0"
-        for name in sorted(APKS):
-            check_apk(directory / name, build_tools)
-        if verify_only:
-            print(f"Verified {preview_tag} for {stable}.")
-            return
-        publish(repository, stable, source, manifest, directory,
-                release_notes(stable, preview_tag, validation[1], repository))
-
-
 if __name__ == "__main__":
     try:
-        promote(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_SHA"],
-                os.environ["PREVIEW_TAG"], os.environ["VERIFY_ONLY"] == "true")
+        repository = os.environ["GITHUB_REPOSITORY"]
+        staging = os.environ["STAGING_TAG"]
+        manifest = {name: tuple(entry) for name, entry in json.loads(os.environ["ASSET_MANIFEST"]).items()}
+        command, path = sys.argv[1:3]
+        directory = Path(path)
+        if command == "download":
+            pattern = sys.argv[3] if len(sys.argv) > 3 else "*"
+            selected = {name: entry for name, entry in manifest.items() if fnmatchcase(name, pattern)}
+            if not selected or pattern != "*" and len(selected) != 1:
+                raise ValueError(f"Expected one Staging asset matching {pattern}")
+            directory.mkdir(parents=True, exist_ok=True)
+            subprocess.check_call(["gh", "release", "download", staging, "--repo", repository,
+                                   "--dir", str(directory), "--pattern", pattern])
+            verify_assets(directory, selected)
+        else:
+            verify_files(directory, manifest)
+        if command == "website":
+            prepare_website(Path(sys.argv[3]), directory, os.environ["PRODUCTION_TAG"])
+        elif command == "publish":
+            stable = os.environ["PRODUCTION_TAG"]
+            publish(repository, stable, os.environ["SOURCE_SHA"], manifest, directory,
+                    release_notes(staging, repository))
+        elif command != "download":
+            raise ValueError("Expected download, website or publish")
     except (ValueError, subprocess.CalledProcessError) as error:
         raise SystemExit(str(error)) from error

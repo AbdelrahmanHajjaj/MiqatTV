@@ -172,6 +172,6 @@
     <string name="public_unavailable">No published Miqat TV package is available yet. Try again later, or choose a local APK in Advanced.</string>
     <string name="public_preview">Published preview build</string>
     <string name="downgrade_kept">The installed copy is newer, or its version could not be verified. It and its settings have been kept.</string>
-    <string name="install_preview_version">Miqat %1$s · published preview. Keep this screen open.</string>
+    <string name="install_staging_version">Miqat %1$s · Staging build. Keep this screen open.</string>
     <string name="local_package_selected">A local APK is selected. Advanced → Use public download restores automatic downloads.</string>
 </resources>

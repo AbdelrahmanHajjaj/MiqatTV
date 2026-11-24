@@ -290,18 +290,18 @@ final class PhoneJourneyCheck {
                                     "LG numbered guide and credentials must share one page");
                             check(
                                     resumed.body
-                                            .findViewWithTag("setup.channel.latest")
+                                            .findViewWithTag("setup.channel.production")
                                             .isSelected(),
-                                    "Latest must be default");
+                                    "Production must be default");
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-lg-guide", captures);
                 PhoneUiCheck.on(
                         test,
                         () -> {
-                            resumed.body.findViewWithTag("setup.channel.preview").performClick();
+                            resumed.body.findViewWithTag("setup.channel.staging").performClick();
                             check(
                                     resumed.body
-                                            .findViewWithTag("setup.channel.preview")
+                                            .findViewWithTag("setup.channel.staging")
                                             .isSelected(),
                                     "Release choice did not update");
                             resumed.back();
@@ -313,7 +313,7 @@ final class PhoneJourneyCheck {
                                                             .findViewWithTag("setup.continue")
                                                     != null,
                                     "Android preparation and release must share one page");
-                            resumed.body.findViewWithTag("setup.channel.preview").performClick();
+                            resumed.body.findViewWithTag("setup.channel.staging").performClick();
                         });
                 PhoneUiCheck.capture(test, resumed, lang + "-journey-channel", captures);
                 PhoneUiCheck.on(

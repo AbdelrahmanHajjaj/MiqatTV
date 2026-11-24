@@ -577,7 +577,7 @@ public abstract class MainActivity extends Activity {
                     timeline.set(0, Timeline.State.WORKING);
                     installPhase(localApk == null ? R.string.install_find_release : R.string.install_check_package, -1);
                 });
-                PublicRelease.Asset release=localApk==null?PublicRelease.latest(false,getIntent().getStringExtra("release-channel")==null?"latest":getIntent().getStringExtra("release-channel")):null;
+                PublicRelease.Asset release=localApk==null?PublicRelease.latest(false,getIntent().getStringExtra("release-channel")==null?"production":getIntent().getStringExtra("release-channel")):null;
                 if (release != null) post(g, () -> installPhase(R.string.t_download, 0));
                 File apk=localApk!=null?localApk:release.download(getCacheDir(),(done,total)->post(g,()->{
                     installPhase(R.string.t_download, (float) done / total);
@@ -592,7 +592,7 @@ public abstract class MainActivity extends Activity {
                 if(onTv!=null&&(installedCode<0||code<installedCode))throw new IOException(getString(R.string.downgrade_kept));
                 boolean current=onTv!=null&&onTv.equals(version)&&code==installedCode;
                 post(g, () -> {
-                    leadView.setText(release!=null&&release.preview?getString(R.string.install_preview_version,version):getString(R.string.install_lead_version,version));
+                    leadView.setText(release!=null&&release.staging?getString(R.string.install_staging_version,version):getString(R.string.install_lead_version,version));
                     if (current) {
                         timeline.set(0, release == null ? Timeline.State.SKIPPED : Timeline.State.CHECKED);
                         timeline.set(1, Timeline.State.CHECKED);
