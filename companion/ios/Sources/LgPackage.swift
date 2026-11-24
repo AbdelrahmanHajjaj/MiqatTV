@@ -41,8 +41,11 @@ enum LgPackage {
             offset += padded
             try input.seek(toOffset: offset)
         }
-        guard let control, hasPayload else { throw Invalid.archive }
-        return try controlVersion(in: inflateControl(control))
+        guard let control, hasPayload,
+              let tar = TVPackageCompression.expand(control, windowBits: 31, limit: controlLimit) else {
+            throw Invalid.archive
+        }
+        return try controlVersion(in: tar)
     }
 
     private static func controlVersion(in tar: Data) throws -> String {
@@ -78,31 +81,6 @@ enum LgPackage {
         return version
     }
 
-    private static func inflateControl(_ data: Data) throws -> Data {
-        var inflater = z_stream()
-        guard inflateInit2_(&inflater, 31, zlibVersion(), Int32(MemoryLayout<z_stream>.size)) == Z_OK else {
-            throw Invalid.archive
-        }
-        defer { _ = inflateEnd(&inflater) }
-        var output = Data(count: controlLimit + 1)
-        let result = data.withUnsafeBytes { (source: UnsafeRawBufferPointer) in
-            output.withUnsafeMutableBytes { (target: UnsafeMutableRawBufferPointer) -> Int32 in
-                guard let start = source.bindMemory(to: UInt8.self).baseAddress,
-                      let end = target.bindMemory(to: UInt8.self).baseAddress else { return Z_DATA_ERROR }
-                inflater.next_in = UnsafeMutablePointer(mutating: start)
-                inflater.avail_in = UInt32(source.count)
-                inflater.next_out = end
-                inflater.avail_out = UInt32(target.count)
-                return inflate(&inflater, Z_FINISH)
-            }
-        }
-        guard result == Z_STREAM_END, inflater.avail_in == 0, UInt64(inflater.total_out) <= UInt64(controlLimit) else {
-            throw Invalid.archive
-        }
-        output.count = Int(inflater.total_out)
-        return output
-    }
-
     private static func number(_ field: Data, radix: Int, limit: Int) throws -> Int {
         let text = String(decoding: field.filter { $0 != 0 }, as: UTF8.self).trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty, text.utf8.allSatisfy({ (48..<(48 + radix)).contains(Int($0)) }),
@@ -120,5 +98,32 @@ enum LgPackage {
             result.append(chunk)
         }
         return result
+    }
+}
+
+enum TVPackageCompression {
+    static func expand(_ data: Data, windowBits: Int32, limit: Int) -> Data? {
+        var inflater = z_stream()
+        guard inflateInit2_(&inflater, windowBits, zlibVersion(), Int32(MemoryLayout<z_stream>.size)) == Z_OK else {
+            return nil
+        }
+        defer { _ = inflateEnd(&inflater) }
+        var output = Data(count: limit + 1)
+        let result = data.withUnsafeBytes { (source: UnsafeRawBufferPointer) in
+            output.withUnsafeMutableBytes { (target: UnsafeMutableRawBufferPointer) -> Int32 in
+                guard let start = source.bindMemory(to: UInt8.self).baseAddress,
+                      let end = target.bindMemory(to: UInt8.self).baseAddress else { return Z_DATA_ERROR }
+                inflater.next_in = UnsafeMutablePointer(mutating: start)
+                inflater.avail_in = UInt32(source.count)
+                inflater.next_out = end
+                inflater.avail_out = UInt32(target.count)
+                return inflate(&inflater, Z_FINISH)
+            }
+        }
+        guard result == Z_STREAM_END, inflater.avail_in == 0, Int(inflater.total_out) <= limit else {
+            return nil
+        }
+        output.count = Int(inflater.total_out)
+        return output
     }
 }

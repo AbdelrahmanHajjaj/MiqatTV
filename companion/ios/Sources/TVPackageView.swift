@@ -50,9 +50,7 @@ struct TVPackageView: View {
                 Button(preferences.text("cancel")) { task.cancel() }
             } else {
                 Button(preferences.text("tv_public_download")) { start() }
-                if platform == .lg {
-                    Button(preferences.text("tv_local")) { importing = true }
-                }
+                Button(preferences.text("tv_local")) { importing = true }
             }
         }
         .navigationTitle(preferences.text("tv_public"))
@@ -60,7 +58,10 @@ struct TVPackageView: View {
         .onChange(of: channel) { _, _ in clearPackage() }
         .onDisappear { task?.cancel(); clearPackage() }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.data]) { result in
-            if case .success(let url) = result { importLG(url) }
+            switch result {
+            case .success(let url): importLocal(url)
+            case .failure: status = "tv_local_invalid"
+            }
         }
     }
 
@@ -94,18 +95,19 @@ struct TVPackageView: View {
         }
     }
 
-    private func importLG(_ url: URL) {
-        guard task == nil, platform == .lg else { return }
+    private func importLocal(_ url: URL) {
+        guard task == nil else { return }
         clearPackage()
         progress = .verifying
+        let selection = platform
         task = Task {
             defer { task = nil; progress = nil }
             do {
-                let ready = try await TVPackageDownload.importLG(url)
+                let ready = try await TVPackageDownload.importLocal(url, platform: selection)
                 if Task.isCancelled { ready.discard(); return }
                 package = ready
             } catch {
-                if !Task.isCancelled { status = "lg_no_package" }
+                status = Task.isCancelled ? "tv_public_cancelled" : "tv_local_invalid"
             }
         }
     }

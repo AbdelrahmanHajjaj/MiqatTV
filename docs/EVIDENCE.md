@@ -2295,3 +2295,11 @@ and version without extracting the payload. The Android IPK fixture suite
 passed all three host tests, nine iOS input fixtures were generated, and the
 changed Swift sources parsed. The Apple workflow exercises the Swift parser and
 copy with those files. Apple Files selection and zlib execution remain pending.
+
+iPhone Android TV APK import now reads only the bounded ZIP directory and
+binary manifest metadata to check the Miqat TV identifier and version code.
+Windows generated nine APK cases and nine IPK cases, parsed the five touched
+Swift sources, and staged the bilingual import status. Android build tools
+decoded the compressed UTF-8 and stored UTF-16 APK fixtures and produced a
+separate APK with the expected manifest layout. The macOS fixture run and
+iPhone Files handoff remain pending. No TV was contacted.

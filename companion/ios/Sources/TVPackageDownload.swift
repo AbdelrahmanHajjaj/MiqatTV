@@ -56,18 +56,25 @@ enum TVPackageDownload {
         }
     }
 
-    static func importLG(_ source: URL) async throws -> Package {
+    static func importLocal(_ source: URL, platform: TVPackagePlatform) async throws -> Package {
         let granted = source.startAccessingSecurityScopedResource()
         defer { if granted { source.stopAccessingSecurityScopedResource() } }
-        guard source.pathExtension.lowercased() == "ipk",
+        let extensionName = platform == .lg ? "ipk" : "apk"
+        guard source.pathExtension.lowercased() == extensionName,
               try source.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true else {
-            throw LgPackage.Invalid.archive
+            throw TVReleaseError.invalidDownload
         }
-        let output = try workspace(name: "miqat-webos.ipk")
+        let output = try workspace(name: platform == .lg ? "miqat-webos.ipk" : "miqat.apk")
         let staged = Package(url: output, tag: "")
         do {
-            try copyLocal(source, to: output)
-            let version = try LgPackage.version(of: output)
+            let limit = platform == .lg ? LgPackage.maximumSize : AndroidTVPackage.maximumSize
+            try copyLocal(source, to: output, limit: limit)
+            let version: String
+            if platform == .lg {
+                version = try LgPackage.version(of: output)
+            } else {
+                version = try AndroidTVPackage.version(of: output)
+            }
             try Task.checkCancellation()
             return Package(url: output, tag: version)
         } catch {
@@ -82,11 +89,11 @@ enum TVPackageDownload {
         return folder.appending(path: name, directoryHint: .notDirectory)
     }
 
-    private static func copyLocal(_ source: URL, to output: URL) throws {
+    private static func copyLocal(_ source: URL, to output: URL, limit: Int) throws {
         let input = try FileHandle(forReadingFrom: source)
         defer { try? input.close() }
-        guard try input.seekToEnd() <= UInt64(LgPackage.maximumSize),
-              FileManager.default.createFile(atPath: output.path, contents: nil) else { throw LgPackage.Invalid.archive }
+        guard try input.seekToEnd() <= UInt64(limit),
+              FileManager.default.createFile(atPath: output.path, contents: nil) else { throw TVReleaseError.invalidDownload }
         try input.seek(toOffset: 0)
         let file = try FileHandle(forWritingTo: output)
         defer { try? file.close() }
@@ -94,7 +101,7 @@ enum TVPackageDownload {
         while let chunk = try input.read(upToCount: 65536), !chunk.isEmpty {
             try Task.checkCancellation()
             received += chunk.count
-            guard received <= LgPackage.maximumSize else { throw LgPackage.Invalid.archive }
+            guard received <= limit else { throw TVReleaseError.invalidDownload }
             try file.write(contentsOf: chunk)
         }
         try file.synchronize()

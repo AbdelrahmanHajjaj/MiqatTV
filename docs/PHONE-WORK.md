@@ -2,6 +2,8 @@
 
 The Android APK is the feature baseline for the approved iPhone port. See the
 [iOS parity queue](IOS-WORK.md) for active work and Apple acceptance.
+The iPhone development target includes public TV package downloads and local
+APK/IPK identity checks. Native validation and direct TV installation are open.
 
 Updated: 2026-11-24. Stable v0.7.7 includes phone 0.5.23/code 39 with TV
 setup and recovery, Quran Radio, Hijri ranges, and opt-in day-before,

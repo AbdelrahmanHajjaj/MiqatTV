@@ -83,6 +83,7 @@
   "tv_public_download":{"en":"Download latest TV build","ar":"تنزيل أحدث إصدار للتلفاز"},
   "tv_public_unavailable":{"en":"No published build available.","ar":"لا يتوفر إصدار منشور."},
   "tv_public_failed":{"en":"Download or verification failed.","ar":"فشل التنزيل أو التحقق."},
+  "tv_local_invalid":{"en":"Choose a Miqat package for this TV.","ar":"اختر حزمة ميقات لهذا التلفاز."},
   "tv_public_staging":{"en":"Staging build","ar":"إصدار تجريبي"},
   "phone_use_location":{"en":"Use my location","ar":"استخدام موقعي"},
   "phone_current_location":{"en":"Current location","ar":"الموقع الحالي"},

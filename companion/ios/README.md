@@ -33,7 +33,8 @@ before offering the package to share or save to Files. Use the existing
 [Android TV setup](../../docs/ANDROID-SETUP.md) or [LG setup](../../docs/WEBOS.md)
 to install the package on a TV.
 
-For LG, **Choose a local package** imports an IPK from Files. Miqat reads its
-package identifier and version from the control archive before sharing it.
+**Choose a local package** accepts an Android TV APK or an LG IPK from Files.
+Miqat checks the package identifier and version before sharing it. The TV
+installer is responsible for validating signing and compatibility.
 
 [Parity queue and validation status](../../docs/IOS-WORK.md).
