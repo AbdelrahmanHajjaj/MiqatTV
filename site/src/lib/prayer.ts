@@ -78,19 +78,19 @@ export function civilPrayerTimes(now: Date, prefs: Prefs) {
 }
 
 /** One moment's view of the prayer day: the six times, the current prayer and the next. */
-export function prayerDay(now: Date, prefs: Prefs) {
+export function prayerDay(now: Date, prefs: Prefs, civilDate = now) {
   const {city, where, at} = calculation(prefs);
-  const times = timesOf(at(now));
+  const times = timesOf(at(civilDate));
 
-  const tomorrowFajr = minute(at(addDays(now, 1)).fajr);
+  const tomorrowFajr = minute(at(addDays(civilDate, 1)).fajr);
   const selected = rules.select(new Float64Array(times.map(Number)), +tomorrowFajr, +now);
   const nowIndex = selected.current, next = selected.next;
   if (next === FAJR && times[FAJR] <= now) times[FAJR] = tomorrowFajr;
-  const h = hijriOf(now, prefs.hijriOffset);
+  const h = hijriOf(civilDate, prefs.hijriOffset);
   return {
     city, times, nowIndex, nextIndex: next, nextTime: times[next],
     suhoorEnd: times[FAJR] > now ? times[FAJR] : tomorrowFajr,
-    friday: now.getDay() === 5,
+    friday: civilDate.getDay() === 5,
     ramadan: h.month === RAMADAN,
     hijri: h,
     qibla: Qibla(where) as number, // degrees clockwise from true north
