@@ -35,8 +35,12 @@ enum PrayerBackgroundRefresh {
     }
 
     static func hasPrayerWidget() async -> Bool {
-        let widgets = try? await WidgetCenter.shared.currentConfigurations()
-        return widgets?.contains { $0.kind == WidgetSnapshot.widgetKind } == true
+        await withCheckedContinuation { continuation in
+            WidgetCenter.shared.getCurrentConfigurations { result in
+                let installed = (try? result.get())?.contains { $0.kind == WidgetSnapshot.widgetKind } == true
+                continuation.resume(returning: installed)
+            }
+        }
     }
 
     static func schedule(enabled: Bool) {
