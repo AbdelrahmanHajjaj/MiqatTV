@@ -8,7 +8,8 @@ shell in JavaScriptCore. The Kotlin core handles rounding and prayer selection.
 
 ## Build on Apple silicon
 
-Use Xcode 16.4, CMake, JDK 17 and Node 24. From the repo root:
+Use Xcode 16.3 with the repository's Kotlin 2.2.10 toolchain, plus CMake,
+JDK 17 and Node 24. Both targets build for arm64. From the repo root:
 
 ```sh
 npm --prefix companion/ios ci --ignore-scripts

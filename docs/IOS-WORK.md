@@ -11,7 +11,7 @@ new Android releases to this pinned baseline before expanding the queue.
 
 | Order | User journey | Status and remaining acceptance |
 | --- | --- | --- |
-| 1 | Apple application, Kotlin framework, canonical bundles and unsigned build | Xcode target, framework and Apple build workflow added. Windows verified Kotlin task registration and resource staging. Apple build and launch pending. |
+| 1 | Apple application, Kotlin framework, canonical bundles and unsigned build | App, widget and native libraries target arm64. The macOS workflow selects Xcode 16.3, supported by the current Kotlin plugin. Windows verified workflow parsing, Kotlin task registration and resource staging. Apple build and launch pending. |
 | 2 | Welcome, skip/resume, permission and confirmation, offline country/city search, fresh fix, manual coordinates and timezone, background location consent/travel refresh | Coded. Native checks include fresh/denied, cancelled fix, Always permission, significant-change delivery, and manual changes during travel refresh. |
 | 3 | Prayer Home, greeting and exact verse, Hijri/Gregorian date, next prayer, countdown seconds and six times, next-Fajr rollover, calculated city, method/school/high-latitude rule and offsets | Coded. 570 minute-for-minute Android comparisons passed across five cities, all presets, both Asr schools and three high-latitude rules. Offset and polar fixtures passed. Native UI pending. |
 | 4 | Hijri month/day navigation, swipes and timetable, Hijri adjustment, current/upcoming and all recurring events | Coded using the canonical event catalog and Kotlin event rules. Verify Umm al-Qura month boundaries against Android. |

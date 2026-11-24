@@ -26,6 +26,8 @@ jobs:
   apple:
     runs-on: macos-15
     timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.3.app/Contents/Developer
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -52,23 +54,17 @@ jobs:
           npm --prefix companion/ios ci --ignore-scripts
           node companion/ios/astronomy.test.mjs
       - name: Check TV settings edit payloads
-        env:
-          DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
         run: |
           swiftc companion/ios/Sources/TVThemeDraft.swift companion/ios/Sources/TVRedirects.swift \
             companion/ios/Sources/TVPreviewLayout.swift \
             companion/ios/checks/tv-settings/main.swift -o "$RUNNER_TEMP/tv-settings-check"
           "$RUNNER_TEMP/tv-settings-check"
       - name: Check widget appearance snapshots
-        env:
-          DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
         run: |
           swiftc companion/ios/Sources/WidgetSnapshot.swift companion/ios/checks/widget-appearance/main.swift \
             -o "$RUNNER_TEMP/widget-appearance-check"
           "$RUNNER_TEMP/widget-appearance-check"
       - name: Check TV packages and installation sequences
-        env:
-          DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
         run: |
           python3 -S -B companion/ios/checks/tv-download/ipk-fixtures.py "$RUNNER_TEMP/ipk-fixtures"
           python3 -S -B companion/ios/checks/tv-download/apk-fixtures.py "$RUNNER_TEMP/apk-fixtures"
@@ -89,8 +85,6 @@ jobs:
           MIQAT_IOS_RECOVERY_FIXTURE="$RUNNER_TEMP/ios-recovery.json" \
             python3 -S -B -m unittest discover -s tests -p test_device.py
       - name: Link Kotlin and build the unsigned simulator app
-        env:
-          DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
         run: |
           sh companion/ios/prepare-ssh.sh iphonesimulator
           sh companion/ios/prepare-adb-crypto.sh iphonesimulator

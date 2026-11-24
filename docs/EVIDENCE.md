@@ -2439,3 +2439,9 @@ strip. The Circle layout places the prayer name above the time and countdown
 in its text hierarchy. The touched Swift file parsed on Windows and all 14
 companion generator checks passed. WidgetKit fit and Dynamic Type remain
 pending on Apple hardware.
+
+The Apple workflow selects Xcode 16.3 across the job, matching the Kotlin
+2.2.10 compatibility guide. The app and widget build for arm64, the architecture
+provided by both Kotlin and the native installer libraries. Windows parsed the
+workflow and confirmed the device and simulator framework tasks register.
+The Xcode build remains pending.
