@@ -2519,3 +2519,11 @@ until refresh. An acknowledged command followed by a failed state read is
 reported separately. Windows passed the 14 generator checks, Swift syntax
 parsing and workflow validation. The Apple capability fixture, Keychain
 rename persistence and foreground TV interaction remain pending.
+
+iPhone TV settings preserve the submitted patch in memory while navigating
+between views. After a conflict, review shows the current value and the
+submitted edit. A lost reply requires refreshed readback before an explicit
+retry. A matching readback clears the pending edit without sending it again.
+Windows passed the shared Kotlin settings tests, 14 generator checks, Swift
+syntax parsing and workflow validation. Native sheet handling and recovery
+against both TV shells remain pending.

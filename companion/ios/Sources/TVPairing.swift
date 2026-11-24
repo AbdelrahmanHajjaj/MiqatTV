@@ -15,6 +15,7 @@ struct TVIdentity: Decodable {
 final class PairedTVs: ObservableObject {
     @Published private(set) var records: [PairedTV] = []
     @Published private(set) var inaccessible = false
+    @Published var settingsEdits: [String: TVSettingEdit] = [:]
 
     func load() {
         do {
@@ -37,6 +38,7 @@ final class PairedTVs: ObservableObject {
         let next = records.filter { $0.id != record.id }
         try TVKeychain.save(next)
         records = next
+        settingsEdits[record.id] = nil
     }
 
     func rename(_ id: String, to name: String) throws {

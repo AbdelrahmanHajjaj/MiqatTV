@@ -48,7 +48,7 @@ struct TVDemo {
         let result = endpoint.apply(expected: expected, changes: changes)
         if result.status == "saved" { UserDefaults.standard.set(result.snapshot.values, forKey: storageKey) }
         return TVSettingsState(controls: controls, values: result.snapshot.values, status: result.status,
-                               systemLanguage: TVProfileCatalog.data.demoSystemLanguage)
+                               systemLanguage: TVProfileCatalog.data.demoSystemLanguage, conflicts: result.conflicts)
     }
 
     mutating func send(_ command: String, value: String) {

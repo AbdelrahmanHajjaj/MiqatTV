@@ -92,3 +92,17 @@ precondition(!TVRemoteState(commands: ["future.command"], inputs: [], media: nil
 precondition(!TVRemoteState(commands: allowed, inputs: inventory + inventory, media: nil).valid(allowed: allowed))
 precondition(remote.statusKey(for: "radio") == "loading_controls" && remote.statusKey(for: "adhan") == nil)
 print("TV Remote validates capabilities and inputs and keeps only offered Stop actions available after uncertainty.")
+
+let opening = ["appearance.theme": "mihrab", "appearance.lighting": "30", "prayer.method": "EGYPTIAN"]
+let requested = TVSettingEdit(baseline: opening, changes: ["appearance.theme": "forest"],
+                              conflicts: ["appearance.lighting"])
+let refreshed = ["appearance.theme": "mihrab", "appearance.lighting": "42", "prayer.method": "KARACHI"]
+precondition(requested.reviewKeys == ["appearance.lighting", "appearance.theme"])
+precondition(requested.requestedValue(for: "appearance.lighting") == "30")
+precondition(requested.remaining(against: refreshed) == ["appearance.theme": "forest"])
+var confirmed = refreshed
+confirmed["appearance.theme"] = "forest"
+precondition(requested.remaining(against: confirmed).isEmpty)
+let toggle = TVSettingEdit(baseline: opening, changes: ["display.seconds": "true"])
+precondition(toggle.remaining(against: refreshed) == ["display.seconds": "true"])
+print("TV settings review retains the submitted patch and recognizes a readback that already reflects it.")
