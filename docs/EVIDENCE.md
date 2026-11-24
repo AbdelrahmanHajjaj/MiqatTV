@@ -1,5 +1,13 @@
 # Validation evidence
 
+## v0.7.9 promotion focus diagnostics
+
+[Production attempt](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45466201679)
+passed phone, LG and website checks. Android TV passed signed launch, prayer
+and UI contract checks, then failed the large Home Up/Down focus assertion.
+The size fixture now records layout, focus snapshots, the calculated Down
+target and whether the original app tile stayed attached.
+
 ## Android in-app update
 
 Both Android apps and their instrumentation compiled. The isolated API 37
