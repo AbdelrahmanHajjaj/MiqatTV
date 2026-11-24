@@ -439,6 +439,7 @@ struct PrayerTimesList: View {
                 if let edit, index != 1 {
                     Button { edit(index) } label: { row(index, name: names[index], navigates: true) }
                         .buttonStyle(.plain)
+                            .accessibilityIdentifier("miqat.prayer.\(index)")
                 } else {
                     row(index, name: names[index], navigates: false)
                 }

@@ -148,6 +148,7 @@ struct LocationSettings: View {
                 } label: {
                     LabeledContent(preferences.text("phone_city"), value: preferences.city.name(preferences.arabic))
                 }
+                .accessibilityIdentifier("miqat.location.city")
                 if location.pending {
                     ProgressView(preferences.text("phone_location_working"))
                     Button(preferences.text("phone_location_cancel")) { location.cancel() }
