@@ -2365,6 +2365,11 @@ start and clears playback controls on a decoder failure. Swift syntax and
 staging of the checksum-verified voices passed. Missing/corrupt recording and
 audio callback cases remain in the native acceptance queue.
 
+iPhone pairing now requests Camera access when Scan is invoked and closes
+the scanner if it becomes unavailable or the app backgrounds. Swift syntax,
+the generator checks and the shared QR tests passed. Camera denial, recovery
+and scanner dismissal remain in the native queue.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

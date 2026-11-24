@@ -126,6 +126,14 @@ same bearing, route, pan, zoom and recenter. At the Kaaba or its antipode,
 verify that Miqat reports no reliable direction. On a physical iPhone, verify
 the arrow appears with a reliable heading and disappears when it is unreliable.
 
+## iPhone pairing camera regression
+
+On a fresh iPhone install, choose Scan TV QR code, deny Camera access and
+verify the pairing page offers Settings and still accepts a pasted code.
+Grant access in Settings, return and scan a TV code. Dismiss the scanner,
+then reopen it and background the app while scanning. Verify the camera
+closes and a late scan cannot submit a pairing request. Repeat in Arabic.
+
 ## Platform differences to verify
 
 - Apple local notification sounds must be under 30 seconds. The short tone is
