@@ -63,5 +63,23 @@ struct DownloadCheck {
             precondition(rejected == nil)
         }
         print("TV release channels, source restrictions, checksums, stream sizes and package integrity passed.")
+        try await checkLocalPackage()
+    }
+
+    static func checkLocalPackage() async throws {
+        let fixture = URL(fileURLWithPath: CommandLine.arguments[1], isDirectory: true)
+        let original = fixture.appending(path: "valid.ipk")
+        let ready = try await TVPackageDownload.importLG(original)
+        defer { ready.discard() }
+        let expected = try Data(contentsOf: original)
+        let imported = try Data(contentsOf: ready.url)
+        precondition(ready.tag == "0.2.28" && ready.url != original && imported == expected)
+
+        for url in try FileManager.default.contentsOfDirectory(at: fixture, includingPropertiesForKeys: nil)
+            where url.lastPathComponent != "valid.ipk" {
+            let rejected = try? await TVPackageDownload.importLG(url)
+            precondition(rejected == nil, url.lastPathComponent)
+        }
+        print("Local IPK import recognizes Miqat and rejects corrupt, oversized, truncated and foreign metadata.")
     }
 }

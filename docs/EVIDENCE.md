@@ -2289,3 +2289,9 @@ sources parsed. The Apple check exercises fixture release selection, checksum
 fallback, origin checks and stream integrity with valid, truncated, oversized
 and altered packages. SHA-256 execution, network cancellation and the Files
 handoff remain unverified on Apple hardware. No TV was contacted.
+
+LG local import now stages a bounded private copy and reads the IPK identifier
+and version without extracting the payload. The Android IPK fixture suite
+passed all three host tests, nine iOS input fixtures were generated, and the
+changed Swift sources parsed. The Apple workflow exercises the Swift parser and
+copy with those files. Apple Files selection and zlib execution remain pending.

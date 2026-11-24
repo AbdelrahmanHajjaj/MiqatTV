@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct TVPackageView: View {
     private struct Platform: Decodable {
@@ -15,6 +16,7 @@ struct TVPackageView: View {
     @State private var progress: TVPackageDownload.Progress?
     @State private var status: String?
     @State private var package: TVPackageDownload.Package?
+    @State private var importing = false
 
     var body: some View {
         Form {
@@ -48,12 +50,18 @@ struct TVPackageView: View {
                 Button(preferences.text("cancel")) { task.cancel() }
             } else {
                 Button(preferences.text("tv_public_download")) { start() }
+                if platform == .lg {
+                    Button(preferences.text("tv_local")) { importing = true }
+                }
             }
         }
         .navigationTitle(preferences.text("tv_public"))
         .onChange(of: platform) { _, _ in clearPackage() }
         .onChange(of: channel) { _, _ in clearPackage() }
         .onDisappear { task?.cancel(); clearPackage() }
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.data]) { result in
+            if case .success(let url) = result { importLG(url) }
+        }
     }
 
     private func clearPackage() {
@@ -82,6 +90,22 @@ struct TVPackageView: View {
                 status = "tv_public_unavailable"
             } catch {
                 status = Task.isCancelled ? "tv_public_cancelled" : "tv_public_failed"
+            }
+        }
+    }
+
+    private func importLG(_ url: URL) {
+        guard task == nil, platform == .lg else { return }
+        clearPackage()
+        progress = .verifying
+        task = Task {
+            defer { task = nil; progress = nil }
+            do {
+                let ready = try await TVPackageDownload.importLG(url)
+                if Task.isCancelled { ready.discard(); return }
+                package = ready
+            } catch {
+                if !Task.isCancelled { status = "lg_no_package" }
             }
         }
     }

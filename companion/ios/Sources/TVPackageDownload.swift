@@ -31,15 +31,20 @@ enum TVPackageDownload {
         let client = session()
         defer { client.invalidateAndCancel() }
         let bytes = try await source(release.url, session: client, limit: release.size)
-        return try await stage(bytes, release: release, digest: digest, report: report)
+        let ready = try await stage(bytes, release: release, digest: digest, report: report)
+        do {
+            if platform == .lg { _ = try LgPackage.version(of: ready.url) }
+            return ready
+        } catch {
+            ready.discard()
+            throw error
+        }
     }
 
     static func stage<Bytes: AsyncSequence>(_ bytes: Bytes, release: TVRelease, digest: String,
                                             report: @Sendable (Progress) async -> Void) async throws -> Package
         where Bytes.Element == UInt8 {
-        let folder = FileManager.default.temporaryDirectory.appending(path: "miqat-" + UUID().uuidString, directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
-        let output = folder.appending(path: release.name, directoryHint: .notDirectory)
+        let output = try workspace(name: release.name)
         let result = Package(url: output, tag: release.tag)
         do {
             try await save(bytes, release: release, digest: digest, output: output, report: report)
@@ -49,6 +54,50 @@ enum TVPackageDownload {
             result.discard()
             throw error
         }
+    }
+
+    static func importLG(_ source: URL) async throws -> Package {
+        let granted = source.startAccessingSecurityScopedResource()
+        defer { if granted { source.stopAccessingSecurityScopedResource() } }
+        guard source.pathExtension.lowercased() == "ipk",
+              try source.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true else {
+            throw LgPackage.Invalid.archive
+        }
+        let output = try workspace(name: "miqat-webos.ipk")
+        let staged = Package(url: output, tag: "")
+        do {
+            try copyLocal(source, to: output)
+            let version = try LgPackage.version(of: output)
+            try Task.checkCancellation()
+            return Package(url: output, tag: version)
+        } catch {
+            staged.discard()
+            throw error
+        }
+    }
+
+    private static func workspace(name: String) throws -> URL {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "miqat-" + UUID().uuidString, directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        return folder.appending(path: name, directoryHint: .notDirectory)
+    }
+
+    private static func copyLocal(_ source: URL, to output: URL) throws {
+        let input = try FileHandle(forReadingFrom: source)
+        defer { try? input.close() }
+        guard try input.seekToEnd() <= UInt64(LgPackage.maximumSize),
+              FileManager.default.createFile(atPath: output.path, contents: nil) else { throw LgPackage.Invalid.archive }
+        try input.seek(toOffset: 0)
+        let file = try FileHandle(forWritingTo: output)
+        defer { try? file.close() }
+        var received = 0
+        while let chunk = try input.read(upToCount: 65536), !chunk.isEmpty {
+            try Task.checkCancellation()
+            received += chunk.count
+            guard received <= LgPackage.maximumSize else { throw LgPackage.Invalid.archive }
+            try file.write(contentsOf: chunk)
+        }
+        try file.synchronize()
     }
 
     private static func save<Bytes: AsyncSequence>(_ bytes: Bytes, release: TVRelease, digest: String, output: URL,
