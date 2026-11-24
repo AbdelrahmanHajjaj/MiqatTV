@@ -20,6 +20,11 @@ of the standalone Android phone app. [CI](CI.md) describes the PR gate.
    Android identities and packaged audio and records the source SHA and Build
    run in the release notes.
 
+The Actions run title shows its channel and branch. Open the run's **Summary**
+for the published Staging tag and release link. For a Development build, open
+the run's source commit or check **About Miqat** after installation for the app
+version. An individual app's version is independent of the release tag.
+
 The Staging prerelease contains `miqat-phone.apk`, `miqat.apk`,
 `tv.miqat.webos_<version>_all.ipk`, `screenshots.zip` and `SHA256SUMS`.
 The screenshot archive contains the reviewed bilingual PNGs and provenance

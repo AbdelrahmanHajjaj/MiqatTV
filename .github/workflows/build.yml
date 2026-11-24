@@ -1,4 +1,5 @@
 name: Build
+run-name: Build · ${{ inputs.channel }} · ${{ github.ref_name }}
 
 on:
   workflow_dispatch:
@@ -100,13 +101,18 @@ jobs:
           python3 tools/check_apk_media.py state/release/miqat.apk
           python3 tools/check_apk_media.py state/release/miqat-phone.apk
           git archive --format=zip --output=state/release/screenshots.zip "$GITHUB_SHA" docs/screenshots
-          (cd state/release && sha256sum -- miqat.apk miqat-phone.apk *.ipk screenshots.zip > SHA256SUMS)
       - name: Publish signed Staging packages
+        working-directory: state/release
         env:
           RELEASE_TAG: ${{ steps.source.outputs.tag }}
         run: |
+          packages=(miqat.apk miqat-phone.apk tv.miqat.webos_*_all.ipk screenshots.zip)
+          test "${#packages[@]}" -eq 4
+          sha256sum -- "${packages[@]}" > SHA256SUMS
           printf 'Miqat Phone, Android TV and LG webOS.\n\nBuild: https://github.com/%s/actions/runs/%s\n\nSource: %s\n' \
-            "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_SHA" > state/release-notes.md
-          gh release create "$RELEASE_TAG" state/release/* --repo "$GITHUB_REPOSITORY" \
+            "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_SHA" > ../release-notes.md
+          gh release create "$RELEASE_TAG" "${packages[@]}" SHA256SUMS --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" --prerelease --latest=false --title "Miqat $RELEASE_TAG" \
-            --notes-file state/release-notes.md
+            --notes-file ../release-notes.md
+          printf '## Staging release\n\n[%s](https://github.com/%s/releases/tag/%s)\n' \
+            "$RELEASE_TAG" "$GITHUB_REPOSITORY" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
