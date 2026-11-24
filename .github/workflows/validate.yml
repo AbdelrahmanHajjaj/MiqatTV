@@ -95,6 +95,8 @@ jobs:
     name: Android build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      version: ${{ steps.package.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -118,6 +120,7 @@ jobs:
       - name: Run Java and setup/recovery regressions
         run: python3 -S -B -m unittest discover -s tests -v
       - name: Collect the selected Android TV APK
+        id: package
         if: inputs.channel != ''
         env:
           CHANNEL: ${{ inputs.channel }}
@@ -128,6 +131,9 @@ jobs:
           else
             cp platforms/android-tv/build/outputs/apk/release/app-release-unsigned.apk state/builds/android/miqat.apk
           fi
+          version=$(python3 tools/check_android_release.py "$ANDROID_HOME/build-tools/35.0.0" \
+            state/builds/android/miqat.apk --version-for tv.miqat.home)
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: inputs.channel != ''
         with:
@@ -149,6 +155,8 @@ jobs:
     name: LG build and tests
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      version: ${{ steps.package.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -175,9 +183,12 @@ jobs:
         if: github.event_name == 'pull_request'
         run: npm --prefix platforms/webos run test:browser -- --smoke
       - name: Package full-audio LG app and service
+        id: package
         run: |
           mkdir -p state/builds/webos
           npm exec --yes --package=@webos-tools/cli@3.2.6 -- ares-package platforms/webos/build/app platforms/webos/build/service --outdir state/builds/webos --no-minify
+          version=$(node -p 'require("./platforms/webos/build/app/appinfo.json").version')
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: inputs.channel != ''
         with:
@@ -224,6 +235,8 @@ jobs:
     if: needs.changes.outputs.companion == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    outputs:
+      version: ${{ steps.package.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -245,11 +258,22 @@ jobs:
           ./gradlew :companion:assembleDebug :companion:lintDebug :companion:assembleDebugAndroidTest :companion:assembleRelease :companion:lintRelease --no-daemon
           python3 tools/check_apk_media.py companion/android/build/outputs/apk/debug/companion-debug.apk
           python3 tools/check_apk_media.py companion/android/build/outputs/apk/release/companion-release-unsigned.apk
-      - name: Collect the Development phone APK
-        if: inputs.channel == 'development'
+      - name: Collect the selected Miqat Phone APK
+        id: package
+        if: inputs.channel != ''
+        env:
+          CHANNEL: ${{ inputs.channel }}
         run: |
-          mkdir -p state/builds/phone
-          cp companion/android/build/outputs/apk/debug/companion-debug.apk state/builds/phone/miqat-phone.apk
+          if [[ "$CHANNEL" == development ]]; then
+            mkdir -p state/builds/phone
+            apk=state/builds/phone/miqat-phone.apk
+            cp companion/android/build/outputs/apk/debug/companion-debug.apk "$apk"
+          else
+            apk=companion/android/build/outputs/apk/release/companion-release-unsigned.apk
+          fi
+          version=$(python3 tools/check_android_release.py "$ANDROID_HOME/build-tools/35.0.0" \
+            "$apk" --version-for tv.miqat.companion)
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: inputs.channel == 'development'
         with:
@@ -279,3 +303,19 @@ jobs:
         env:
           RESULTS: ${{ toJSON(needs) }}
         run: python3 -S -B tools/ci.py require
+      - name: Show built app versions
+        if: inputs.channel != ''
+        env:
+          PHONE_VERSION: ${{ needs.companion.outputs.version }}
+          TV_VERSION: ${{ needs.android.outputs.version }}
+          LG_VERSION: ${{ needs.webos.outputs.version }}
+        run: |
+          test -n "$PHONE_VERSION"
+          test -n "$TV_VERSION"
+          test -n "$LG_VERSION"
+          {
+            printf '## Built app versions\n\n'
+            printf '| App | Version |\n| --- | --- |\n'
+            printf '| Miqat Phone | %s |\n| Android TV | %s |\n| LG webOS | %s |\n' \
+              "$PHONE_VERSION" "$TV_VERSION" "$LG_VERSION"
+          } >> "$GITHUB_STEP_SUMMARY"

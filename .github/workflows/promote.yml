@@ -8,7 +8,7 @@ on:
         description: Full Staging tag (blank uses latest published Staging)
         type: string
       publish:
-        description: Approve Production publication if all checks pass
+        description: Check to approve live Production publication and website deployment
         type: boolean
         default: false
 
@@ -38,7 +38,10 @@ jobs:
         run: |
           test "$GITHUB_REF" = refs/heads/main
           if [[ "$APPROVED" != true ]]; then
-            echo "Select the publication approval to promote. Use Device simulation for verification alone."
+            message="Start a new Promote to Production run and check the publication approval box."
+            echo "::error title=Production approval missing::$message"
+            printf '## Publication approval required\n\n%s\n\nUse Device simulation for verification alone.\n' \
+              "$message" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
