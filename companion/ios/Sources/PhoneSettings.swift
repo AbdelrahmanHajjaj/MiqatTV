@@ -56,6 +56,7 @@ struct PhoneSettings: View {
                     radio.stop()
                     try library.reset()
                     notifications.cancelTest()
+                    try PhoneStore.shared.clearAdhanClaims()
                     preferences = PhonePreferences()
                 } catch { resetFailed = true }
             }

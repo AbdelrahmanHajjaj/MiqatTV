@@ -76,6 +76,7 @@ final class PrayerNotifications: ObservableObject {
 
     func cancelTest() {
         center.removePendingNotificationRequests(withIdentifiers: [Self.testID])
+        center.removeDeliveredNotifications(withIdentifiers: [Self.testID])
     }
 
     func test(preferences: PhonePreferences, adhan: Bool = false) async -> Date? {
@@ -86,7 +87,10 @@ final class PrayerNotifications: ObservableObject {
         content.sound = Self.shortSound
         if adhan {
             let settings = await center.notificationSettings()
-            if settings.soundSetting == .enabled { content.userInfo["adhanPrayer"] = 2 }
+            if settings.soundSetting == .enabled {
+                content.userInfo["adhanPrayer"] = 2
+                content.userInfo["adhanTime"] = when.timeIntervalSince1970 * 1000
+            }
         }
         do {
             try await center.add(UNNotificationRequest(identifier: Self.testID, content: content,
@@ -94,6 +98,24 @@ final class PrayerNotifications: ObservableObject {
             if Task.isCancelled { cancelTest(); return nil }
             return when
         } catch { return nil }
+    }
+
+    func claimAdhan(_ request: AdhanNotification, preferences: PhonePreferences, schedule: PrayerSchedule) -> Bool {
+        let now = Date.now
+        let rules = PhonePrayerRules.shared
+        guard rules.due(time: request.time, now: now.timeIntervalSince1970 * 1000) else { return false }
+        if request.identifier == Self.testID {
+            guard request.prayer == 2 else { return false }
+        } else {
+            guard preferences.locationConfirmed, preferences.alertsEnabled, preferences.valid else { return false }
+            let start = Date(timeIntervalSince1970: request.time / 1000 - 1)
+            let valid = Self.plans(preferences, schedule: schedule, now: start, days: -1...1).contains { plan in
+                plan.fullAdhan && plan.event.time == request.time && Int(plan.event.prayer) == request.prayer
+                    && Self.schedulePrefix + plan.event.id == request.identifier
+            }
+            guard valid else { return false }
+        }
+        return PhoneStore.shared.claimAdhan(request.claimID)
     }
 
     private func reconcile(preferences: PhonePreferences, schedule: PrayerSchedule) async {
@@ -124,6 +146,7 @@ final class PrayerNotifications: ObservableObject {
             content.sound = plan.audible ? Self.shortSound : nil
             if plan.fullAdhan && permissions.soundSetting == .enabled {
                 content.userInfo["adhanPrayer"] = Int(plan.event.prayer)
+                content.userInfo["adhanTime"] = plan.event.time
             }
             do {
                 try await center.add(UNNotificationRequest(identifier: Self.schedulePrefix + plan.event.id, content: content,
@@ -142,12 +165,13 @@ final class PrayerNotifications: ObservableObject {
         var fullAdhan = false
     }
 
-    private static func plans(_ prefs: PhonePreferences, schedule: PrayerSchedule, now: Date) -> [Plan] {
+    private static func plans(_ prefs: PhonePreferences, schedule: PrayerSchedule, now: Date,
+                              days: ClosedRange<Int> = -1...7) -> [Plan] {
         let calendar = PrayerSchedule.civilCalendar(prefs)
         let today = calendar.startOfDay(for: now)
         let nowMs = now.timeIntervalSince1970 * 1000
         var plans: [Plan] = []
-        for offset in -1...7 {
+        for offset in days {
             guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { continue }
             let times = schedule.day(at: date, prefs: prefs)
             let weekday = calendar.component(.weekday, from: date) - 1

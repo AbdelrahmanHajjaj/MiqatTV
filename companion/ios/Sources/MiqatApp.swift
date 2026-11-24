@@ -18,6 +18,7 @@ struct MiqatApp: App {
     @State private var tab = "prayer"
     @State private var setup = false
     @State private var showAdhan = false
+    @State private var playingAdhan: String?
     private let schedule = PrayerSchedule.shared
 
     private var settings: Binding<PhonePreferences> {
@@ -53,8 +54,9 @@ struct MiqatApp: App {
             }
             .onAppear {
                 if !store.preferences.setupStarted { setup = true }
-                delegate.foregroundAdhan = playAdhan
+                delegate.presentAdhan = presentAdhan
                 adhan.onPlayback = { radio.pause(forAdhan: true) }
+                if scenePhase == .active { delegate.presentPendingAdhan() }
             }
             .fullScreenCover(isPresented: $showAdhan) { AdhanPlayback(preferences: store.preferences) }
             .onChange(of: adhan.prayer) { _, prayer in
@@ -70,6 +72,7 @@ struct MiqatApp: App {
             .onOpenURL { url in if url.scheme == "miqat" && url.host == "prayer" { tab = "prayer" } }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
+                    delegate.presentPendingAdhan()
                     delegate.travel.update(store.preferences)
                     delegate.travel.refresh(store.preferences)
                     refreshAlerts()
@@ -101,21 +104,33 @@ struct MiqatApp: App {
         notifications.refresh(preferences: store.preferences, schedule: schedule)
     }
 
-    private func playAdhan(_ index: Int) -> Bool {
+    private func presentAdhan(_ request: AdhanNotification, tapped: Bool) -> Bool {
+        if tapped { tab = "prayer" }
+        if playingAdhan == request.claimID && adhan.prayer != nil {
+            if tapped && !setup { showAdhan = true }
+            return true
+        }
         let prefs = store.preferences
-        guard [0, 2, 3, 4, 5].contains(index) else { return false }
+        guard notifications.claimAdhan(request, preferences: prefs, schedule: schedule) else { return false }
+        let index = request.prayer
         let settings = prefs.prayerAlerts[index]
         let selection = prefs.adhan.forPrayer(index, settings: settings)
         let fallback = index == 0 ? PhoneData.defaultFajrVoice : PhoneData.defaults["reminders.voice"] ?? "almalki"
         let voice = library.url(selection.voice) != nil ? selection.voice : fallback
         guard let url = library.url(voice) else { return false }
-        return adhan.play(url: url, name: library.name(voice, preferences: prefs), selection: selection, prayer: index)
+        guard adhan.play(url: url, name: library.name(voice, preferences: prefs), selection: selection, prayer: index) else {
+            return false
+        }
+        playingAdhan = request.claimID
+        if tapped && !setup { showAdhan = true }
+        return true
     }
 }
 
 @MainActor
 final class PhoneApplicationDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    var foregroundAdhan: ((Int) -> Bool)?
+    var presentAdhan: ((AdhanNotification, Bool) -> Bool)?
+    private var pendingAdhan: AdhanNotification?
     let travel = TravelLocation()
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         UNUserNotificationCenter.current().delegate = self
@@ -141,11 +156,28 @@ final class PhoneApplicationDelegate: NSObject, UIApplicationDelegate, UNUserNot
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async
         -> UNNotificationPresentationOptions {
-        guard let index = notification.request.content.userInfo["adhanPrayer"] as? Int else {
+        guard let request = AdhanNotification(notification.request),
+              await center.notificationSettings().soundSetting == .enabled else {
             return [.banner, .list, .sound]
         }
-        let played = await MainActor.run { self.foregroundAdhan?(index) ?? false }
+        let played = await MainActor.run { self.presentAdhan?(request, false) ?? false }
         return played ? [.banner, .list] : [.banner, .list, .sound]
+    }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier,
+              let request = AdhanNotification(response.notification.request),
+              await center.notificationSettings().soundSetting == .enabled else { return }
+        await MainActor.run {
+            self.pendingAdhan = request
+            if UIApplication.shared.applicationState == .active { self.presentPendingAdhan() }
+        }
+    }
+
+    func presentPendingAdhan() {
+        guard let presentAdhan, let pendingAdhan else { return }
+        self.pendingAdhan = nil
+        _ = presentAdhan(pendingAdhan, true)
     }
 }
 

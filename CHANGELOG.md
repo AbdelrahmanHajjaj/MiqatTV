@@ -10,6 +10,7 @@
 - The iPhone companion TV preview reflects countdown placement, prayer rows, favourites, and TV language and clock settings.
 - iPhone prayer widgets can use a different Miqat palette, scene and background opacity for each placement.
 - The iPhone prayer widget's 120% text option applies to all layouts.
+- Opening a recent Adhan notification can start playback or reopen its controls on iPhone.
 - The iPhone development target can download and share verified Miqat TV packages from Production and Staging.
 - The iPhone development target can inspect and share local Miqat Android TV APKs and LG webOS IPKs.
 - The iPhone development target can find advertised Android TV debugging and pairing ports.

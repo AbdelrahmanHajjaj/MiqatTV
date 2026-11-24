@@ -16,7 +16,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | 3 | Prayer Home, greeting and exact verse, Hijri/Gregorian date, next prayer, countdown seconds and six times, next-Fajr rollover, calculated city, method/school/high-latitude rule and offsets | Coded. 570 minute-for-minute Android comparisons passed across five cities, all presets, both Asr schools and three high-latitude rules. Offset and polar fixtures passed. Native UI pending. |
 | 4 | Hijri month/day navigation, swipes and timetable, Hijri adjustment, current/upcoming and all recurring events | Coded using the canonical event catalog and Kotlin event rules. Verify Umm al-Qura month boundaries against Android. |
 | 5 | English/Arabic and RTL, digits, 12/24-hour clocks, type scale, palettes, backgrounds, full-page previews, Home artwork and reduce motion | Coded. Verify theme fidelity, Arabic/English UI and the scale edges on iOS. |
-| 6 | Prayer alerts, enablement, mode, timing previews, weekday inclusion/overrides, quiet hours, before/after, explicit tests, permission and recovery | Local notification planner, settings and short-tone test coded. Validate permission, replacement and day edges. Full Adhan playback and platform limits belong to row 8. |
+| 6 | Prayer alerts, enablement, mode, timing previews, weekday inclusion/overrides, quiet hours, before/after, explicit tests, permission and recovery | Local notification planner, settings and short-tone test coded. Adhan alert taps use the Kotlin two-minute expiry and check current prayer settings before starting a new playback. Validate foreground delivery, cold-launch taps, dismissal, repeat taps, revoked sound access, replacement and day edges. |
 | 7 | Fasting eve, Suhoor and Iftar, choices, exclusions and overlapping selections | Coded using Kotlin fasting rules. Check day edges and independent delivery on iOS. |
 | 8 | Approved voices including Fajr, named audio library/import and CRUD, previews, per-prayer selection, level/length and playback controls, foreground Adhan screen | Coded. Packaged 13 checksum-verified voices. Native playback, interruptions, imported audio and reset checks pending. See delivery differences below. |
 | 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Coded with the canonical HTTPS stations. Device streaming, audio interruption and remote transport controls pending. |
@@ -43,7 +43,8 @@ new Android releases to this pinned baseline before expanding the queue.
 ## Platform differences to verify
 
 - Apple local notification sounds must be under 30 seconds. The short tone is
-  available for scheduled delivery. Full playback starts in the active app.
+  available for scheduled delivery. Opening a recent Adhan notification can
+  start full playback once the app is active.
   iOS owns lock-screen delivery, system volume, mute and haptics. The Android
   alarm stream, notification-channel vibration, hardware volume-key Stop and
   lock-screen full-screen start remain deferred. Background prayer

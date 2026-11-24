@@ -2445,3 +2445,11 @@ The Apple workflow selects Xcode 16.3 across the job, matching the Kotlin
 provided by both Kotlin and the native installer libraries. Windows parsed the
 workflow and confirmed the device and simulator framework tasks register.
 The Xcode build remains pending.
+
+Adhan notifications now carry their scheduled time. A tap can reopen active
+playback or start playback after app activation when the request is still due
+and matches current settings. A protected local claim prevents duplicate
+playback across launches. Windows passed the focused Kotlin timing suite,
+14 generator checks and Swift syntax checks for the touched files. The macOS
+payload fixture, actual notification responses and audio interaction still need
+Apple validation.

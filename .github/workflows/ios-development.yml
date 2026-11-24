@@ -64,6 +64,11 @@ jobs:
           swiftc companion/ios/Sources/WidgetSnapshot.swift companion/ios/checks/widget-appearance/main.swift \
             -o "$RUNNER_TEMP/widget-appearance-check"
           "$RUNNER_TEMP/widget-appearance-check"
+      - name: Check Adhan notification payloads
+        run: |
+          swiftc companion/ios/Sources/AdhanNotification.swift companion/ios/checks/adhan-notification/main.swift \
+            -o "$RUNNER_TEMP/adhan-notification-check"
+          "$RUNNER_TEMP/adhan-notification-check"
       - name: Check TV packages and installation sequences
         run: |
           python3 -S -B companion/ios/checks/tv-download/ipk-fixtures.py "$RUNNER_TEMP/ipk-fixtures"

@@ -163,6 +163,7 @@ final class PhoneStore: ObservableObject {
     static let shared = PhoneStore()
     private static let directory = URL.applicationSupportDirectory.appending(path: "Prayer", directoryHint: .isDirectory)
     private static let file = directory.appending(path: "preferences.json")
+    private static let claimsFile = directory.appending(path: "adhan-claims.json")
     @Published private(set) var preferences: PhonePreferences
     @Published var saveFailed = false
 
@@ -175,15 +176,42 @@ final class PhoneStore: ObservableObject {
 
     func save(_ value: PhonePreferences) {
         do {
-            var directory = Self.directory
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            var attributes = URLResourceValues()
-            attributes.isExcludedFromBackup = true
-            try directory.setResourceValues(attributes)
-            try JSONEncoder().encode(value).write(to: Self.file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            try Self.write(value, to: Self.file)
             preferences = value
         } catch {
             saveFailed = true
         }
+    }
+
+    func claimAdhan(_ id: String) -> Bool {
+        guard id.utf8.count <= 256 else { return false }
+        do {
+            let old: [String]
+            if FileManager.default.fileExists(atPath: Self.claimsFile.path) {
+                old = try JSONDecoder().decode([String].self, from: Data(contentsOf: Self.claimsFile))
+            } else {
+                old = []
+            }
+            guard !old.contains(id) else { return false }
+            try Self.write(Array((old + [id]).suffix(64)), to: Self.claimsFile)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    func clearAdhanClaims() throws {
+        if FileManager.default.fileExists(atPath: Self.claimsFile.path) {
+            try FileManager.default.removeItem(at: Self.claimsFile)
+        }
+    }
+
+    private static func write<Value: Encodable>(_ value: Value, to file: URL) throws {
+        var directory = Self.directory
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        var attributes = URLResourceValues()
+        attributes.isExcludedFromBackup = true
+        try directory.setResourceValues(attributes)
+        try JSONEncoder().encode(value).write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
     }
 }
