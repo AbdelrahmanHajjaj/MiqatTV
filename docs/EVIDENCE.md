@@ -2320,3 +2320,11 @@ passed the three Android IPK tests. The Apple workflow fixture covers success,
 changed content, downgrade, corrupt transfer, failed or missing status, and
 a stale installed version. That Swift fixture is pending Xcode execution.
 The sequence has no production SSH caller yet. No TV was contacted.
+
+The iPhone branch now includes a libssh2 transport, a private IPv4 Developer
+Mode key reader and a host-key gate before retrieving or using authentication
+material. Windows verified both upstream archive hashes, parsed the new Swift
+files and ATS property list, and checked both shell scripts with `sh -n`.
+The Apple workflow prepares ARM64 simulator libraries before Xcode links them.
+Native compilation, SSH negotiation, Key Server behavior and a TV run remain
+unverified. The setup screen and separate credentials still need integration.
