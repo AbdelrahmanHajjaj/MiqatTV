@@ -9,6 +9,10 @@ on:
       channel:
         type: string
         required: true
+      version_name:
+        type: string
+      version_code:
+        type: string
 
 permissions:
   contents: read
@@ -113,6 +117,9 @@ jobs:
           python-version: '3.12'
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       - name: Build and lint standalone Android TV
+        env:
+          MIQAT_RELEASE_VERSION: ${{ inputs.version_name }}
+          MIQAT_RELEASE_CODE: ${{ inputs.version_code }}
         run: |
           ./gradlew -p platforms/android-tv verifyApkSize lintDebug assembleDebugAndroidTest assembleRelease lintRelease --no-daemon
           python3 tools/check_apk_media.py platforms/android-tv/build/outputs/apk/debug/app-debug.apk
@@ -176,6 +183,8 @@ jobs:
       - run: npm --prefix shared/core ci --ignore-scripts
       - run: npm --prefix platforms/webos ci --ignore-scripts
       - name: Check all media and LG ES5/service behavior
+        env:
+          MIQAT_RELEASE_VERSION: ${{ inputs.version_name }}
         run: |
           sha256sum --check shared/media/SHA256SUMS
           npm --prefix platforms/webos test
@@ -250,6 +259,9 @@ jobs:
           node-version: 24
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       - name: Verify and build with approved shared recordings
+        env:
+          MIQAT_RELEASE_VERSION: ${{ inputs.version_name }}
+          MIQAT_RELEASE_CODE: ${{ inputs.version_code }}
         run: |
           node companion/generate.test.mjs
           node companion/qr.test.cjs
@@ -306,6 +318,9 @@ jobs:
       - name: Show built app versions
         if: inputs.channel != ''
         env:
+          CHANNEL: ${{ inputs.channel }}
+          RELEASE_VERSION: ${{ inputs.version_name }}
+          RELEASE_CODE: ${{ inputs.version_code }}
           PHONE_VERSION: ${{ needs.companion.outputs.version }}
           TV_VERSION: ${{ needs.android.outputs.version }}
           LG_VERSION: ${{ needs.webos.outputs.version }}
@@ -313,6 +328,13 @@ jobs:
           test -n "$PHONE_VERSION"
           test -n "$TV_VERSION"
           test -n "$LG_VERSION"
+          if [[ "$CHANNEL" == staging ]]; then
+            test -n "$RELEASE_VERSION"
+            test -n "$RELEASE_CODE"
+            test "$PHONE_VERSION" = "$RELEASE_VERSION (code $RELEASE_CODE)"
+            test "$TV_VERSION" = "$PHONE_VERSION"
+            test "$LG_VERSION" = "$RELEASE_VERSION"
+          fi
           {
             printf '## Built app versions\n\n'
             printf '| App | Version |\n| --- | --- |\n'

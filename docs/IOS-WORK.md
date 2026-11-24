@@ -8,6 +8,8 @@ and [LAN contract](COMPANION-LAN.md) as acceptance inputs.
 Work in order. Record finished code and validation here before starting the next
 row. Leave an unfinished row open and record its next concrete action. Compare
 new Android releases to this pinned baseline before expanding the queue.
+Android 0.5.24 and subsequent in-app APK updates were integrated from main.
+The iOS update action still depends on an iOS distribution channel.
 
 | Order | User journey | Status and remaining acceptance |
 | --- | --- | --- |
@@ -38,9 +40,11 @@ new Android releases to this pinned baseline before expanding the queue.
   Apple framework linkage, SwiftUI and device behavior require macOS/Xcode.
   A local Git bundle can transfer the committed port to an existing Mac clone
   at the documented base. [Apple build and import steps](../companion/ios/README.md#build-on-apple-silicon)
-- GitHub CLI authentication returned HTTP 401. Git's credential manager passed
-  a non-interactive dry run. Automatic approval review blocked the actual push
-  pending explicit authorization to send the branch to the GitHub remote.
+- The owner authorized the GitHub push and a normal merge after the first Apple
+  builds and required checks. [Pull request #49](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/49)
+- Early Apple runs found a BoringSSL tool packaging error, a missing Xcode 16.3
+  runtime and an iOS 18-only WidgetKit call. The fixes are on the port branch.
+  Verify both unsigned Apple targets, then launch the simulator build.
 
 ## First-use regression on iPhone
 

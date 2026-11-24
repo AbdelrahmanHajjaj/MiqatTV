@@ -1,7 +1,7 @@
 # Current work
 
-The `feature/ios-app-port` worktree owns the approved iPhone port. Start with
-the Apple build and offline prayer journey, then follow the
+For the iPhone port, start with the Apple build and offline prayer journey,
+then follow the
 [iOS parity queue](IOS-WORK.md) in order.
 The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android
@@ -11,15 +11,11 @@ Wireless pairing and its separate TLS debugging connection are wired into the
 Android setup screen. The app reads and updates the TV-wide cleanup history.
 Verify the unsigned Apple build and run the native acceptance queue.
 
-Updated: 2026-11-24. Stable v0.7.7 contains phone 0.5.23/code 39,
+Updated: 2026-11-24. Stable v0.7.8 contains phone 0.5.24/code 40,
 Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed
 checksum and identity verification. Website downloads and update metadata
-point to v0.7.7. See EVIDENCE.md.
-
-Production promotion of `v0.7.8-staging.2` stopped at the phone simulation.
-The next candidate needs the companion catalog fix and phone 0.5.24/code 40
-so existing release-signed phone installs can detect the channel update after
-promotion. See [Releasing](RELEASING.md).
+point to v0.7.8. Both Android emulator simulations and the LG browser mock
+passed. See [EVIDENCE.md](EVIDENCE.md).
 
 The phone release includes countdown seconds, the Circle widget with adjustable
 text, prayer time previews, calendar swipes and a Qibla map that opens at the
@@ -40,12 +36,14 @@ browser preview mirrors it. Email stays disabled
 until a public address is chosen.
 
 Sideloaded Android phone and TV builds can explicitly check the stable update
-metadata on GitHub Pages from About. Installation remains user-driven.
+metadata on GitHub Pages from About. Download and install fetches the signed
+update for the installed app and opens Android's confirmation screen.
 
 Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Validate is PR-only. Build provides Development
 artifacts and signed Staging prereleases. Production verifies a pinned Staging
 candidate with Device simulation and deploys its screenshots and update metadata.
+Staging assigns app versions and Android version codes before signing.
 See [CI](CI.md) and [Releasing](RELEASING.md).
 
 Transition from debug signing requires one fresh install and removes local data;

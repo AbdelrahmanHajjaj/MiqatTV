@@ -47,7 +47,9 @@ final class Text {
     String aboutNoUpdate() { return ar ? "لا يوجد إصدار مستقر أحدث." : "No newer stable version is available."; }
     String aboutNewUpdate() { return ar ? "يتوفر تحديث" : "Update available"; }
     String aboutUpdateFailed() { return ar ? "تعذر التحقق من التحديثات. حاول مرة أخرى." : "Couldn’t check for updates. Try again."; }
-    String aboutViewRelease() { return ar ? "عرض الإصدار" : "View release"; }
+    String aboutInstallUpdate() { return ar ? "تنزيل وتثبيت" : "Download and install"; }
+    String aboutDownloadingUpdate() { return ar ? "جارٍ تنزيل التحديث…" : "Downloading update…"; }
+    String aboutInstallUpdateFailed() { return ar ? "تعذر تنزيل التحديث أو تثبيته. حاول مرة أخرى." : "Couldn’t download or install the update. Try again."; }
     /** The saved city in this language; set by {@link Screen#loadText}. */
     String cityName = "";
     String city() { return cityName; }

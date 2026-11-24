@@ -32,6 +32,12 @@
 - The iPhone development target adds reviewed Android TV cleanup and recovery, including apps disabled by earlier Miqat installers.
 - The iPhone development target adds Android TV prayer preferences and Home favourites during setup.
 - The iPhone development target adds LG Developer Mode setup, installation and pairing handoff.
+- Staging sets app versions and Android version codes automatically for Production.
+- Sideloaded Miqat Phone and Android TV can download updates from About and
+  open Android's installation confirmation.
+
+## v0.7.8
+
 - Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
   Select a downloaded Development package in Advanced.
 - Development and Staging builds run on demand. Production promotion tests

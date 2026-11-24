@@ -10,7 +10,7 @@ import sys
 from zipfile import ZipFile
 
 from tools.check_android_release import CERTIFICATES, check_apk
-from tools.release_source import BOT, asset_manifest, read_api, releases, stable_version, tag_commit
+from tools.release_source import BOT, asset_manifest, package_version, read_api, releases, stable_version, tag_commit
 
 
 APKS = {"miqat.apk", "miqat-phone.apk"}
@@ -61,15 +61,20 @@ def use_screenshots(candidate, archive):
             (candidate / entry.filename).write_bytes(images.read(entry))
 
 
-def prepare_website(candidate, directory, production):
+def prepare_website(candidate, directory, production, staging):
     use_screenshots(candidate, directory / SCREENSHOTS)
     build_tools = Path(os.environ["ANDROID_HOME"]) / "build-tools/35.0.0"
     certificates = json.loads(CERTIFICATES.read_text(encoding="utf-8"))
+    expected_version = package_version(staging)
     android = {}
     for name, expected in certificates.items():
         version, code = check_apk(directory / name, build_tools)
+        if (version, code) != expected_version:
+            raise ValueError(f"{name} does not use the version assigned to {staging}. Build a new Staging candidate.")
         android[expected["applicationId"]] = {"versionCode": code, "versionName": version}
     lg_asset, = directory.glob("*.ipk")
+    if lg_asset.name != f"tv.miqat.webos_{expected_version[0]}_all.ipk":
+        raise ValueError(f"LG package does not use the version assigned to {staging}. Build a new Staging candidate.")
     metadata = {"tag": production, "lgAsset": lg_asset.name, "android": android}
     (candidate / "site/src/lib/stable-release.json").write_text(
         json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
@@ -152,7 +157,7 @@ if __name__ == "__main__":
         else:
             verify_files(directory, manifest)
         if command == "website":
-            prepare_website(Path(sys.argv[3]), directory, os.environ["PRODUCTION_TAG"])
+            prepare_website(Path(sys.argv[3]), directory, os.environ["PRODUCTION_TAG"], staging)
         elif command == "publish":
             stable = os.environ["PRODUCTION_TAG"]
             publish(repository, stable, os.environ["SOURCE_SHA"], manifest, directory,

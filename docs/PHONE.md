@@ -5,7 +5,9 @@ feedback form. GitHub sign-in is required and reports are public. Email feedback
 is currently disabled.
 
 For a sideloaded build, **Check for updates** compares your installed version
-with the stable GitHub release and opens its release page when newer.
+with the stable GitHub release. If a newer version is available, choose
+**Download and install**, then confirm the update in Android. On first use,
+Android may ask you to allow Miqat to install apps from this source.
 
 Miqat is a standalone Android 8+ prayer app with optional TV companion mode in
 **Your TVs**. Phone prayer times, alerts, calendar, Qibla and widgets do not need a

@@ -8,7 +8,7 @@ const voices = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/dat
 const sacred = JSON.parse(fs.readFileSync(path.join(__dirname, '../../shared/data/sacred-text.json')));
 const uiGaps = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-gaps.json')));
 const uiChoiceGaps = JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-choice-gaps.json')));
-const appVersion = require('./app/appinfo.json').version;
+const appVersion = require('./build/app/appinfo.json').version;
 const shots = path.resolve(__dirname, '../../state/webos-port');
 const capture=process.argv.includes('--capture');
 if(capture)fs.mkdirSync(shots, { recursive: true });

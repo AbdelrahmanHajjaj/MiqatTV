@@ -276,6 +276,11 @@ It checks the Cairo bearing, native square Map tab, restricted WebView and live
 tiles. Inspect the route, attribution and About update sheet captures.
 Ordinary phone UI uses no map or update network request.
 
+The targeted `update-install` phone suite uses a newer same-signed APK placed
+in the installed debug app's cache as `update-fixture.apk`. It rejects a bad
+version, stages the verified fixture and requires Android's confirmation UI.
+Run only on a disposable owned emulator. The test leaves confirmation open.
+
 Phone settings redraw checks retain the window container and inspect scroll on
 its first drawn frame during repeated number edits and saving. Keep weekdays
 on one row with complete targets when they fit, and preserve narrow scrolling.

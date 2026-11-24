@@ -24,6 +24,7 @@ public final class CompanionCheck extends Instrumentation {
     String backgroundSuite = "";
     boolean calendarReturn, phoneControls, phoneDialog, phoneTests, phoneLibrary, phoneAudioRoute, setupLocation, widgetSmall;
     boolean mapNetwork, phoneFasting;
+    boolean updateInstall;
     String radio = "";
     boolean journey,
             customCheck,
@@ -64,6 +65,7 @@ public final class CompanionCheck extends Instrumentation {
         journey = suite.equals("phone-journey");
         customCheck = suite.equals("phone-custom");
         releaseCheck = suite.equals("public-release");
+        updateInstall = suite.equals("update-install");
         locationApprox = suite.equals("phone-location-approx");
         phoneLocation = suite.equals("phone-location");
         locationDenied = suite.equals("phone-location-denied");
@@ -88,6 +90,12 @@ public final class CompanionCheck extends Instrumentation {
         Bundle result = new Bundle();
         int count = 0;
         try {
+            if (updateInstall) {
+                tv.miqat.companion.about.UpdateMetadataCheck.install(this);
+                result.putString("stream", "PASS: APK identity and Android update confirmation\n");
+                finish(-1, result);
+                return;
+            }
             if (!radio.isEmpty()) {
                 PhoneRadioCheck.run(this, radio, captures);
                 result.putString("stream", "PASS: phone radio " + radio + "\n");
