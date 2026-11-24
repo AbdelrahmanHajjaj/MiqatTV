@@ -17,7 +17,7 @@ struct PrayerWidgetOptions: WidgetConfigurationIntent {
     @Parameter(title: "Layout", default: .adaptive) var layout: PrayerWidgetStyle
     @Parameter(title: "Hijri date", default: true) var hijri: Bool
     @Parameter(title: "Gregorian date", default: false) var gregorian: Bool
-    @Parameter(title: "Larger text", default: false) var large: Bool
+    @Parameter(title: "120% text size", default: false) var large: Bool
     @Parameter(title: "Theme") var palette: PrayerWidgetPalette?
     @Parameter(title: "Background scene") var scene: PrayerWidgetScene?
     @Parameter(title: "Background opacity (%)", default: 100, inclusiveRange: (0, 100)) var opacityPercent: Int
@@ -69,6 +69,7 @@ struct PrayerWidgetProvider: AppIntentTimelineProvider {
 
 struct PrayerWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @ScaledMetric(relativeTo: .body) private var bodyPoints: CGFloat = 15
     let entry: PrayerWidgetEntry
     private let icons = ["sunrise", "sun.horizon", "sun.max", "sun.min", "sunset", "moon.stars"]
 
@@ -87,11 +88,11 @@ struct PrayerWidgetView: View {
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Image(systemName: "sun.horizon")
-                    Text(entry.snapshot?.arabic == true ? "افتح ميقات" : "Open Miqat").font(.headline)
+                    Text(entry.snapshot?.arabic == true ? "افتح ميقات" : "Open Miqat").font(textFont(1))
                 }
             }
         }
-        .font(entry.options.large ? .body : .subheadline)
+        .font(textFont(1))
         .foregroundStyle(color("plaster-100", fallback: .white))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.layoutDirection, entry.snapshot?.arabic == true ? .rightToLeft : .leftToRight)
@@ -103,11 +104,15 @@ struct PrayerWidgetView: View {
         .widgetURL(URL(string: "miqat://prayer"))
     }
 
-    private func summary(_ snapshot: WidgetSnapshot, next: (index: Int, time: Date)) -> some View {
+    private func summary(_ snapshot: WidgetSnapshot, next: (index: Int, time: Date), inCircle: Bool = false) -> some View {
         VStack(spacing: 4) {
-            Label(snapshot.names[next.index], systemImage: icons[next.index]).font(entry.options.large ? .headline : .subheadline)
-            Text(clock(next.time, snapshot)).font(.title3.monospacedDigit())
-            Text(timerInterval: entry.date...next.time, countsDown: true).monospacedDigit()
+            Label(snapshot.names[next.index], systemImage: icons[next.index])
+                .font(textFont(inCircle ? 1.2 : 1).weight(.semibold))
+                .lineLimit(1)
+            Text(clock(next.time, snapshot)).font(textFont(inCircle ? 1 : 1.25).monospacedDigit())
+                .lineLimit(1)
+            Text(timerInterval: entry.date...next.time, countsDown: true)
+                .font(textFont(inCircle ? 0.8 : 1).monospacedDigit())
                 .multilineTextAlignment(.center)
             dates
         }
@@ -121,7 +126,7 @@ struct PrayerWidgetView: View {
             Circle().trim(from: 0, to: min(1, max(0, ratio)))
                 .stroke(color("gold-400", fallback: .yellow), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90)).padding(2)
-            summary(snapshot, next: next).padding(10)
+            summary(snapshot, next: next, inCircle: true).padding(10)
         }
         .aspectRatio(1, contentMode: .fit)
     }
@@ -133,8 +138,9 @@ struct PrayerWidgetView: View {
                 ForEach(0..<6, id: \.self) { index in
                     VStack(spacing: 3) {
                         Image(systemName: icons[index]).accessibilityHidden(true)
-                        Text(snapshot.names[index]).font(.caption2).lineLimit(1).minimumScaleFactor(0.6)
-                        Text(clock(prayerTime(index, next: next), snapshot)).font(.caption2.monospacedDigit())
+                        Text(snapshot.names[index]).font(textFont(0.75)).lineLimit(1).minimumScaleFactor(0.6)
+                        Text(clock(prayerTime(index, next: next), snapshot))
+                            .font(textFont(0.75).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.6)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
@@ -163,7 +169,12 @@ struct PrayerWidgetView: View {
             if entry.options.hijri, let date = entry.current?.hijri { Text(date).lineLimit(1) }
             if entry.options.gregorian, let date = entry.current?.gregorian { Text(date).lineLimit(1) }
         }
-        .font(.caption2)
+        .font(textFont(0.75))
+        .minimumScaleFactor(0.7)
+    }
+
+    private func textFont(_ relativeSize: CGFloat) -> Font {
+        .system(size: bodyPoints * relativeSize * (entry.options.large ? 1.2 : 1))
     }
 
     private func prayerTime(_ index: Int, next: (index: Int, time: Date)) -> Date {

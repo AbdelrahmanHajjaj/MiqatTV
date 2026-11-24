@@ -2432,3 +2432,10 @@ confirmed undo, and preserves unrelated entries. The macOS fixture now covers
 both cases, protected entries, new disables and local restore. Windows parsed
 five affected Swift files, passed 14 generator and 27 desktop recovery tests,
 and staged the resource bundle. The Swift fixture and hardware check are pending.
+
+The widget's existing per-placement larger-text setting now scales text by
+120% across the supported layouts, including prayer times and dates in the
+strip. The Circle layout places the prayer name above the time and countdown
+in its text hierarchy. The touched Swift file parsed on Windows and all 14
+companion generator checks passed. WidgetKit fit and Dynamic Type remain
+pending on Apple hardware.
