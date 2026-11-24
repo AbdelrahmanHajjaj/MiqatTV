@@ -53,7 +53,7 @@ struct MiqatApp: App {
                 .interactiveDismissDisabled()
             }
             .onAppear {
-                if !store.preferences.setupStarted { setup = true }
+                if store.loadIfNeeded(), !store.preferences.setupStarted { setup = true }
                 delegate.presentAdhan = presentAdhan
                 adhan.onPlayback = { radio.pause(forAdhan: true) }
                 if scenePhase == .active { delegate.presentPendingAdhan() }
@@ -109,6 +109,7 @@ struct MiqatApp: App {
     }
 
     private func refreshAlerts() {
+        guard store.loadIfNeeded() else { return }
         schedule.publishWidget(preferences: store.preferences)
         notifications.refresh(preferences: store.preferences, schedule: schedule)
     }
@@ -158,6 +159,7 @@ final class PhoneApplicationDelegate: NSObject, UIApplicationDelegate, UNUserNot
     let travel = TravelLocation()
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        PrayerBackgroundRefresh.register()
         travel.authorizationChanged = { [weak self] in self?.travel.update(PhoneStore.shared.preferences) }
         travel.didLocate = { fix, useSystemZone in
             let store = PhoneStore.shared

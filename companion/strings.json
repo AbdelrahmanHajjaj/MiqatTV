@@ -548,5 +548,6 @@
   "phone_test_running":{"en":"Test playing","ar":"الاختبار قيد التشغيل"},
   "phone_test_finished":{"en":"Test finished","ar":"انتهى الاختبار"},
   "phone_test_sent":{"en":"Test notification sent","ar":"أُرسل إشعار الاختبار"},
-  "phone_test_failed":{"en":"Could not schedule the test","ar":"تعذّرت جدولة الاختبار"}
+  "phone_test_failed":{"en":"Could not schedule the test","ar":"تعذّرت جدولة الاختبار"},
+  "phone_alert_schedule_failed":{"en":"Some alerts could not be scheduled","ar":"تعذّرت جدولة بعض التنبيهات"}
 }

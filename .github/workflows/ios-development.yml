@@ -69,6 +69,11 @@ jobs:
           swiftc companion/ios/Sources/AdhanNotification.swift companion/ios/checks/adhan-notification/main.swift \
             -o "$RUNNER_TEMP/adhan-notification-check"
           "$RUNNER_TEMP/adhan-notification-check"
+      - name: Check prayer notification replacement
+        run: |
+          swiftc companion/ios/Sources/PrayerNotificationRequest.swift companion/ios/checks/prayer-notification/main.swift \
+            -o "$RUNNER_TEMP/prayer-notification-check"
+          "$RUNNER_TEMP/prayer-notification-check"
       - name: Check Hijri calendar selection
         run: |
           swiftc companion/ios/Sources/HijriCalendarSelection.swift companion/ios/checks/hijri-calendar/main.swift \

@@ -49,9 +49,8 @@ final class PrayerNotifications: ObservableObject {
     @Published private(set) var permission = UNAuthorizationStatus.notDetermined
     @Published private(set) var scheduleFailed = false
     private let center = UNUserNotificationCenter.current()
-    private var pending: Task<Void, Never>?
+    private var pending: (id: UUID, work: Task<Bool, Never>)?
     private static let schedulePrefix = "miqat.schedule."
-    static let shortSound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "miqat_short_tone.wav"))
 
     func authorize() async -> Bool {
         do {
@@ -63,14 +62,20 @@ final class PrayerNotifications: ObservableObject {
         }
     }
 
-    func refresh(preferences: PhonePreferences, schedule: PrayerSchedule) {
-        let previous = pending
+    @discardableResult
+    func refresh(preferences: PhonePreferences, schedule: PrayerSchedule) -> Task<Bool, Never> {
+        let previous = pending?.work
         previous?.cancel()
-        pending = Task { [weak self] in
-            await previous?.value
-            guard let self, !Task.isCancelled else { return }
-            await self.reconcile(preferences: preferences, schedule: schedule)
+        let id = UUID()
+        let work = Task { [weak self] in
+            _ = await previous?.value
+            guard let self else { return false }
+            defer { if self.pending?.id == id { self.pending = nil } }
+            guard !Task.isCancelled else { return false }
+            return await self.reconcile(preferences: preferences, schedule: schedule)
         }
+        pending = (id, work)
+        return work
     }
 
     func cancelTest() {
@@ -83,7 +88,7 @@ final class PrayerNotifications: ObservableObject {
         let when = Date.now.addingTimeInterval(30)
         let content = UNMutableNotificationContent()
         content.title = preferences.text(adhan ? "phone_test_adhan" : "phone_test_notification")
-        content.sound = Self.shortSound
+        content.sound = PrayerNotificationRequest.shortSound
         if adhan {
             let settings = await center.notificationSettings()
             if settings.soundSetting == .enabled {
@@ -117,43 +122,43 @@ final class PrayerNotifications: ObservableObject {
         return PhoneStore.shared.claimAdhan(request.claimID)
     }
 
-    private func reconcile(preferences: PhonePreferences, schedule: PrayerSchedule) async {
+    private func reconcile(preferences: PhonePreferences, schedule: PrayerSchedule) async -> Bool {
         let permissions = await center.notificationSettings()
         let existing = await center.pendingNotificationRequests()
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled else { return false }
         permission = permissions.authorizationStatus
-        let ours = existing.map(\.identifier).filter { $0.hasPrefix(Self.schedulePrefix) }
+        let ours = existing.filter { $0.identifier.hasPrefix(Self.schedulePrefix) }
         guard preferences.locationConfirmed, preferences.valid,
               [.authorized, .provisional, .ephemeral].contains(permissions.authorizationStatus) else {
-            center.removePendingNotificationRequests(withIdentifiers: ours)
+            center.removePendingNotificationRequests(withIdentifiers: ours.map(\.identifier))
+            PrayerBackgroundRefresh.schedule(enabled: false)
             scheduleFailed = false
-            return
+            return true
         }
 
         let now = Date.now
-        let plans = Self.plans(preferences, schedule: schedule, now: now).prefix(60)
-        let ids = Set(plans.map { Self.schedulePrefix + $0.event.id })
-        center.removePendingNotificationRequests(withIdentifiers: ours.filter { !ids.contains($0) })
+        let fasting = preferences.fastingAlerts
+        PrayerBackgroundRefresh.schedule(enabled: preferences.alertsEnabled || fasting.eve || fasting.suhoor || fasting.iftar)
+        let requests = Self.plans(preferences, schedule: schedule, now: now).prefix(60).map { plan in
+            PrayerNotificationRequest(id: Self.schedulePrefix + plan.event.id, time: plan.event.time,
+                title: plan.title, body: plan.body, audible: plan.audible,
+                adhanPrayer: plan.fullAdhan && permissions.soundSetting == .enabled ? Int(plan.event.prayer) : nil)
+        }
+        let ids = Set(requests.map(\.id))
+        let existingByID = Dictionary(ours.map { ($0.identifier, $0) }, uniquingKeysWith: { first, _ in first })
+        center.removePendingNotificationRequests(withIdentifiers: existingByID.keys.filter { !ids.contains($0) })
         scheduleFailed = false
-        for plan in plans {
-            guard !Task.isCancelled else { return }
-            let delay = plan.event.time / 1000 - Date.now.timeIntervalSince1970
-            guard delay > 0 else { continue }
-            let content = UNMutableNotificationContent()
-            content.title = plan.title
-            content.body = plan.body
-            content.sound = plan.audible ? Self.shortSound : nil
-            if plan.fullAdhan && permissions.soundSetting == .enabled {
-                content.userInfo["adhanPrayer"] = Int(plan.event.prayer)
-                content.userInfo["adhanTime"] = plan.event.time
-            }
+        for request in requests {
+            guard !Task.isCancelled else { return false }
+            if let pending = existingByID[request.id], request.matches(pending) { continue }
+            guard request.date > .now else { continue }
             do {
-                try await center.add(UNNotificationRequest(identifier: Self.schedulePrefix + plan.event.id, content: content,
-                    trigger: UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)))
+                try await center.add(request.makeRequest())
             } catch {
                 scheduleFailed = true
             }
         }
+        return !scheduleFailed
     }
 
     private struct Plan {

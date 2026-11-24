@@ -23,7 +23,7 @@ struct AlertSettings: View {
                     Text(preferences.text("phone_location_needed")).foregroundStyle(.secondary)
                 }
                 if notifications.scheduleFailed {
-                    Text(preferences.text("phone_test_failed")).foregroundStyle(.secondary)
+                    Text(preferences.text("phone_alert_schedule_failed")).foregroundStyle(.secondary)
                 }
             }
             Section(preferences.text("phone_prayer_settings")) {

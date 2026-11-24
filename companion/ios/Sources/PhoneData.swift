@@ -180,15 +180,30 @@ final class PhoneStore: ObservableObject {
     private static let claimsFile = directory.appending(path: "adhan-claims.json")
     @Published private(set) var preferences: PhonePreferences
     @Published var saveFailed = false
+    private var loaded = false
 
     private init() {
-        let loaded = (try? Data(contentsOf: Self.file)).flatMap {
-            try? JSONDecoder().decode(PhonePreferences.self, from: $0)
+        preferences = PhonePreferences()
+        _ = loadIfNeeded()
+    }
+
+    func loadIfNeeded() -> Bool {
+        if loaded { return true }
+        do {
+            let data = try Data(contentsOf: Self.file)
+            let saved = try? JSONDecoder().decode(PhonePreferences.self, from: data)
+            loaded = true
+            if let saved, saved.valid { preferences = saved }
+        } catch let error as CocoaError where [.fileReadNoSuchFile, .fileNoSuchFile].contains(error.code) {
+            loaded = true
+        } catch {
+            return false
         }
-        preferences = loaded.flatMap { $0.valid ? $0 : nil } ?? PhonePreferences()
+        return true
     }
 
     func save(_ value: PhonePreferences) {
+        guard loaded else { saveFailed = true; return }
         do {
             try Self.write(value, to: Self.file)
             preferences = value

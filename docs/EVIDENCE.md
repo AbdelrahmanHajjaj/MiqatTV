@@ -2486,3 +2486,12 @@ voice slot. Windows passed the shared naming fixture, Android phone Java
 compilation, 14 companion generator checks and Swift syntax checks. Files
 permission, media decoding, corrupt-index recovery and deletion across slots
 still need iPhone validation.
+
+Prayer and fasting alerts use one-shot UTC calendar triggers. Reconciliation
+retains matching pending requests and replaces changed requests, including
+older relative triggers. The offline iOS background refresh replenishes the
+queue when the system schedules it. If protected preferences are unreadable,
+the task leaves the pending queue alone. Windows passed focused Kotlin prayer
+and fasting tests, the 14 companion generator checks, Swift syntax parsing,
+and the workflow and background-task declaration checks. Apple trigger
+execution, protected-data recovery and background delivery remain pending.
