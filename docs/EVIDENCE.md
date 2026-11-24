@@ -2336,6 +2336,13 @@ Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
 
+At `bf9523f`, three first-use XCUITests passed on iPhone 16 Simulator with
+iOS 18.4. On fresh simulator data, Allow and Don't Allow both reached Your style.
+After setup and relaunch, Prayer alerts was on after allowance and off after
+denial. The manual-city case passed again and both unsigned Apple builds passed.
+Alert delivery, Sounds recovery and hardware behavior remain open.
+[First-use permission results](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45498653118/job/138815762233)
+
 On iPhone 16 Simulator with iOS 18.4, XCTest at `54a54a9` confirmed the location
 denial message, searched the bundled catalog for London, confirmed the city,
 and preserved the alert opt-out through Skip and relaunch. The journey finished
