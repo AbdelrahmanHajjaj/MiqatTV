@@ -126,6 +126,7 @@ jobs:
   pages:
     name: Deploy the Production website
     needs: [source, publish]
+    concurrency: pages-deploy
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

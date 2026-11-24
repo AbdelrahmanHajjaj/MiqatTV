@@ -62,8 +62,8 @@ npm --prefix site run test:browser
 
 Run shared-core, site and LG generators sequentially. `npm --prefix site run dev`
 starts local development. Keep the `/MiqatTV/` base path in asset and route URLs.
-PR CI validates the site; only successful main validation deploys it. See
-[website CI](../docs/CI.md#website).
+PR CI validates the site. Production promotion and the manual **Publish website**
+workflow deploy it. See [website CI](../docs/CI.md#website).
 
 For focused product-page review and social-card refresh, after building:
 

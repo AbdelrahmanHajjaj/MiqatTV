@@ -1,5 +1,14 @@
 # Validation evidence
 
+## Miqat Signature website captures — 25 November 2026
+
+An isolated API 37 phone emulator captured all 26 Android phone and companion
+images at 1080×2400 from Miqat 0.7.9/code 7009001. Bilingual phone UI, first-use,
+companion controls, fasting, radio and the live Qibla map checks passed. Reviewed
+both galleries for notification icons and demo data. The Arabic and English
+landing captures show the phone and TV in Miqat Signature with the original
+overlapping layout.
+
 ## Website screenshot layout — 25 November 2026
 
 The website build and browser showcase checks passed in Arabic and English at

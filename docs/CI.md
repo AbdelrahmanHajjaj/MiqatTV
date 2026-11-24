@@ -6,6 +6,7 @@
 | [Build](../.github/workflows/build.yml) | Manual, **Development** or **Staging** | Installable Actions artifacts or a signed GitHub prerelease. |
 | [Device simulation](../.github/workflows/device-simulation.yml) | Manual on `main`, or called by Production | Android emulator and LG webOS browser-mock results for one Staging candidate. |
 | [Promote to Production](../.github/workflows/promote.yml) | Manual dispatch on `main` | Device simulation, byte-for-byte package promotion and deployment of the release website. |
+| [Publish website](../.github/workflows/publish-website.yml) | Manual dispatch on `main` | Rebuild and publish Pages with the existing stable downloads and update feed. |
 
 ## PR gate
 
@@ -87,5 +88,12 @@ Production tag and verified Android APK versions.
 Pages uses GitHub Actions and the main-only `github-pages` environment. The
 Production run prepares the site before publication and deploys it afterwards.
 A Pages retry uses the same artifact and checks that its release is still the
-current Production version. Site-only changes go live with the next Production
-release.
+current Production version.
+
+For site-only changes, open [Publish website](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/publish-website.yml)
+and select **Run workflow** on `main`. The job uses the checked-in screenshots
+and confirms that the live update feed still points to the latest stable release
+and its download assets. It builds and tests both languages before deploying
+through the same Pages environment. Enable **Build and test only** for a dry run.
+If the release and feed differ, finish or retry the Production Pages deployment
+before publishing the website separately.
