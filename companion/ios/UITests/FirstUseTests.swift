@@ -18,12 +18,15 @@ final class FirstUseTests: XCTestCase {
         search.typeText("London")
         tap(app.buttons["London"])
         tap(app.buttons["miqat.location.confirm"])
+        let continueSetup = app.buttons["Continue"]
+        XCTAssertTrue(continueSetup.isEnabled)
 
         let alerts = app.switches["Prayer alerts"]
         reveal(alerts, in: app)
         XCTAssertEqual(alerts.value as? String, "1")
-        tap(alerts)
-        XCTAssertEqual(alerts.value as? String, "0")
+        alerts.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let alertsOff = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '0'"), object: alerts)
+        XCTAssertEqual(XCTWaiter.wait(for: [alertsOff], timeout: 5), .completed)
         tap(app.buttons["Skip"])
 
         app.terminate()
@@ -31,7 +34,7 @@ final class FirstUseTests: XCTestCase {
         tap(app.buttons["Finish setting up Miqat"])
         reveal(alerts, in: app)
         XCTAssertEqual(alerts.value as? String, "0")
-        tap(app.buttons["Continue"])
+        tap(continueSetup)
         XCTAssertTrue(app.navigationBars["Your style"].waitForExistence(timeout: 10))
         let finish = app.buttons["Start using Miqat"]
         reveal(finish, in: app)
