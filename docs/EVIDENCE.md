@@ -1,5 +1,12 @@
 # Validation evidence
 
+## Website screenshot layout — 25 November 2026
+
+The website build and browser showcase checks passed in Arabic and English at
+390, 900 and 1440 px. The checks cover separate hero images, matching TV gallery
+frame heights, image loading and original-image links. Reviewed both mobile
+landings and refreshed both 1200×630 social cards from the desktop hero.
+
 ## Stable v0.7.9 — 24 November 2026
 
 [Signed Staging](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.9-staging.3)
