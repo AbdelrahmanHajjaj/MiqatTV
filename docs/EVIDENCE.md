@@ -2315,6 +2315,12 @@ passed actionlint, Xcode workflow configuration and App Group plist checks,
 and the offline astronomy smoke test. Both Xcode builds and signed
 installation remain pending.
 
+The iPhone fasting planner and widget publisher normalize every civil-day
+boundary after date arithmetic. Fasting-eve time keeps the same local day
+and handles missing or repeated clock times. Five calendar vectors matched
+Android's Java time arithmetic. Actionlint, Swift syntax and the Kotlin fasting
+rules test passed on Windows. The Apple calendar fixture remains pending.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

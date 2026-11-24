@@ -187,7 +187,7 @@ final class PrayerNotifications: ObservableObject {
         let nowMs = now.timeIntervalSince1970 * 1000
         var plans: [Plan] = []
         for offset in days {
-            guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { continue }
+            guard let date = calendar.prayerDayStart(adding: offset, to: today) else { continue }
             let times = schedule.day(at: date, prefs: prefs)
             let weekday = calendar.component(.weekday, from: date) - 1
             if prefs.alertsEnabled, let times {
@@ -231,9 +231,7 @@ final class PrayerNotifications: ObservableObject {
               let corrected = calendar.date(byAdding: .day, value: prefs.hijriOffset, to: date) else { return [] }
         let hijri = PrayerSchedule.hijriCalendar(prefs).dateComponents([.month, .day], from: corrected)
         guard let month = hijri.month, let day = hijri.day else { return [] }
-        let eve = calendar.date(byAdding: .day, value: -1, to: date).flatMap {
-            calendar.date(bySettingHour: options.eveMinute / 60, minute: options.eveMinute % 60, second: 0, of: $0)
-        }
+        let eve = options.eve ? calendar.fastingEve(before: date, minute: options.eveMinute) : nil
         let optionsCore = FastingPreferences(ramadan: options.ramadan, ashura: options.ashura, arafah: options.arafah,
             whiteDays: options.whiteDays, mondayThursday: options.mondayThursday,
             suhoorMinutes: options.suhoor ? Int32(options.suhoorMinutes) : 0, iftar: options.iftar,

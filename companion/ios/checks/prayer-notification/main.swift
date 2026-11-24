@@ -28,4 +28,21 @@ let call = PrayerNotificationRequest.localTiming(prayerTime: prayer, eventTime: 
 precondition(call.weekday == 0 && call.minute == 4)
 let after = PrayerNotificationRequest.localTiming(prayerTime: prayer - 300000, eventTime: prayer, calendar: calendar)
 precondition(after.weekday == 6 && after.minute == 4)
-print("Absolute alerts, prayer weekdays and quiet-hour times across midnight passed.")
+
+func utcDate(_ text: String) -> Date { ISO8601DateFormatter().date(from: text)! }
+calendar.timeZone = TimeZone(identifier: "America/New_York")!
+precondition(calendar.fastingEve(before: utcDate("2026-03-09T04:00:00Z"), minute: 150)
+             == utcDate("2026-03-08T07:30:00Z"))
+precondition(calendar.fastingEve(before: utcDate("2026-11-02T05:00:00Z"), minute: 90)
+             == utcDate("2026-11-01T05:30:00Z"))
+calendar.timeZone = TimeZone(identifier: "Australia/Lord_Howe")!
+precondition(calendar.fastingEve(before: utcDate("2026-10-04T13:00:00Z"), minute: 135)
+             == utcDate("2026-10-03T15:45:00Z"))
+calendar.timeZone = TimeZone(identifier: "Pacific/Apia")!
+precondition(calendar.fastingEve(before: utcDate("2011-12-30T10:00:00Z"), minute: 1200) == nil)
+calendar.timeZone = TimeZone(identifier: "Africa/Cairo")!
+let shortenedDay = utcDate("2026-04-23T22:00:00Z")
+precondition(calendar.startOfDay(for: shortenedDay) == shortenedDay)
+precondition(calendar.component(.hour, from: shortenedDay) == 1)
+precondition(calendar.prayerDayStart(adding: 1, to: shortenedDay) == utcDate("2026-04-24T21:00:00Z"))
+print("Absolute alerts, midnight boundaries and civil date transitions passed.")

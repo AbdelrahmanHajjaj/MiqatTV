@@ -76,7 +76,7 @@ final class PrayerSchedule {
         let calendar = Self.civilCalendar(preferences)
         let today = calendar.startOfDay(for: .now)
         var days = (-1...8).compactMap { offset -> WidgetSnapshot.Day? in
-            guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
+            guard let date = calendar.prayerDayStart(adding: offset, to: today) else { return nil }
             let times = preferences.locationConfirmed ? day(at: date, prefs: preferences) : nil
             return .init(start: date, times: times, hijri: preferences.hijriDate(date), gregorian: preferences.gregorianDate(date))
         }
