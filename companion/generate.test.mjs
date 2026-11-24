@@ -30,6 +30,9 @@ test('every canonical control has bilingual phone metadata and an explicit actio
   const source=JSON.parse(readFileSync(new URL('../shared/data/ui-contract.json',import.meta.url)));
   for(const profile of Object.values(data.profiles)) {
     assert.equal(new Set(profile.map(x=>x.id)).size,profile.length);
+    for(const {id,section} of profile) {
+      assert.ok(data.sections[section]?.ar && data.sections[section]?.en, `${id} section ${section}`);
+    }
     for(const c of source) {
       const bound=profile.find(x=>x.id===c.id);
       assert.ok(bound?.title.ar && bound.title.en,c.id);
