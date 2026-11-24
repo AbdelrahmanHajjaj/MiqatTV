@@ -125,20 +125,26 @@ final class PrayerNotifications: ObservableObject {
     private func reconcile(preferences: PhonePreferences, schedule: PrayerSchedule) async -> Bool {
         let permissions = await center.notificationSettings()
         let existing = await center.pendingNotificationRequests()
+        let hasWidget: Bool
+        if preferences.locationConfirmed && !Task.isCancelled {
+            hasWidget = await PrayerBackgroundRefresh.hasPrayerWidget()
+        } else {
+            hasWidget = false
+        }
         guard !Task.isCancelled else { return false }
         permission = permissions.authorizationStatus
         let ours = existing.filter { $0.identifier.hasPrefix(Self.schedulePrefix) }
         guard preferences.locationConfirmed, preferences.valid,
               [.authorized, .provisional, .ephemeral].contains(permissions.authorizationStatus) else {
             center.removePendingNotificationRequests(withIdentifiers: ours.map(\.identifier))
-            PrayerBackgroundRefresh.schedule(enabled: false)
+            PrayerBackgroundRefresh.schedule(enabled: preferences.valid && hasWidget)
             scheduleFailed = false
             return true
         }
 
         let now = Date.now
         let fasting = preferences.fastingAlerts
-        PrayerBackgroundRefresh.schedule(enabled: preferences.alertsEnabled || fasting.eve || fasting.suhoor || fasting.iftar)
+        PrayerBackgroundRefresh.schedule(enabled: hasWidget || preferences.alertsEnabled || fasting.eve || fasting.suhoor || fasting.iftar)
         let requests = Self.plans(preferences, schedule: schedule, now: now).prefix(60).map { plan in
             PrayerNotificationRequest(id: Self.schedulePrefix + plan.event.id, time: plan.event.time,
                 title: plan.title, body: plan.body, audible: plan.audible,

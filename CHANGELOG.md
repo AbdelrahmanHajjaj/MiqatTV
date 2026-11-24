@@ -15,6 +15,7 @@
 - On iPhone, choose a name before importing an Adhan recording. Deleting a recording restores the affected voice selections.
 - iPhone can replenish prayer and fasting notifications through Background App Refresh when iOS runs it.
 - iPhone appearance settings show palette and scene previews, and apply the selected theme across Prayer Home and the Adhan screen.
+- The iPhone prayer widget waits for a confirmed location, follows the phone's prayer rollover, and uses a compact medium timetable.
 - The iPhone prayer Home city button can refresh a confirmed location when permission is already granted.
 - The iPhone Hijri calendar keeps the selected prayer day while browsing months and opens dates from the month’s observance list.
 - The iPhone development target can download and share verified Miqat TV packages from Production and Staging.

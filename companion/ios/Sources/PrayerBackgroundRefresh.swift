@@ -1,5 +1,6 @@
 import BackgroundTasks
 import Foundation
+import WidgetKit
 
 @MainActor
 enum PrayerBackgroundRefresh {
@@ -13,6 +14,10 @@ enum PrayerBackgroundRefresh {
                     if !Task.isCancelled { schedule(enabled: true) }
                     return false
                 }
+                if await hasPrayerWidget(), !Task.isCancelled {
+                    PrayerSchedule.shared.publishWidget(preferences: store.preferences)
+                }
+                guard !Task.isCancelled else { return false }
                 let refresh = PrayerNotifications.shared.refresh(preferences: store.preferences,
                                                                   schedule: PrayerSchedule.shared)
                 return await withTaskCancellationHandler {
@@ -27,6 +32,11 @@ enum PrayerBackgroundRefresh {
                 task.setTaskCompleted(success: success && !work.isCancelled)
             }
         }
+    }
+
+    static func hasPrayerWidget() async -> Bool {
+        let widgets = try? await WidgetCenter.shared.currentConfigurations()
+        return widgets?.contains { $0.kind == WidgetSnapshot.widgetKind } == true
     }
 
     static func schedule(enabled: Bool) {

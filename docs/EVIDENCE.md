@@ -2503,3 +2503,11 @@ passed 14 generator checks, verified all scene files staged and parsed the
 changed Swift sources. Estimated sRGB contrast for the checked surfaces stayed
 above 4.5 across all 20 palettes after dimming the scene. Native layout,
 Dynamic Type, Right-to-Left behavior and actual artwork rendering remain pending.
+
+The iPhone widget gates prayer times on a confirmed location and consumes the
+Kotlin next-prayer decisions staged by the app for each civil day. Missing or
+expired days show an unavailable state. The medium timetable uses two columns,
+and installed widgets can refresh without notification permission when iOS runs
+the background task. Windows passed the shared prayer-rule tests, 14 generator
+checks and Swift syntax parsing. The extended Apple widget fixture, compact
+layout, system countdown digits and App Group transfer remain pending.

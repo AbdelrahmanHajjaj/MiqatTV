@@ -74,10 +74,21 @@ final class PrayerSchedule {
         guard let file = WidgetSnapshot.file else { return }
         let calendar = Self.civilCalendar(preferences)
         let today = calendar.startOfDay(for: .now)
-        let days = (-1...8).compactMap { offset -> WidgetSnapshot.Day? in
-            guard let date = calendar.date(byAdding: .day, value: offset, to: today),
-                  let times = day(at: date, prefs: preferences) else { return nil }
+        var days = (-1...8).compactMap { offset -> WidgetSnapshot.Day? in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
+            let times = preferences.locationConfirmed ? day(at: date, prefs: preferences) : nil
             return .init(start: date, times: times, hijri: preferences.hijriDate(date), gregorian: preferences.gregorianDate(date))
+        }
+        for index in days.indices {
+            let current = days[index]
+            guard let times = current.times else { continue }
+            let tomorrow = days.indices.contains(index + 1) ? days[index + 1].times : nil
+            let display = DisplayDay(start: current.start, today: times, tomorrow: tomorrow)
+            let starts = Set([current.start] + times.filter { $0 >= current.start && calendar.isDate($0, inSameDayAs: current.start) })
+            days[index].transitions = starts.sorted().compactMap { date in
+                guard let next = display.next(at: date) else { return nil }
+                return .init(start: date, nextIndex: Int(next.next), nextTime: Date(timeIntervalSince1970: next.nextTime / 1000))
+            }
         }
         let appearance = PhoneAppearance.catalog
         let names = PhoneAppearance.themeNames(preferences)
@@ -92,7 +103,8 @@ final class PrayerSchedule {
         let snapshot = WidgetSnapshot(days: days, names: preferences.prayerNames(), arabic: preferences.arabic,
             eastern: preferences.digits == "eastern" || (preferences.digits == "auto" && preferences.arabic),
             clock: preferences.clock, timezone: preferences.zone.identifier, colors: colors, palettes: palettes,
-            scenes: scenes, phoneScene: preferences.background)
+            scenes: scenes, phoneScene: preferences.background, locationConfirmed: preferences.locationConfirmed,
+            locationMessage: preferences.text("phone_location_needed"), unavailableMessage: preferences.text("phone_unavailable"))
         do {
             let data = try JSONEncoder().encode(snapshot)
             try data.write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -100,7 +112,7 @@ final class PrayerSchedule {
             var attributes = URLResourceValues()
             attributes.isExcludedFromBackup = true
             try localFile.setResourceValues(attributes)
-            WidgetCenter.shared.reloadAllTimelines()
+            WidgetCenter.shared.reloadTimelines(ofKind: WidgetSnapshot.widgetKind)
         } catch {
             // Widget continues using the last complete snapshot.
         }

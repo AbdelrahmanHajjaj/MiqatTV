@@ -28,17 +28,14 @@ struct PrayerWidgetEntry: TimelineEntry {
     let snapshot: WidgetSnapshot?
     let options: PrayerWidgetOptions
 
-    var current: WidgetSnapshot.Day? { snapshot?.days.last { $0.start <= date } }
+    var current: WidgetSnapshot.Day? { snapshot?.day(at: date) }
 
-    var next: (index: Int, time: Date)? {
-        guard let snapshot else { return nil }
-        return snapshot.days.flatMap { day in
-            [0, 2, 3, 4, 5].map { ($0, day.times[$0]) }
-        }.filter { $0.1 > date }.min { $0.1 < $1.1 }
-    }
+    var next: (index: Int, time: Date)? { snapshot?.nextPrayer(at: date) }
 
-    var previous: Date? {
-        snapshot?.days.flatMap { day in [0, 2, 3, 4, 5].map { day.times[$0] } }.filter { $0 <= date }.max()
+    var message: String {
+        let fallback = snapshot?.arabic == true ? "افتح ميقات" : "Open Miqat"
+        if snapshot?.locationConfirmed == true { return snapshot?.unavailableMessage ?? fallback }
+        return snapshot?.locationMessage ?? fallback
     }
 }
 
@@ -57,9 +54,9 @@ struct PrayerWidgetProvider: AppIntentTimelineProvider {
         let horizon = now.addingTimeInterval(36 * 3600)
         var updates = Set([now])
         for day in snapshot?.days ?? [] {
-            for time in [day.start] + day.times where time > now && time <= horizon { updates.insert(time) }
+            for time in [day.start] + (day.times ?? []) where time > now && time <= horizon { updates.insert(time) }
         }
-        if configuration.layout == .circle {
+        if configuration.layout == .circle, snapshot?.locationConfirmed == true {
             for halfHour in 1...72 { updates.insert(now.addingTimeInterval(Double(halfHour) * 1800)) }
         }
         let entries = updates.sorted().map { PrayerWidgetEntry(date: $0, snapshot: snapshot, options: configuration) }
@@ -80,7 +77,8 @@ struct PrayerWidgetView: View {
                 case .circle: circle(snapshot, next: next)
                 case .next: summary(snapshot, next: next)
                 case .strip where family != .systemSmall: strip(snapshot, next: next)
-                case .timetable where family != .systemSmall: timetable(snapshot, next: next)
+                case .timetable where family == .systemMedium: mediumTimetable(snapshot, next: next)
+                case .timetable where family == .systemLarge: timetable(snapshot, next: next)
                 case .adaptive where family == .systemLarge: timetable(snapshot, next: next)
                 case .adaptive where family == .systemMedium: strip(snapshot, next: next)
                 default: summary(snapshot, next: next)
@@ -88,7 +86,7 @@ struct PrayerWidgetView: View {
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Image(systemName: "sun.horizon")
-                    Text(entry.snapshot?.arabic == true ? "افتح ميقات" : "Open Miqat").font(textFont(1))
+                    Text(entry.message).font(textFont(1)).multilineTextAlignment(.center)
                 }
             }
         }
@@ -96,6 +94,7 @@ struct PrayerWidgetView: View {
         .foregroundStyle(color("plaster-100", fallback: .white))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.layoutDirection, entry.snapshot?.arabic == true ? .rightToLeft : .leftToRight)
+        .environment(\.locale, entry.snapshot?.locale ?? .current)
         .containerBackground(for: .widget) {
             PrayerWidgetBackdrop(sceneID: entry.snapshot?.sceneID(for: entry.options.scene?.id),
                 ground: color("lapis-900", fallback: Color(red: 0.04, green: 0.18, blue: 0.20)),
@@ -111,8 +110,9 @@ struct PrayerWidgetView: View {
                 .lineLimit(1)
             Text(clock(next.time, snapshot)).font(textFont(inCircle ? 1 : 1.25).monospacedDigit())
                 .lineLimit(1)
-            Text(timerInterval: entry.date...next.time, countsDown: true)
+            Text(timerInterval: entry.date...next.time, pauseTime: next.time, countsDown: true)
                 .font(textFont(inCircle ? 0.8 : 1).monospacedDigit())
+                .lineLimit(1)
                 .multilineTextAlignment(.center)
             dates
         }
@@ -120,7 +120,10 @@ struct PrayerWidgetView: View {
     }
 
     private func circle(_ snapshot: WidgetSnapshot, next: (index: Int, time: Date)) -> some View {
-        let ratio = entry.previous.map { next.time.timeIntervalSince(entry.date) / next.time.timeIntervalSince($0) } ?? 0
+        let ratio = snapshot.previousPrayer(at: entry.date, next: next).flatMap { previous -> Double? in
+            guard previous < next.time else { return nil }
+            return next.time.timeIntervalSince(entry.date) / next.time.timeIntervalSince(previous)
+        } ?? 0
         return ZStack {
             Circle().strokeBorder(.white.opacity(0.20), lineWidth: 3)
             Circle().trim(from: 0, to: min(1, max(0, ratio)))
@@ -164,6 +167,42 @@ struct PrayerWidgetView: View {
         }
     }
 
+    private func mediumTimetable(_ snapshot: WidgetSnapshot, next: (index: Int, time: Date)) -> some View {
+        VStack(spacing: 5) {
+            HStack {
+                Label(snapshot.names[next.index], systemImage: icons[next.index])
+                    .foregroundStyle(color("gold-400", fallback: .yellow))
+                Spacer(minLength: 4)
+                Text(timerInterval: entry.date...next.time, pauseTime: next.time, countsDown: true)
+                    .monospacedDigit()
+            }
+            .font(textFont(1).weight(.semibold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.65)
+            dates
+            Grid(horizontalSpacing: 12, verticalSpacing: 4) {
+                ForEach(0..<3, id: \.self) { index in
+                    GridRow {
+                        compactPrayer(index, snapshot, next: next)
+                        compactPrayer(index + 3, snapshot, next: next)
+                    }
+                }
+            }
+        }
+    }
+
+    private func compactPrayer(_ index: Int, _ snapshot: WidgetSnapshot, next: (index: Int, time: Date)) -> some View {
+        HStack(spacing: 3) {
+            Text(snapshot.names[index])
+            Spacer(minLength: 2)
+            Text(clock(prayerTime(index, next: next), snapshot)).monospacedDigit()
+        }
+        .font(textFont(0.75))
+        .lineLimit(1)
+        .minimumScaleFactor(0.65)
+        .foregroundStyle(index == next.index ? color("gold-400", fallback: .yellow) : color("plaster-100", fallback: .white))
+    }
+
     private var dates: some View {
         VStack(spacing: 1) {
             if entry.options.hijri, let date = entry.current?.hijri { Text(date).lineLimit(1) }
@@ -179,13 +218,12 @@ struct PrayerWidgetView: View {
 
     private func prayerTime(_ index: Int, next: (index: Int, time: Date)) -> Date {
         if index == next.index { return next.time }
-        return entry.current?.times[index] ?? next.time
+        return entry.current?.times?[index] ?? next.time
     }
 
     private func clock(_ date: Date, _ snapshot: WidgetSnapshot) -> String {
         let formatter = DateFormatter()
-        let language = snapshot.arabic ? "ar-EG" : "en-US"
-        formatter.locale = Locale(identifier: language + (snapshot.eastern ? "-u-nu-arab" : "-u-nu-latn"))
+        formatter.locale = snapshot.locale
         formatter.timeZone = TimeZone(identifier: snapshot.timezone)
         formatter.dateFormat = snapshot.clock == "24" ? "HH:mm" : "h:mm a"
         return formatter.string(from: date)
@@ -202,7 +240,7 @@ struct PrayerWidgetView: View {
 @main
 struct PrayerWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "miqat.prayer", intent: PrayerWidgetOptions.self, provider: PrayerWidgetProvider()) {
+        AppIntentConfiguration(kind: WidgetSnapshot.widgetKind, intent: PrayerWidgetOptions.self, provider: PrayerWidgetProvider()) {
             PrayerWidgetView(entry: $0)
         }
         .configurationDisplayName("Miqat Prayer")
