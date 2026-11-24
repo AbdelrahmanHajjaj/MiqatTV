@@ -1,5 +1,20 @@
 # Validation evidence
 
+## Stable v0.7.8 — 24 November 2026
+
+[Development](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45457328158)
+passed and produced phone, Android TV and LG webOS artifacts. The signed
+[Staging candidate](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.8-staging.3)
+and [Production release](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.8)
+point to `333286a` and have matching digests for all five assets. Local checks
+confirmed both release APK signing identities and checksums.
+
+[Production](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45458169621)
+passed the phone and Android TV emulator suites, the LG browser mock and the
+website build and deployment. The live feed reports phone 0.5.24/code 40 and
+Android TV 0.7.5/code 16. The LG package is 0.2.32. A physical phone upgrade
+remains unverified.
+
 ## On-demand builds and Production promotion
 
 Local checks passed for the four workflow definitions with actionlint, 58
@@ -37,8 +52,8 @@ passed Android TV simulation, LG browser simulation and website preparation.
 Phone companion instrumentation failed while rendering `adhan.quiet-input`
 because the generated catalog lacked a bilingual `adhan` section title.
 The catalog regression reproduced the missing title and passes with the fix.
-The public feed still reports v0.7.7, and `v0.7.8-staging.2` retains phone
-version code 39. The next phone candidate uses code 40 for in-place updates.
+At the time, the public feed reported v0.7.7 and `v0.7.8-staging.2` retained
+phone version code 39. The fix raised the code to 40 for in-place updates.
 The local phone and instrumentation APKs built, and APK inspection confirmed
 `tv.miqat.companion` 0.5.24/code 40. The Android TV catalog regenerated.
 

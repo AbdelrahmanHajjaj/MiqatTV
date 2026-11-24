@@ -1,14 +1,10 @@
 # Current work
 
-Updated: 2026-11-24. Stable v0.7.7 contains phone 0.5.23/code 39,
+Updated: 2026-11-24. Stable v0.7.8 contains phone 0.5.24/code 40,
 Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed
 checksum and identity verification. Website downloads and update metadata
-point to v0.7.7. See EVIDENCE.md.
-
-Production promotion of `v0.7.8-staging.2` stopped at the phone simulation.
-The next candidate needs the companion catalog fix and phone 0.5.24/code 40
-so existing release-signed phone installs can detect the channel update after
-promotion. See [Releasing](RELEASING.md).
+point to v0.7.8. Both Android emulator simulations and the LG browser mock
+passed. See [EVIDENCE.md](EVIDENCE.md).
 
 The phone release includes countdown seconds, the Circle widget with adjustable
 text, prayer time previews, calendar swipes and a Qibla map that opens at the
