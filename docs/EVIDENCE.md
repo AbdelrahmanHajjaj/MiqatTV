@@ -15,6 +15,10 @@ viewport, forcing the corresponding screen rebuild reproduced both original
 assertions. Home returned to the original slot using a newly attached view.
 All apps cleared its tiles while reloading, so long OK had no selected app.
 The historical CI logs did not record the event that triggered either failure.
+The passing v0.7.8 run used Ubuntu runner image 20261116.133.1. Both failed
+v0.7.9 attempts used 20261116.376.1. All three reported emulator 37.3.10.0
+and the API 34 Google APIs image target. This comparison does not establish
+that the runner image caused the refresh.
 
 The corrected fixture passed the forced-refresh English 150% case. A separate
 full API 37 layout sweep later stopped on a clipped Appearance reset control

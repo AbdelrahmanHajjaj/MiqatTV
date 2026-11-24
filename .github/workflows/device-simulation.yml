@@ -159,7 +159,7 @@ jobs:
           printf '### Required %s simulation\n\nAttempts (1–3): %s, %s, %s\n' \
             "$DEVICE" "$ATTEMPT_1" "$ATTEMPT_2" "$ATTEMPT_3" >> "$GITHUB_STEP_SUMMARY"
           if [[ -f state/device-simulation/blocking-failure ]]; then
-            cat state/device-simulation/blocking-failure | tee -a "$GITHUB_STEP_SUMMARY"
+            tee -a "$GITHUB_STEP_SUMMARY" < state/device-simulation/blocking-failure
             exit 1
           fi
           if [[ "$ATTEMPT_2" == success || "$ATTEMPT_3" == success ]]; then
