@@ -10,16 +10,15 @@ Wireless pairing and its separate TLS debugging connection are wired into the
 Android setup screen. The app reads and updates the TV-wide cleanup history.
 The unsigned iPhone and simulator builds passed. Native acceptance is open.
 
-Updated: 2026-11-24. Stable v0.7.8 contains phone 0.5.24/code 40,
-Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed
-checksum and identity verification. Website downloads and update metadata
-point to v0.7.8. Both Android emulator simulations and the LG browser mock
-passed. See [EVIDENCE.md](EVIDENCE.md).
+Updated: 2026-11-24. Stable v0.7.9 contains phone and Android TV 0.7.9/code
+7009003 and LG 0.7.9. The five Production asset digests match signed Staging.
+Both Android emulator simulations and the LG browser mock passed. Website
+downloads and update metadata point to v0.7.9. See [EVIDENCE.md](EVIDENCE.md).
 
-v0.7.9 promotion hit two Android TV fixture failures. The size regression
-forces a catalog rebuild to verify Home focus and the All apps long-press
-menu. Required simulations retry runner failures on fresh emulators and keep
-functional assertions blocking. See [CI](CI.md).
+The Android TV size regression forces a catalog rebuild to verify Home focus
+and the All apps long-press menu. The hosted API 34 sweep passed. Required
+simulations retry runner failures on fresh emulators and keep functional
+assertions blocking. See [CI](CI.md).
 
 The phone release includes countdown seconds, the Circle widget with adjustable
 text, prayer time previews, calendar swipes and a Qibla map that opens at the

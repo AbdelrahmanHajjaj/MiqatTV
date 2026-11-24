@@ -1,5 +1,20 @@
 # Validation evidence
 
+## Stable v0.7.9 — 24 November 2026
+
+[Signed Staging](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.9-staging.3)
+from `3e6af77` verified the persistent Android signing identities and both APKs
+as 0.7.9/code 7009003. LG is 0.7.9. The standalone
+[hosted simulation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45477843399)
+passed Android phone, Android TV and LG. Android TV passed the full API 34 size
+sweep, including forced refreshes at 150% and the 90% layout.
+
+[Production](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45480783489)
+passed all three simulations, published all five assets with matching Staging
+digests, and deployed Pages. Both live website languages link to v0.7.9 and
+the live feed reports version code 7009003 for both Android apps. Physical
+upgrades remain unverified.
+
 ## v0.7.9 promotion focus diagnostics
 
 [Production attempt](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45466201679)

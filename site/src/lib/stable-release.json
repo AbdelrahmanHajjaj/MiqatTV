@@ -1,8 +1,8 @@
 {
-  "tag": "v0.7.8",
-  "lgAsset": "tv.miqat.webos_0.2.32_all.ipk",
+  "tag": "v0.7.9",
+  "lgAsset": "tv.miqat.webos_0.7.9_all.ipk",
   "android": {
-    "tv.miqat.companion": { "versionCode": 40, "versionName": "0.5.24" },
-    "tv.miqat.home": { "versionCode": 16, "versionName": "0.7.5" }
+    "tv.miqat.companion": { "versionCode": 7009003, "versionName": "0.7.9" },
+    "tv.miqat.home": { "versionCode": 7009003, "versionName": "0.7.9" }
   }
 }
