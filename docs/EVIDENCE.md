@@ -1,5 +1,21 @@
 # Validation evidence
 
+## Miqat Signature website captures — 25 November 2026
+
+An isolated API 37 phone emulator captured all 26 Android phone and companion
+images at 1080×2400 from Miqat 0.7.9/code 7009001. Bilingual phone UI, first-use,
+companion controls, fasting, radio and the live Qibla map checks passed. Reviewed
+both galleries for notification icons and demo data. The Arabic and English
+landing captures show the phone and TV in Miqat Signature with the original
+overlapping layout.
+
+## Website screenshot layout — 25 November 2026
+
+The website build and browser showcase checks passed in Arabic and English at
+390, 900 and 1440 px. The checks cover separate hero images, matching TV gallery
+frame heights, image loading and original-image links. Reviewed both mobile
+landings and refreshed both 1200×630 social cards from the desktop hero.
+
 ## Stable v0.7.9 — 24 November 2026
 
 [Signed Staging](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.9-staging.3)
@@ -2310,6 +2326,13 @@ browser Umm al-Qura; prayer times are illustrative fixtures, not calculations.
 Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
+
+At `bf9523f`, three first-use XCUITests passed on iPhone 16 Simulator with
+iOS 18.4. On fresh simulator data, Allow and Don't Allow both reached Your style.
+After setup and relaunch, Prayer alerts was on after allowance and off after
+denial. The manual-city case passed again and both unsigned Apple builds passed.
+Alert delivery, Sounds recovery and hardware behavior remain open.
+[First-use permission results](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45498653118/job/138815762233)
 
 On iPhone 16 Simulator with iOS 18.4, XCTest at `54a54a9` confirmed the location
 denial message, searched the bundled catalog for London, confirmed the city,

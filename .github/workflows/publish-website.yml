@@ -1,0 +1,100 @@
+name: Publish website
+run-name: "${{ inputs.preview_only && 'Verify website' || 'Publish website' }} · ${{ github.ref_name }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_only:
+        description: Build and test only. Leave unchecked to publish to GitHub Pages.
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-website-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Verify the website
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      tag: ${{ steps.stable.outputs.tag }}
+    steps:
+      - name: Require main
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Keep the live update metadata and verify its downloads
+        id: stable
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl --fail --silent --show-error --retry 3 \
+            https://abdelrahmanhajjaj.github.io/MiqatTV/updates.json -o "$RUNNER_TEMP/updates.json"
+          gh api "repos/$GITHUB_REPOSITORY/releases/latest" > "$RUNNER_TEMP/stable-release.json"
+          tag=$(jq -er --slurpfile feed "$RUNNER_TEMP/updates.json" '
+            select(.tag_name == $feed[0].tag and (.draft or .prerelease | not))
+            | select((["miqat.apk", "miqat-phone.apk", $feed[0].lgAsset] - [.assets[].name]) == [])
+            | .tag_name
+          ' "$RUNNER_TEMP/stable-release.json") || {
+            echo "::error::The live update feed does not match the latest stable release and its downloads. Restore the Production site first."
+            exit 1
+          }
+          echo "Keeping stable downloads for $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          cp "$RUNNER_TEMP/updates.json" site/src/lib/stable-release.json
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Build and verify the website
+        run: |
+          npm --prefix shared/core ci --ignore-scripts
+          npm --prefix site ci --ignore-scripts
+          npm --prefix site run build
+          diff -u <(jq -cS . "$RUNNER_TEMP/updates.json") <(jq -cS . site/dist/updates.json)
+          npm --prefix site run test:browser
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site/dist
+
+  deploy:
+    name: Publish to GitHub Pages
+    if: github.ref == 'refs/heads/main' && !inputs.preview_only
+    needs: build
+    concurrency: pages-deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Require the current main and stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STABLE_TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA" || {
+            echo "::error::Main advanced. Dispatch a fresh website run."
+            exit 1
+          }
+          test "$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)" = "$STABLE_TAG" || {
+            echo "::error::The stable release advanced. Dispatch a fresh website run."
+            exit 1
+          }
+      - name: Deploy the verified site
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

@@ -23,6 +23,9 @@ const server=http.createServer((request,response)=>{
       assert.equal(await page.locator('h1').count(),1);
       assert.equal(await page.evaluate(()=>scrollY),0,'product entry must not jump to the TV');
       assert.ok(await page.locator('.hero-tv').evaluate(el=>el.getBoundingClientRect().width>=250),'hero screenshots retain visible width on phones');
+      const tv=await page.locator('.hero-tv').boundingBox(),phone=await page.locator('.hero-phone').boundingBox();
+      assert.ok(Math.max(tv.x,phone.x)<Math.min(tv.x+tv.width,phone.x+phone.width)
+        && Math.max(tv.y,phone.y)<Math.min(tv.y+tv.height,phone.y+phone.height),'phone overlaps the TV in the landing composition');
       assert.ok(await page.locator('.product-rail').evaluate(el=>el.getBoundingClientRect().top>=document.querySelector('.hero-phone').getBoundingClientRect().bottom),'product navigation stays below the phone image');
       await page.keyboard.press('ArrowDown');await page.waitForFunction(()=>scrollY>0);
       assert.equal(await page.locator('.tv :focus').count(),0,'off-screen TV must not steal page arrow keys');
