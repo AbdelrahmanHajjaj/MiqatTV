@@ -6,7 +6,7 @@ struct YourTVs: View {
     let preferences: PhonePreferences
     @State private var forget: PairedTV?
     @State private var error = false
-    @State private var demo = false
+    @AppStorage("show-demo-tvs") private var demo = false
 
     var body: some View {
         List {
@@ -82,13 +82,6 @@ struct TVProfileCatalog: Decodable {
     let themeKeys: [String]
     let themeSurfaces: [String]
     static let data: Self = PhoneData.load("tv-profiles")
-
-    func preview(_ profile: String) -> TVSettingsState {
-        let controls = profiles[profile] ?? []
-        return TVSettingsState(controls: controls, values: Dictionary(
-            controls.compactMap { control in control.default.map { (control.id, $0) } }, uniquingKeysWith: { first, _ in first }
-        ))
-    }
 }
 
 struct TVDetails: View {
@@ -102,6 +95,7 @@ struct TVDetails: View {
     @State private var action: Task<Void, Never>?
     @State private var status: String?
     @State private var editable = false
+    @State private var demoTV: TVDemo?
     @State private var themeEdit: ThemeEdit?
     @State private var redirectEdit: RedirectEdit?
     @State private var unsavedText: [String: String] = [:]
@@ -126,7 +120,22 @@ struct TVDetails: View {
 
     var body: some View {
         Form {
-            if tv == nil { Text(preferences.text("demo")).foregroundStyle(.secondary) }
+            if tv == nil {
+                Text(preferences.text("demo")).foregroundStyle(.secondary)
+                if let demoTV {
+                    Section(preferences.text("demo_tools")) {
+                        Button(preferences.text(editable ? "disconnect" : "reconnect")) {
+                            demoTV.endpoint.online.toggle()
+                            load()
+                        }
+                        Button(preferences.text("fail_next")) {
+                            demoTV.endpoint.failNextSave = true
+                            status = "fail_armed"
+                        }
+                        .disabled(!editable)
+                    }
+                }
+            }
             Picker(preferences.text("tvs"), selection: $page) {
                 Text(preferences.text("settings")).tag("settings")
                 Text(preferences.text("remote_title")).tag("remote")
@@ -179,7 +188,10 @@ struct TVDetails: View {
                 }, draft: edit.draft)
         }
         .toolbar {
-            Button { load() } label: {
+            Button {
+                demoTV?.endpoint.online = true
+                load()
+            } label: {
                 Image(systemName: "arrow.clockwise").accessibilityLabel(preferences.text("refresh"))
             }
             .disabled(action != nil)
@@ -206,10 +218,12 @@ struct TVDetails: View {
     private func load() {
         guard action == nil, scenePhase == .active else { return }
         if tv == nil {
-            if snapshot == nil { snapshot = TVProfileCatalog.data.preview(profile) }
-            if remote == nil { remote = TVRemoteState(commands: TVProtocol.current.commands, inputs: [], media: nil) }
-            status = nil
-            editable = true
+            if demoTV == nil { demoTV = TVDemo(profile: profile, controls: TVProfileCatalog.data.profiles[profile] ?? []) }
+            guard let demoTV else { return }
+            editable = demoTV.endpoint.online
+            if editable { snapshot = demoTV.read() }
+            remote = demoTV.remote
+            status = editable ? nil : "disconnected"
             return
         }
         editable = false
@@ -237,15 +251,16 @@ struct TVDetails: View {
     }
 
     private func apply(_ changes: [String: String], expected: [String: String]) {
-        guard action == nil, editable, var snapshot else { return }
+        guard action == nil, editable, let snapshot else { return }
         guard changes.contains(where: { snapshot.values[$0.key] != $0.value }) else {
             for key in changes.keys { unsavedText[key] = nil }
             return
         }
         if tv == nil {
-            snapshot.values.merge(changes) { _, new in new }
-            self.snapshot = snapshot
-            for key in changes.keys { unsavedText[key] = nil }
+            guard let result = demoTV?.apply(expected: expected, changes: changes) else { status = "invalid"; return }
+            self.snapshot = result
+            status = result.status
+            if result.status == "saved" { for key in changes.keys { unsavedText[key] = nil } }
             return
         }
         connect {
@@ -341,6 +356,9 @@ struct TVDetails: View {
                 Text(preferences.text(media.state == "playing" ? "phone_playing" : ""))
                     .foregroundStyle(.secondary)
             }
+            if let selectedInput = state.inputs.first(where: { $0.value == state.input }) {
+                LabeledContent(preferences.text("inputsTitle"), value: selectedInput.label)
+            }
             if commands.contains("device.home") { commandButton("home", command: "device.home") }
             if commands.contains("device.inputs") {
                 commandButton("inputsTitle", command: "device.inputs")
@@ -363,7 +381,11 @@ struct TVDetails: View {
 
     private func command(_ id: String, value: String) {
         guard editable, action == nil, TVProtocol.current.commands.contains(id), value.utf8.count <= 2048 else { return }
-        if tv == nil { status = "demo"; return }
+        if tv == nil {
+            demoTV?.send(id, value: value)
+            remote = demoTV?.remote
+            return
+        }
         connect {
             let result = try await $0.request("command", as: TVRemoteState.Result.self,
                 body: ["id": id, "value": value], credential: $1)
@@ -386,7 +408,8 @@ struct TVRemoteState: Decodable {
     struct Result: Decodable { let status: String }
     let commands: [String]
     let inputs: [Input]
-    let media: Media?
+    var media: Media?
+    var input: String?
 }
 
 struct TVSettingRow: View {

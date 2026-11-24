@@ -12,19 +12,21 @@ class SettingSpec(
     val maximum: Int,
     val step: Int,
 ) {
+    fun accepts(value: String): Boolean = when (kind) {
+        "toggle" -> value == "true" || value == "false"
+        "choice" -> value in options
+        "number" -> value.toIntOrNull()?.let { it in minimum..maximum &&
+            (id != "display.size" && id != "appearance.mihrab-opacity" || (it - minimum) % step == 0) } ?: false
+        "list" -> {
+            val items = if (value.isEmpty()) emptyList() else value.split(',')
+            items.size <= maximum && items.distinct().size == items.size && items.all { it in options }
+        }
+        "text" -> value.length <= maximum
+        else -> false
+    }
+
     fun validate(value: String) {
-        require(when (kind) {
-            "toggle" -> value == "true" || value == "false"
-            "choice" -> value in options
-            "number" -> value.toIntOrNull()?.let { it in minimum..maximum &&
-                (id != "display.size" && id != "appearance.mihrab-opacity" || (it - minimum) % step == 0) } ?: false
-            "list" -> {
-                val items = if (value.isEmpty()) emptyList() else value.split(',')
-                items.size <= maximum && items.distinct().size == items.size && items.all { it in options }
-            }
-            "text" -> value.length <= maximum
-            else -> false
-        }) { "Invalid value: $id" }
+        require(accepts(value)) { "Invalid value: $id" }
     }
 
     fun adjust(value: String, direction: Int): String {

@@ -2257,3 +2257,10 @@ edits with the original snapshot. Host checks confirmed Android and LG
 capabilities, the 2,048 UTF-16-unit limit and bilingual labels. The changed
 Swift sources parsed. Apple fixtures for circular, duplicate, unknown and
 oversized redirects await the Apple runner.
+
+The Kotlin companion JVM suite passed after exposing nonthrowing setting
+validation to the iPhone demo. A JVM probe built both demo endpoints from the
+current generated profiles and checked 60 Android and 42 LG defaults, one-shot
+save failure, read-only reconnect and city-dependent changes. The changed iPhone
+demo and TV views passed host Swift syntax checks. iPhone demo UI, persistence
+and remote-state display still need the simulator.
