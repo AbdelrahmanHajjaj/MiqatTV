@@ -13,7 +13,7 @@ The iOS update action still depends on an iOS distribution channel.
 
 | Order | User journey | Status and remaining acceptance |
 | --- | --- | --- |
-| 1 | Apple application, Kotlin framework, canonical bundles and unsigned build | The Xcode 16.3 workflow selects each SDK and checks both app and widget binaries for their target platform and arm64 slice. Windows verified workflow parsing, Kotlin native configurations, resource staging and the generated icon. Apple builds and launch pending. |
+| 1 | Apple application, Kotlin framework, canonical bundles and unsigned build | Both unsigned Xcode 16.3 builds passed, including app and widget architecture, platform and bundled resources. The simulator ZIP passed digest and archive checks. Simulator launch and signed iPhone acceptance are open. |
 | 2 | Welcome, skip/resume, permission and confirmation, offline country/city search, fresh fix, manual coordinates and timezone, background location consent/travel refresh | Home resumes an unfinished setup. Location confirmation and continuation are saved independently, and continuing enables prayer alerts only with user and system consent. Location mode changes retire the old request. Run the first-use regression below and check Always permission, significant-change delivery and manual edits during travel refresh. |
 | 3 | Prayer Home, greeting and exact verse, Hijri/Gregorian date, next prayer, countdown seconds and six times, next-Fajr rollover, calculated city, method/school/high-latitude rule and offsets | 570 minute-for-minute Android comparisons passed. After Isha, the countdown labels tomorrow's prayer and today's timetable stays intact. Home opens alert settings from the five prayer rows. Native rollover, offsets, polar display and row navigation remain open. |
 | 4 | Hijri month/day navigation, swipes and timetable, Hijri adjustment, current/upcoming and all recurring events | Home shows today's or the nearest upcoming observance and opens the calendar on its date. Month browsing keeps the prayer day selected and navigation stays within 366 days. Run the Apple fixture and verify Home links, calendar swipes and labels in Arabic and English. |
@@ -44,7 +44,7 @@ The iOS update action still depends on an iOS distribution channel.
   builds and required checks. [Pull request #49](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/49)
 - Early Apple runs found a BoringSSL tool packaging error, a missing Xcode 16.3
   runtime and an iOS 18-only WidgetKit call. The fixes are on the port branch.
-  Verify both unsigned Apple targets, then launch the simulator build.
+  Both unsigned Apple targets then passed. [Apple build and simulator ZIP](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45474659710)
 
 ## First-use regression on iPhone
 

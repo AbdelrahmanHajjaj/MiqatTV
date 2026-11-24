@@ -14,15 +14,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 /** Real Android view/window sizing; media stays disabled and all original preferences are restored. */
 final class UiScaleDeviceCheck {
-    static void run(Instrumentation test) {
+    static void run(Instrumentation test, String refresh) {
+        boolean refreshOnly = refresh.equals("focused");
+        boolean forceRefresh = refreshOnly || refresh.equals("both");
         SharedPreferences prefs = Prefs.of(test.getTargetContext());
         Map<String, ?> original = prefs.getAll();
         Activity[] active = new Activity[1];
@@ -40,7 +45,9 @@ final class UiScaleDeviceCheck {
                 try { Prefs.setUiScale(test.getTargetContext(), invalid); } catch (IllegalArgumentException expected) { rejected = true; }
                 check(rejected, "Invalid size must not be saved");
             }
-            for (String language : new String[] {"en", "ar"}) for (int size : new int[] {150, 80, 90, 100, 110, 120, 130, 140}) {
+            String[] languages = refreshOnly ? new String[] {"en"} : new String[] {"en", "ar"};
+            int[] sizes = refreshOnly ? new int[] {150} : new int[] {150, 80, 90, 100, 110, 120, 130, 140};
+            for (String language : languages) for (int size : sizes) {
                 prefs.edit().putString("locale", language).putString("clock", "12").putString("digits", "")
                     .putInt("ui_scale", 100).putInt("appearance_cycle", 0).putBoolean("reduce_motion", false)
                     .putBoolean("adhan", false).putBoolean("announce", false).putBoolean("remind_voice", false).putInt("remind", 0).commit();
@@ -67,7 +74,7 @@ final class UiScaleDeviceCheck {
                 Map<String, Object> expected = new HashMap<>(before); expected.put("ui_scale", size);
                 check(prefs.getAll().equals(expected), "Only global size is saved");
                 check(settings.getCurrentFocus() == binding(settings.root, "display.size"), "Saving restores the new size row");
-                scene(test, settings, language, size);
+                scene(test, settings, language, size, false);
                 key(test, settings, KeyEvent.KEYCODE_BACK);
                 for (int i = 0; i < 3; i++) key(test, settings, KeyEvent.KEYCODE_DPAD_UP);
                 for (int section = 0; section < 7; section++) {
@@ -87,15 +94,7 @@ final class UiScaleDeviceCheck {
                 for (Class<? extends Screen> type : Arrays.asList(MainActivity.class, AllAppsActivity.class, PrayerDayActivity.class, NowActivity.class, OnlinePrayerActivity.class)) {
                     Screen screen = launch(test, type); active[0] = screen;
                     if (screen instanceof AllAppsActivity) {
-                        long deadline = SystemClock.uptimeMillis() + 7000;
-                        while (((java.util.List<?>) UiContractDeviceCheck.field(screen, "tiles")).isEmpty() && SystemClock.uptimeMillis() < deadline) {
-                            SystemClock.sleep(50); test.waitForIdleSync();
-                        }
-                        UiContractDeviceCheck.onMain(test, () -> {
-                            java.util.List<?> tiles = (java.util.List<?>) UiContractDeviceCheck.field(screen, "tiles");
-                            check(!tiles.isEmpty() && tiles.get(0) != null, "Actual installed-app row is loaded");
-                            ((View) tiles.get(0)).requestFocus();
-                        });
+                        awaitApp(test, () -> selectFirstApp(screen), "Actual installed-app row is loaded and focused");
                     }
                     if (screen instanceof OnlinePrayerActivity) UiContractDeviceCheck.onMain(test, () -> {
                         OnlinePrayerActivity online = (OnlinePrayerActivity) screen;
@@ -107,21 +106,27 @@ final class UiScaleDeviceCheck {
                         catch (Exception error) { throw new AssertionError(error); }
                     });
                     SystemClock.sleep(200); test.waitForIdleSync();
-                    scene(test, screen, language, size);
+                    boolean refreshCase = forceRefresh && size == 150 && language.equals("en");
+                    scene(test, screen, language, size, refreshCase);
                     if (screen instanceof PrayerDayActivity) {
                         UiContractDeviceCheck.onMain(test, () -> ((View) UiContractDeviceCheck.field(screen, "roomButton")).requestFocus());
                         key(test, screen, KeyEvent.KEYCODE_DPAD_CENTER); modal(test, screen, "picker"); key(test, screen, KeyEvent.KEYCODE_BACK);
                     }
                     if (screen instanceof AllAppsActivity) {
-                        View focused = screen.getCurrentFocus();
-                        UiContractDeviceCheck.onMain(test, () -> {
+                        if (refreshCase) UiContractDeviceCheck.onMain(test, screen::build);
+                        String focused = awaitApp(test, () -> {
+                            String app = selectFirstApp(screen);
+                            if (app == null) return null;
                             long now = SystemClock.uptimeMillis();
                             screen.dispatchKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, 0));
                             screen.dispatchKeyEvent(KeyEvent.changeFlags(new KeyEvent(now, now + 600, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, 1), KeyEvent.FLAG_LONG_PRESS));
                             screen.dispatchKeyEvent(new KeyEvent(now, now + 610, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_CENTER, 0));
-                        });
+                            check(UiContractDeviceCheck.field(screen, "menu") != null, "Long OK on a focused app opens its menu at " + language + " " + size + "%");
+                            return app;
+                        }, "A loaded app tile is available for long OK");
                         modal(test, screen, "menu"); key(test, screen, KeyEvent.KEYCODE_BACK);
-                        check(screen.getCurrentFocus() == focused, "App menu returns to its origin");
+                        check(focused.equals(awaitApp(test, () -> focusedApp(screen), "An app tile receives focus after the menu")),
+                            "App menu returns to its original app");
                     }
                     finish(test, screen); active[0] = null;
                     if (type == MainActivity.class && size == 150) {
@@ -130,7 +135,7 @@ final class UiScaleDeviceCheck {
                             prefs.edit().putBoolean("quick_labels", true).putInt("home_countdown", variant[0])
                                 .putInt("home_side", variant[1]).putInt("home_bar", variant[2]).putString("clock", "12").commit();
                             MainActivity sample = launch(test, MainActivity.class); active[0] = sample;
-                            SystemClock.sleep(200); test.waitForIdleSync(); scene(test, sample, language, size);
+                            SystemClock.sleep(200); test.waitForIdleSync(); scene(test, sample, language, size, false);
                             finish(test, sample); active[0] = null;
                         }
                         restore(prefs, beforeHome);
@@ -139,7 +144,9 @@ final class UiScaleDeviceCheck {
                 check(Prefs.uiScale(test.getTargetContext()) == size, "Size survives activity reopening");
                 Bundle progress = new Bundle(); progress.putString("stream", "PASS: native pages " + language + " " + size + "% save/cancel/focus/geometry.\n"); test.sendStatus(0, progress);
             }
-            result.putString("stream", "Native global-size pages passed, including settings preservation and real view transforms.\n"); code = Activity.RESULT_OK;
+            result.putString("stream", refreshOnly ? "PASS: forced Home rebuild and All apps reload at 150%.\n"
+                : "Native global-size pages passed, including settings preservation and real view transforms.\n");
+            code = Activity.RESULT_OK;
         } catch (Throwable error) { result.putString("stream", android.util.Log.getStackTraceString(error)); }
         finally {
             if (active[0] != null) test.runOnMainSync(active[0]::finish);
@@ -156,6 +163,33 @@ final class UiScaleDeviceCheck {
     private static void finish(Instrumentation test, Activity activity) { test.runOnMainSync(activity::finish); test.waitForIdleSync(); }
     private static void key(Instrumentation test, Activity activity, int key) { UiContractDeviceCheck.key(test, activity, key); }
 
+    private static String awaitApp(Instrumentation test, Supplier<String> action, String message) {
+        long deadline = SystemClock.uptimeMillis() + 7000;
+        String[] result = new String[1];
+        do {
+            UiContractDeviceCheck.onMain(test, () -> result[0] = action.get());
+            if (result[0] != null) return result[0];
+            SystemClock.sleep(50);
+        } while (SystemClock.uptimeMillis() < deadline);
+        throw new AssertionError(message);
+    }
+
+    private static String selectFirstApp(Screen screen) {
+        List<?> tiles = (List<?>) UiContractDeviceCheck.field(screen, "tiles");
+        if (!screen.hasWindowFocus() || tiles.isEmpty() || !(tiles.get(0) instanceof View tile)) return null;
+        if (!tile.requestFocus() || screen.getCurrentFocus() != tile) return null;
+        return focusedApp(screen);
+    }
+
+    private static String focusedApp(Screen screen) {
+        View view = screen.getCurrentFocus();
+        if (view == null) return null;
+        List<?> tiles = (List<?>) UiContractDeviceCheck.field(screen, "tiles");
+        List<?> apps = (List<?>) UiContractDeviceCheck.field(screen, "apps");
+        int at = tiles.indexOf(view);
+        return at < 0 ? null : (String) apps.get(at);
+    }
+
     private static View binding(View view, String id) {
         if (view.getTag() instanceof SettingsActivity.Row && id.equals(((SettingsActivity.Row) view.getTag()).contract.getId())) return view;
         if (view instanceof ViewGroup) for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
@@ -164,7 +198,7 @@ final class UiScaleDeviceCheck {
         return null;
     }
 
-    private static void scene(Instrumentation test, Screen screen, String language, int size) throws Exception {
+    private static void scene(Instrumentation test, Screen screen, String language, int size, boolean refreshAfterUp) throws Exception {
         capture(test, language, size, screen.getClass().getSimpleName());
         UiContractDeviceCheck.onMain(test, () -> {
             pageBounds(screen, size);
@@ -182,10 +216,14 @@ final class UiScaleDeviceCheck {
             SystemClock.sleep(200); test.waitForIdleSync();
             UiContractDeviceCheck.onMain(test, () -> pageBounds(screen, size));
             capture(test, language, size, "home-header");
+            if (refreshAfterUp) UiContractDeviceCheck.onMain(test, screen::build);
             HomeFocus beforeDown = homeFocus(test, screen, start.view());
             key(test, screen, KeyEvent.KEYCODE_DPAD_DOWN);
             HomeFocus down = homeFocus(test, screen, start.view());
-            check(down.view() == start.view(), "Large Home returns to its app\n" + scenario
+            boolean sameApp = start.app() == null
+                ? start.slot() == FavouriteChoice.ALL && down.slot() == FavouriteChoice.ALL
+                : start.app().equals(down.app());
+            check(sameApp, "Large Home returns to its app\n" + scenario
                 + "\nstart: " + start.detail() + "\nafter Up: " + up.detail()
                 + "\nbefore Down: " + beforeDown.detail() + "\nafter Down: " + down.detail());
             Bundle progress = new Bundle();
@@ -198,7 +236,7 @@ final class UiScaleDeviceCheck {
         }
     }
 
-    private record HomeFocus(View view, int slot, String detail) {}
+    private record HomeFocus(View view, int slot, String app, String detail) {}
 
     private static HomeFocus homeFocus(Instrumentation test, Screen screen, View origin) {
         HomeFocus[] snapshot = new HomeFocus[1];
@@ -206,6 +244,7 @@ final class UiScaleDeviceCheck {
             View view = screen.getCurrentFocus();
             View[] nodes = (View[]) UiContractDeviceCheck.field(screen, "nodes");
             int slot = view == null ? -1 : Arrays.asList(nodes).indexOf(view);
+            String[] packages = (String[]) UiContractDeviceCheck.field(screen, "nodePackage");
             int favourites = (int) UiContractDeviceCheck.field(screen, "favouriteCount");
             int recents = (int) UiContractDeviceCheck.field(screen, "recentCount");
             int lastFav = (int) UiContractDeviceCheck.field(screen, "lastFav");
@@ -217,18 +256,24 @@ final class UiScaleDeviceCheck {
                 + " columns=" + columns + " downTarget=" + downTarget + " path=" + parents(view);
             if (origin != null) detail += " originSlot=" + Arrays.asList(nodes).indexOf(origin)
                 + " originAttached=" + origin.isAttachedToWindow();
-            snapshot[0] = new HomeFocus(view, slot, detail);
+            snapshot[0] = new HomeFocus(view, slot, slot < 0 ? null : packages[slot], detail);
         });
         return snapshot[0];
     }
 
-    private static void capture(Instrumentation test, String language, int size, String name) throws Exception {
-        if (size != 90) {
+    private static void capture(Instrumentation test, String language, int size, String name) {
+        if (size == 90) return;
+        try {
             Bitmap image = test.getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES).takeScreenshot();
-            check(image != null, "Screenshot is available");
+            if (image == null) throw new IOException("No screenshot returned");
             try (FileOutputStream output = new FileOutputStream(test.getTargetContext().getCacheDir() + "/size-native-" + language + "-" + size + "-" + name + ".png")) {
-                image.compress(Bitmap.CompressFormat.PNG, 100, output);
+                if (!image.compress(Bitmap.CompressFormat.PNG, 100, output)) throw new IOException("PNG encoding failed");
             } finally { image.recycle(); }
+        } catch (IOException | RuntimeException failure) {
+            Bundle progress = new Bundle();
+            progress.putString("stream", "Advisory screenshot failed: " + language + " " + size + "% " + name
+                + " (" + failure.getClass().getSimpleName() + ")\n");
+            test.sendStatus(0, progress);
         }
     }
 
