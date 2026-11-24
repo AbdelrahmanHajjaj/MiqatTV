@@ -44,6 +44,12 @@ The app and widget targets use the `group.tv.miqat.ios` App Group to share
 an offline prayer timetable. A signed widget check needs both targets in a
 development team with that group enabled. Signing identities stay local.
 
+The app privacy manifest declares app-local UserDefaults use for TV setup and
+demo preferences. Before App Store submission, review the linked dependencies
+and archive privacy report. The development workflow uses Xcode 16.3. Apple
+currently requires Xcode 26 or later with a supported SDK for App Store Connect.
+[Apple SDK requirements](https://developer.apple.com/news/upcoming-requirements/)
+
 In **Your TVs → Download latest TV build**, choose Android/Google TV or LG and
 select Production or Staging. Miqat checks the release's SHA-256 and file size
 before offering the package to share or save to Files. Use the existing

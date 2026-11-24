@@ -2349,6 +2349,11 @@ the exact cleanup path and preserves files after an uncertain install. Swift
 syntax, IPK fixture generation and workflow lint passed locally. The Swift
 transport fixture and a physical LG transfer still await Apple execution.
 
+The iPhone target declares its app-local UserDefaults use in a privacy
+manifest. Plist parsing and workflow lint passed. Both unsigned Apple builds
+check the packaged manifest. The archive privacy report and dependency review
+remain pending for distribution.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

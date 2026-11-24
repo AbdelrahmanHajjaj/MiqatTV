@@ -131,6 +131,9 @@ jobs:
           test -x "$app/Miqat"
           test -s "$app/Assets.car"
           test "$(plutil -extract CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName raw "$app/Info.plist")" = AppIcon
+          plutil -lint "$app/PrivacyInfo.xcprivacy"
+          test "$(plutil -extract NSPrivacyAccessedAPITypes.0.NSPrivacyAccessedAPIType raw "$app/PrivacyInfo.xcprivacy")" = NSPrivacyAccessedAPICategoryUserDefaults
+          test "$(plutil -extract NSPrivacyAccessedAPITypes.0.NSPrivacyAccessedAPITypeReasons.0 raw "$app/PrivacyInfo.xcprivacy")" = CA92.1
           test -f "$app/cities.json"
           test -f "$app/adhan.js"
           cmp tools/setup-steps.txt "$app/android-setup-steps.txt"

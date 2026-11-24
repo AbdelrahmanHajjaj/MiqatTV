@@ -146,3 +146,6 @@ the arrow appears with a reliable heading and disappears when it is unreliable.
   private IPv4 and port entry. CVTE setup uses the desktop installer on both.
 - Qibla uses Apple Maps on iPhone and OpenStreetMap on Android. The iPhone
   update action depends on an iOS distribution channel.
+- App Store Connect needs a newer SDK than the development workflow uses.
+  Review the linked dependency privacy declarations and the archive report
+  before publication. [Apple requirements](https://developer.apple.com/news/upcoming-requirements/)
