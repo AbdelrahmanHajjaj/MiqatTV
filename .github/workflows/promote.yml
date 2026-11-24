@@ -5,12 +5,8 @@ on:
   workflow_dispatch:
     inputs:
       staging_tag:
-        description: Full Staging tag (blank uses latest published Staging)
+        description: Full Staging tag (blank uses latest). Running this workflow approves live publication.
         type: string
-      publish:
-        description: Check to approve live Production publication and website deployment
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -32,18 +28,8 @@ jobs:
       production: ${{ steps.resolve.outputs.production }}
       manifest: ${{ steps.resolve.outputs.manifest }}
     steps:
-      - name: Require an approved Production dispatch from main
-        env:
-          APPROVED: ${{ inputs.publish }}
-        run: |
-          test "$GITHUB_REF" = refs/heads/main
-          if [[ "$APPROVED" != true ]]; then
-            message="Start a new Promote to Production run and check the publication approval box."
-            echo "::error title=Production approval missing::$message"
-            printf '## Publication approval required\n\n%s\n\nUse Device simulation for verification alone.\n' \
-              "$message" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
+      - name: Require main for Production
+        run: test "$GITHUB_REF" = refs/heads/main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false

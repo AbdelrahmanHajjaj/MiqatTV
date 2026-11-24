@@ -35,10 +35,9 @@ tracked under [docs/screenshots](screenshots/README.md) at the candidate commit.
 1. Open [Promote to Production](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/promote.yml)
    on `main`. Leave **Staging tag** blank for the most recently published
    Staging candidate, or enter a full tag such as `v0.7.8-staging.2`.
-2. Check **Approve live Production publication and website deployment** and
-   run the workflow. If the checkbox was left clear, start a new run with it
-   checked. The workflow pins the tag,
-   source and asset digests before running **Device simulation**. In parallel
+2. Click **Run workflow** to approve the live release and website deployment.
+   The workflow pins the tag, source and asset digests before running
+   **Device simulation**. In parallel
    it prepares and verifies the website using the candidate's screenshots and
    signed versions. A failed prerequisite blocks publication.
 3. After both pass, the workflow publishes the Production tag at the same

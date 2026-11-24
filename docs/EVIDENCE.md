@@ -29,6 +29,9 @@ checks with both approval values. Read-only verification of
 `v0.7.8-staging.2` passed the Production asset list, checksums and both
 release signing identities.
 
+The Production dispatch now supplies publication approval. Workflow lint,
+the main-only preflight and the candidate and promotion regressions passed.
+
 ## Stable v0.7.7 — 24 November 2026
 
 [PR #39](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/39) passed its required

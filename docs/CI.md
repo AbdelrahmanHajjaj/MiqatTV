@@ -5,7 +5,7 @@
 | [Validate](../.github/workflows/validate.yml) | Pull request targeting `main` | Affected checks and the required merge status. |
 | [Build](../.github/workflows/build.yml) | Manual, **Development** or **Staging** | Installable Actions artifacts or a signed GitHub prerelease. |
 | [Device simulation](../.github/workflows/device-simulation.yml) | Manual on `main`, or called by Production | Android emulator and LG webOS browser-mock results for one Staging candidate. |
-| [Promote to Production](../.github/workflows/promote.yml) | Manual on `main` with publication approval | Device simulation, byte-for-byte package promotion and deployment of the release website. |
+| [Promote to Production](../.github/workflows/promote.yml) | Manual dispatch on `main` | Device simulation, byte-for-byte package promotion and deployment of the release website. |
 
 ## PR gate
 
