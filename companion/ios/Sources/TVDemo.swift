@@ -57,10 +57,12 @@ struct TVDemo {
             if remote.inputs.contains(where: { $0.value == value }) { remote.input = value }
         case "device.home", "device.exit-input":
             remote.input = nil
-        case "radio.play", "tests.adhan-short":
-            remote.media = .init(state: "playing")
-        case "radio.stop", "tests.cancel":
-            remote.media = nil
+        case "radio.play": remote.media = .init(kind: "radio", state: "playing")
+        case "tests.adhan-short": remote.media = .init(kind: "adhan", state: "playing")
+        case "radio.stop":
+            if remote.media?.kind == "radio" { remote.media = nil }
+        case "tests.cancel":
+            if remote.media?.kind == "adhan" { remote.media = nil }
         default:
             break
         }

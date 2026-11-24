@@ -56,7 +56,7 @@ jobs:
       - name: Check TV settings edit payloads
         run: |
           swiftc companion/ios/Sources/TVThemeDraft.swift companion/ios/Sources/TVRedirects.swift \
-            companion/ios/Sources/TVPreviewLayout.swift \
+            companion/ios/Sources/TVPreviewLayout.swift companion/ios/Sources/TVRemoteState.swift \
             companion/ios/checks/tv-settings/main.swift -o "$RUNNER_TEMP/tv-settings-check"
           "$RUNNER_TEMP/tv-settings-check"
       - name: Check widget appearance snapshots

@@ -2511,3 +2511,11 @@ and installed widgets can refresh without notification permission when iOS runs
 the background task. Windows passed the shared prayer-rule tests, 14 generator
 checks and Swift syntax parsing. The extended Apple widget fixture, compact
 layout, system countdown digits and App Group transfer remain pending.
+
+iPhone TV names can be changed locally for a paired TV or a demo. Remote
+readback validates the advertised commands and input inventory. After an
+uncertain response, only a previously offered Stop command remains available
+until refresh. An acknowledged command followed by a failed state read is
+reported separately. Windows passed the 14 generator checks, Swift syntax
+parsing and workflow validation. The Apple capability fixture, Keychain
+rename persistence and foreground TV interaction remain pending.

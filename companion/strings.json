@@ -230,6 +230,7 @@
   "remote_failed":{"en":"TV controls are unavailable. Keep the launcher active and refresh to reconnect.","ar":"التحكّم غير متاح. أبقِ الواجهة مفتوحة على التلفاز وحدّث لإعادة الاتصال."},
   "remote_uncertain":{"en":"The TV did not confirm this command. Refresh its status before trying again.","ar":"لم يؤكّد التلفاز تنفيذ الأمر. حدّث حالته قبل المحاولة مجدداً."},
   "remote_accepted":{"en":"Command sent to TV","ar":"أُرسل الأمر إلى التلفاز"},
+  "remote_readback_failed":{"en":"Command sent. Refresh for current TV status.","ar":"أُرسل الأمر. حدّث لعرض حالة التلفاز الحالية."},
   "tv_busy":{"en":"The TV is busy. Finish its current editor or playback first.","ar":"التلفاز مشغول. أنهِ التعديل أو التشغيل الحالي أولاً."},
   "no_tvs":{"en":"Your TV, in your hands","ar":"تلفازك بين يديك"},
   "more_actions":{"en":"More options","ar":"خيارات إضافية"},

@@ -3,7 +3,7 @@ import Foundation
 import JavaScriptCore
 import Security
 
-enum TVConnectionError: Error { case invalid, unconfirmed, credentialStorage }
+enum TVConnectionError: Error { case invalid, unconfirmed, credentialStorage, remoteUnavailable }
 
 struct TVProtocol: Decodable {
     let port: Int
@@ -152,6 +152,16 @@ final class TVConnection: NSObject, URLSessionTaskDelegate {
         session = nil
     }
 
+    @MainActor func remote(credential: String) async throws -> TVRemoteState {
+        do {
+            let state = try await request("remote", as: TVRemoteState.self, credential: credential)
+            guard state.valid(allowed: TVProtocol.current.commands) else { throw TVConnectionError.invalid }
+            return state
+        } catch TVConnectionError.remoteUnavailable {
+            return .unavailable
+        }
+    }
+
     @MainActor func request<Result: Decodable>(_ path: String, as: Result.Type, body: [String: Any]? = nil,
                                     credential: String? = nil) async throws -> Result {
         guard let session, ["pair", "pair-status", "pair-complete", "info", "remote", "command", "settings"].contains(path) else {
@@ -173,6 +183,9 @@ final class TVConnection: NSObject, URLSessionTaskDelegate {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
         let (bytes, response) = try await session.bytes(for: request)
+        if path == "remote", body == nil, (response as? HTTPURLResponse)?.statusCode == 404 {
+            throw TVConnectionError.remoteUnavailable
+        }
         guard let http = response as? HTTPURLResponse, http.statusCode == 200,
               http.mimeType == "application/json", http.expectedContentLength <= Int64(TVProtocol.current.maxResponseBytes) else {
             throw TVConnectionError.unconfirmed

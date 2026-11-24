@@ -7,6 +7,8 @@ struct YourTVs: View {
     @State private var forget: PairedTV?
     @State private var error = false
     @AppStorage("show-demo-tvs") private var demo = false
+    @AppStorage("demo-tv-name-android") private var androidName = "Android / Google TV"
+    @AppStorage("demo-tv-name-lg") private var lgName = "LG webOS"
 
     var body: some View {
         List {
@@ -26,8 +28,10 @@ struct YourTVs: View {
                         }
                 }
                 if demo {
-                    NavigationLink("Android / Google TV") { TVDetails(preferences: preferences, tv: nil, profile: "android") }
-                    NavigationLink("LG webOS") { TVDetails(preferences: preferences, tv: nil, profile: "lg") }
+                    NavigationLink(androidName) {
+                        TVDetails(preferences: preferences, tv: nil, profile: "android", demoName: $androidName)
+                    }
+                    NavigationLink(lgName) { TVDetails(preferences: preferences, tv: nil, profile: "lg", demoName: $lgName) }
                 }
             }
             if error || store.inaccessible {
@@ -92,9 +96,11 @@ struct TVProfileCatalog: Decodable {
 
 struct TVDetails: View {
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var store: PairedTVs
     let preferences: PhonePreferences
     let tv: PairedTV?
     let profile: String
+    var demoName: Binding<String>?
     @State private var page = "settings"
     @State private var snapshot: TVSettingsState?
     @State private var remote: TVRemoteState?
@@ -105,6 +111,13 @@ struct TVDetails: View {
     @State private var themeEdit: ThemeEdit?
     @State private var redirectEdit: RedirectEdit?
     @State private var unsavedText: [String: String] = [:]
+    @State private var rename = false
+    @State private var draftName = ""
+
+    private var name: String {
+        if let tv { return store.records.first(where: { $0.id == tv.id })?.name ?? tv.name }
+        return demoName?.wrappedValue ?? (profile == "lg" ? "LG webOS" : "Android / Google TV")
+    }
 
     private struct ThemeEdit: Identifiable {
         let id = UUID()
@@ -174,10 +187,15 @@ struct TVDetails: View {
                 }
             } else if page == "remote", let remote {
                 remoteRows(remote)
-                    .disabled(!editable || action != nil)
             }
         }
-        .navigationTitle(tv?.name ?? (profile == "lg" ? "LG webOS" : "Android / Google TV"))
+        .navigationTitle(name)
+        .alert(preferences.text("rename"), isPresented: $rename) {
+            TextField(preferences.text("rename"), text: $draftName)
+            Button(preferences.text("done")) { renameTV() }
+                .disabled(validName == nil)
+            Button(preferences.text("cancel"), role: .cancel) {}
+        }
         .sheet(item: $themeEdit) { edit in
             TVThemeEditor(preferences: preferences, title: edit.title,
                 backgrounds: edit.backgrounds, maximum: edit.maximum, editable: editable && action == nil,
@@ -202,6 +220,12 @@ struct TVDetails: View {
                 Image(systemName: "arrow.clockwise").accessibilityLabel(preferences.text("refresh"))
             }
             .disabled(action != nil)
+            Menu {
+                Button(preferences.text("rename")) { draftName = name; rename = true }
+                    .disabled(store.inaccessible && tv != nil)
+            } label: {
+                Image(systemName: "ellipsis.circle").accessibilityLabel(preferences.text("more_actions"))
+            }
         }
         .onAppear { load() }
         .onChange(of: page) { _, _ in action?.cancel(); loadAfterCancel() }
@@ -211,6 +235,23 @@ struct TVDetails: View {
                 action?.cancel()
                 if tv != nil { editable = false; status = "stale" }
             }
+        }
+    }
+
+    private var validName: String? {
+        let name = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (1...60).contains(name.utf16.count), !name.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
+        else { return nil }
+        return name
+    }
+
+    private func renameTV() {
+        guard let validName else { return }
+        if let tv {
+            do { try store.rename(tv.id, to: validName) }
+            catch { status = "vault_failed" }
+        } else {
+            demoName?.wrappedValue = validName
         }
     }
 
@@ -236,11 +277,11 @@ struct TVDetails: View {
         editable = false
         status = nil
         let selected = page
-        connect {
+        connect(failure: selected == "settings" ? "stale" : "remote_failed") {
             if selected == "settings" {
                 snapshot = try await $0.request("settings", as: TVSettingsState.self, credential: $1)
             } else {
-                remote = try await $0.request("remote", as: TVRemoteState.self, credential: $1)
+                remote = try await $0.remote(credential: $1)
             }
             try Task.checkCancellation()
             editable = true
@@ -342,7 +383,7 @@ struct TVDetails: View {
             lighting: values["appearance.lighting"].flatMap { Int($0) } ?? custom?.lighting ?? theme?.lighting)
     }
 
-    private func connect(_ operation: @escaping (TVConnection, String) async throws -> Void) {
+    private func connect(failure: String = "stale", _ operation: @escaping (TVConnection, String) async throws -> Void) {
         guard let tv, action == nil, scenePhase == .active else { return }
         action = Task {
             defer { action = nil }
@@ -352,74 +393,111 @@ struct TVDetails: View {
                 try await operation(link, tv.credential)
             } catch {
                 if !Task.isCancelled {
-                    status = page == "settings" ? "stale" : "remote_uncertain"
+                    status = failure
                     editable = false
                 }
             }
         }
     }
 
-    private func remoteRows(_ state: TVRemoteState) -> some View {
+    @ViewBuilder private func remoteRows(_ state: TVRemoteState) -> some View {
         let commands = state.commands.filter { TVProtocol.current.commands.contains($0) }
-        return Section {
-            if let media = state.media, !media.state.isEmpty {
-                Text(preferences.text(media.state == "playing" ? "phone_playing" : ""))
-                    .foregroundStyle(.secondary)
-            }
-            if let selectedInput = state.inputs.first(where: { $0.value == state.input }) {
-                LabeledContent(preferences.text("inputsTitle"), value: selectedInput.label)
-            }
-            if commands.contains("device.home") { commandButton("home", command: "device.home") }
-            if commands.contains("device.inputs") {
-                commandButton("inputsTitle", command: "device.inputs")
-                ForEach(state.inputs.indices, id: \.self) { index in
-                    let input = state.inputs[index]
-                    Button(input.label) { command("device.inputs", value: input.value) }
+        if commands.isEmpty {
+            Text(preferences.text("remote_unavailable")).foregroundStyle(.secondary)
+        } else {
+            Section {
+                if commands.contains("device.home") { commandButton("tv_home", command: "device.home", icon: "house") }
+                if commands.contains("device.inputs") {
+                    if state.inputs.isEmpty {
+                        commandButton("tv_inputs", command: "device.inputs", icon: "rectangle.connected.to.line.below")
+                    } else {
+                        Menu {
+                            Button(preferences.text("tv_inputs")) { command("device.inputs", value: "") }
+                            ForEach(state.inputs, id: \.value) { input in
+                                Button(input.label) { command("device.inputs", value: input.value) }
+                            }
+                        } label: {
+                            Label(preferences.text("tv_inputs"), systemImage: "rectangle.connected.to.line.below")
+                        }
+                        .disabled(!canSend("device.inputs"))
+                    }
+                }
+                if commands.contains("device.exit-input") {
+                    commandButton("tv_input", command: "device.exit-input", icon: "tv")
+                }
+                if let selectedInput = state.inputs.first(where: { $0.value == state.input }) {
+                    LabeledContent(preferences.text("tv_inputs"), value: selectedInput.label)
                 }
             }
-            if commands.contains("device.exit-input") { commandButton("back", command: "device.exit-input") }
-            if commands.contains("radio.play") { commandButton("radio_title", command: "radio.play") }
-            if commands.contains("radio.stop") { commandButton("phone_radio_stop", command: "radio.stop") }
-            if commands.contains("tests.adhan-short") { commandButton("phone_test_adhan", command: "tests.adhan-short") }
-            if commands.contains("tests.cancel") { commandButton("phone_stop", command: "tests.cancel") }
+            mediaControls(state, kind: "radio", title: "radio_title", play: "radio.play", stop: "radio.stop")
+            mediaControls(state, kind: "adhan", title: "adhan_preview", play: "tests.adhan-short", stop: "tests.cancel")
         }
     }
 
-    private func commandButton(_ text: String, command id: String) -> some View {
-        Button(preferences.text(text)) { command(id, value: "") }
+    @ViewBuilder private func mediaControls(_ state: TVRemoteState, kind: String, title: String, play: String, stop: String) -> some View {
+        if state.commands.contains(play) || state.commands.contains(stop) {
+            Section(preferences.text(title)) {
+                if editable, let status = state.statusKey(for: kind) {
+                    Text(preferences.text(status)).foregroundStyle(.secondary)
+                }
+                HStack(spacing: 14) {
+                    if state.commands.contains(play) {
+                        commandButton("play", command: play, icon: "play.fill")
+                            .accessibilityLabel(preferences.text("play") + " · " + preferences.text(title))
+                    }
+                    if state.commands.contains(stop) {
+                        commandButton("stop", command: stop, icon: "stop.fill")
+                            .accessibilityLabel(preferences.text("stop") + " · " + preferences.text(title))
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+    }
+
+    private func commandButton(_ text: String, command id: String, icon: String) -> some View {
+        Button { command(id, value: "") } label: { Label(preferences.text(text), systemImage: icon) }
+            .disabled(!canSend(id))
+    }
+
+    private func canSend(_ id: String, value: String = "") -> Bool {
+        action == nil && scenePhase == .active
+            && remote?.permits(id, value: value, fresh: editable, allowed: TVProtocol.current.commands) == true
     }
 
     private func command(_ id: String, value: String) {
-        guard editable, action == nil, TVProtocol.current.commands.contains(id), value.utf8.count <= 2048 else { return }
+        guard canSend(id, value: value) else { return }
         if tv == nil {
             demoTV?.send(id, value: value)
             remote = demoTV?.remote
             return
         }
-        connect {
+        connect(failure: "remote_uncertain") {
             let result = try await $0.request("command", as: TVRemoteState.Result.self,
                 body: ["id": id, "value": value], credential: $1)
-            guard ["accepted", "busy", "unavailable", "uncertain"].contains(result.status) else {
-                throw TVConnectionError.unconfirmed
-            }
             try Task.checkCancellation()
-            if result.status == "uncertain" { self.status = "remote_uncertain"; self.editable = false }
-            else {
-                self.status = result.status == "accepted" ? "remote_accepted" : result.status
-                self.remote = try await $0.request("remote", as: TVRemoteState.self, credential: $1)
+            switch result.status {
+            case .uncertain:
+                self.status = "remote_uncertain"
+                self.editable = false
+            case .busy: self.status = "tv_busy"
+            case .unavailable: self.status = "unavailable"
+            case .accepted:
+                do {
+                    let state = try await $0.remote(credential: $1)
+                    try Task.checkCancellation()
+                    self.remote = state
+                    self.status = "remote_accepted"
+                    self.editable = true
+                } catch {
+                    if !Task.isCancelled {
+                        self.status = "remote_readback_failed"
+                        self.editable = false
+                    }
+                }
             }
         }
     }
-}
-
-struct TVRemoteState: Decodable {
-    struct Input: Decodable { let value: String; let label: String }
-    struct Media: Decodable { let state: String }
-    struct Result: Decodable { let status: String }
-    let commands: [String]
-    let inputs: [Input]
-    var media: Media?
-    var input: String?
 }
 
 struct TVSettingRow: View {

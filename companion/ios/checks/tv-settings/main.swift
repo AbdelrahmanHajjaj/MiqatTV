@@ -75,3 +75,20 @@ values["appearance.prayers"] = "none"
 layout = TVPreviewLayout(values: values, systemLanguage: nil)
 precondition(layout.countdown == .hidden && layout.prayerIndices.isEmpty)
 print("TV preview follows countdown placement, prayer selection, TV language and display settings.")
+
+let allowed = ["device.home", "device.inputs", "radio.play", "radio.stop", "tests.cancel"]
+let inventory = [TVRemoteState.Input(value: "HDMI_1", label: "HDMI 1")]
+let remote = TVRemoteState(commands: allowed, inputs: inventory, media: .init(kind: "radio", state: "loading"))
+precondition(remote.valid(allowed: allowed))
+precondition(remote.permits("device.inputs", value: "HDMI_1", fresh: true, allowed: allowed))
+precondition(!remote.permits("device.inputs", value: "unlisted", fresh: true, allowed: allowed))
+precondition(!remote.permits("device.home", value: "HDMI_1", fresh: true, allowed: allowed))
+precondition(!remote.permits("device.inputs", fresh: false, allowed: allowed))
+precondition(!remote.permits("radio.play", fresh: false, allowed: allowed))
+precondition(remote.permits("radio.stop", fresh: false, allowed: allowed))
+precondition(remote.permits("tests.cancel", fresh: false, allowed: allowed))
+precondition(!TVRemoteState.unavailable.permits("radio.stop", fresh: false, allowed: allowed))
+precondition(!TVRemoteState(commands: ["future.command"], inputs: [], media: nil).valid(allowed: allowed))
+precondition(!TVRemoteState(commands: allowed, inputs: inventory + inventory, media: nil).valid(allowed: allowed))
+precondition(remote.statusKey(for: "radio") == "loading_controls" && remote.statusKey(for: "adhan") == nil)
+print("TV Remote validates capabilities and inputs and keeps only offered Stop actions available after uncertainty.")

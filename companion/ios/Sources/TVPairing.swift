@@ -38,6 +38,16 @@ final class PairedTVs: ObservableObject {
         try TVKeychain.save(next)
         records = next
     }
+
+    func rename(_ id: String, to name: String) throws {
+        guard !inaccessible, let index = records.firstIndex(where: { $0.id == id && !$0.pending }) else {
+            throw TVConnectionError.credentialStorage
+        }
+        var next = records
+        next[index].name = name
+        try TVKeychain.save(next)
+        records = next
+    }
 }
 
 struct TVPairing: View {
