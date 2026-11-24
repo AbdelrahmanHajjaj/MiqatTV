@@ -86,9 +86,13 @@ final class PrayerSchedule {
             return .init(id: id, name: names.indices.contains(index) ? names[index] : id, colors: theme.colors)
         }
         let colors = appearance.themes[preferences.theme]?.colors ?? appearance.themes["mihrab"]?.colors ?? [:]
+        let scenes = appearance.backgrounds.filter { $0 != "plain" }.map { id in
+            WidgetSnapshot.Scene(id: id, name: PhoneAppearance.backgroundName(id, preferences: preferences))
+        }
         let snapshot = WidgetSnapshot(days: days, names: preferences.prayerNames(), arabic: preferences.arabic,
             eastern: preferences.digits == "eastern" || (preferences.digits == "auto" && preferences.arabic),
-            clock: preferences.clock, timezone: preferences.zone.identifier, colors: colors, palettes: palettes)
+            clock: preferences.clock, timezone: preferences.zone.identifier, colors: colors, palettes: palettes,
+            scenes: scenes, phoneScene: preferences.background)
         do {
             let data = try JSONEncoder().encode(snapshot)
             try data.write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])

@@ -189,7 +189,7 @@
         A10000000000000000000028 = {
             isa = PBXResourcesBuildPhase;
             buildActionMask = 2147483647;
-            files = ();
+            files = (A10000000000000000000032, );
             runOnlyForDeploymentPostprocessing = 0;
         };
         A10000000000000000000029 = {
@@ -209,6 +209,16 @@
             isa = PBXFileReference;
             lastKnownFileType = text.xcconfig;
             path = Widget.xcconfig;
+            sourceTree = SOURCE_ROOT;
+        };
+        A10000000000000000000032 = {
+            isa = PBXBuildFile;
+            fileRef = A10000000000000000000033;
+        };
+        A10000000000000000000033 = {
+            isa = PBXFileReference;
+            lastKnownFileType = folder;
+            path = ../../shared/design/assets/backgrounds;
             sourceTree = SOURCE_ROOT;
         };
     };

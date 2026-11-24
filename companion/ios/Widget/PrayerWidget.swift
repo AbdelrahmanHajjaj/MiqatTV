@@ -19,6 +19,7 @@ struct PrayerWidgetOptions: WidgetConfigurationIntent {
     @Parameter(title: "Gregorian date", default: false) var gregorian: Bool
     @Parameter(title: "Larger text", default: false) var large: Bool
     @Parameter(title: "Theme") var palette: PrayerWidgetPalette?
+    @Parameter(title: "Background scene") var scene: PrayerWidgetScene?
     @Parameter(title: "Background opacity (%)", default: 100, inclusiveRange: (0, 100)) var opacityPercent: Int
 }
 
@@ -94,8 +95,11 @@ struct PrayerWidgetView: View {
         .foregroundStyle(color("plaster-100", fallback: .white))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.layoutDirection, entry.snapshot?.arabic == true ? .rightToLeft : .leftToRight)
-        .containerBackground(for: .widget) { color("lapis-900", fallback: Color(red: 0.04, green: 0.18, blue: 0.20))
-            .opacity(WidgetSnapshot.opacity(percent: entry.options.opacityPercent)) }
+        .containerBackground(for: .widget) {
+            PrayerWidgetBackdrop(sceneID: entry.snapshot?.sceneID(for: entry.options.scene?.id),
+                ground: color("lapis-900", fallback: Color(red: 0.04, green: 0.18, blue: 0.20)),
+                opacity: WidgetSnapshot.opacity(percent: entry.options.opacityPercent))
+        }
         .widgetURL(URL(string: "miqat://prayer"))
     }
 

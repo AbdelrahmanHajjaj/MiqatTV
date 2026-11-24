@@ -2276,3 +2276,9 @@ selection and 0–100% background opacity. The host Swift syntax check passed
 and all 20 projected palettes had bilingual names and the needed widget
 colors. The Apple workflow includes a snapshot decoding and appearance check.
 Widget configuration and system rendering remain pending on Apple hardware.
+
+Widget scene selection can follow the phone background, use a plain surface
+or load an original Miqat scene. The host verified the widget resource phase
+resolves to all eight canonical JPEGs, their bilingual labels and the changed
+Swift syntax. The Apple build checks embedded JPEG bytes and the snapshot
+selection fixture. Widget scene rendering and memory behavior remain unverified.

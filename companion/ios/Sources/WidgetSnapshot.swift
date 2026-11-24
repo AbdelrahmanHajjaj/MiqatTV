@@ -20,6 +20,11 @@ struct WidgetSnapshot: Codable {
         let colors: [String: String]
     }
 
+    struct Scene: Codable {
+        let id: String
+        let name: String
+    }
+
     let days: [Day]
     let names: [String]
     let arabic: Bool
@@ -28,6 +33,8 @@ struct WidgetSnapshot: Codable {
     let timezone: String
     let colors: [String: String]
     var palettes: [Palette]?
+    var scenes: [Scene]?
+    var phoneScene: String?
 
     static func load() -> Self? {
         guard let url = file, let data = try? Data(contentsOf: url),
@@ -39,6 +46,12 @@ struct WidgetSnapshot: Codable {
     func colors(for id: String?) -> [String: String] {
         guard let id, let palette = palettes?.first(where: { $0.id == id }) else { return colors }
         return colors.merging(palette.colors) { _, selected in selected }
+    }
+
+    func sceneID(for choice: String?) -> String? {
+        let id = choice == "app" ? phoneScene : choice
+        guard let id, id != "plain", scenes?.contains(where: { $0.id == id }) == true else { return nil }
+        return id
     }
 
     static func opacity(percent: Int) -> Double {
