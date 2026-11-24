@@ -67,6 +67,10 @@ class DeliveryChecks(unittest.TestCase):
             self.assertEqual((resolved["tag"], resolved["source"], resolved["production"]),
                              (tag, sha, "v0.7.8"))
             self.assertEqual(json.loads(resolved["manifest"]), {"miqat.apk": [5, "a" * 64]})
+            summary = release.candidate_summary(repo, resolved)
+            self.assertIn(f"https://github.com/{repo}/releases/tag/{tag}", summary)
+            self.assertIn(f"https://github.com/{repo}/commit/{sha}", summary)
+            self.assertIn(f"https://github.com/{repo}/actions/runs/42", summary)
             for key, value in (("status", "in_progress"), ("conclusion", "failure"),
                                ("head_branch", "topic"), ("head_sha", "b" * 40),
                                ("path", ".github/workflows/validate.yml"), ("event", "pull_request"),

@@ -19,6 +19,10 @@ the promotion asset list. The Build fix uses one list for checksums and uploads.
 A local rehearsal with both sidecars present confirmed the five upload names,
 all four checksums and the clickable Staging tag in the Actions summary.
 
+Workflow lint and focused tests cover Validate's selected check summary and
+release candidate links. A read-only rehearsal resolved the published
+`v0.7.8-staging.1` tag and linked its exact commit and originating Build run.
+
 ## Stable v0.7.7 — 24 November 2026
 
 [PR #39](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/39) passed its required

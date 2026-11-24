@@ -1,4 +1,5 @@
 name: Device simulation
+run-name: Device simulation · ${{ inputs.staging_tag || 'Latest Staging' }}
 
 on:
   workflow_dispatch:
@@ -50,7 +51,7 @@ jobs:
           fi
 
   android:
-    name: ${{ matrix.device }}
+    name: ${{ matrix.device }} emulator (${{ matrix.profile }}) · ${{ needs.source.outputs.tag }}
     needs: source
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -120,7 +121,7 @@ jobs:
           retention-days: 7
 
   webos:
-    name: LG webOS browser simulation
+    name: LG webOS browser mock · ${{ needs.source.outputs.tag }}
     needs: source
     runs-on: ubuntu-24.04
     timeout-minutes: 20

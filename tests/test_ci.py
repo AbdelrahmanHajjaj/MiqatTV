@@ -35,14 +35,20 @@ class CiChecks(unittest.TestCase):
             event.write_text(json.dumps({"pull_request": {
                 "base": {"sha": base}, "head": {"sha": git("rev-parse", "HEAD")}}}))
             output = root / "output"
+            summary = root / "summary"
+            head = git("rev-parse", "HEAD")
             for trigger in ("pull_request", "push", "workflow_dispatch"):
                 output.write_text("")
                 subprocess.run([sys.executable, "-S", "-B", str(script), "select"], cwd=root,
                                env={**os.environ, "GITHUB_EVENT_PATH": str(event),
-                                    "GITHUB_EVENT_NAME": trigger, "GITHUB_OUTPUT": str(output)},
+                                    "GITHUB_EVENT_NAME": trigger, "GITHUB_OUTPUT": str(output),
+                                    "GITHUB_REPOSITORY": "owner/miqat", "GITHUB_SHA": head,
+                                    "GITHUB_STEP_SUMMARY": str(summary)},
                                check=True, capture_output=True)
                 self.assertEqual(dict(line.split("=") for line in output.read_text().splitlines()),
                                  {name: "true" for name in JOBS})
+            self.assertIn(f"https://github.com/owner/miqat/commit/{head}", summary.read_text())
+            self.assertIn("Core, Android TV, LG webOS, Website preview, Miqat Phone", summary.read_text())
             output.write_text("")
             subprocess.run([sys.executable, "-S", "-B", str(script), "select"], cwd=root,
                            env={**os.environ, "GITHUB_EVENT_PATH": str(event),

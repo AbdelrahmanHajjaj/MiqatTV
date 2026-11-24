@@ -9,6 +9,9 @@
 
 ## PR gate
 
+The Validate run title identifies the PR and branch. Its **Summary** links
+the checked commit and lists the selected platform checks.
+
 The `main` rules require a pull request, the GitHub Actions **Required checks**
 status, an up-to-date branch and resolved review conversations. Merge with a
 normal merge commit. There are no automatic builds or deployments on merge.
@@ -43,6 +46,11 @@ website separately from the packaged Staging source. See
 [Releasing](RELEASING.md) for asset names, signing and retries.
 
 ## Release evidence
+
+Device simulation and Production show the requested Staging tag in the run
+title. If the input is blank, the title says **Latest Staging** and the
+**Summary** links the exact release, source commit and originating Build run.
+Simulation job names identify their device or browser mock and Staging tag.
 
 Device simulation boots isolated Android emulators. It installs and launches
 the signed Staging APKs first, then runs native instrumentation on debug APKs

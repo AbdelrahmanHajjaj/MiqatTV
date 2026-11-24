@@ -98,8 +98,20 @@ def resolve(repository, tag):
         raise ValueError("Staging candidate must come from a successful Build run on main")
     return {
         "tag": tag, "source": source, "production": re.fullmatch(STAGING_TAG, tag)[1],
+        "build_run": build[1],
         "manifest": json.dumps(asset_manifest(candidate), separators=(",", ":")),
     }
+
+
+def candidate_summary(repository, candidate):
+    url = f"https://github.com/{repository}"
+    tag, source, build = (candidate[key] for key in ("tag", "source", "build_run"))
+    return (
+        "## Release candidate\n\n"
+        f"- Staging release [{tag}]({url}/releases/tag/{tag})\n"
+        f"- Source commit [{source[:12]}]({url}/commit/{source})\n"
+        f"- [Build run {build}]({url}/actions/runs/{build})\n"
+    )
 
 
 if __name__ == "__main__":
@@ -109,6 +121,9 @@ if __name__ == "__main__":
             result = {"tag": next_tag(f"repos/{repository}")}
         elif sys.argv[1] == "resolve":
             result = resolve(repository, os.environ.get("STAGING_TAG", ""))
+            if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
+                with Path(summary).open("a", encoding="utf-8") as output:
+                    output.write(candidate_summary(repository, result))
         else:
             raise ValueError("Expected next or resolve")
         with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:

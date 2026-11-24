@@ -5,7 +5,9 @@ from pathlib import Path
 import subprocess
 import sys
 
-JOBS = ("core", "android", "webos", "preview", "companion")
+CHECK_LABELS = {"core": "Core", "android": "Android TV", "webos": "LG webOS",
+                "preview": "Website preview", "companion": "Miqat Phone"}
+JOBS = tuple(CHECK_LABELS)
 
 
 def affected(paths):
@@ -72,6 +74,13 @@ if __name__ == "__main__":
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
             for name in JOBS:
                 print(name + "=" + str(name in selected).lower(), file=output)
+        if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
+            sha = os.environ["GITHUB_SHA"]
+            url = f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/commit/{sha}"
+            checks = ", ".join(CHECK_LABELS[name] for name in JOBS if name in selected)
+            with Path(summary).open("a", encoding="utf-8") as output:
+                print(f"## Validation target\n\nChecked commit [{sha[:12]}]({url})", file=output)
+                print(f"\n### Selected checks\n\n{checks or 'Selection and merge gate only'}", file=output)
         print("Selected checks:", ", ".join(sorted(selected)) or "documentation only")
     elif sys.argv[1] == "require":
         require_jobs(json.loads(os.environ["RESULTS"]))
