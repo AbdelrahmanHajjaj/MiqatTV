@@ -15,17 +15,7 @@ final class LGSSH: LGInstallation.Transport, @unchecked Sendable {
 
     static func privateAddress(_ text: String) -> String? {
         let host = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let parts = host.split(separator: ".", omittingEmptySubsequences: false)
-        guard parts.count == 4 else { return nil }
-        let address = parts.compactMap { part -> UInt8? in
-            guard (1...3).contains(part.utf8.count), part.utf8.allSatisfy({ (48...57).contains($0) }),
-                  part.count == 1 || part.first != "0" else { return nil }
-            return UInt8(part)
-        }
-        guard address.count == 4,
-              address[0] == 10 || (address[0] == 172 && (16...31).contains(address[1]))
-                  || (address[0] == 192 && address[1] == 168) else { return nil }
-        return host
+        return TVEndpoint.isPrivateIPv4(host) ? host : nil
     }
 
     static func open(host: String, expectedKey: Data?) async throws -> LGSSH {

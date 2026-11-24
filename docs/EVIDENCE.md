@@ -2344,3 +2344,10 @@ tests for legacy checksums, modern framing, oversized and malformed
 frames, authorization order, wireless negotiation detection, cross-stream
 replies and acknowledgement-gated writes. The iOS socket, RSA identity and
 live ADB installation remain pending. The test used only synthetic messages.
+
+The Swift classic ADB adapter now uses Network.framework and a device-only
+RSA Keychain key under a service tag separate from other TV credentials.
+The JVM suite passed all 33 tests. Two additions compare wire public keys
+against JVM big-integer arithmetic and reject malformed DER. Windows parsed
+the four touched Swift files. iOS Keychain generation, signature use, direct
+ADB authorization, install/recovery and wireless TLS remain unverified.

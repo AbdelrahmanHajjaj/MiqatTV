@@ -27,6 +27,10 @@ struct TVEndpoint: Codable, Equatable {
               parts.user == nil, parts.password == nil, parts.query == nil, parts.fragment == nil,
               parts.percentEncodedPath.isEmpty, url.absoluteString == "https://\(host):\(config.port)",
               pin.range(of: "^[0-9a-f]{64}$", options: .regularExpression) != nil else { return false }
+        return Self.isPrivateIPv4(host)
+    }
+
+    static func isPrivateIPv4(_ host: String) -> Bool {
         let octets = host.split(separator: ".", omittingEmptySubsequences: false).compactMap { part -> UInt8? in
             guard let value = UInt8(part), String(value) == part else { return nil }
             return value
