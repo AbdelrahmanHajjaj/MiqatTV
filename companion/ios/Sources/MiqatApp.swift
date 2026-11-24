@@ -223,6 +223,7 @@ struct PrayerHome: View {
     @StateObject private var location = PhoneLocation()
     @State private var showPlayback = false
     @State private var showRadio = false
+    @State private var editingPrayer: Int?
 
     private var ground: Color { PhoneAppearance.color("lapis-900", preferences: preferences) }
     private var ink: Color { PhoneAppearance.color("plaster-100", preferences: preferences) }
@@ -233,6 +234,8 @@ struct PrayerHome: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let day = schedule.current(at: context.date, prefs: preferences)
             let next = day.next(at: context.date)
+            let nextDate = next.map { Date(timeIntervalSince1970: $0.nextTime / 1000) }
+            let tomorrow = nextDate.map { PrayerSchedule.civilCalendar(preferences).startOfDay(for: $0) > day.start } ?? false
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     if let resumeSetup, !preferences.setupFinished {
@@ -269,11 +272,11 @@ struct PrayerHome: View {
                             Label(event, systemImage: "calendar.badge.clock").font(.subheadline)
                         }
                     }
-                    if let next, preferences.prayerNames().indices.contains(Int(next.next)) {
-                        let nextDate = Date(timeIntervalSince1970: next.nextTime / 1000)
+                    if let next, let nextDate, preferences.prayerNames().indices.contains(Int(next.next)) {
                         HStack {
                             VStack(alignment: .leading) {
-                                Text(preferences.text("phone_next")).font(.subheadline)
+                                Text(preferences.text("phone_next") + (tomorrow ? " · " + preferences.text("phone_tomorrow") : ""))
+                                    .font(.subheadline)
                                 Text(preferences.prayerNames()[Int(next.next)]).font(.title2.bold())
                                     .foregroundStyle(accent)
                                 Text(preferences.time(nextDate))
@@ -288,11 +291,10 @@ struct PrayerHome: View {
                         .padding()
                         .background(PhoneAppearance.color("lapis-800", preferences: preferences), in: .rect(cornerRadius: 16))
                     }
-                    if var times = day.today {
-                        if let next, next.next == 0, let fajr = day.tomorrow?.first, times[0] <= context.date {
-                            times[0] = fajr
-                        }
-                        PrayerTimesList(preferences: preferences, times: times, next: next.map { Int($0.next) })
+                    if let times = day.today {
+                        PrayerTimesList(preferences: preferences, times: times,
+                                        next: tomorrow ? nil : next.map { Int($0.next) },
+                                        edit: preview ? nil : { editingPrayer = $0 })
                     } else {
                         Text(preferences.text("phone_unavailable")).foregroundStyle(.secondary)
                     }
@@ -329,6 +331,9 @@ struct PrayerHome: View {
             .background { PhoneBackdrop(ground: ground, scene: scene, shade: 0.82).ignoresSafeArea() }
         }
         .navigationTitle(preferences.text(preview ? "appearancePreview" : "phone_home"))
+        .navigationDestination(item: $editingPrayer) { index in
+            PrayerAlertSettings(preferences: $preferences, schedule: schedule, index: index)
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(ground, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -414,22 +419,19 @@ struct PrayerTimesList: View {
     let preferences: PhonePreferences
     let times: [Date]
     var next: Int?
+    var edit: ((Int) -> Void)?
     private let icons = ["sunrise", "sun.horizon", "sun.max", "sun.min", "sunset", "moon.stars"]
 
     var body: some View {
         let names = preferences.prayerNames()
         VStack(spacing: 0) {
             ForEach(times.indices, id: \.self) { index in
-                HStack {
-                    Label(names[index], systemImage: icons[index])
-                    Spacer()
-                    Text(preferences.time(times[index])).monospacedDigit()
+                if let edit, index != 1 {
+                    Button { edit(index) } label: { row(index, name: names[index], navigates: true) }
+                        .buttonStyle(.plain)
+                } else {
+                    row(index, name: names[index], navigates: false)
                 }
-                .fontWeight(index == next ? .semibold : .regular)
-                .foregroundStyle(PhoneAppearance.color(index == next ? "gold-400" : "plaster-100",
-                                                        preferences: preferences))
-                .padding(12)
-                .background(index == next ? PhoneAppearance.color("lapis-700", preferences: preferences) : .clear)
                 if index < times.count - 1 { Divider() }
             }
         }
@@ -440,6 +442,22 @@ struct PrayerTimesList: View {
                 .strokeBorder(PhoneAppearance.color("mist-400", preferences: preferences).opacity(0.2))
                 .allowsHitTesting(false)
         }
+    }
+
+    private func row(_ index: Int, name: String, navigates: Bool) -> some View {
+        HStack {
+            Label(name, systemImage: icons[index])
+            Spacer()
+            Text(preferences.time(times[index])).monospacedDigit()
+            if navigates {
+                Image(systemName: "chevron.forward").font(.caption).accessibilityHidden(true)
+            }
+        }
+        .fontWeight(index == next ? .semibold : .regular)
+        .foregroundStyle(PhoneAppearance.color(index == next ? "gold-400" : "plaster-100", preferences: preferences))
+        .padding(12)
+        .contentShape(Rectangle())
+        .background(index == next ? PhoneAppearance.color("lapis-700", preferences: preferences) : .clear)
     }
 }
 

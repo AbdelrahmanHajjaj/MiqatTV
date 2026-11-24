@@ -2321,6 +2321,11 @@ and handles missing or repeated clock times. Five calendar vectors matched
 Android's Java time arithmetic. Actionlint, Swift syntax and the Kotlin fasting
 rules test passed on Windows. The Apple calendar fixture remains pending.
 
+The iPhone Home timetable continues showing today's times after Isha and
+labels the next Fajr as tomorrow. The five prayer rows open the existing alert
+editors. Swift syntax and all 14 generator checks passed. Rollover and row
+navigation still need native acceptance.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

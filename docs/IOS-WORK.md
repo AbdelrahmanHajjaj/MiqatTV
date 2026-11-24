@@ -13,7 +13,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | --- | --- | --- |
 | 1 | Apple application, Kotlin framework, canonical bundles and unsigned build | The Xcode 16.3 workflow checks independent arm64 Simulator and iPhone builds and archives the Simulator app. Windows verified workflow parsing, Kotlin task registration, resource staging and the generated icon. Apple builds and launch pending. |
 | 2 | Welcome, skip/resume, permission and confirmation, offline country/city search, fresh fix, manual coordinates and timezone, background location consent/travel refresh | Home resumes an unfinished setup. Location confirmation and continuation are saved independently, and continuing enables prayer alerts only with user and system consent. Location mode changes retire the old request. Run the first-use regression below and check Always permission, significant-change delivery and manual edits during travel refresh. |
-| 3 | Prayer Home, greeting and exact verse, Hijri/Gregorian date, next prayer, countdown seconds and six times, next-Fajr rollover, calculated city, method/school/high-latitude rule and offsets | Coded. 570 minute-for-minute Android comparisons passed across five cities, all presets, both Asr schools and three high-latitude rules. Offset and polar fixtures passed. Native UI pending. |
+| 3 | Prayer Home, greeting and exact verse, Hijri/Gregorian date, next prayer, countdown seconds and six times, next-Fajr rollover, calculated city, method/school/high-latitude rule and offsets | 570 minute-for-minute Android comparisons passed. After Isha, the countdown labels tomorrow's prayer and today's timetable stays intact. Home opens alert settings from the five prayer rows. Native rollover, offsets, polar display and row navigation remain open. |
 | 4 | Hijri month/day navigation, swipes and timetable, Hijri adjustment, current/upcoming and all recurring events | Month browsing keeps the prayer day selected, events can select their day, and civil navigation is limited to 366 days in either direction. The Apple fixture covers Umm al-Qura month/year boundaries and DST with an offset. Verify the fixture and both Arabic and English UI journeys on Apple. |
 | 5 | English/Arabic and RTL, digits, 12/24-hour clocks, type scale, palettes, backgrounds, full-page previews, Home artwork and reduce motion | Setup and settings share visual palette and scene choices, and the full-page preview is read-only. Prayer Home and Adhan use the selected artwork and palette. Verify both locales, artwork visibility, reduced motion and scale extremes on iOS. |
 | 6 | Prayer alerts, enablement, mode, timing previews, weekday inclusion/overrides, quiet hours, before/after, explicit tests, permission and recovery | The planner keeps matching absolute-time requests and can replenish the queue in offline Background App Refresh. Weekday overrides follow the prayer's local date and quiet hours follow the reminder's delivery time, including across midnight. Run the Apple notification fixture, permission regression, timezone-change, delivery and background expiration checks. |
@@ -62,6 +62,10 @@ new Android releases to this pinned baseline before expanding the queue.
    that detection returns. Start a fix, immediately choose a manual city, and
    verify a late fix cannot replace it. On Home, a failed refresh should preserve
    the previously confirmed location. Reopen Qibla and verify it gets a new fix.
+6. With a confirmed location after Isha, verify Home labels the next Fajr
+   Tomorrow and keeps today's Fajr in the timetable. At local midnight verify
+   the date and timetable advance. Open each prayer row to its alert editor.
+   Sunrise, Hijri timetable rows and the appearance preview stay read-only.
 
 ## Alert permission regression on iPhone
 
