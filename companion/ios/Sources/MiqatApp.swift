@@ -380,7 +380,8 @@ struct PrayerHome: View {
                 } label: { Label(title, systemImage: "location") }
             }
             if location.failed {
-                Text(preferences.text("phone_location_timeout")).foregroundStyle(.secondary)
+                Text(preferences.text(location.permissionBlocked ? "phone_location_denied" : "phone_location_timeout"))
+                    .foregroundStyle(.secondary)
             }
         }
     }

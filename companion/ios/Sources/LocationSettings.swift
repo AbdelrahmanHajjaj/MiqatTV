@@ -25,6 +25,7 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
     private var compass = false
 
     var canLocate: Bool { [.authorizedAlways, .authorizedWhenInUse].contains(authorizationStatus) }
+    var permissionBlocked: Bool { [.denied, .restricted].contains(authorizationStatus) }
 
     init(compass: Bool = false) {
         self.compass = compass
@@ -40,8 +41,6 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
         configureManager()
         pending = true
         failed = false
-        fix = nil
-        heading = nil
         if manager.authorizationStatus == .notDetermined {
             manager.requestWhenInUseAuthorization()
         } else {
@@ -56,17 +55,18 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
         manager.stopUpdatingHeading()
         pending = false
         requested = false
+        fix = nil
+        heading = nil
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         guard manager === self.manager else { return }
+        if authorizationStatus != manager.authorizationStatus { failed = false }
         authorizationStatus = manager.authorizationStatus
         if pending { startIfAuthorized() }
         else if compass && requested &&
                     (manager.accuracyAuthorization != .fullAccuracy ||
                      ![.authorizedAlways, .authorizedWhenInUse].contains(manager.authorizationStatus)) {
-            fix = nil
-            heading = nil
             fail()
         }
     }
@@ -151,6 +151,11 @@ struct LocationSettings: View {
                 if location.pending {
                     ProgressView(preferences.text("phone_location_working"))
                     Button(preferences.text("phone_location_cancel")) { location.cancel() }
+                } else if location.permissionBlocked {
+                    Text(preferences.text("phone_location_denied")).foregroundStyle(.secondary)
+                    if !preferences.automaticLocation {
+                        Button(preferences.text("phone_location_settings"), action: openLocationSettings)
+                    }
                 } else {
                     Button {
                         location.find()
@@ -158,7 +163,9 @@ struct LocationSettings: View {
                         Label(preferences.text("phone_location_title"), systemImage: "location")
                     }
                 }
-                if location.failed { Text(preferences.text("phone_location_timeout")).foregroundStyle(.secondary) }
+                if location.failed && !location.permissionBlocked {
+                    Text(preferences.text("phone_location_timeout")).foregroundStyle(.secondary)
+                }
                 Button(preferences.text("phone_custom_location")) {
                     location.cancel()
                     showCoordinates = true
@@ -187,9 +194,7 @@ struct LocationSettings: View {
                 ))
                 .disabled(!preferences.locationConfirmed)
                 if preferences.automaticLocation && location.authorizationStatus != .authorizedAlways {
-                    Button(preferences.text("phone_location_settings")) {
-                        if let settings = URL(string: UIApplication.openSettingsURLString) { openURL(settings) }
-                    }
+                    Button(preferences.text("phone_location_settings"), action: openLocationSettings)
                 }
             }
             Section {
@@ -245,6 +250,9 @@ struct LocationSettings: View {
         .onDisappear { location.cancel() }
     }
 
+    private func openLocationSettings() {
+        if let settings = URL(string: UIApplication.openSettingsURLString) { openURL(settings) }
+    }
 }
 
 struct CityPicker: View {

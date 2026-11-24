@@ -92,7 +92,7 @@
   "phone_location_working":{"en":"Finding your location…","ar":"جارٍ تحديد موقعك…"},
   "phone_location_cancel":{"en":"Cancel location detection","ar":"إلغاء تحديد الموقع"},
   "phone_location_cancelled":{"en":"Location detection stopped.","ar":"توقف تحديد الموقع."},
-  "phone_location_denied":{"en":"Location access is off. Allow it in Android app settings or choose your city.","ar":"الوصول إلى الموقع متوقف. اسمح به في إعدادات التطبيق أو اختر مدينتك."},
+  "phone_location_denied":{"en":"Location access is off. Allow it in app settings or choose your city.","ar":"الوصول إلى الموقع متوقف. اسمح به في إعدادات التطبيق أو اختر مدينتك."},
   "phone_location_disabled":{"en":"Turn on Android location services, or choose your city.","ar":"شغّل خدمات الموقع في Android أو اختر مدينتك."},
   "phone_location_timeout":{"en":"A fresh location was not available. Try again with a clearer signal or choose a city.","ar":"تعذّر الحصول على موقع حديث. حاول مجددًا مع إشارة أفضل أو اختر مدينة."},
   "phone_location_settings":{"en":"Open location settings","ar":"فتح إعدادات الموقع"},

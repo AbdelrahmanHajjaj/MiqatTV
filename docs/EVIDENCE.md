@@ -2267,6 +2267,11 @@ digits and rejects partial or non-finite values. The companion JVM suite passed
 its parser regression. The Swift editor parsed and all 14 generator checks
 passed. Native apply/cancel and fixed-timezone acceptance remain open.
 
+iPhone location denial now uses shared bilingual copy and links to app settings.
+Cancelling discards pending location state so a manual city stays authoritative.
+Swift syntax, iOS resource staging and Android companion generation passed.
+Permission recovery, cancellation and Qibla reacquisition await the native run.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

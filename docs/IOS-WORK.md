@@ -57,6 +57,11 @@ new Android releases to this pinned baseline before expanding the queue.
    Reopen, verify Apply is disabled for `30abc`, then apply the valid values.
    Confirm the location again and compare the offline Cairo timetable and civil
    date with Android at the same instant.
+5. After denying location, verify the location editor reports the denial and
+   offers app settings and manual city selection. Re-enable access and check
+   that detection returns. Start a fix, immediately choose a manual city, and
+   verify a late fix cannot replace it. On Home, a failed refresh should preserve
+   the previously confirmed location. Reopen Qibla and verify it gets a new fix.
 
 ## Platform differences to verify
 
