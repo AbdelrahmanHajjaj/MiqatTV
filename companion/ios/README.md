@@ -36,8 +36,15 @@ before offering the package to share or save to Files. Use the existing
 to install the package on a TV.
 
 **Choose a local package** accepts an Android TV APK or an LG IPK from Files.
-Miqat checks the package identifier and version before sharing it. The TV
-installer is responsible for validating signing and compatibility.
+Miqat checks the package identifier and version before sharing it.
+
+For direct LG installation, open **Your TVs → Install Miqat on LG webOS**.
+Enable Developer Mode and Key Server on the TV. Enter the TV's address and
+passphrase, then confirm its SSH fingerprint. Choose a public build or a local
+IPK and compare its version with the one on the TV before installing. The app
+verifies the installed version and offers to launch Miqat and pair the phone.
+You can remember the passphrase on this iPhone and forget the installation
+identity from the same screen.
 
 In **Your TVs → Find Android TV**, start a search to see the local addresses
 and ports advertised by Android TV for network debugging and wireless pairing.

@@ -57,7 +57,7 @@ struct DownloadCheck {
         let verified = try await TVPackageDownload.stage(stream(bytes), release: release, digest: digest) { _ in }
         defer { verified.discard() }
         let onDisk = try Data(contentsOf: verified.url)
-        precondition(onDisk == bytes && verified.url.lastPathComponent == "miqat.apk")
+        precondition(onDisk == bytes && verified.url.lastPathComponent == "miqat.apk" && verified.version == nil)
         for invalid in [bytes.dropLast(), bytes + Data([0]), Data(repeating: 0, count: 1024)] {
             let rejected = try? await TVPackageDownload.stage(stream(invalid), release: release, digest: digest) { _ in }
             precondition(rejected == nil)
@@ -78,7 +78,7 @@ struct DownloadCheck {
             defer { ready.discard() }
             let expected = try Data(contentsOf: original)
             let imported = try Data(contentsOf: ready.url)
-            precondition(ready.tag == version && ready.url != original && imported == expected)
+            precondition(ready.tag == version && ready.version == version && ready.url != original && imported == expected)
         }
         for url in try FileManager.default.contentsOfDirectory(at: fixture, includingPropertiesForKeys: nil)
             where valid[url.lastPathComponent] == nil {

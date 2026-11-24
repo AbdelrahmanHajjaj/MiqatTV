@@ -9,6 +9,14 @@ enum TVPackageDownload {
     struct Package: Sendable {
         let url: URL
         let tag: String
+        let version: String?
+
+        init(url: URL, tag: String, version: String? = nil) {
+            self.url = url
+            self.tag = tag
+            self.version = version
+        }
+
         func discard() { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
     }
 
@@ -33,7 +41,9 @@ enum TVPackageDownload {
         let bytes = try await source(release.url, session: client, limit: release.size)
         let ready = try await stage(bytes, release: release, digest: digest, report: report)
         do {
-            if platform == .lg { _ = try LgPackage.version(of: ready.url) }
+            if platform == .lg {
+                return Package(url: ready.url, tag: ready.tag, version: try LgPackage.version(of: ready.url))
+            }
             return ready
         } catch {
             ready.discard()
@@ -76,7 +86,7 @@ enum TVPackageDownload {
                 version = try AndroidTVPackage.version(of: output)
             }
             try Task.checkCancellation()
-            return Package(url: output, tag: version)
+            return Package(url: output, tag: version, version: version)
         } catch {
             staged.discard()
             throw error

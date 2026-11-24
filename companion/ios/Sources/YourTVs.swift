@@ -14,6 +14,7 @@ struct YourTVs: View {
                 NavigationLink(preferences.text("pair")) { TVPairing(preferences: preferences) }
                 NavigationLink(preferences.text("tv_public_download")) { TVPackageView(preferences: preferences) }
                 NavigationLink(preferences.text("tv_find_search")) { TVSetupDiscoveryView(preferences: preferences) }
+                NavigationLink(preferences.text("lg_intro")) { TVPackageView(preferences: preferences, setupLG: true) }
                 Toggle(preferences.text("demo"), isOn: $demo)
             }
             Section {

@@ -2328,3 +2328,12 @@ files and ATS property list, and checked both shell scripts with `sh -n`.
 The Apple workflow prepares ARM64 simulator libraries before Xcode links them.
 Native compilation, SSH negotiation, Key Server behavior and a TV run remain
 unverified. The setup screen and separate credentials still need integration.
+
+The LG screen now routes Developer Mode approval, foreground connection, IPK
+selection, installation, launch and companion pairing. The host parsed the
+six changed Swift files, passed the 14 companion generator tests, staged the
+33 bilingual LG labels and checked that installation and remote pairing use
+distinct Keychain services. Apple validation must exercise first-use approval,
+changed or declined host keys, remembered and cleared credentials, closing
+the screen with a transfer active, install verification and pairing handoff.
+The Windows checks did not run the app or contact a TV.
