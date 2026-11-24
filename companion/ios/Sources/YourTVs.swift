@@ -60,12 +60,14 @@ struct TVControl: Decodable, Identifiable {
     }
 
     var supported: Bool {
-        available && ["toggle", "choice", "number", "list"].contains(kind)
+        available && (["toggle", "choice", "number", "list"].contains(kind)
+            || (kind == "text" && id == "appearance.custom-theme"))
             && (canonical != nil || id.range(of: "^remote\\.key-[0-9]{1,5}$", options: .regularExpression) != nil && kind == "choice")
             && (kind != "number" || canonical?.range != nil)
     }
 
     var limit: Int { min(9, max(1, canonical?.maximum ?? 9)) }
+    var textLimit: Int { min(8192, max(0, canonical?.maximum ?? 0)) }
 }
 
 struct TVSettingsState: Decodable {
@@ -77,6 +79,8 @@ struct TVSettingsState: Decodable {
 struct TVProfileCatalog: Decodable {
     let profiles: [String: [TVControl]]
     let sections: [String: Localized<String>]
+    let themeKeys: [String]
+    let themeSurfaces: [String]
     static let data: Self = PhoneData.load("tv-profiles")
 
     func preview(_ profile: String) -> TVSettingsState {
@@ -98,6 +102,17 @@ struct TVDetails: View {
     @State private var action: Task<Void, Never>?
     @State private var status: String?
     @State private var editable = false
+    @State private var themeEdit: ThemeEdit?
+    @State private var unsavedTheme: String?
+
+    private struct ThemeEdit: Identifiable {
+        let id = UUID()
+        let baseline: [String: String]
+        let title: String
+        let backgrounds: [String]
+        let maximum: Int
+        let draft: TVThemeDraft
+    }
 
     var body: some View {
         Form {
@@ -115,9 +130,16 @@ struct TVDetails: View {
                 ForEach(sections.keys.sorted(), id: \.self) { section in
                     Section(TVProfileCatalog.data.sections[section]?.value(preferences.arabic)
                         ?? preferences.text("settings")) {
+                        if section == "appearance" {
+                            appearancePreview(snapshot.values)
+                        }
                         ForEach(sections[section] ?? []) { control in
-                            TVSettingRow(preferences: preferences, control: control,
-                                         value: snapshot.values[control.id] ?? "", save: { set(control.id, $0) })
+                            if control.id == "appearance.custom-theme" {
+                                Button(control.title.value(preferences.arabic)) { editTheme(snapshot) }
+                            } else {
+                                TVSettingRow(preferences: preferences, control: control,
+                                             value: snapshot.values[control.id] ?? "", save: { set(control.id, $0) })
+                            }
                         }
                     }
                     .disabled(!editable || action != nil)
@@ -128,6 +150,14 @@ struct TVDetails: View {
             }
         }
         .navigationTitle(tv?.name ?? (profile == "lg" ? "LG webOS" : "Android / Google TV"))
+        .sheet(item: $themeEdit) { edit in
+            TVThemeEditor(preferences: preferences, title: edit.title,
+                backgrounds: edit.backgrounds, maximum: edit.maximum, editable: editable && action == nil,
+                save: { changes in
+                    unsavedTheme = changes["appearance.custom-theme"]
+                    apply(changes, expected: edit.baseline)
+                }, draft: edit.draft)
+        }
         .toolbar {
             Button { load() } label: {
                 Image(systemName: "arrow.clockwise").accessibilityLabel(preferences.text("refresh"))
@@ -177,15 +207,31 @@ struct TVDetails: View {
     }
 
     private func set(_ id: String, _ value: String) {
-        guard action == nil, editable, var snapshot, snapshot.values[id] != value else { return }
+        guard action == nil, editable, let snapshot, snapshot.values[id] != value else { return }
+        if id == "appearance.theme", value == "custom",
+           snapshot.values["appearance.custom-theme"]?.isEmpty != false {
+            editTheme(snapshot)
+            return
+        }
+        apply([id: value], expected: snapshot.values)
+    }
+
+    private func apply(_ changes: [String: String], expected: [String: String]) {
+        guard action == nil, editable, var snapshot else { return }
+        let customTheme = changes["appearance.custom-theme"] != nil
+        guard changes.contains(where: { snapshot.values[$0.key] != $0.value }) else {
+            if customTheme { unsavedTheme = nil }
+            return
+        }
         if tv == nil {
-            snapshot.values[id] = value
+            snapshot.values.merge(changes) { _, new in new }
             self.snapshot = snapshot
+            if customTheme { unsavedTheme = nil }
             return
         }
         connect {
             let result = try await $0.request("settings", as: TVSettingsState.self,
-                body: ["expected": snapshot.values, "changes": [id: value]], credential: $1)
+                body: ["expected": expected, "changes": changes], credential: $1)
             guard let resultStatus = result.status, ["saved", "conflict", "busy", "uncertain"].contains(resultStatus) else {
                 throw TVConnectionError.unconfirmed
             }
@@ -193,7 +239,51 @@ struct TVDetails: View {
             self.snapshot = result
             self.status = resultStatus == "saved" ? nil : resultStatus == "uncertain" ? "stale" : resultStatus
             self.editable = resultStatus != "uncertain"
+            if customTheme && resultStatus == "saved" { unsavedTheme = nil }
         }
+    }
+
+    private func editTheme(_ snapshot: TVSettingsState) {
+        let values = snapshot.values
+        guard editable, action == nil,
+              let control = snapshot.controls.first(where: { $0.id == "appearance.custom-theme" && $0.supported }),
+              let value = unsavedTheme ?? values[control.id], var draft = TVThemeDraft.read(value) else {
+            status = "invalid"
+            return
+        }
+        let keys = TVProfileCatalog.data.themeKeys
+        let backgrounds = snapshot.controls.first(where: { $0.id == "appearance.background" })?.options.map(\.value) ?? []
+        guard draft.changes(keys: keys, backgrounds: backgrounds, surfaces: TVProfileCatalog.data.themeSurfaces,
+                            maximum: control.textLimit) != nil else {
+            status = "invalid"
+            return
+        }
+        let colors = themeColors(values)
+        draft.colors = Dictionary(uniqueKeysWithValues: keys.compactMap { key in
+            (draft.colors?[key] ?? colors[key]).map { (key, $0) }
+        })
+        themeEdit = ThemeEdit(baseline: values, title: control.title.value(preferences.arabic),
+                              backgrounds: backgrounds, maximum: control.textLimit, draft: draft)
+    }
+
+    private func themeColors(_ values: [String: String]) -> [String: String] {
+        let themes = PhoneAppearance.catalog.themes
+        let id = values["appearance.theme"] ?? "mihrab"
+        let base = themes["mihrab"]?.colors ?? [:]
+        if id == "custom", let draft = TVThemeDraft.read(values["appearance.custom-theme"] ?? "") {
+            return base.merging(draft.colors ?? [:]) { _, custom in custom }
+        }
+        return base.merging(themes[id]?.colors ?? [:]) { _, selected in selected }
+    }
+
+    private func appearancePreview(_ values: [String: String]) -> some View {
+        let id = values["appearance.theme"] ?? "mihrab"
+        let theme = PhoneAppearance.catalog.themes[id]
+        let custom = id == "custom" ? TVThemeDraft.read(values["appearance.custom-theme"] ?? "") : nil
+        let background = values["appearance.background"]
+        return TVAppearancePreview(preferences: preferences, colors: themeColors(values),
+            background: background == "theme" || background == nil ? custom?.background ?? theme?.background : background,
+            lighting: values["appearance.lighting"].flatMap { Int($0) } ?? custom?.lighting ?? theme?.lighting)
     }
 
     private func connect(_ operation: @escaping (TVConnection, String) async throws -> Void) {

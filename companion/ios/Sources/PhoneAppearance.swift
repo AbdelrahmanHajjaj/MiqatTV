@@ -1,7 +1,12 @@
 import SwiftUI
 
 struct PhoneAppearance: Decodable {
-    struct Theme: Decodable { let colors: [String: String] }
+    struct Theme: Decodable {
+        let colors: [String: String]
+        let background: String?
+        let lighting: Int?
+        let surface: String?
+    }
 
     let themes: [String: Theme]
     let backgrounds: [String]
@@ -10,7 +15,12 @@ struct PhoneAppearance: Decodable {
 
     static func color(_ role: String, preferences: PhonePreferences) -> Color {
         let theme = catalog.themes[preferences.theme] ?? catalog.themes["mihrab"]
-        let value = theme?.colors[role].flatMap { UInt32($0.dropFirst(), radix: 16) } ?? 0
+        return color(theme?.colors[role]) ?? .black
+    }
+
+    static func color(_ hex: String?) -> Color? {
+        guard let hex, hex.hasPrefix("#"), hex.count == 7,
+              let value = UInt32(hex.dropFirst(), radix: 16) else { return nil }
         return Color(red: Double((value >> 16) & 255) / 255,
                      green: Double((value >> 8) & 255) / 255,
                      blue: Double(value & 255) / 255)

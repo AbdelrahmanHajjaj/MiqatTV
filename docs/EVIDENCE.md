@@ -2245,3 +2245,9 @@ Host-side staging verified all 13 approved recordings against shared hashes.
 All Swift app/widget sources parsed in the host syntax check. The Xcode project
 references, scheme XML, Info plists and App Group entitlement parsed as well.
 These checks did not compile SwiftUI, link the Apple framework or launch the app.
+
+The iPhone TV appearance editor now reads canonical palette and surface
+metadata. Its settings write sets the custom theme value and selection together
+with the baseline captured on editor entry. Host checks passed for staging both
+TV profiles and their scene assets and parsing the edited Swift. A focused
+Swift payload check is wired into the Apple build and awaits that runner.

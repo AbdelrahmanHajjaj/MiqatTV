@@ -17,16 +17,16 @@ for (const name of [
   copyFileSync(join(root, 'shared/data', name + '.json'), join(destination, name + '.json'));
 }
 copyFileSync(join(root, 'companion/strings.json'), join(destination, 'phone-strings.json'));
-const { themes, profiles, commands, sections } = generate();
+const { themes, profiles, sections, themeKeys, themeSurfaces } = generate();
 const { backgrounds, voices } = generatePhone();
 const themeOrder = JSON.parse(readFileSync(join(root, 'shared/design/themes.json'), 'utf8'));
 writeFileSync(join(destination, 'phone-appearance.json'), JSON.stringify({
   themes, backgrounds, themeOrder: themeOrder.filter(id => id in themes),
 }));
-writeFileSync(join(destination, 'tv-profiles.json'), JSON.stringify({ profiles, sections }));
+writeFileSync(join(destination, 'tv-profiles.json'), JSON.stringify({ profiles, sections, themeKeys, themeSurfaces }));
 copyFileSync(join(root, 'companion/protocol/lan.json'), join(destination, 'lan.json'));
 copyFileSync(join(root, 'companion/qr.js'), join(destination, 'PairingQr.js'));
-for (const id of backgrounds.filter(id => id !== 'plain' && id !== 'miqat_signature')) {
+for (const id of backgrounds.filter(id => id !== 'plain')) {
   copyFileSync(join(root, 'shared/design/assets/backgrounds', id + '.jpg'), join(destination, id + '.jpg'));
 }
 copyFileSync(join(root, 'shared/design/phone/portrait/miqat_signature.png'), join(destination, 'miqat_signature.png'));
