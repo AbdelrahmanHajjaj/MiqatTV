@@ -69,6 +69,22 @@ test('companion copy is bilingual and compact/mihrab positions remain independen
   assert.deepEqual([...manifest.matchAll(/<uses-permission android:name="([^"]+)"/g)].map(x=>x[1]),['INTERNET','CAMERA','ACCESS_COARSE_LOCATION','ACCESS_FINE_LOCATION','ACCESS_BACKGROUND_LOCATION','POST_NOTIFICATIONS','SCHEDULE_EXACT_ALARM','USE_EXACT_ALARM','RECEIVE_BOOT_COMPLETED','FOREGROUND_SERVICE','FOREGROUND_SERVICE_MEDIA_PLAYBACK','WAKE_LOCK','MODIFY_AUDIO_SETTINGS','USE_FULL_SCREEN_INTENT','VIBRATE'].map(x=>'android.permission.'+x));
 });
 
+test('iPhone discovers the same declared Android TV setup services as Android', () => {
+  const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
+  const quotedServices = source => [...source.matchAll(/"(_adb[^"]*\._tcp)"/g)].map(match => match[1]).sort();
+  const android = read('../installer/src/main/java/tv/miqat/installer/Finder.java');
+  const discovery = read('ios/Sources/TVSetupDiscovery.swift');
+  const declared = read('ios/Info.plist').match(/<key>NSBonjourServices<\/key>\s*<array>([\s\S]*?)<\/array>/);
+  assert.ok(declared, 'iOS local network declaration');
+  const allowed = [...declared[1].matchAll(/<string>([^<]+)<\/string>/g)].map(match => match[1]).sort();
+  assert.equal(allowed.length, 3);
+  assert.deepEqual(quotedServices(discovery), allowed);
+  assert.deepEqual(quotedServices(android), allowed);
+  for (const [key] of discovery.matchAll(/tv_find_[a-z]+/g)) {
+    assert.ok(data.text[key]?.en && data.text[key]?.ar, key);
+  }
+});
+
 test('new branding settings reach both profiles with canonical scenes and immediate opacity',()=>{
   for(const profile of Object.values(data.profiles)) {
     const opacity=profile.find(c=>c.id==='appearance.mihrab-opacity');

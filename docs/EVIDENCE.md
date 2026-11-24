@@ -2303,3 +2303,11 @@ Swift sources, and staged the bilingual import status. Android build tools
 decoded the compressed UTF-8 and stored UTF-16 APK fixtures and produced a
 separate APK with the expected manifest layout. The macOS fixture run and
 iPhone Files handoff remain pending. No TV was contacted.
+
+The iPhone Android TV discovery screen resolves the same three Bonjour service
+types as the Android installer. Host checks matched the Swift declarations,
+Android Finder and iOS privacy manifest, verified the seven bilingual labels,
+and passed the 14 companion generator tests and Swift syntax parsing. On an
+iPhone, check Local Network permission, a TV entering/leaving its pairing
+screen, the 15-second deadline and background cancellation. The Windows check
+did not run those paths or contact a TV.

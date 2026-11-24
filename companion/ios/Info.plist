@@ -14,7 +14,13 @@
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>When you turn on Automatic location, Miqat updates prayer times after travel while the app is closed.</string>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>Connect to paired Miqat TVs on your home network.</string>
+    <string>Find TVs for setup and connect to paired Miqat TVs on your home network.</string>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_adb._tcp</string>
+        <string>_adb-tls-connect._tcp</string>
+        <string>_adb-tls-pairing._tcp</string>
+    </array>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsLocalNetworking</key>

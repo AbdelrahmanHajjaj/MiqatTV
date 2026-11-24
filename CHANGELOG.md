@@ -11,6 +11,7 @@
 - iPhone prayer widgets can use a different Miqat palette, scene and background opacity for each placement.
 - The iPhone development target can download and share verified Miqat TV packages from Production and Staging.
 - The iPhone development target can inspect and share local Miqat Android TV APKs and LG webOS IPKs.
+- The iPhone development target can find advertised Android TV debugging and pairing ports.
 - Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
   Select a downloaded Development package in Advanced.
 - Development and Staging builds run on demand. Production promotion tests

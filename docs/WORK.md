@@ -3,6 +3,8 @@
 The `feature/ios-app-port` worktree owns the approved iPhone port. Start with
 the Apple build and offline prayer journey, then follow the
 [iOS parity queue](IOS-WORK.md) in order.
+Direct TV setup next needs an authenticated transport and device identity
+checks. The branch has package import and Android Bonjour discovery.
 
 Updated: 2026-11-24. Stable v0.7.7 contains phone 0.5.23/code 39,
 Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed

@@ -13,6 +13,7 @@ struct YourTVs: View {
             Section {
                 NavigationLink(preferences.text("pair")) { TVPairing(preferences: preferences) }
                 NavigationLink(preferences.text("tv_public_download")) { TVPackageView(preferences: preferences) }
+                NavigationLink(preferences.text("tv_find_search")) { TVSetupDiscoveryView(preferences: preferences) }
                 Toggle(preferences.text("demo"), isOn: $demo)
             }
             Section {

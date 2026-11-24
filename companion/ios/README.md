@@ -37,4 +37,9 @@ to install the package on a TV.
 Miqat checks the package identifier and version before sharing it. The TV
 installer is responsible for validating signing and compatibility.
 
+In **Your TVs → Find Android TV**, start a search to see the local addresses
+and ports advertised by Android TV for network debugging and wireless pairing.
+Allow Miqat to use the local network when iOS prompts. Use the setup guide
+above if a TV shows its debugging address only on its own screen.
+
 [Parity queue and validation status](../../docs/IOS-WORK.md).
