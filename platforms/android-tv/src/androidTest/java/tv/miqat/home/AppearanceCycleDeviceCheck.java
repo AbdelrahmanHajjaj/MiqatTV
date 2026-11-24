@@ -17,6 +17,7 @@ public final class AppearanceCycleDeviceCheck extends Instrumentation {
     private boolean uiCheck;
     private boolean onlineCheck, onlineNetwork, companionCheck,companionHost;
     private boolean sizeCheck, sizeWindows;
+    private String sizeRefresh;
 
     private boolean opacityCheck;
 
@@ -31,6 +32,7 @@ public final class AppearanceCycleDeviceCheck extends Instrumentation {
         onlineCheck = "online".equals(requested) || "online-network".equals(requested);
         onlineNetwork = "online-network".equals(requested);
         sizeCheck = "size".equals(requested);
+        sizeRefresh = arguments == null ? "" : arguments.getString("refresh", "");
         sizeWindows = "size-windows".equals(requested);
         super.onCreate(arguments);
         start();
@@ -44,7 +46,7 @@ public final class AppearanceCycleDeviceCheck extends Instrumentation {
         if (prayerCheck) { PrayerRuntimeDeviceCheck.run(this); return; }
         if (uiCheck) { UiContractDeviceCheck.run(this); return; }
         if (onlineCheck) { OnlinePrayerDeviceCheck.run(this, onlineNetwork); return; }
-        if (sizeCheck) { UiScaleDeviceCheck.run(this); return; }
+        if (sizeCheck) { UiScaleDeviceCheck.run(this, sizeRefresh); return; }
         if (sizeWindows) { UiScaleWindowDeviceCheck.run(this); return; }
         SharedPreferences prefs = Prefs.of(getTargetContext());
         Map<String, ?> saved = prefs.getAll();

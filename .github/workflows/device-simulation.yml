@@ -54,7 +54,7 @@ jobs:
     name: ${{ matrix.device }} emulator (${{ matrix.profile }}) · ${{ needs.source.outputs.tag }}
     needs: source
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -73,6 +73,8 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       STAGING_TAG: ${{ needs.source.outputs.tag }}
       ASSET_MANIFEST: ${{ needs.source.outputs.manifest }}
+      DEVICE: ${{ matrix.target }}
+      APK: ${{ matrix.apk }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -92,7 +94,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       - name: Download signed candidate and build same-source instrumentation
         env:
-          APK: ${{ matrix.apk }}
           MODULE: ${{ matrix.module }}
         run: |
           python3 -S -B -m tools.promote_release download state/release "$APK"
@@ -101,19 +102,74 @@ jobs:
           ./gradlew ":$MODULE:assembleDebug" ":$MODULE:assembleDebugAndroidTest" --no-daemon
       - name: Allow the runner to use KVM
         run: sudo setfacl -m "u:$(id -un):rw" /dev/kvm
-      - uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+      - name: Required · Android simulation attempt 1
+        id: first
+        continue-on-error: true
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         env:
-          DEVICE: ${{ matrix.target }}
-          APK: ${{ matrix.apk }}
+          SIMULATION_ATTEMPT: '1'
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
           profile: ${{ matrix.profile }}
+          avd-name: miqat-attempt-1
+          emulator-port: 5554
           disable-animations: true
           script: bash tools/device-simulation.sh "$DEVICE" "state/release/$APK"
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Required · Android simulation attempt 2
+        if: steps.first.outcome == 'failure' && hashFiles('state/device-simulation/blocking-failure') == ''
+        id: second
+        continue-on-error: true
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        env:
+          SIMULATION_ATTEMPT: '2'
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          avd-name: miqat-attempt-2
+          emulator-port: 5556
+          disable-animations: true
+          script: bash tools/device-simulation.sh "$DEVICE" "state/release/$APK"
+      - name: Required · Android simulation attempt 3
+        if: steps.second.outcome == 'failure' && hashFiles('state/device-simulation/blocking-failure') == ''
+        id: third
+        continue-on-error: true
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        env:
+          SIMULATION_ATTEMPT: '3'
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          avd-name: miqat-attempt-3
+          emulator-port: 5558
+          disable-animations: true
+          script: bash tools/device-simulation.sh "$DEVICE" "state/release/$APK"
+      - name: Required · Verify Android simulation result
+        if: ${{ !cancelled() }}
+        env:
+          ATTEMPT_1: ${{ steps.first.outcome }}
+          ATTEMPT_2: ${{ steps.second.outcome }}
+          ATTEMPT_3: ${{ steps.third.outcome }}
+        run: |
+          printf '### Required %s simulation\n\nAttempts (1–3): %s, %s, %s\n' \
+            "$DEVICE" "$ATTEMPT_1" "$ATTEMPT_2" "$ATTEMPT_3" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -f state/device-simulation/blocking-failure ]]; then
+            tee -a "$GITHUB_STEP_SUMMARY" < state/device-simulation/blocking-failure
+            exit 1
+          fi
+          if [[ "$ATTEMPT_2" == success || "$ATTEMPT_3" == success ]]; then
+            echo '::warning::Required simulation recovered on a fresh emulator'
+          fi
+          [[ "$ATTEMPT_1" == success || "$ATTEMPT_2" == success || "$ATTEMPT_3" == success ]]
+      - name: Advisory · Upload Android simulation diagnostics
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
+        continue-on-error: true
         with:
           name: ${{ matrix.target }}-simulation
           path: state/device-simulation/

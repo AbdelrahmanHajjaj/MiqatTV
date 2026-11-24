@@ -59,6 +59,17 @@ service extracted from the verified IPK. These results describe emulated or
 mocked behavior. Physical device acceptance follows [Testing](TESTING.md).
 Development, Staging and ordinary PR jobs never boot emulators.
 
+| Production check | Release effect |
+| --- | --- |
+| Candidate provenance, asset digests, Android signing and version checks, website verification | Required |
+| Signed launch, native phone and TV behavior, and LG browser behavior | Required |
+| Native diagnostic screenshots and Android simulation log upload | Advisory, with failures reported in the originating step |
+
+Android runner or ADB transport failures have up to three attempts with a new
+AVD and port each time. A completed instrumentation failure blocks promotion
+immediately. Earlier attempt logs stay separate and a recovered run reports a
+warning. The job summary records every attempt outcome.
+
 GitHub jobs use separate workspaces, and generators stay sequential within each
 job. Actions are pinned to commits and checkout does not persist credentials.
 Release-writing permissions are limited to Staging and Production publication

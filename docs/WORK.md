@@ -6,6 +6,11 @@ checksum and identity verification. Website downloads and update metadata
 point to v0.7.8. Both Android emulator simulations and the LG browser mock
 passed. See [EVIDENCE.md](EVIDENCE.md).
 
+v0.7.9 promotion hit two Android TV fixture failures. The size regression
+forces a catalog rebuild to verify Home focus and the All apps long-press
+menu. Required simulations retry runner failures on fresh emulators and keep
+functional assertions blocking. See [CI](CI.md).
+
 The phone release includes countdown seconds, the Circle widget with adjustable
 text, prayer time previews, calendar swipes and a Qibla map that opens at the
 phone's current location. Physical phone launcher acceptance remains pending.
