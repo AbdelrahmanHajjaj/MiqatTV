@@ -54,7 +54,9 @@ final class AdhanLibrary: ObservableObject {
 
     func url(_ voice: String) -> URL? {
         if let recording = records.first(where: { $0.id == voice }) {
-            return Self.storage.appending(path: recording.filename)
+            let file = Self.storage.appending(path: recording.filename)
+            guard (try? file.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else { return nil }
+            return file
         }
         guard PhoneData.voices.contains(where: { $0.id == voice }) else { return nil }
         return Bundle.main.url(forResource: voice, withExtension: "mp3", subdirectory: "Adhan")

@@ -123,6 +123,14 @@ final class PhoneAdhan: NSObject, ObservableObject, AVAudioPlayerDelegate {
     }
 
     nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        finish(player)
+    }
+
+    nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        finish(player)
+    }
+
+    private nonisolated func finish(_ player: AVAudioPlayer) {
         Task { @MainActor [weak self] in
             if self?.player === player { self?.stop() }
         }

@@ -113,6 +113,10 @@ state, and opening it shows the recording name. Turn on Reduce Motion in
 Miqat or iOS and verify the symbol stays still. Turn off artwork and verify
 the controls show a plain background. Check Back confirmation, Pause and
 swipe or tap to Stop. Repeat at the largest in-app text size and in Arabic.
+With a custom recording selected, use a local fixture with missing or invalid
+audio. Check that scheduled playback starts the built-in voice and identifies
+it in Now Playing. Separately verify that a decoder failure during playback
+closes the stopped session and cannot close a newer one.
 
 ## Qibla fallback on iPhone
 

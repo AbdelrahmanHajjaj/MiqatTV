@@ -137,18 +137,20 @@ struct MiqatApp: App {
         let settings = prefs.prayerAlerts[index]
         let selection = prefs.adhan.forPrayer(index, settings: settings)
         let fallback = index == 0 ? PhoneData.defaultFajrVoice : AdhanPreferences.defaultVoice
-        let voice = library.url(selection.voice) != nil ? selection.voice : fallback
-        guard let url = library.url(voice) else { return false }
         let prayerTime = Date(timeIntervalSince1970: request.time / 1000)
         let title = request.isTest ? prefs.text("phone_test_adhan")
             : prefs.prayerNames()[index] + " · " + prefs.time(prayerTime)
-        guard adhan.play(url: url, name: library.name(voice, preferences: prefs), selection: selection,
-                         prayer: index, mediaTitle: title, artwork: PhoneRemotePlayback.artwork(prefs)) else {
-            return false
+        let artwork = PhoneRemotePlayback.artwork(prefs)
+        let candidates = selection.voice == fallback ? [fallback] : [selection.voice, fallback]
+        for voice in candidates {
+            guard let url = library.url(voice),
+                  adhan.play(url: url, name: library.name(voice, preferences: prefs), selection: selection,
+                             prayer: index, mediaTitle: title, artwork: artwork) else { continue }
+            playingAdhan = request.claimID
+            if tapped && !setup { showAdhan = true }
+            return true
         }
-        playingAdhan = request.claimID
-        if tapped && !setup { showAdhan = true }
-        return true
+        return false
     }
 }
 
