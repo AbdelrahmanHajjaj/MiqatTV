@@ -2407,3 +2407,12 @@ and Ninja. Its native fixture rejected wrong codes, a different TLS exporter
 and a changed authentication tag, and matched an independent AES-GCM vector.
 No pairing was sent to a TV. The native TLS connection, certificate identity
 and installer handoff are still pending.
+
+The wireless pairing adapter now makes a foreground TLS 1.3 connection,
+presents the installer RSA identity and exchanges authenticated peer data
+bound to that session. On Windows, two native fixtures passed through
+BoringSSL, including a TLS handshake using in-memory BIOs, certificate key
+verification, the ADB exporter, peer digest and encrypted peer exchange.
+The transport library and upstream notice installed to a scratch build
+directory. Swift syntax checks passed. The Apple adapter and the distinct
+wireless debugging STLS connection remain unverified. No TV was contacted.

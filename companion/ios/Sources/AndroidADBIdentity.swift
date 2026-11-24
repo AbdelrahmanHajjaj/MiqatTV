@@ -46,6 +46,11 @@ struct AndroidADBIdentity {
         return signature as Data
     }
 
+    func privateRepresentation() throws -> Data {
+        guard let der = SecKeyCopyExternalRepresentation(key, nil) as Data? else { throw Failure.keychain }
+        return der
+    }
+
     func offer() throws -> Data {
         guard let publicKey = SecKeyCopyPublicKey(key),
               let der = SecKeyCopyExternalRepresentation(publicKey, nil) as Data?,

@@ -45,7 +45,7 @@ jobs:
       - name: Check Android wireless pairing key exchange
         run: |
           cmake -S companion/ios/adb-crypto -B "$RUNNER_TEMP/adb-crypto" -DCMAKE_BUILD_TYPE=Release
-          cmake --build "$RUNNER_TEMP/adb-crypto" --target miqat_adb_spake_check --parallel 4
+          cmake --build "$RUNNER_TEMP/adb-crypto" --target miqat_adb_spake_check miqat_adb_tls_check --parallel 4
           ctest --test-dir "$RUNNER_TEMP/adb-crypto" --output-on-failure
       - name: Check iOS resources and astronomy
         run: |
@@ -93,6 +93,7 @@ jobs:
           DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
         run: |
           sh companion/ios/prepare-ssh.sh iphonesimulator
+          sh companion/ios/prepare-adb-crypto.sh iphonesimulator
           xcodebuild -project companion/ios/Miqat.xcodeproj -scheme Miqat \
             -configuration Debug -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath state/ios-build CODE_SIGNING_ALLOWED=NO build
@@ -105,6 +106,7 @@ jobs:
           test -f "$app/Notices/Adhan.txt"
           test -f "$app/Notices/libssh2.txt"
           test -f "$app/Notices/OpenSSL.txt"
+          test -f "$app/Notices/BoringSSL.txt"
           test -f "$app/Adhan/chebae_fajr.mp3"
           test -f "$app/PlugIns/MiqatPrayerWidget.appex/Info.plist"
           for scene in shared/design/assets/backgrounds/*.jpg; do

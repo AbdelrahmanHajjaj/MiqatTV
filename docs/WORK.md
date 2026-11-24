@@ -7,8 +7,8 @@ The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android
 TV installation and Home/remote setup with a recovery journal are wired.
 Android cleanup, recovery export and guided personalisation are wired.
-The wireless pairing frame codec and SPAKE2 fixture are in place. Next wire
-the TLS client identity, encrypted peer exchange and setup reconnect. Verify
+Wireless pairing's TLS client identity and encrypted peer exchange are wired.
+Next connect the setup screen and the separate STLS debugging session. Verify
 Apple fixtures and port the TV-wide cleanup history.
 
 Updated: 2026-11-24. Stable v0.7.7 contains phone 0.5.23/code 39,
