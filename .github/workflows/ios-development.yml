@@ -35,7 +35,7 @@ jobs:
   apple:
     name: Apple (${{ matrix.sdk }})
     runs-on: macos-15
-    timeout-minutes: ${{ inputs.simulator_first_use && matrix.sdk == 'iphonesimulator' && 40 || 30 }}
+    timeout-minutes: ${{ inputs.simulator_first_use && matrix.sdk == 'iphonesimulator' && 50 || 30 }}
     strategy:
       fail-fast: false
       matrix:
@@ -178,7 +178,7 @@ jobs:
           done
       - name: Check first launch on an iPhone simulator
         if: github.event_name == 'workflow_dispatch' && (inputs.simulator_launch || inputs.simulator_first_use) && matrix.sdk == 'iphonesimulator'
-        timeout-minutes: 12
+        timeout-minutes: 26
         env:
           MIQAT_FIRST_USE: ${{ inputs.simulator_first_use }}
         run: |
@@ -187,9 +187,12 @@ jobs:
             com.apple.CoreSimulator.SimDeviceType.iPhone-16 \
             com.apple.CoreSimulator.SimRuntime.iOS-18-4)
           trap 'xcrun simctl shutdown "$device" || true; xcrun simctl delete "$device"' EXIT
-          xcrun simctl boot "$device"
-          xcrun simctl bootstatus "$device" -b
-          xcrun simctl install "$device" "$app"
+          boot_and_install() {
+            xcrun simctl boot "$device"
+            xcrun simctl bootstatus "$device" -b
+            xcrun simctl install "$device" "$app"
+          }
+          boot_and_install
           bundle=tv.miqat.ios
           launch=$(xcrun simctl launch "$device" "$bundle")
           printf '%s\n' "$launch"
@@ -198,11 +201,23 @@ jobs:
           sleep 5
           ps -p "$pid" -o comm= | grep -E '(^|[[:space:]]|/)Miqat$'
           if [ "$MIQAT_FIRST_USE" = true ]; then
+            sim_test() {
+              xcodebuild -project companion/ios/Miqat.xcodeproj -scheme Miqat \
+                -configuration Debug -sdk iphonesimulator -destination "id=$device" \
+                -derivedDataPath state/ios-build -parallel-testing-enabled NO \
+                CODE_SIGNING_ALLOWED=NO "$@"
+            }
+            sim_test build-for-testing
             xcrun simctl privacy "$device" revoke location "$bundle"
-            xcodebuild -project companion/ios/Miqat.xcodeproj -scheme Miqat \
-              -configuration Debug -sdk iphonesimulator -destination "id=$device" \
-              -derivedDataPath state/ios-build -parallel-testing-enabled NO \
-              -only-testing:MiqatUITests/FirstUseTests CODE_SIGNING_ALLOWED=NO test
+            sim_test -only-testing:MiqatUITests/FirstUseTests/testManualCityWithLocationDenied test-without-building
+            # Neither notification choice may inherit a prior app install or permission.
+            for scenario in testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup; do
+              xcrun simctl shutdown "$device"
+              xcrun simctl erase "$device"
+              boot_and_install
+              xcrun simctl privacy "$device" revoke location "$bundle"
+              sim_test "-only-testing:MiqatUITests/FirstUseTests/$scenario" test-without-building
+            done
           fi
       - name: Package simulator build
         if: matrix.sdk == 'iphonesimulator'
