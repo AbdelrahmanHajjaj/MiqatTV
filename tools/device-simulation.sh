@@ -2,9 +2,14 @@
 set -euo pipefail
 
 adb=(adb -s "emulator-${EMULATOR_PORT:?}")
-logs=state/device-simulation
+logs=state/device-simulation/attempt-${SIMULATION_ATTEMPT:-1}
 mkdir -p "$logs"
 printf 'Staging: %s\n' "$STAGING_TAG" | tee "$logs/candidate.log"
+
+block() {
+  printf '%s\n' "$1" | tee state/device-simulation/blocking-failure >&2
+  return 1
+}
 
 case "$1" in
   phone)
@@ -20,26 +25,42 @@ case "$1" in
   *) exit 2 ;;
 esac
 
+{
+  "${adb[@]}" shell getprop ro.build.fingerprint
+  "${adb[@]}" shell wm size
+  "${adb[@]}" shell wm density
+} > "$logs/emulator.log" 2>&1 || true
+
 # Smoke the actual signed package before switching to the matching debug test pair.
 "${adb[@]}" install "$2"
 "${adb[@]}" shell am start -W -n "$package/.MainActivity" | tee "$logs/signed-launch.log"
-grep -q '^Status: ok' "$logs/signed-launch.log"
+grep -q '^Status: ok' "$logs/signed-launch.log" || block 'Signed app launch failed'
 "${adb[@]}" shell pidof "$package"
 "${adb[@]}" uninstall "$package"
 
 instrument() {
   local check=$1
   shift
-  timeout 420s "${adb[@]}" shell am instrument -r -w "$@" "$runner" | tee "$logs/$check.log"
-  grep -q '^INSTRUMENTATION_CODE: -1' "$logs/$check.log"
-  grep -Eq 'PASS:|passed:|Native prayer regression|Native global-size pages passed' "$logs/$check.log"
+  local log="$logs/$check.log" status=0
+  timeout 420s "${adb[@]}" shell am instrument -r -w "$@" "$runner" | tee "$log" || status=$?
+  if ! grep -q '^INSTRUMENTATION_CODE:' "$log"; then
+    printf 'No instrumentation result for %s (command exit %s)\n' "$check" "$status" >&2
+    return 1
+  fi
+  grep -q '^INSTRUMENTATION_CODE: -1[[:space:]]*$' "$log" || block "Instrumentation failed: $check"
+  grep -Eq 'PASS:|passed:|Native prayer regression|Native global-size pages passed' "$log" || block "Missing success marker: $check"
+  return "$status"
 }
 
 if [[ "$1" == tv ]]; then
   "${adb[@]}" install candidate/platforms/android-tv/build/outputs/apk/debug/app-debug.apk
   "${adb[@]}" install -t candidate/platforms/android-tv/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
   for check in prayer ui size online; do
-    instrument "$check" -e check "$check"
+    if [[ "$check" == size ]]; then
+      instrument "$check" -e check "$check" -e refresh both
+    else
+      instrument "$check" -e check "$check"
+    fi
   done
   exit
 fi

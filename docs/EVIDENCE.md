@@ -8,6 +8,20 @@ and UI contract checks, then failed the large Home Up/Down focus assertion.
 The size fixture now records layout, focus snapshots, the calculated Down
 target and whether the original app tile stayed attached.
 
+[Second attempt](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45472435241)
+passed all six logged English 150% Home focus sequences and then failed to
+open the All apps menu. On an isolated API 37 phone emulator at the CI
+viewport, forcing the corresponding screen rebuild reproduced both original
+assertions. Home returned to the original slot using a newly attached view.
+All apps cleared its tiles while reloading, so long OK had no selected app.
+The historical CI logs did not record the event that triggered either failure.
+
+The corrected fixture passed the forced-refresh English 150% case. A separate
+full API 37 layout sweep later stopped on a clipped Appearance reset control
+at 90%. Hosted API 34 verification remains separate. A Bash fixture verified
+that missing instrumentation results permit a retry and completed failures
+produce the blocking marker.
+
 ## Android in-app update
 
 Both Android apps and their instrumentation compiled. The isolated API 37

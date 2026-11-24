@@ -402,6 +402,13 @@ collapsed header: Android 14's row expansion action can toggle an already-
 expanded alert closed. The focused `phone-presentation -e case actions` check
 exercises the actual visible notification Stop button.
 
+The TV size simulation passes `-e refresh both` to force a Home rebuild before
+Down and an All apps reload before long OK at English 150%. The check requires
+return focus to the same app across the rebuild and sends long OK while the
+selected tile is present. Screenshot failures are advisory and geometry and
+focus assertions remain required. `-e refresh focused` runs the English 150%
+case alone when reproducing the refresh behavior locally.
+
 Notification polish: `phone-presentation -e case actions` imports a named private
 recording, verifies that name in notification/session metadata and the visible
 expanded view, then clicks the actual Pause, Play and Stop icons. `actions-ar`
