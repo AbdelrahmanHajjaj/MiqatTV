@@ -139,6 +139,10 @@ jobs:
             test "$platform" = "$MIQAT_BINARY_PLATFORM"
           done
           test -s "$app/Assets.car"
+          for bundle in "$app" "$widget"; do
+            test "$(plutil -extract CFBundleDisplayName raw "$bundle/Info.plist")" = Miqat
+            test "$(plutil -extract CFBundleDisplayName raw "$bundle/ar.lproj/InfoPlist.strings")" = ميقات
+          done
           test "$(plutil -extract CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName raw "$app/Info.plist")" = AppIcon
           plutil -lint "$app/PrivacyInfo.xcprivacy"
           test "$(plutil -extract NSPrivacyAccessedAPITypes.0.NSPrivacyAccessedAPIType raw "$app/PrivacyInfo.xcprivacy")" = NSPrivacyAccessedAPICategoryUserDefaults
@@ -152,7 +156,6 @@ jobs:
           test -f "$app/Notices/OpenSSL.txt"
           test -f "$app/Notices/BoringSSL.txt"
           test -f "$app/Adhan/chebae_fajr.mp3"
-          test -f "$widget/Info.plist"
           for scene in shared/design/assets/backgrounds/*.jpg; do
             cmp "$scene" "$widget/backgrounds/${scene##*/}"
           done

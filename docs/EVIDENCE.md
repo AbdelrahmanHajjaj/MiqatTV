@@ -2228,6 +2228,11 @@ Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
 
+The iOS app and widget bundle names match Android's Arabic Miqat label. The
+source plist and locale values were checked on Windows and the workflow lint
+passed. The Apple build now checks the bundled values. The Home Screen and
+widget gallery labels still need a native check.
+
 On 2026-11-24, branch `feature/ios-app-port` configured the Kotlin iOS device
 and simulator framework tasks and added a native iOS application target.
 Companion JVM tests, its 13 catalog generator checks, resource staging and the
