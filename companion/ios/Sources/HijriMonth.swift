@@ -23,22 +23,28 @@ struct HijriObservance: Identifiable, Decodable {
         return catalog.filter { ids.contains($0.id) }
     }
 
-    static func upcoming(from date: Date, preferences: PhonePreferences) -> [String] {
-        let calendar = PrayerSchedule.hijriCalendar(preferences)
+    static func upcoming(from date: Date, preferences: PhonePreferences) -> (date: Date, label: String)? {
+        let civil = PrayerSchedule.civilCalendar(preferences)
+        let hijri = PrayerSchedule.hijriCalendar(preferences)
         for offset in 0...3 {
-            guard let corrected = calendar.date(byAdding: .day, value: offset + preferences.hijriOffset, to: date) else {
-                continue
-            }
-            let parts = calendar.dateComponents([.month, .day], from: corrected)
+            guard let observed = civil.prayerDayStart(adding: offset, to: date),
+                  let noon = civil.date(bySettingHour: 12, minute: 0, second: 0, of: observed),
+                  let corrected = civil.date(byAdding: .day, value: preferences.hijriOffset, to: noon) else { continue }
+            let parts = hijri.dateComponents([.month, .day], from: corrected)
             guard let month = parts.month, let day = parts.day else { continue }
             let names = events(month: month, day: day).map { $0.name(day: day, preferences: preferences) }
-            if !names.isEmpty {
-                if offset == 0 { return names }
-                guard let observed = calendar.date(byAdding: .day, value: offset, to: date) else { return names }
-                return names.map { $0 + " · " + preferences.hijriDate(observed) }
+            guard !names.isEmpty else { continue }
+            let timing: String
+            switch offset {
+            case 0: timing = preferences.text("phone_today")
+            case 1: timing = preferences.text("phone_tomorrow")
+            default:
+                timing = preferences.text("phone_event_in_days")
+                    .replacingOccurrences(of: "%s", with: preferences.displayDigits(String(offset)))
             }
+            return (observed, (names + [timing]).joined(separator: " · "))
         }
-        return []
+        return nil
     }
 }
 
@@ -48,11 +54,12 @@ struct HijriMonth: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selection: HijriCalendarSelection
 
-    init(preferences: PhonePreferences, schedule: PrayerSchedule) {
+    init(preferences: PhonePreferences, schedule: PrayerSchedule, selectedDay: Date? = nil) {
         self.preferences = preferences
         self.schedule = schedule
         _selection = State(initialValue: HijriCalendarSelection(opened: .now, civil: PrayerSchedule.civilCalendar(preferences),
-                           hijri: PrayerSchedule.hijriCalendar(preferences), correction: preferences.hijriOffset))
+                           hijri: PrayerSchedule.hijriCalendar(preferences), correction: preferences.hijriOffset,
+                           selectedDay: selectedDay))
     }
 
     var body: some View {

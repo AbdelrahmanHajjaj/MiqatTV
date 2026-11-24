@@ -8,7 +8,7 @@ struct HijriCalendarSelection {
     private(set) var selected: Date
     private(set) var month: Date
 
-    init(opened: Date, civil: Calendar, hijri: Calendar, correction: Int) {
+    init(opened: Date, civil: Calendar, hijri: Calendar, correction: Int, selectedDay: Date? = nil) {
         self.civil = civil
         self.hijri = hijri
         self.correction = correction
@@ -16,6 +16,7 @@ struct HijriCalendarSelection {
         self.opened = noon
         selected = noon
         month = civil.date(byAdding: .day, value: correction, to: noon) ?? noon
+        if let selectedDay { select(selectedDay, followMonth: true) }
     }
 
     var selectedHijri: Date { civil.date(byAdding: .day, value: correction, to: selected) ?? selected }

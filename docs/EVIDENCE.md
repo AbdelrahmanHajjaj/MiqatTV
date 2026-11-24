@@ -2326,6 +2326,12 @@ labels the next Fajr as tomorrow. The five prayer rows open the existing alert
 editors. Swift syntax and all 14 generator checks passed. Rollover and row
 navigation still need native acceptance.
 
+The iPhone Home observance opens its civil date in the Hijri calendar and
+uses the bilingual relative-day labels. The Apple fixture covers opening an
+observance across an adjusted Hijri month boundary. Swift syntax, all 14
+generator checks and Kotlin Hijri event tests passed. The Apple fixture and
+Home navigation remain pending.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

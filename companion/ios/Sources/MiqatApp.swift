@@ -267,9 +267,14 @@ struct PrayerHome: View {
                             } label: { dateLabels(context.date) }
                             cityAction
                         }
-                        let events = HijriObservance.upcoming(from: context.date, preferences: preferences)
-                        ForEach(events, id: \.self) { event in
-                            Label(event, systemImage: "calendar.badge.clock").font(.subheadline)
+                        if let event = HijriObservance.upcoming(from: context.date, preferences: preferences) {
+                            let label = Label(event.label, systemImage: "calendar.badge.clock").font(.subheadline)
+                            if preview { label }
+                            else {
+                                NavigationLink {
+                                    HijriMonth(preferences: preferences, schedule: schedule, selectedDay: event.date)
+                                } label: { label }
+                            }
                         }
                     }
                     if let next, let nextDate, preferences.prayerNames().indices.contains(Int(next.next)) {
