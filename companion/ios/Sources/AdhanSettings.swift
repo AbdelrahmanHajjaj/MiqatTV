@@ -196,6 +196,9 @@ struct AdhanPlayback: View {
     @State private var confirm = false
 
     var body: some View {
+        let ground = PhoneAppearance.color("lapis-900", preferences: preferences)
+        let ink = PhoneAppearance.color("plaster-100", preferences: preferences)
+        let accent = PhoneAppearance.color("gold-400", preferences: preferences)
         VStack(spacing: 18) {
             Text(PhoneData.adhanCall).font(.largeTitle)
             if let prayer = audio.prayer { Text(preferences.prayerNames()[prayer]).font(.title) }
@@ -206,6 +209,7 @@ struct AdhanPlayback: View {
             Button(preferences.text("back")) { confirm = true }
             Button(role: .destructive, action: stopAndClose) {
                 Label(preferences.text("phone_swipe_stop"), systemImage: "chevron.up")
+                    .foregroundStyle(accent)
                     .frame(minHeight: 44)
             }
             .accessibilityLabel(preferences.text("phone_stop_close"))
@@ -215,6 +219,12 @@ struct AdhanPlayback: View {
             })
         }
         .padding(28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .foregroundStyle(ink)
+        .tint(accent)
+        .background {
+            PhoneBackdrop(ground: ground, scene: preferences.background, shade: 0.82).ignoresSafeArea()
+        }
         .interactiveDismissDisabled()
         .onChange(of: audio.name) { _, name in if name == nil { dismiss() } }
         .alert(preferences.text("phone_stop_close"), isPresented: $confirm) {

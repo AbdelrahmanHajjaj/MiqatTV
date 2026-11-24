@@ -215,9 +215,15 @@ struct PrayerHome: View {
     @EnvironmentObject private var radio: QuranRadio
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
+    var preview = false
     @StateObject private var location = PhoneLocation()
     @State private var showPlayback = false
     @State private var showRadio = false
+
+    private var ground: Color { PhoneAppearance.color("lapis-900", preferences: preferences) }
+    private var ink: Color { PhoneAppearance.color("plaster-100", preferences: preferences) }
+    private var accent: Color { PhoneAppearance.color("gold-400", preferences: preferences) }
+    private var scene: String { preferences.showArtwork ? preferences.background : "plain" }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -232,35 +238,22 @@ struct PrayerHome: View {
                             .font(.title3)
                             .environment(\.layoutDirection, .rightToLeft)
                     }
-                    .foregroundStyle(PhoneAppearance.color("plaster-100", preferences: preferences))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(24)
                     .background {
-                        ZStack {
-                            PhoneAppearance.color("lapis-900", preferences: preferences)
-                            if preferences.showArtwork, let url = Bundle.main.url(forResource: preferences.background,
-                                withExtension: preferences.background == "miqat_signature" ? "png" : "jpg"),
-                               let image = UIImage(contentsOfFile: url.path) {
-                                GeometryReader { area in
-                                    Image(uiImage: image).resizable().scaledToFill()
-                                        .frame(width: area.size.width, height: area.size.height)
-                                        .clipped().accessibilityHidden(true)
-                                }
-                                Color.black.opacity(0.38)
-                            }
-                        }
+                        PhoneBackdrop(ground: ground, scene: scene, shade: 0.74, portrait: false)
                     }
                     .clipShape(.rect(cornerRadius: 24))
                     VStack(alignment: .leading, spacing: 10) {
-                        NavigationLink {
-                            HijriMonth(preferences: preferences, schedule: schedule)
-                        } label: {
-                            VStack(alignment: .leading) {
-                                Text(preferences.hijriDate(context.date)).font(.headline)
-                                Text(preferences.gregorianDate(context.date)).font(.subheadline)
-                            }
+                        if preview {
+                            dateLabels(context.date)
+                            Label(preferences.city.name(preferences.arabic), systemImage: "location")
+                        } else {
+                            NavigationLink {
+                                HijriMonth(preferences: preferences, schedule: schedule)
+                            } label: { dateLabels(context.date) }
+                            cityAction
                         }
-                        cityAction
                         let events = HijriObservance.upcoming(from: context.date, preferences: preferences)
                         ForEach(events, id: \.self) { event in
                             Label(event, systemImage: "calendar.badge.clock").font(.subheadline)
@@ -272,6 +265,7 @@ struct PrayerHome: View {
                             VStack(alignment: .leading) {
                                 Text(preferences.text("phone_next")).font(.subheadline)
                                 Text(preferences.prayerNames()[Int(next.next)]).font(.title2.bold())
+                                    .foregroundStyle(accent)
                                 Text(preferences.time(nextDate))
                             }
                             Spacer()
@@ -279,9 +273,9 @@ struct PrayerHome: View {
                             Text(preferences.displayDigits(String(format: "%d:%02d:%02d",
                                  seconds / 3600, seconds / 60 % 60, seconds % 60)))
                                 .font(.title2.monospacedDigit())
+                                .foregroundStyle(accent)
                         }
                         .padding()
-                        .foregroundStyle(PhoneAppearance.color("plaster-100", preferences: preferences))
                         .background(PhoneAppearance.color("lapis-800", preferences: preferences), in: .rect(cornerRadius: 16))
                     }
                     if var times = day.today {
@@ -292,13 +286,14 @@ struct PrayerHome: View {
                     } else {
                         Text(preferences.text("phone_unavailable")).foregroundStyle(.secondary)
                     }
-                    if audio.prayer != nil {
+                    if !preview && audio.prayer != nil {
                         Button { showPlayback = true } label: {
                             Label(preferences.text("phone_adhan_controls"), systemImage: "waveform")
+                                .foregroundStyle(ground)
                         }
                         .buttonStyle(.borderedProminent)
                     }
-                    if radio.hasSession {
+                    if !preview && radio.hasSession {
                         Button {
                             if radio.wantsPlay { radio.pause() }
                             else if let station = RadioStation.catalog.first(where: { $0.id == preferences.radioStation }) {
@@ -313,12 +308,18 @@ struct PrayerHome: View {
                     }
                 }
                 .padding()
+                .foregroundStyle(ink)
+                .tint(accent)
                 .frame(maxWidth: 640)
                 .frame(maxWidth: .infinity)
             }
+            .background { PhoneBackdrop(ground: ground, scene: scene, shade: 0.82).ignoresSafeArea() }
         }
-        .navigationTitle(preferences.text("phone_home"))
+        .navigationTitle(preferences.text(preview ? "appearancePreview" : "phone_home"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(ground, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .onChange(of: location.fix) { _, fix in
             guard let fix, preferences.locationConfirmed else { return }
             preferences = preferences.useDeviceLocation(.init(latitude: fix.coordinate.latitude,
@@ -329,13 +330,15 @@ struct PrayerHome: View {
         }
         .onDisappear { location.cancel() }
         .toolbar {
-            NavigationLink {
-                QiblaView(preferences: preferences)
-            } label: {
-                Image(systemName: "location.north.line").accessibilityLabel(preferences.text("phone_qibla"))
-            }
-            Button { showRadio = true } label: {
-                Image(systemName: "radio").accessibilityLabel(preferences.text("phone_radio"))
+            if !preview {
+                NavigationLink {
+                    QiblaView(preferences: preferences)
+                } label: {
+                    Image(systemName: "location.north.line").accessibilityLabel(preferences.text("phone_qibla"))
+                }
+                Button { showRadio = true } label: {
+                    Image(systemName: "radio").accessibilityLabel(preferences.text("phone_radio"))
+                }
             }
         }
         .sheet(isPresented: $showPlayback) { AdhanPlayback(preferences: preferences) }
@@ -345,6 +348,13 @@ struct PrayerHome: View {
                     Button(preferences.text("done")) { showRadio = false }
                 }
             }
+        }
+    }
+
+    private func dateLabels(_ date: Date) -> some View {
+        VStack(alignment: .leading) {
+            Text(preferences.hijriDate(date)).font(.headline)
+            Text(preferences.gregorianDate(date)).font(.subheadline)
         }
     }
 
@@ -385,15 +395,19 @@ struct PrayerTimesList: View {
                     Text(preferences.time(times[index])).monospacedDigit()
                 }
                 .fontWeight(index == next ? .semibold : .regular)
+                .foregroundStyle(PhoneAppearance.color(index == next ? "gold-400" : "plaster-100",
+                                                        preferences: preferences))
                 .padding(12)
-                .background(index == next ? Color.accentColor.opacity(0.12) : .clear)
+                .background(index == next ? PhoneAppearance.color("lapis-700", preferences: preferences) : .clear)
                 if index < times.count - 1 { Divider() }
             }
         }
-        .background(.background, in: .rect(cornerRadius: 16))
+        .background(PhoneAppearance.color("lapis-800", preferences: preferences), in: .rect(cornerRadius: 16))
         .clipShape(.rect(cornerRadius: 16))
         .overlay {
-            RoundedRectangle(cornerRadius: 16).strokeBorder(.quaternary).allowsHitTesting(false)
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(PhoneAppearance.color("mist-400", preferences: preferences).opacity(0.2))
+                .allowsHitTesting(false)
         }
     }
 }
@@ -426,14 +440,10 @@ struct PhoneSetup: View {
                             .background(.regularMaterial)
                     }
             case 2:
-                Form {
-                    DisplaySettings(preferences: $preferences)
-                    Button(preferences.text("done")) {
-                        preferences.setupFinished = true
-                        dismiss()
-                    }
+                PhoneAppearanceEditor(preferences: $preferences, schedule: schedule) {
+                    preferences.setupFinished = true
+                    dismiss()
                 }
-                .navigationTitle(preferences.text("phone_appearance"))
             default:
                 VStack(spacing: 20) {
                     Image(systemName: "sun.horizon").font(.system(size: 64)).accessibilityHidden(true)

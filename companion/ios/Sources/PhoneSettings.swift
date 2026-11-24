@@ -32,13 +32,7 @@ struct PhoneSettings: View {
             }
             Section {
                 NavigationLink(preferences.text("phone_appearance")) {
-                    Form {
-                        DisplaySettings(preferences: $preferences)
-                        NavigationLink(preferences.text("appearancePreview")) {
-                            PrayerHome(preferences: .constant(preferences), schedule: schedule)
-                        }
-                    }
-                        .navigationTitle(preferences.text("phone_appearance"))
+                    PhoneAppearanceEditor(preferences: $preferences, schedule: schedule)
                 }
                 NavigationLink(preferences.text("aboutMiqat")) {
                     AboutMiqat(preferences: preferences)
@@ -89,22 +83,91 @@ struct DisplaySettings: View {
             Text(preferences.displayDigits("24")).tag("24")
         }
         Toggle(preferences.text("phone_home_background"), isOn: $preferences.showArtwork)
-        Picker(preferences.text("phone_theme"), selection: $preferences.theme) {
-            let names = PhoneAppearance.themeNames(preferences)
-            ForEach(PhoneAppearance.catalog.themeOrder.indices, id: \.self) { index in
-                let id = PhoneAppearance.catalog.themeOrder[index]
-                Text(names.indices.contains(index) ? names[index] : id).tag(id)
-            }
-        }
-        Picker(preferences.text("phone_background"), selection: $preferences.background) {
-            ForEach(PhoneAppearance.catalog.backgrounds, id: \.self) { id in
-                Text(PhoneAppearance.backgroundName(id, preferences: preferences)).tag(id)
-            }
-        }
         Stepper(value: $preferences.displaySize, in: 80...150, step: 10) {
             LabeledContent(preferences.text("phone_size"), value: preferences.displayDigits("\(preferences.displaySize)%"))
         }
         Toggle(preferences.text("phone_reduce_motion"), isOn: $preferences.reduceMotion)
+    }
+}
+
+struct PhoneAppearanceEditor: View {
+    @Binding var preferences: PhonePreferences
+    let schedule: PrayerSchedule
+    var finish: (() -> Void)?
+
+    var body: some View {
+        let ground = PhoneAppearance.color("lapis-900", preferences: preferences)
+        let ink = PhoneAppearance.color("plaster-100", preferences: preferences)
+        Form {
+            NavigationLink {
+                PrayerHome(preferences: .constant(preferences), schedule: schedule, preview: true)
+            } label: {
+                Label(preferences.text("appearancePreview"), systemImage: "eye")
+                    .font(.headline)
+                    .foregroundStyle(ink)
+                    .frame(maxWidth: .infinity, minHeight: 86, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .background {
+                        PhoneBackdrop(ground: ground, scene: preferences.background, shade: 0.74, portrait: false)
+                    }
+                    .clipShape(.rect(cornerRadius: 16))
+            }
+            Section(preferences.text("phone_theme")) {
+                rail(selected: $preferences.theme, ids: PhoneAppearance.catalog.themeOrder,
+                     name: { PhoneAppearance.themeName($0, preferences: preferences) }) { id in
+                    let colors = PhoneAppearance.catalog.themes[id]?.colors
+                    HStack(spacing: 0) {
+                        ForEach(["lapis-900", "lapis-800", "gold-400", "plaster-100"], id: \.self) { role in
+                            PhoneAppearance.color(colors?[role]) ?? ground
+                        }
+                    }
+                }
+            }
+            Section(preferences.text("phone_background")) {
+                rail(selected: $preferences.background, ids: PhoneAppearance.catalog.backgrounds,
+                     name: { PhoneAppearance.backgroundName($0, preferences: preferences) }) { id in
+                    PhoneBackdrop(ground: ground, scene: id, shade: 0, portrait: false, maxPixelSize: 240)
+                }
+            }
+            Section { DisplaySettings(preferences: $preferences) }
+            if let finish { Button(preferences.text("done"), action: finish) }
+        }
+        .scrollContentBackground(.hidden)
+        .background { PhoneBackdrop(ground: ground, scene: preferences.background, shade: 0.76).ignoresSafeArea() }
+        .navigationTitle(preferences.text("phone_appearance"))
+        .toolbarBackground(ground, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+    }
+
+    private func rail<Swatch: View>(selected: Binding<String>, ids: [String], name: @escaping (String) -> String,
+                                    @ViewBuilder swatch: @escaping (String) -> Swatch) -> some View {
+        ScrollView(.horizontal) {
+            HStack(alignment: .top, spacing: 9) {
+                ForEach(ids, id: \.self) { id in
+                    Button { selected.wrappedValue = id } label: {
+                        VStack(alignment: .leading, spacing: 5) {
+                            swatch(id)
+                                .frame(height: 46)
+                                .clipShape(.rect(cornerRadius: 8))
+                                .overlay(alignment: .topTrailing) {
+                                    if id == selected.wrappedValue {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, .black)
+                                            .padding(5)
+                                    }
+                                }
+                            Text(name(id)).font(.caption).lineLimit(2)
+                        }
+                        .frame(width: 110, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(id == selected.wrappedValue ? .isSelected : [])
+                }
+            }
+        }
+        .scrollIndicators(.hidden)
     }
 }
 

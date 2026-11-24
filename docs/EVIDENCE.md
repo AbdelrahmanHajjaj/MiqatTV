@@ -2495,3 +2495,11 @@ the task leaves the pending queue alone. Windows passed focused Kotlin prayer
 and fasting tests, the 14 companion generator checks, Swift syntax parsing,
 and the workflow and background-task declaration checks. Apple trigger
 execution, protected-data recovery and background delivery remain pending.
+
+Appearance choices now show canonical palette swatches and scene thumbnails
+in setup and settings. The full-page preview has no playback or location
+actions. Home and Adhan use the selected palette and staged artwork. Windows
+passed 14 generator checks, verified all scene files staged and parsed the
+changed Swift sources. Estimated sRGB contrast for the checked surfaces stayed
+above 4.5 across all 20 palettes after dimming the scene. Native layout,
+Dynamic Type, Right-to-Left behavior and actual artwork rendering remain pending.
