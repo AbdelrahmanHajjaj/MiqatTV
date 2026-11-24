@@ -1,5 +1,13 @@
 # Validation evidence
 
+## Automatic release versions
+
+A read-only rehearsal against GitHub resolved `v0.7.9-staging.1` to version
+0.7.9 and Android code 7009001. Both local release APKs reported those values
+in their manifests, and the generated LG app and service reported 0.7.9.
+LG service tests, bilingual browser smoke, workflow lint and release regressions
+passed. No new public release was created for this check.
+
 ## Stable v0.7.8 — 24 November 2026
 
 [Development](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45457328158)

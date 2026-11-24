@@ -82,5 +82,18 @@ class DeliveryChecks(unittest.TestCase):
     def test_next_tag_skips_releases_drafts_and_existing_git_tags(self):
         with patch.object(release, "releases", return_value=[{"tag_name": "v0.7.8-staging.1"}]), \
                 patch.object(release, "read_api", side_effect=[
-                    {"tag_name": "v0.7.7"}, [{"ref": "refs/tags/v0.7.8-staging.2"}]]):
-            self.assertEqual(release.next_tag("repos/owner/MiqatTV"), "v0.7.8-staging.3")
+                    {"tag_name": "v0.7.7"}, [{"ref": "refs/tags/v0.7.8-staging.3"}]]):
+            self.assertEqual(release.next_tag("repos/owner/MiqatTV"), "v0.7.8-staging.4")
+
+    def test_signed_build_versions_increase_across_candidates_and_releases(self):
+        tags = ["v0.7.9-staging.1", "v0.7.9-staging.999", "v0.7.10-staging.1",
+                "v0.8.0-staging.1", "v1.0.0-staging.1"]
+        versions = [release.package_version(tag) for tag in tags]
+        self.assertEqual(versions[0], ("0.7.9", 7_009_001))
+        codes = [code for _, code in versions]
+        self.assertEqual(codes, sorted(set(codes)))
+        self.assertTrue(all(code > 40 for code in codes))
+        for tag in ("v0.7.9", "v0.7.9-staging.1000", "v0.7.1000-staging.1",
+                    "v0.100.0-staging.1", "v21.0.0-staging.1"):
+            with self.subTest(tag=tag), self.assertRaises(ValueError):
+                release.package_version(tag)

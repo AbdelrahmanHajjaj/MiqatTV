@@ -17,6 +17,7 @@ Sideloaded phone builds offer a manual Production version check in About Miqat.
 Miqat Phone TV setup selects Production or Staging public downloads. Development
 packages use the local file picker. See [Releasing](RELEASING.md).
 Release-signed installs with the update check can detect code 40 in Production.
+Subsequent Staging builds assign the phone version and code before signing.
 
 About Miqat shows the installed phone app version, developer credit
 and GitHub feedback. Email feedback stays disabled pending a public address.

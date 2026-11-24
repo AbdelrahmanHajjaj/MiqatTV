@@ -16,15 +16,16 @@ of the standalone Android phone app. [CI](CI.md) describes the PR gate.
    `phone-development`, `android-tv-development` and `lg-development` from the
    run. These artifacts expire after seven days.
 3. Select **staging** on `main` to publish a signed prerelease. Build allocates
-   the first unused Staging tag for the next Production patch. It verifies the
+   the next Staging suffix for the next Production patch. It verifies the
    Android identities and packaged audio and records the source SHA and Build
    run in the release notes.
 
 The Actions run title shows its channel and branch. Open the run's **Summary**
 for **Built app versions**, including both Android version codes. A Staging
-run also links the published release tag. Build allocates the bundle tag and
-Staging suffix automatically. Each app keeps the version and Android version
-code configured in its source.
+run also links the published release tag. Staging assigns the bundle version to
+all three apps and derives both Android version codes from the bundle version
+and Staging suffix. Production keeps those versions when it promotes the signed
+packages. Development and local builds use the versions configured in source.
 
 The Staging prerelease contains `miqat-phone.apk`, `miqat.apk`,
 `tv.miqat.webos_<version>_all.ipk`, `screenshots.zip` and `SHA256SUMS`.
@@ -105,11 +106,12 @@ records before switching. Staging and Production share the signing identities.
 
 ## Versioning
 
-Phone versions live in `companion/android/build.gradle`, Android TV versions in
-`platforms/android-tv/build.gradle`. LG's version must match package.json, its
-lockfile, appinfo.json and service/package.json. Increase version codes when
-shipping changed APKs. Preserve app identities and signing keys. Published
-packages are immutable.
+Local Android defaults live in `companion/android/build.gradle` and
+`platforms/android-tv/build.gradle`. LG's local version must match package.json,
+its lockfile, appinfo.json and service/package.json. Staging calculates release
+versions before building, so a release needs no source version bump. Android
+version codes increase across successful Staging builds and Production releases.
+Preserve app identities and signing keys. Published packages are immutable.
 
 Miqat Phone TV setup offers **Production** and **Staging** public downloads.
 For a Development build, download the Actions artifact and select its APK or

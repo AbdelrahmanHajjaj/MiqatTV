@@ -8,7 +8,7 @@ import sys
 
 BOT = "github-actions[bot]"
 STABLE_TAG = r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
-STAGING_TAG = rf"({STABLE_TAG})-staging\.[1-9]\d*"
+STAGING_TAG = rf"({STABLE_TAG})-staging\.(?P<attempt>[1-9]\d*)"
 
 
 def gh_api(endpoint, *options):
@@ -37,10 +37,23 @@ def next_tag(repo):
     used = {release["tag_name"] for release in releases(repo)}
     refs = read_api(f"{repo}/git/matching-refs/tags/{prefix}")
     used.update(ref["ref"].removeprefix("refs/tags/") for ref in refs)
-    number = 1
-    while f"{prefix}{number}" in used:
-        number += 1
+    numbers = [int(match["attempt"]) for tag in used if tag.startswith(prefix)
+               and (match := re.fullmatch(STAGING_TAG, tag))]
+    number = max(numbers, default=0) + 1
     return f"{prefix}{number}"
+
+
+def package_version(tag):
+    match = re.fullmatch(STAGING_TAG, tag)
+    if not match:
+        raise ValueError("Package versions require a Staging tag")
+    major, minor, patch = stable_version(match[1])
+    attempt = int(match["attempt"])
+    # Reserve decimal places so all candidates sort by release, then by Staging suffix.
+    code = ((major * 100 + minor) * 1000 + patch) * 1000 + attempt
+    if minor >= 100 or patch >= 1000 or attempt >= 1000 or not 40 < code <= 2_100_000_000:
+        raise ValueError(f"Staging tag is outside the Android version code range: {tag}")
+    return match[1][1:], code
 
 
 def tag_commit(repo, tag):
@@ -118,7 +131,9 @@ if __name__ == "__main__":
     repository = os.environ["GITHUB_REPOSITORY"]
     try:
         if sys.argv[1] == "next":
-            result = {"tag": next_tag(f"repos/{repository}")}
+            tag = next_tag(f"repos/{repository}")
+            name, code = package_version(tag)
+            result = {"tag": tag, "version_name": name, "version_code": code}
         elif sys.argv[1] == "resolve":
             result = resolve(repository, os.environ.get("STAGING_TAG", ""))
             if summary := os.environ.get("GITHUB_STEP_SUMMARY"):

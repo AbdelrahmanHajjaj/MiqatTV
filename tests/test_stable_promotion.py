@@ -1,5 +1,6 @@
 """Production preserves the verified Staging assets across retries."""
 from hashlib import sha256
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -113,3 +114,25 @@ class StablePromotionChecks(unittest.TestCase):
                 pack(b"modified image")
                 with self.assertRaisesRegex(ValueError, "differs from its approved source"):
                     promotion.use_screenshots(directory, archive)
+
+    def test_website_uses_the_packaged_versions_and_rejects_stale_apks(self):
+        staging = "v0.7.8-staging.3"
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            metadata = root / "site/src/lib/stable-release.json"
+            metadata.parent.mkdir(parents=True)
+            lg = root / "tv.miqat.webos_0.7.8_all.ipk"
+            lg.touch()
+            with patch.object(promotion, "use_screenshots"), \
+                    patch.dict(promotion.os.environ, {"ANDROID_HOME": temporary}), \
+                    patch.object(promotion, "check_apk", return_value=("0.7.8", 7_008_003)) as check_apk:
+                promotion.prepare_website(root, root, self.stable, staging)
+                self.assertEqual(json.loads(metadata.read_text())["android"]["tv.miqat.companion"],
+                                 {"versionCode": 7_008_003, "versionName": "0.7.8"})
+                check_apk.return_value = ("0.5.24", 40)
+                with self.assertRaisesRegex(ValueError, "Build a new Staging candidate"):
+                    promotion.prepare_website(root, root, self.stable, staging)
+                check_apk.return_value = ("0.7.8", 7_008_003)
+                lg.rename(root / "tv.miqat.webos_0.2.32_all.ipk")
+                with self.assertRaisesRegex(ValueError, "LG package does not use the version"):
+                    promotion.prepare_website(root, root, self.stable, staging)

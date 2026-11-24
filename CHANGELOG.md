@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Staging sets app versions and Android version codes automatically for Production.
+
 ## v0.7.8
 
 - Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
