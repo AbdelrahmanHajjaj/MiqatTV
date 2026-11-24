@@ -45,22 +45,25 @@ struct HijriObservance: Identifiable, Decodable {
 struct HijriMonth: View {
     let preferences: PhonePreferences
     let schedule: PrayerSchedule
-    @State private var selected = Date.now
+    @Environment(\.dismiss) private var dismiss
+    @State private var selection: HijriCalendarSelection
 
-    private var calendar: Calendar { PrayerSchedule.hijriCalendar(preferences) }
-    private var corrected: Date {
-        calendar.date(byAdding: .day, value: preferences.hijriOffset, to: selected) ?? selected
-    }
-    private var days: [Date] {
-        guard let month = calendar.dateInterval(of: .month, for: corrected),
-              let range = calendar.range(of: .day, in: .month, for: corrected) else { return [] }
-        return range.compactMap { calendar.date(byAdding: .day, value: $0 - 1, to: month.start) }
+    init(preferences: PhonePreferences, schedule: PrayerSchedule) {
+        self.preferences = preferences
+        self.schedule = schedule
+        _selection = State(initialValue: HijriCalendarSelection(opened: .now, civil: PrayerSchedule.civilCalendar(preferences),
+                           hijri: PrayerSchedule.hijriCalendar(preferences), correction: preferences.hijriOffset))
     }
 
     var body: some View {
+        let days = selection.days
+        let selected = selection.selected
+        let calendar = selection.hijri
+        let month = calendar.component(.month, from: selection.month)
+        let parts = calendar.dateComponents([.month, .day], from: selection.selectedHijri)
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                monthGrid
+                monthGrid(days, month: month)
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         arrow("phone_previous_day", delta: -1, unit: .day)
@@ -70,6 +73,12 @@ struct HijriMonth: View {
                         arrow("phone_next_day", delta: 1, unit: .day)
                     }
                     Text(preferences.gregorianDate(selected)).foregroundStyle(.secondary)
+                    if let month = parts.month, let day = parts.day {
+                        ForEach(HijriObservance.events(month: month, day: day)) { event in
+                            Text(event.name(day: day, preferences: preferences))
+                                .font(.subheadline).foregroundStyle(Color.accentColor)
+                        }
+                    }
                     if let times = schedule.day(at: selected, prefs: preferences) {
                         PrayerTimesList(preferences: preferences, times: times)
                     } else {
@@ -77,51 +86,61 @@ struct HijriMonth: View {
                     }
                 }
                 .simultaneousGesture(swipe(.day))
-                monthEvents
+                monthEvents(days, month: month)
             }
             .padding()
         }
         .navigationTitle(preferences.text("phone_calendar"))
         .toolbar {
-            Button(preferences.text("phone_today")) { selected = .now }
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button(preferences.text("phone_today")) { selection.select(.now, followMonth: true) }
+                Button(preferences.text("done")) { dismiss() }
+            }
         }
     }
 
-    private var monthGrid: some View {
-        let month = calendar.component(.month, from: corrected)
-        let year = calendar.component(.year, from: corrected)
+    private func monthGrid(_ days: [Date], month: Int) -> some View {
+        let calendar = selection.hijri
+        let year = calendar.component(.year, from: selection.month)
         let months = PhoneData.list("hijriMonths", arabic: preferences.arabic)
-        let weekdays = calendar.veryShortStandaloneWeekdaySymbols
-        let gap = days.first.map { (calendar.component(.weekday, from: $0) - calendar.firstWeekday + 7) % 7 } ?? 0
+        let weekdays = calendar.shortStandaloneWeekdaySymbols
+        let weekStart = preferences.arabic ? 7 : 1
+        let gap = days.first.map { (calendar.component(.weekday, from: $0) - weekStart + 7) % 7 } ?? 0
         return VStack(spacing: 8) {
             HStack {
                 arrow("phone_previous_month", delta: -1, unit: .month)
                 Spacer()
-                Text(preferences.displayDigits("\(months[month - 1]) \(year)")).font(.headline)
+                if months.indices.contains(month - 1) {
+                    Text(preferences.displayDigits("\(months[month - 1]) \(year)")).font(.headline)
+                }
                 Spacer()
                 arrow("phone_next_month", delta: 1, unit: .month)
             }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 6) {
                 ForEach(0..<7, id: \.self) { index in
-                    Text(weekdays[(calendar.firstWeekday - 1 + index) % 7])
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text(weekdays[(weekStart - 1 + index) % 7])
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.6)
                 }
-                ForEach(0..<gap, id: \.self) { _ in Color.clear.frame(height: 30) }
+                ForEach((-gap)..<0, id: \.self) { _ in Color.clear.frame(height: 30) }
                 ForEach(days, id: \.self) { date in
                     let day = calendar.component(.day, from: date)
-                    let active = calendar.isDate(date, inSameDayAs: corrected)
-                    let marked = !HijriObservance.events(month: month, day: day).isEmpty
+                    let civilDay = selection.civilDay(date)
+                    let active = selection.civil.isDate(civilDay, inSameDayAs: selection.selected)
+                    let events = HijriObservance.events(month: month, day: day)
                     Button {
-                        selected = calendar.date(byAdding: .day, value: -preferences.hijriOffset, to: date) ?? date
+                        selection.select(civilDay)
                     } label: {
                         VStack(spacing: 2) {
                             Text(preferences.displayDigits(String(day))).font(.callout.monospacedDigit())
-                            Circle().fill(marked ? Color.accentColor : .clear).frame(width: 4, height: 4)
+                            Circle().fill(events.isEmpty ? .clear : Color.accentColor).frame(width: 4, height: 4)
                         }
                         .frame(maxWidth: .infinity, minHeight: 38)
                         .background(active ? Color.accentColor.opacity(0.16) : .clear, in: .rect(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
+                    .disabled(!selection.canSelect(civilDay))
+                    .accessibilityLabel(([preferences.hijriDate(civilDay)] +
+                        events.map { $0.name(day: day, preferences: preferences) }).joined(separator: ", "))
                     .accessibilityAddTraits(active ? .isSelected : [])
                 }
             }
@@ -129,19 +148,25 @@ struct HijriMonth: View {
         .simultaneousGesture(swipe(.month))
     }
 
-    private var monthEvents: some View {
-        let month = calendar.component(.month, from: corrected)
-        let entries = days.flatMap { date in
-            let day = calendar.component(.day, from: date)
-            return HijriObservance.events(month: month, day: day).map { (day, $0) }
+    private func monthEvents(_ days: [Date], month: Int) -> some View {
+        let entries = days.compactMap { date -> (date: Date, day: Int, labels: [String])? in
+            let civilDay = selection.civilDay(date)
+            guard selection.canSelect(civilDay) else { return nil }
+            let day = selection.hijri.component(.day, from: date)
+            let labels = HijriObservance.events(month: month, day: day).map { $0.name(day: day, preferences: preferences) }
+            return labels.isEmpty ? nil : (civilDay, day, labels)
         }
         return VStack(alignment: .leading, spacing: 8) {
             if !entries.isEmpty {
                 Text(preferences.text("phone_calendar_events")).font(.headline)
                 ForEach(entries.indices, id: \.self) { index in
-                    let (day, event) = entries[index]
-                    Text(preferences.displayDigits(String(day)) + " · " + event.name(day: day, preferences: preferences))
-                        .font(.subheadline)
+                    let entry = entries[index]
+                    Button {
+                        selection.select(entry.date)
+                    } label: {
+                        Text(preferences.displayDigits(String(entry.day)) + " · " + entry.labels.joined(separator: ", "))
+                            .font(.subheadline)
+                    }
                 }
             }
         }
@@ -152,19 +177,19 @@ struct HijriMonth: View {
             Image(systemName: delta < 0 ? "chevron.backward" : "chevron.forward").padding(10)
         }
         .accessibilityLabel(preferences.text(label))
+        .disabled(unit == .month ? selection.nextMonth(delta) == nil : selection.nextDay(delta) == nil)
     }
 
     private func swipe(_ unit: Calendar.Component) -> some Gesture {
         DragGesture(minimumDistance: 34).onEnded { value in
             let x = value.translation.width
-            guard abs(x) > abs(value.translation.height) else { return }
+            guard abs(x) > 1.5 * abs(value.translation.height) else { return }
             move(unit, (x < 0) != preferences.arabic ? 1 : -1)
         }
     }
 
     private func move(_ unit: Calendar.Component, _ amount: Int) {
-        guard let moved = calendar.date(byAdding: unit, value: amount, to: corrected),
-              let uncorrected = calendar.date(byAdding: .day, value: -preferences.hijriOffset, to: moved) else { return }
-        selected = uncorrected
+        if unit == .month { selection.moveMonth(amount) }
+        else if let day = selection.nextDay(amount) { selection.select(day, followMonth: true) }
     }
 }

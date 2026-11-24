@@ -2461,3 +2461,11 @@ chosen timezone for the on-open refresh. Windows passed the shared Kotlin
 location-quality check and syntax checks for the affected Swift sources.
 Actual permission changes, delayed Core Location callbacks and significant-change
 delivery still need iPhone validation.
+
+The Hijri calendar keeps month browsing separate from the selected prayer
+day. Day selection, event rows, arrows and swipes follow the Android calendar
+behavior within the same civil-date limit. Windows verified the shared Kotlin
+observance rules, checked the reference Ramadan, Eid, Arafah and Hijri rollover
+dates with Intl Umm al-Qura, and parsed the changed Swift sources and workflow.
+Apple Foundation date conversion, the new Swift fixture and the native RTL
+and LTR calendar interactions remain pending.

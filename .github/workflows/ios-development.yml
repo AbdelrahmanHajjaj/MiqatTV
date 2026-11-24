@@ -69,6 +69,11 @@ jobs:
           swiftc companion/ios/Sources/AdhanNotification.swift companion/ios/checks/adhan-notification/main.swift \
             -o "$RUNNER_TEMP/adhan-notification-check"
           "$RUNNER_TEMP/adhan-notification-check"
+      - name: Check Hijri calendar selection
+        run: |
+          swiftc companion/ios/Sources/HijriCalendarSelection.swift companion/ios/checks/hijri-calendar/main.swift \
+            -o "$RUNNER_TEMP/hijri-calendar-check"
+          "$RUNNER_TEMP/hijri-calendar-check"
       - name: Check TV packages and installation sequences
         run: |
           python3 -S -B companion/ios/checks/tv-download/ipk-fixtures.py "$RUNNER_TEMP/ipk-fixtures"

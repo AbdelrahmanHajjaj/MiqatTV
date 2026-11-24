@@ -12,6 +12,7 @@
 - The iPhone prayer widget's 120% text option applies to all layouts.
 - Opening a recent Adhan notification can start playback or reopen its controls on iPhone.
 - The iPhone prayer Home city button can refresh a confirmed location when permission is already granted.
+- The iPhone Hijri calendar keeps the selected prayer day while browsing months and opens dates from the month’s observance list.
 - The iPhone development target can download and share verified Miqat TV packages from Production and Staging.
 - The iPhone development target can inspect and share local Miqat Android TV APKs and LG webOS IPKs.
 - The iPhone development target can find advertised Android TV debugging and pairing ports.
