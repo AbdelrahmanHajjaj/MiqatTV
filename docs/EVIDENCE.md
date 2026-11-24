@@ -2343,6 +2343,12 @@ opened. Swift syntax, all 14 companion generator checks, the shared compact
 QR vectors and LG's pairing fixture passed. Check named user approval, Arabic
 verification digit order, and reconnect against the TV after obtaining an Apple build.
 
+The iPhone LG installer attempts to remove its temporary IPK after a failed
+upload or checksum check, before requesting installation. Its fixture checks
+the exact cleanup path and preserves files after an uncertain install. Swift
+syntax, IPK fixture generation and workflow lint passed locally. The Swift
+transport fixture and a physical LG transfer still await Apple execution.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

@@ -52,17 +52,23 @@ struct LGInstallation {
 
         let digest = try Self.transferDigest(file)
         let remote = "\(Self.folder)/miqat-\(UUID().uuidString.lowercased()).ipk"
+        let cleanup = Command("rm -f \(remote)")
         _ = try await execute(Command("mkdir -p \(Self.folder)"))
-        await report(.sending(0))
-        try Task.checkCancellation()
-        _ = try await transport.run(Command("cat > \(remote)", input: file)) { progress in
-            await report(.sending(min(1, max(0, progress))))
+        do {
+            await report(.sending(0))
+            try Task.checkCancellation()
+            _ = try await transport.run(Command("cat > \(remote)", input: file)) { progress in
+                await report(.sending(min(1, max(0, progress))))
+            }
+            await report(.sending(1))
+            await report(.checkingTransfer)
+            let hashReply = try await execute(Command("md5sum \(remote)"))
+            let remoteHash = String(data: hashReply, encoding: .ascii)?.split(whereSeparator: \.isWhitespace).first
+            guard remoteHash == digest[...] else { throw Failure.transferMismatch }
+        } catch {
+            if !Task.isCancelled { _ = try? await execute(cleanup) }
+            throw error
         }
-        await report(.sending(1))
-        await report(.checkingTransfer)
-        let hashReply = try await execute(Command("md5sum \(remote)"))
-        let remoteHash = String(data: hashReply, encoding: .ascii)?.split(whereSeparator: \.isWhitespace).first
-        guard remoteHash == digest[...] else { throw Failure.transferMismatch }
 
         await report(.installing)
         let install = Self.luna("com.webos.appInstallService/dev/install",
@@ -73,7 +79,7 @@ struct LGInstallation {
 
         await report(.verifyingVersion)
         guard try await installedVersion() == version else { throw Failure.unconfirmed }
-        if !Task.isCancelled { _ = try? await execute(Command("rm -f \(remote)")) }
+        if !Task.isCancelled { _ = try? await execute(cleanup) }
     }
 
     func launch() async throws {

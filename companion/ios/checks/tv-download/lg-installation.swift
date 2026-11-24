@@ -19,7 +19,11 @@ enum LGInstallationCheck {
 
         let corrupt = TV(digest: "mismatch", after: "0.2.28")
         try await rejects(package, on: corrupt, with: .transferMismatch,
-                          after: ["list", "prepare", "upload", "digest"])
+                          after: ["list", "prepare", "upload", "digest", "clean"])
+
+        let interrupted = TV(digest: digest, after: "0.2.28", uploadFailure: .refused)
+        try await rejects(package, on: interrupted, with: .refused,
+                          after: ["list", "prepare", "upload", "clean"])
 
         let refused = TV(digest: digest, after: "0.2.28",
                          terminal: #"{"returnValue":true,"details":{"state":"FAILED"}} "#)
@@ -56,15 +60,18 @@ enum LGInstallationCheck {
         let before: String?
         let after: String
         let terminal: String
+        let uploadFailure: LGInstallation.Failure?
         var commands: [String] = []
         var uploadedPath: String?
 
         init(digest: String, before: String? = nil, after: String,
-             terminal: String = #"{"returnValue":true,"details":{"state":"INSTALLED"}}"#) {
+             terminal: String = #"{"returnValue":true,"details":{"state":"INSTALLED"}}"#,
+             uploadFailure: LGInstallation.Failure? = nil) {
             self.digest = digest
             self.before = before
             self.after = after
             self.terminal = terminal
+            self.uploadFailure = uploadFailure
         }
 
         func run(_ command: LGInstallation.Command, progress: @Sendable (Double) async -> Void) async throws -> Data {
@@ -85,6 +92,7 @@ enum LGInstallationCheck {
                 uploadedPath = path
                 commands.append("upload")
                 await progress(0.5)
+                if let uploadFailure { throw uploadFailure }
                 return Data()
             }
             if let path = uploadedPath, text == "md5sum \(path)" {
