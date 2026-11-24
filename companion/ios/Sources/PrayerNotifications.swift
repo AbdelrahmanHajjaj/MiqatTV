@@ -50,8 +50,12 @@ final class PrayerNotifications: ObservableObject {
     @Published private(set) var permission = UNAuthorizationStatus.notDetermined
     @Published private(set) var scheduleFailed = false
     @Published private(set) var alertSoundsBlocked = false
+    @Published private(set) var testDate: Date?
+    @Published private(set) var schedulingTest = false
+    @Published private(set) var testFailed = false
     private let center = UNUserNotificationCenter.current()
     private var pending: (id: UUID, work: Task<Bool, Never>)?
+    private var testCancelled = false
     private static let schedulePrefix = "miqat.schedule."
 
     var permissionMissing: Bool { permission == .denied || alertSoundsBlocked }
@@ -83,29 +87,49 @@ final class PrayerNotifications: ObservableObject {
     }
 
     func cancelTest() {
+        testCancelled = true
+        testDate = nil
+        testFailed = false
+        removeTestNotifications()
+    }
+
+    private func removeTestNotifications() {
         center.removePendingNotificationRequests(withIdentifiers: [AdhanNotification.testID])
         center.removeDeliveredNotifications(withIdentifiers: [AdhanNotification.testID])
     }
 
-    func test(preferences: PhonePreferences, adhan: Bool = false) async -> Date? {
-        guard !Task.isCancelled, await authorize(), !Task.isCancelled else { return nil }
+    func startTest(preferences: PhonePreferences, adhan: Bool) {
+        guard !schedulingTest, testDate.map({ $0 <= .now }) != false else { return }
+        cancelTest()
+        testCancelled = false
+        schedulingTest = true
+        Task { await scheduleTest(preferences: preferences, adhan: adhan) }
+    }
+
+    private func scheduleTest(preferences: PhonePreferences, adhan: Bool) async {
+        defer { schedulingTest = false }
+        guard !testCancelled else { return }
+        let allowed = await authorize()
+        guard !testCancelled, !Task.isCancelled else { return }
+        guard allowed else { testFailed = true; return }
+        let audible = await center.notificationSettings().soundSetting == .enabled
+        guard !testCancelled, !Task.isCancelled else { return }
         let when = Date.now.addingTimeInterval(30)
         let content = UNMutableNotificationContent()
         content.title = preferences.text(adhan ? "phone_test_adhan" : "phone_test_notification")
         content.sound = PrayerNotificationRequest.shortSound
-        if adhan {
-            let settings = await center.notificationSettings()
-            if settings.soundSetting == .enabled {
-                content.userInfo["adhanPrayer"] = 2
-                content.userInfo["adhanTime"] = when.timeIntervalSince1970 * 1000
-            }
+        if adhan && audible {
+            content.userInfo["adhanPrayer"] = 2
+            content.userInfo["adhanTime"] = when.timeIntervalSince1970 * 1000
         }
         do {
             try await center.add(UNNotificationRequest(identifier: AdhanNotification.testID, content: content,
                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: 30, repeats: false)))
-            if Task.isCancelled { cancelTest(); return nil }
-            return when
-        } catch { return nil }
+            if testCancelled || Task.isCancelled { removeTestNotifications(); return }
+            testDate = when
+        } catch {
+            if !testCancelled && !Task.isCancelled { testFailed = true }
+        }
     }
 
     func claimAdhan(_ request: AdhanNotification, preferences: PhonePreferences, schedule: PrayerSchedule) -> Bool {
@@ -113,7 +137,8 @@ final class PrayerNotifications: ObservableObject {
         let rules = PhonePrayerRules.shared
         guard rules.due(time: request.time, now: now.timeIntervalSince1970 * 1000) else { return false }
         if request.isTest {
-            guard request.prayer == 2 else { return false }
+            guard request.prayer == 2, !testCancelled, !schedulingTest,
+                  testDate.map({ $0.timeIntervalSince1970 * 1000 == request.time }) != false else { return false }
         } else {
             guard preferences.locationConfirmed, preferences.alertsEnabled, preferences.valid else { return false }
             let start = Date(timeIntervalSince1970: request.time / 1000 - 1)

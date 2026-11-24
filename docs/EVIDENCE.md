@@ -2332,6 +2332,11 @@ observance across an adjusted Hijri month boundary. Swift syntax, all 14
 generator checks and Kotlin Hijri event tests passed. The Apple fixture and
 Home navigation remain pending.
 
+The iPhone notification service now owns test registration and countdown state
+across settings navigation. Cancel and reset invalidate an in-flight test,
+including a queued playback callback. Swift syntax and all 14 generator
+checks passed. The iOS permission, reset and delivery race needs native testing.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

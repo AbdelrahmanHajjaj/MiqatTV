@@ -5,9 +5,6 @@ struct AlertSettings: View {
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
     @ObservedObject var notifications: PrayerNotifications
-    @State private var testDate: Date?
-    @State private var testFailed = false
-    @State private var testTask: Task<Void, Never>?
 
     var body: some View {
         Form {
@@ -45,13 +42,16 @@ struct AlertSettings: View {
                 }
             }
             Section {
-                if let date = testDate {
+                if notifications.schedulingTest {
+                    ProgressView()
+                    Button(preferences.text("phone_test_cancel"), action: notifications.cancelTest)
+                } else if let date = notifications.testDate {
                     TimelineView(.periodic(from: .now, by: 1)) { context in
                         let seconds = Int(ceil(date.timeIntervalSince(context.date)))
                         if seconds > 0 {
                             Text(preferences.text("phone_test_pending").replacingOccurrences(of: "%s",
                                 with: preferences.displayDigits(String(seconds))))
-                            Button(preferences.text("phone_test_cancel")) { cancelTest() }
+                            Button(preferences.text("phone_test_cancel"), action: notifications.cancelTest)
                         } else {
                             Text(preferences.text("phone_test_sent"))
                             testButtons
@@ -60,7 +60,7 @@ struct AlertSettings: View {
                 } else {
                     testButtons
                 }
-                if testFailed { Text(preferences.text("phone_test_failed")).foregroundStyle(.secondary) }
+                if notifications.testFailed { Text(preferences.text("phone_test_failed")).foregroundStyle(.secondary) }
             }
         }
         .navigationTitle(preferences.text("phone_audio"))
@@ -71,25 +71,9 @@ struct AlertSettings: View {
 
     private var testButtons: some View {
         Group {
-            Button(preferences.text("phone_test_notification")) { startTest(adhan: false) }
-            Button(preferences.text("phone_test_adhan")) { startTest(adhan: true) }
+            Button(preferences.text("phone_test_notification")) { notifications.startTest(preferences: preferences, adhan: false) }
+            Button(preferences.text("phone_test_adhan")) { notifications.startTest(preferences: preferences, adhan: true) }
         }
-        .disabled(testTask != nil)
-    }
-
-    private func startTest(adhan: Bool) {
-        testFailed = false
-        testTask = Task {
-            testDate = await notifications.test(preferences: preferences, adhan: adhan)
-            testFailed = !Task.isCancelled && testDate == nil
-            testTask = nil
-        }
-    }
-
-    private func cancelTest() {
-        testTask?.cancel()
-        notifications.cancelTest()
-        testDate = nil
     }
 }
 

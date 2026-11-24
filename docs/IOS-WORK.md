@@ -76,6 +76,12 @@ Repeat with all scheduled alerts silent and confirm that disabled Sounds alone
 does not show the action. Disable all notifications and verify recovery remains
 available on Home and under Fasting when only fasting alerts are enabled.
 
+Start Test notification or Test Adhan, leave its screen, then reopen it before
+delivery. Verify the same countdown is visible and Cancel prevents delivery.
+Repeat with Reset phone prayer settings while a test is being registered or
+counting down. Verify no test alert or playback appears after reset, then start
+a new test and check that it can still play.
+
 ## Prayer timing editor regression on iPhone
 
 With a confirmed location, type `−٥` in the sunrise and Fajr adjustment fields

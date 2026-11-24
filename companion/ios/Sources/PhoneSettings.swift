@@ -46,11 +46,11 @@ struct PhoneSettings: View {
         .navigationTitle(preferences.text("phone_settings"))
         .alert(preferences.text("phone_reset"), isPresented: $reset) {
             Button(preferences.text("phone_reset"), role: .destructive) {
+                notifications.cancelTest()
                 do {
                     audio.stop()
                     radio.stop()
                     try library.reset()
-                    notifications.cancelTest()
                     try PhoneStore.shared.clearAdhanClaims()
                     preferences = PhonePreferences()
                 } catch { resetFailed = true }
