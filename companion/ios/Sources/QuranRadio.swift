@@ -22,10 +22,12 @@ final class QuranRadio: ObservableObject {
     private var player: AVPlayer?
     private var itemWatch: NSKeyValueObservation?
     private var statusWatch: NSKeyValueObservation?
+    private var endWatch: AnyCancellable?
     private var timeout: Task<Void, Never>?
     private var station: RadioStation?
     private var preferences: PhonePreferences?
     private var retries = 0
+    private static let maxRetries = 4
 
     var wantsPlay: Bool { player != nil }
     var hasSession: Bool { status != nil }
@@ -33,7 +35,7 @@ final class QuranRadio: ObservableObject {
     func play(station: RadioStation, preferences: PhonePreferences) {
         self.station = station
         self.preferences = preferences
-        retries = 2
+        retries = 0
         connect("phone_radio_connecting")
     }
 
@@ -82,11 +84,20 @@ final class QuranRadio: ObservableObject {
                 if self?.player?.currentItem === item { self?.retry() }
             }
         }
+        let center = NotificationCenter.default
+        endWatch = center.publisher(for: AVPlayerItem.didPlayToEndTimeNotification, object: item)
+            .merge(with: center.publisher(for: AVPlayerItem.failedToPlayToEndTimeNotification, object: item))
+            .sink { [weak self, weak item] _ in
+                Task { @MainActor in
+                    guard let self, let item, self.player?.currentItem === item else { return }
+                    self.retry()
+                }
+            }
         statusWatch = source.observe(\.timeControlStatus, options: [.new]) { [weak self] source, _ in
             Task { @MainActor in
                 guard let self, self.player === source else { return }
                 if source.timeControlStatus == .playing {
-                    self.timeout?.cancel()
+                    self.resetRetriesAfterStablePlayback()
                     self.status = "phone_radio_live"
                     self.metadata()
                 } else if source.timeControlStatus == .waitingToPlayAtSpecifiedRate {
@@ -117,9 +128,18 @@ final class QuranRadio: ObservableObject {
         }
     }
 
+    private func resetRetriesAfterStablePlayback() {
+        timeout?.cancel()
+        guard retries > 0 else { return }
+        timeout = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(30))
+            if !Task.isCancelled { self?.retries = 0 }
+        }
+    }
+
     private func retry() {
-        if retries > 0 {
-            retries -= 1
+        if retries < Self.maxRetries {
+            retries += 1
             connect("phone_radio_retrying")
         } else {
             closeStream()
@@ -132,6 +152,7 @@ final class QuranRadio: ObservableObject {
         timeout?.cancel()
         statusWatch = nil
         itemWatch = nil
+        endWatch = nil
         guard let player else { return }
         self.player = nil
         player.pause()

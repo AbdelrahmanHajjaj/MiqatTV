@@ -2288,6 +2288,11 @@ and bounded steppers. Zero-length reminders and unconfirmed locations show no
 preview time. Swift syntax and all 14 generator checks passed. Native keyboard,
 preview and weekday localization are in the iPhone acceptance queue.
 
+The iPhone radio observes completion and terminal errors for the current
+player item. A stable connection replenishes the four-retry budget. The Swift
+source parsed and all 14 generator checks passed. Terminal stream callbacks,
+retry exhaustion and lock-screen transport await the native radio regression.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

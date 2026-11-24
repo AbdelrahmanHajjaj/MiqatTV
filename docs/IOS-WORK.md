@@ -19,7 +19,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | 6 | Prayer alerts, enablement, mode, timing previews, weekday inclusion/overrides, quiet hours, before/after, explicit tests, permission and recovery | The planner keeps matching absolute-time requests and can replenish the queue in offline Background App Refresh. Weekday overrides follow the prayer's local date and quiet hours follow the reminder's delivery time, including across midnight. Run the Apple notification fixture, permission regression, timezone-change, delivery and background expiration checks. |
 | 7 | Fasting eve, Suhoor and Iftar, choices, exclusions and overlapping selections | Coded using Kotlin fasting rules. Check day edges and independent delivery on iOS. |
 | 8 | Approved voices including Fajr, named audio library/import and CRUD, previews, per-prayer selection, level/length and playback controls, foreground Adhan screen | Packaged 13 checksum-verified voices. Named imports share Android's validation and preserve an unreadable library index. Deleting a recording restores affected voice selections. Active Adhan publishes progress to Now Playing and supports swipe or tap to stop. Verify Files import/cancellation, duplicate naming, deletion across slots, reset during import, system controls and headphone removal. |
-| 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Coded with the canonical HTTPS stations. Radio releases Now Playing when Adhan takes over. Verify a queued radio command cannot affect Adhan, headphone removal pauses the stream, and radio resumes by request after Adhan. |
+| 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Uses canonical HTTPS stations. Stream completion and terminal failures can reconnect up to four times. Thirty seconds of stable playback restores the budget. Verify the radio regression below, including audio ownership during Adhan and headphone removal. |
 | 10 | Independent Qibla fix, true-north compass, numeric fallback, explicit map with route/pan/zoom/recenter | Coded with Core Location and an explicit Apple MapKit view. Test simulator fallback and a physical iPhone heading. |
 | 11 | Home widgets, adaptive/strip/daily/circle presentations, settings per instance, date options, countdown and ring | Confirmed location gates the timetable. The app stages prayer transitions from Kotlin and can replenish an installed widget during offline background refresh. Each placement retains appearance, date and 120% text choices. Verify signed App Group transfer, medium timetable fit, timer locale and rollover, and per-instance choices. |
 | 12 | About, feedback, update action, independent local storage and prayer reset | About, GitHub feedback, protected prayer settings and reset coded. iOS update action remains open until there is a stable iOS distribution channel. |
@@ -82,6 +82,16 @@ Set Before and After to zero and verify both previews disappear. Select Arabic
 while iOS uses English and verify the weekday names and digits follow Miqat's
 preferences. Repeat before confirming a location and check time previews stay
 unavailable until confirmation.
+
+## Radio reconnect regression on iPhone
+
+With a controllable HTTPS stream in a local development fixture, end the
+stream normally and then fail it mid-playback. In each case check that Miqat
+reconnects and shows Station unavailable after four failed retries. Recover the
+stream, keep it playing for at least 30 seconds, and interrupt it again to
+check that the full retry budget is available. Pause, switch stations or start
+Adhan during a failure and verify a late callback cannot restart the old player.
+Repeat an interruption while locked and verify the system playback controls.
 
 ## Platform differences to verify
 
