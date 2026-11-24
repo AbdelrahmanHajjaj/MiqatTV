@@ -100,8 +100,8 @@ const L = ar ? {
     <div class="actions"><a class="primary" href="#get-miqat">{L.getCta}</a><a href="#phone">{L.phoneCta}</a></div>
   </div>
   <figure class="hero-images">
-    <div class="hero-tv"><Image src={shot('android-home')} alt={L.androidTitle} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 54vw" loading="eager" format="webp" /></div>
-    <Image class="hero-phone" src={shot('phone-home')} alt={ar ? 'ميقات على هاتف أندرويد' : 'Miqat on an Android phone'} widths={[240, 420, 640]} sizes="(max-width: 800px) 24vw, 15vw" loading="eager" format="webp" />
+    <div class="tv-image hero-tv"><span class="tv-screen native"><Image src={shot('android-home')} alt={L.androidTitle} widths={[640, 960, 1440]} sizes="(max-width: 800px) 74vw, 40vw" loading="eager" format="webp" /></span></div>
+    <Image class="hero-phone" src={shot('phone-home')} alt={ar ? 'ميقات على هاتف أندرويد' : 'Miqat on an Android phone'} widths={[240, 420, 640]} sizes="(max-width: 800px) 22vw, 12vw" loading="eager" format="webp" />
   </figure>
 </section>
 <nav class="product-rail" aria-label={ar ? 'تطبيقات ميقات' : 'Miqat apps'}>
@@ -135,7 +135,7 @@ const L = ar ? {
       ['android-tv', 'android-home', L.androidTitle, L.androidCopy],
       ['lg-webos', 'lg-home', L.lgTitle, L.lgCopy],
     ].map(([id, image, title, copy]) => <figure id={id}>
-      <a class:list={['tv-image', { native: id === 'android-tv' }]} href={shot(image).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><Image src={shot(image)} alt={title} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 45vw" format="webp" /></a>
+      <a class="tv-image" href={shot(image).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><span class:list={['tv-screen', { native: id === 'android-tv' }]}><Image src={shot(image)} alt={title} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 45vw" format="webp" /></span></a>
       <figcaption><h3>{title}</h3><p>{copy}</p></figcaption>
     </figure>)}
   </div>
@@ -159,11 +159,9 @@ const L = ar ? {
   .actions { display:flex; align-items:center; gap:20px; flex-wrap:wrap; font-size:1rem; }
   .actions a { padding:14px 0; text-underline-offset:5px; }
   .actions .primary { padding:14px 22px; background:var(--color-gold-400); color:var(--color-lapis-950); border-radius:10px; text-decoration:none; font-weight:600; }
-  .hero-images { position:relative; width:100%; min-width:0; margin:0; padding:10% 9% 12% 0; }
-  .hero-images :global(img) { display:block; height:auto; box-shadow:0 20px 60px #0005; }
-  .hero-tv { position:relative; aspect-ratio:1920/1020; width:100%; overflow:hidden; border:1px solid var(--color-line-soft); border-radius:12px; box-shadow:0 20px 60px #0005; }
-  .hero-tv :global(img) { position:absolute; inset:0; width:100%; }
-  .hero-images :global(.hero-phone) { position:absolute; width:29%; inset-inline-end:0; top:0; border:5px solid #102b30; border-radius:24px; }
+  .hero-images { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,.29fr); align-items:center; gap:clamp(8px,1.15vw,18px); width:100%; }
+  .hero-tv, .hero-images :global(.hero-phone) { box-shadow:0 20px 60px #0005; }
+  .hero-images :global(.hero-phone) { display:block; width:100%; height:auto; border:1px solid var(--color-line-soft); border-radius:clamp(9px,1.6vw,24px); }
   .product-rail { display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px 32px; border-block:1px solid var(--color-line-soft); padding:22px 0; font-size:1rem; }
   .product-rail a { text-decoration:none; }
   .product-section { padding:clamp(52px,7vw,100px) 0; border-bottom:1px solid var(--color-line-soft); }
@@ -183,9 +181,11 @@ const L = ar ? {
   .widget-feature :global(img) { width:100%; height:auto; }
   .companion-gallery { grid-template-columns:repeat(3,minmax(0,1fr)); max-width:1020px; margin-inline:auto; gap:40px; }
   .tv-gallery { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
-  .tv-image { display:block; position:relative; aspect-ratio:16/9; overflow:hidden; border-radius:12px; border:1px solid var(--color-line-soft); }
-  .tv-image.native { aspect-ratio:1920/1020; }
-  .tv-image :global(img) { position:absolute; inset:0; width:100%; height:auto; display:block; }
+  .tv-image { display:grid; align-items:center; aspect-ratio:16/9; overflow:hidden; background:var(--color-lapis-950); border-radius:12px; border:1px solid var(--color-line-soft); }
+  a.tv-image { cursor:zoom-in; }
+  .tv-screen { display:block; aspect-ratio:16/9; overflow:hidden; }
+  .tv-screen.native { aspect-ratio:1920/1020; }
+  .tv-screen :global(img) { display:block; width:100%; height:auto; }
   .tv-demo-link { margin-top:28px; }
   .download-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin-top:32px; }
   .download-card { display:flex; flex-direction:column; gap:20px; padding:28px; background:#123b4088; border:1px solid var(--color-line-soft); border-radius:16px; }
@@ -193,8 +193,7 @@ const L = ar ? {
   .release-link { display:inline-block; margin-top:28px; font-size:1rem; text-underline-offset:5px; }
   @media(max-width:1100px) { .phone-gallery { grid-template-columns:repeat(3,minmax(0,1fr)); } .companion-gallery { gap:24px; } }
   @media(max-width:800px) { .product-hero { grid-template-columns:1fr; gap:12px; } .hero-images { max-width:680px; margin:auto; } .phone-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } .widget-feature,.download-grid { grid-template-columns:1fr; gap:26px; } .tv-gallery { grid-template-columns:1fr; gap:40px; } .section-heading { align-items:start; flex-direction:column; gap:18px; } }
-  @media(max-width:560px) { .phone-gallery { grid-template-columns:1fr; max-width:360px; margin-inline:auto; gap:38px; } .product-rail { justify-content:start; gap:16px 24px; } .widget-feature { padding:24px 18px; } .hero-images :global(.hero-phone) { border-width:3px; border-radius:14px; } }
+  @media(max-width:560px) { .phone-gallery { grid-template-columns:1fr; max-width:360px; margin-inline:auto; gap:38px; } .product-rail { justify-content:start; gap:16px 24px; } .widget-feature { padding:24px 18px; } }
   :global([dir='rtl']) .kicker { letter-spacing:0; }
-  :global([dir='rtl']) .hero-images { padding-inline:0 9%; }
   a:focus-visible { outline:2px solid var(--color-gold-400); outline-offset:5px; }
 </style>
