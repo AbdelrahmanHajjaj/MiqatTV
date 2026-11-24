@@ -61,7 +61,7 @@ struct TVControl: Decodable, Identifiable {
 
     var supported: Bool {
         available && (["toggle", "choice", "number", "list"].contains(kind)
-            || (kind == "text" && id == "appearance.custom-theme"))
+            || (kind == "text" && ["appearance.custom-theme", "device.redirects"].contains(id)))
             && (canonical != nil || id.range(of: "^remote\\.key-[0-9]{1,5}$", options: .regularExpression) != nil && kind == "choice")
             && (kind != "number" || canonical?.range != nil)
     }
@@ -103,7 +103,8 @@ struct TVDetails: View {
     @State private var status: String?
     @State private var editable = false
     @State private var themeEdit: ThemeEdit?
-    @State private var unsavedTheme: String?
+    @State private var redirectEdit: RedirectEdit?
+    @State private var unsavedText: [String: String] = [:]
 
     private struct ThemeEdit: Identifiable {
         let id = UUID()
@@ -112,6 +113,15 @@ struct TVDetails: View {
         let backgrounds: [String]
         let maximum: Int
         let draft: TVThemeDraft
+    }
+
+    private struct RedirectEdit: Identifiable {
+        let id = UUID()
+        let baseline: [String: String]
+        let title: String
+        let apps: [TVControl.Option]
+        let savedValue: String?
+        let draft: TVRedirects
     }
 
     var body: some View {
@@ -136,6 +146,8 @@ struct TVDetails: View {
                         ForEach(sections[section] ?? []) { control in
                             if control.id == "appearance.custom-theme" {
                                 Button(control.title.value(preferences.arabic)) { editTheme(snapshot) }
+                            } else if control.id == "device.redirects" {
+                                Button(control.title.value(preferences.arabic)) { editRedirects(snapshot, control: control) }
                             } else {
                                 TVSettingRow(preferences: preferences, control: control,
                                              value: snapshot.values[control.id] ?? "", save: { set(control.id, $0) })
@@ -154,8 +166,16 @@ struct TVDetails: View {
             TVThemeEditor(preferences: preferences, title: edit.title,
                 backgrounds: edit.backgrounds, maximum: edit.maximum, editable: editable && action == nil,
                 save: { changes in
-                    unsavedTheme = changes["appearance.custom-theme"]
+                    unsavedText["appearance.custom-theme"] = changes["appearance.custom-theme"]
                     apply(changes, expected: edit.baseline)
+                }, draft: edit.draft)
+        }
+        .sheet(item: $redirectEdit) { edit in
+            TVRedirectEditor(preferences: preferences, title: edit.title, apps: edit.apps,
+                savedValue: edit.savedValue, editable: editable && action == nil,
+                save: { value in
+                    unsavedText["device.redirects"] = value
+                    apply(["device.redirects": value], expected: edit.baseline)
                 }, draft: edit.draft)
         }
         .toolbar {
@@ -218,15 +238,14 @@ struct TVDetails: View {
 
     private func apply(_ changes: [String: String], expected: [String: String]) {
         guard action == nil, editable, var snapshot else { return }
-        let customTheme = changes["appearance.custom-theme"] != nil
         guard changes.contains(where: { snapshot.values[$0.key] != $0.value }) else {
-            if customTheme { unsavedTheme = nil }
+            for key in changes.keys { unsavedText[key] = nil }
             return
         }
         if tv == nil {
             snapshot.values.merge(changes) { _, new in new }
             self.snapshot = snapshot
-            if customTheme { unsavedTheme = nil }
+            for key in changes.keys { unsavedText[key] = nil }
             return
         }
         connect {
@@ -239,7 +258,7 @@ struct TVDetails: View {
             self.snapshot = result
             self.status = resultStatus == "saved" ? nil : resultStatus == "uncertain" ? "stale" : resultStatus
             self.editable = resultStatus != "uncertain"
-            if customTheme && resultStatus == "saved" { unsavedTheme = nil }
+            if resultStatus == "saved" { for key in changes.keys { unsavedText[key] = nil } }
         }
     }
 
@@ -247,7 +266,7 @@ struct TVDetails: View {
         let values = snapshot.values
         guard editable, action == nil,
               let control = snapshot.controls.first(where: { $0.id == "appearance.custom-theme" && $0.supported }),
-              let value = unsavedTheme ?? values[control.id], var draft = TVThemeDraft.read(value) else {
+              let value = unsavedText[control.id] ?? values[control.id], var draft = TVThemeDraft.read(value) else {
             status = "invalid"
             return
         }
@@ -264,6 +283,18 @@ struct TVDetails: View {
         })
         themeEdit = ThemeEdit(baseline: values, title: control.title.value(preferences.arabic),
                               backgrounds: backgrounds, maximum: control.textLimit, draft: draft)
+    }
+
+    private func editRedirects(_ snapshot: TVSettingsState, control: TVControl) {
+        guard editable, action == nil, let value = snapshot.values[control.id],
+              let options = snapshot.controls.first(where: { $0.id == "favourites.order" })?.options else { return }
+        let apps = options.filter { !$0.value.isEmpty && !$0.value.contains(",") && !$0.value.contains("=") }
+        let ids = Set(apps.map(\.value))
+        let installed = TVRedirects(value, apps: ids, maximum: control.textLimit)
+        let retained = unsavedText[control.id].flatMap { TVRedirects($0, apps: ids, maximum: control.textLimit) }
+        guard let draft = retained ?? installed else { status = "invalid"; return }
+        redirectEdit = RedirectEdit(baseline: snapshot.values, title: control.title.value(preferences.arabic),
+                                    apps: apps, savedValue: installed?.value, draft: draft)
     }
 
     private func themeColors(_ values: [String: String]) -> [String: String] {

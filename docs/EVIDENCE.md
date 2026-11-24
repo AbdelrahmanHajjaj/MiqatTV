@@ -2251,3 +2251,9 @@ metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both
 TV profiles and their scene assets and parsing the edited Swift. A focused
 Swift payload check is wired into the Apple build and awaits that runner.
+
+The iPhone Android TV app redirect editor uses the TV's app choices and sends
+edits with the original snapshot. Host checks confirmed Android and LG
+capabilities, the 2,048 UTF-16-unit limit and bilingual labels. The changed
+Swift sources parsed. Apple fixtures for circular, duplicate, unknown and
+oversized redirects await the Apple runner.
