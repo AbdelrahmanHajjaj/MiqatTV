@@ -2377,3 +2377,10 @@ each change. Windows verified the staged file byte-for-byte, parsed all six
 touched Swift sources and passed the 14 companion checks. The Apple fixture
 covers missing checks, an existing grant, a successful change and a TV that
 does not confirm a startup flag. Apple execution and device checks are pending.
+
+The iPhone recovery journal can be exported to Files in a scoped format.
+The desktop tool verifies the TV identity and restores only owned Home and
+accessibility changes. All 26 desktop tool tests passed on Windows, including
+wrong-device rejection and later user choices. Five affected Swift files
+parsed. The Apple workflow will pass a Swift-generated backup to the desktop
+tests. The Files UI and Apple run remain pending. No physical TV was contacted.

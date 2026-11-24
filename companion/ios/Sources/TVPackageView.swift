@@ -27,6 +27,7 @@ struct TVPackageView: View {
     @State private var confirmingSetup = false
     @State private var confirmingRestore = false
     @State private var selectedOption: AndroidTVOptions.Step?
+    @State private var exportingRecovery = false
 
     init(preferences: PhonePreferences, setup: TVPackagePlatform? = nil, host: String = "", port: Int = 5555) {
         self.preferences = preferences
@@ -119,6 +120,17 @@ struct TVPackageView: View {
         .onChange(of: connected) { _, connected in
             if setup != nil && connected && package == nil && !importing && task == nil { start() }
         }
+        .onChange(of: android.recoveryBackup) { _, backup in
+            exportingRecovery = backup != nil
+        }
+        .fileExporter(isPresented: Binding(get: { exportingRecovery }, set: { presented in
+            exportingRecovery = presented
+            if !presented { android.finishRecoveryExport() }
+        }),
+                      document: android.recoveryBackup.map(TVRecoveryDocument.init(data:)),
+                      contentType: .json, defaultFilename: "recovery") { result in
+            if case .failure = result { android.finishRecoveryExport(failed: true) }
+        }
         .alert(item: $lg.approval) { candidate in
             Alert(title: Text(preferences.text("lg_trust")),
                   message: Text(preferences.text("lg_trust_info") + "\n\n" + candidate.address + "\n" + candidate.fingerprint),
@@ -177,6 +189,8 @@ struct TVPackageView: View {
                         Button(preferences.text("tv_adb_restore")) { android.restoreTV() }
                         Button(preferences.text("cancel"), role: .cancel) {}
                     }
+                Button(preferences.text("tv_adb_export")) { android.prepareRecoveryBackup() }
+                    .disabled(task != nil)
                 Button(preferences.text("lg_disconnect")) { stopSetup() }
             } else {
                 Button(preferences.text("lg_connect")) { android.connect() }.disabled(task != nil || importing)
@@ -314,5 +328,21 @@ struct TVPackageView: View {
                 status = Task.isCancelled ? "tv_public_cancelled" : "tv_local_invalid"
             }
         }
+    }
+}
+
+private struct TVRecoveryDocument: FileDocument {
+    static let readableContentTypes: [UTType] = [.json]
+    let data: Data
+
+    init(data: Data) { self.data = data }
+
+    init(configuration: ReadConfiguration) throws {
+        guard let contents = configuration.file.regularFileContents else { throw CocoaError(.fileReadCorruptFile) }
+        data = contents
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: data)
     }
 }

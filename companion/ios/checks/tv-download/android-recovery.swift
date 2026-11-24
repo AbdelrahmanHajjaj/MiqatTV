@@ -1,7 +1,7 @@
 import Foundation
 
 enum AndroidRecoveryCheck {
-    static func run() async throws {
+    static func run(exportTo: URL) async throws {
         let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
         let journal = directory.appending(path: "journal")
@@ -11,6 +11,8 @@ enum AndroidRecoveryCheck {
         try await recovery.configure()
         let configured = await tv.snapshot
         precondition(configured == ["tv.miqat.home/.MainActivity", "tv.miqat.home/.RemoteKeys", "1"])
+        let backup = try await recovery.export()
+        try backup.write(to: exportTo)
         try await recovery.restore()
         let restored = await tv.snapshot
         precondition(restored == ["com.vendor.home/.Main", "null", "0"])
@@ -83,7 +85,7 @@ enum AndroidRecoveryCheck {
             if command == "pm list packages -e --user 0" {
                 return cvte ? "package:com.cvte.home" : "package:com.vendor.home"
             }
-            if command == "getprop ro.serialno" { return "synthetic-miqat-fixture" }
+            if command == "getprop ro.serialno" { return "fake-device" }
             if command.hasPrefix("cmd package resolve-activity ") { return "priority=0\n" + home }
             if command == "settings get secure enabled_accessibility_services" { return services }
             if command == "settings get secure accessibility_enabled" { return enabled }

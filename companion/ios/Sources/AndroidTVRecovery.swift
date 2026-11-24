@@ -7,7 +7,7 @@ struct AndroidTVRecovery {
     }
 
     private struct Journal: Codable {
-        let version: Int
+        var version: Int
         let device: String
         let home: String
         var homeChanged = false
@@ -103,6 +103,18 @@ struct AndroidTVRecovery {
         journal.remoteAdded = false
         journal.enabledBySetup = false
         try save(journal, to: file)
+    }
+
+    func export() async throws -> Data {
+        let device = try await deviceID()
+        guard var journal = try load(journalURL(device), device: device), journal.hasChanges else {
+            throw Failure.noRecord
+        }
+        // Version 2 identifies the iPhone's scoped Home and accessibility restore.
+        journal.version = 2
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(journal)
     }
 
     private func deviceID() async throws -> String {

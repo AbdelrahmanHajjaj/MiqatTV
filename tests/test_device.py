@@ -1,5 +1,7 @@
 """Device changes against a fake TV; never connects to ADB."""
 import importlib.util
+import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -116,6 +118,49 @@ class RecoveryTest(unittest.TestCase):
         self.adb.current_home = device.HOME
         self.assertEqual(self.tv.backup()["home"], first["home"])
         self.assertIn("com.example.alreadyoff", first["disabled"])
+
+    def ios_backup(self, **replacements):
+        default = {"version": 2, "device": self.tv.identity(), "home": "com.vendor.home/.Main",
+                   "homeChanged": True, "remoteAdded": True, "enabledBySetup": True, "enabled": "0"}
+        actual = os.environ.get("MIQAT_IOS_RECOVERY_FIXTURE")
+        if actual:
+            default = json.loads(Path(actual).read_text(encoding="utf-8"))
+        device.atomic_json(self.tv.path, {**default, **replacements})
+
+    def test_ios_backup_restores_only_its_own_changes(self):
+        self.ios_backup()
+        self.adb.current_home = "tv.miqat.home/tv.miqat.home.MainActivity"
+        services = ("secure", "enabled_accessibility_services")
+        enabled = ("secure", "accessibility_enabled")
+        self.adb.settings.update({services: device.PACKAGE + "/.RemoteKeys", enabled: "1"})
+        self.tv.restore()
+        self.assertEqual(self.adb.current_home, "com.vendor.home/.Main")
+        self.assertNotIn(services, self.adb.settings)
+        self.assertEqual(self.adb.settings[enabled], "0")
+        self.assertFalse(any(command.startswith("pm ") or "restore_remote" in command
+                             for command in self.adb.mutations))
+
+    def test_ios_backup_preserves_later_home_and_accessibility_services(self):
+        self.ios_backup()
+        independent = "com.user.home/.Home"
+        self.adb.current_home = independent
+        services = ("secure", "enabled_accessibility_services")
+        enabled = ("secure", "accessibility_enabled")
+        self.adb.settings.update({services: "new.app/.Reader:" + device.PACKAGE + "/tv.miqat.home.RemoteKeys",
+                                  enabled: "1"})
+        self.tv.restore()
+        self.assertEqual(self.adb.current_home, independent)
+        self.assertEqual(self.adb.settings[services], "new.app/.Reader")
+        self.assertEqual(self.adb.settings[enabled], "1")
+
+    def test_ios_backup_wrong_tv_or_unsafe_input_changes_nothing(self):
+        for override in ({"device": "wrong-tv"}, {"home": "android/.FallbackHome"},
+                         {"remoteAdded": "true"}, {"services": "other.app/.Reader\nreboot"}):
+            with self.subTest(override=override):
+                self.ios_backup(**override)
+                with self.assertRaises(ValueError):
+                    self.tv.restore()
+                self.assertEqual(self.adb.mutations, [])
 
     def test_failed_start_keeps_previous_launcher(self):
         self.adb.reject_start = True

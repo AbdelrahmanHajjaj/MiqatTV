@@ -70,7 +70,7 @@ struct DownloadCheck {
         try await LGInstallationCheck.run(lgFixture)
         let apkFixture = URL(fileURLWithPath: CommandLine.arguments[2], isDirectory: true).appending(path: "valid.apk")
         try await AndroidInstallationCheck.run(apkFixture)
-        try await AndroidRecoveryCheck.run()
+        try await AndroidRecoveryCheck.run(exportTo: URL(fileURLWithPath: CommandLine.arguments[4]))
         try await AndroidOptionsCheck.run(URL(fileURLWithPath: CommandLine.arguments[3]))
     }
 

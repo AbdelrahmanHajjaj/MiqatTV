@@ -7,8 +7,8 @@ The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android
 TV installation and Home/remote setup with a recovery journal are wired.
 Verify the Apple fixtures, then port wireless pairing and remaining Android
-cleanup, personalisation and portable recovery export. Optional TV app
-permissions and startup controls are wired to the bundled setup steps.
+cleanup and personalisation. Optional TV app settings and Files export of
+the Home/remote recovery journal are wired.
 
 Updated: 2026-11-24. Stable v0.7.7 contains phone 0.5.23/code 39,
 Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed

@@ -57,12 +57,15 @@ the installed version before launching Miqat. To set Miqat as Home and enable
 its remote-button service, choose **Set up Home and remote buttons**. The
 iPhone saves the prior configuration before applying changes. Reconnect to the
 same TV and choose **Restore saved TV setup** to undo those changes.
+Choose **Save recovery backup** to export `recovery.json` to Files. With
+this version of the desktop tools, put the export in a private folder and
+use `python -S -B tools/device.py --backup-dir <folder> restore` against the same TV.
 Under **Optional TV setup**, you can enable the TV app's radio level and
 sleep-timer permissions, startup on supported models, or Wi-Fi name display.
 Miqat checks each option after applying it.
 
 The Android TV development flow currently uses classic network debugging.
-Use the desktop guide above for wireless-code pairing, CVTE setup, package
-cleanup and recovery backup export.
+Use the desktop guide above for wireless-code pairing, CVTE setup and package
+cleanup.
 
 [Parity queue and validation status](../../docs/IOS-WORK.md).

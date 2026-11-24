@@ -11,6 +11,7 @@ final class AndroidTVSetup: ObservableObject {
     @Published private(set) var stage: String?
     @Published private(set) var fraction: Double?
     @Published private(set) var optionStatus: [AndroidTVOptions.ID: Bool] = [:]
+    @Published private(set) var recoveryBackup: Data?
     private var client: AndroidADB?
     private var task: Task<Void, Never>?
 
@@ -90,6 +91,21 @@ final class AndroidTVSetup: ObservableObject {
         }
     }
 
+    func prepareRecoveryBackup() {
+        guard let client, !busy else { return }
+        recoveryBackup = nil
+        run("tv_adb_preparing_backup") {
+            let data = try await Self.recovery(client).export()
+            try Task.checkCancellation()
+            self.recoveryBackup = data
+        }
+    }
+
+    func finishRecoveryExport(failed: Bool = false) {
+        recoveryBackup = nil
+        if failed { status = "tv_adb_export_failed" }
+    }
+
     func disconnect() {
         task?.cancel()
         task = nil
@@ -116,6 +132,7 @@ final class AndroidTVSetup: ObservableObject {
         connected = false
         installed = nil
         optionStatus = [:]
+        recoveryBackup = nil
     }
 
     private func run(_ label: String, operation: @escaping @MainActor () async throws -> Void) {
