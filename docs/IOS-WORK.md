@@ -68,6 +68,12 @@ new Android releases to this pinned baseline before expanding the queue.
    Tomorrow and keeps today's Fajr in the timetable. At local midnight verify
    the date and timetable advance. Open each prayer row to its alert editor.
    Sunrise, Hijri timetable rows and the appearance preview stay read-only.
+7. On a fresh install, confirm a manual city without granting location.
+   Enable Automatic location. Grant While Using, then decline Always. Confirm
+   the saved city stays put and Settings reports background location is off.
+   Grant Always from iOS Settings and verify automatic travel refresh begins.
+   Repeat with Allow Once, turn off the Miqat toggle, and then grant Always
+   in iOS Settings. Verify opening the app leaves the saved city in place.
 
 ## Alert permission regression on iPhone
 

@@ -153,7 +153,7 @@ struct LocationSettings: View {
                     Button(preferences.text("phone_location_cancel")) { location.cancel() }
                 } else if location.permissionBlocked {
                     Text(preferences.text("phone_location_denied")).foregroundStyle(.secondary)
-                    if !preferences.automaticLocation {
+                    if !preferences.automaticLocation || !TravelLocation.supportsBackground {
                         Button(preferences.text("phone_location_settings"), action: openLocationSettings)
                     }
                 } else {
@@ -192,8 +192,11 @@ struct LocationSettings: View {
                         else { preferences.automaticLocation = false }
                     }
                 ))
-                .disabled(!preferences.locationConfirmed)
-                if preferences.automaticLocation && location.authorizationStatus != .authorizedAlways {
+                .disabled(!preferences.locationConfirmed || (!TravelLocation.supportsBackground && !preferences.automaticLocation))
+                if !TravelLocation.supportsBackground {
+                    Text(preferences.text("phone_background_unavailable")).foregroundStyle(.secondary)
+                } else if preferences.automaticLocation && location.authorizationStatus != .authorizedAlways {
+                    Text(preferences.text("phone_background_location_denied")).foregroundStyle(.secondary)
                     Button(preferences.text("phone_location_settings"), action: openLocationSettings)
                 }
             }
@@ -225,7 +228,7 @@ struct LocationSettings: View {
             NavigationStack { AdvancedLocation(preferences: $preferences) }
         }
         .alert(preferences.text("phone_background_location_title"), isPresented: $allowBackground) {
-            Button(preferences.text("done")) {
+            Button(preferences.text("phone_background_continue")) {
                 preferences.automaticLocation = true
                 requestBackgroundLocation()
             }

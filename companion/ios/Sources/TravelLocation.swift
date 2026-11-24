@@ -8,8 +8,11 @@ final class TravelLocation: NSObject, CLLocationManagerDelegate {
     private var manager = CLLocationManager()
     private var mode = Mode.off
     private var requested = false
+    private var awaitingForegroundConsent = false
     var didLocate: ((CLLocation, Bool) -> Void)?
     var authorizationChanged: (() -> Void)?
+
+    static var supportsBackground: Bool { CLLocationManager.significantLocationChangeMonitoringAvailable() }
 
     override init() {
         super.init()
@@ -17,10 +20,11 @@ final class TravelLocation: NSObject, CLLocationManagerDelegate {
     }
 
     func update(_ prefs: PhonePreferences) {
+        if !prefs.locationConfirmed || !prefs.automaticLocation { awaitingForegroundConsent = false }
         let authorization = manager.authorizationStatus
         let next: Mode
         if prefs.locationConfirmed && prefs.automaticLocation && authorization == .authorizedAlways
-            && CLLocationManager.significantLocationChangeMonitoringAvailable() {
+            && Self.supportsBackground {
             next = .automatic
         } else if prefs.locationConfirmed && prefs.travelRefresh
             && [.authorizedWhenInUse, .authorizedAlways].contains(authorization) {
@@ -47,13 +51,22 @@ final class TravelLocation: NSObject, CLLocationManagerDelegate {
     }
 
     func requestBackground() {
-        if [.notDetermined, .authorizedWhenInUse].contains(manager.authorizationStatus) {
+        guard Self.supportsBackground else { return }
+        if manager.authorizationStatus == .notDetermined {
+            awaitingForegroundConsent = true
+            manager.requestWhenInUseAuthorization()
+        } else if manager.authorizationStatus == .authorizedWhenInUse {
             manager.requestAlwaysAuthorization()
         }
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager === self.manager { authorizationChanged?() }
+        guard manager === self.manager else { return }
+        if awaitingForegroundConsent && manager.authorizationStatus != .notDetermined {
+            awaitingForegroundConsent = false
+            if manager.authorizationStatus == .authorizedWhenInUse { manager.requestAlwaysAuthorization() }
+        }
+        authorizationChanged?()
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

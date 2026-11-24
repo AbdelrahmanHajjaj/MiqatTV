@@ -2238,6 +2238,11 @@ settings in the time editor. Swift syntax, all 14 phone generator checks and
 canonical iOS resource staging passed. The native regression covers midnight,
 noon, 23:59, cancel, Arabic and VoiceOver.
 
+Automatic location asks for foreground access before requesting Always on a
+fresh install. The settings show when background updates are off or unavailable.
+Swift syntax and all 14 generator checks passed. The two iOS prompts, Allow
+Once and changing authorization in iOS Settings remain in native acceptance.
+
 On 2026-11-24, branch `feature/ios-app-port` configured the Kotlin iOS device
 and simulator framework tasks and added a native iOS application target.
 Companion JVM tests, its 13 catalog generator checks, resource staging and the
