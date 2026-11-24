@@ -14,6 +14,11 @@ GitHub-hosted Device simulation and live publication/deployment require a
 published Staging candidate. Local build checks did not boot an emulator or
 operate any physical devices.
 
+The first published Staging release included two APK signing sidecars outside
+the promotion asset list. The Build fix uses one list for checksums and uploads.
+A local rehearsal with both sidecars present confirmed the five upload names,
+all four checksums and the clickable Staging tag in the Actions summary.
+
 ## Stable v0.7.7 — 24 November 2026
 
 [PR #39](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/39) passed its required
