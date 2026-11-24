@@ -2337,6 +2337,12 @@ across settings navigation. Cancel and reset invalidate an in-flight test,
 including a queued playback callback. Swift syntax and all 14 generator
 checks passed. The iOS permission, reset and delivery race needs native testing.
 
+iPhone pairing now sends the chosen phone name and keeps the saved TV
+nickname on credential repair. Malformed codes stop before a connection is
+opened. Swift syntax, all 14 companion generator checks, the shared compact
+QR vectors and LG's pairing fixture passed. Check named user approval, Arabic
+verification digit order, and reconnect against the TV after obtaining an Apple build.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

@@ -57,34 +57,47 @@ struct TVPairing: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var store: PairedTVs
     let preferences: PhonePreferences
+    @AppStorage("pairing-phone-name") private var savedPhoneName = "Miqat iPhone"
+    @State private var phoneName = ""
     @State private var code = ""
     @State private var displayCode: String?
     @State private var scan = false
     @State private var task: Task<Void, Never>?
-    @State private var failed = false
+    @State private var failure: String?
+
+    private var validName: String? {
+        let name = phoneName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name.utf16.count <= 64,
+              name.rangeOfCharacter(from: .controlCharacters) == nil else { return nil }
+        return name
+    }
 
     var body: some View {
         Form {
             if let displayCode {
                 Section {
                     Text(displayCode).font(.largeTitle.monospacedDigit())
+                        .environment(\.layoutDirection, .leftToRight)
                     Text(preferences.text("pair_match"))
                     ProgressView(preferences.text("pair_waiting"))
                 }
             } else if task != nil {
                 ProgressView(preferences.text("pair_connecting"))
             } else {
+                TextField(preferences.text("phone_name"), text: $phoneName)
                 if DataScannerViewController.isSupported && DataScannerViewController.isAvailable {
                     Button(preferences.text("scan_qr")) { scan = true }
+                        .disabled(validName == nil || store.inaccessible)
                 }
                 TextField(preferences.text("pair_verify"), text: $code, axis: .vertical)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .privacySensitive()
                 Button(preferences.text("pair")) { begin(code) }
-                    .disabled(code.isEmpty || store.inaccessible)
+                    .disabled(code.isEmpty || validName == nil || store.inaccessible)
             }
-            if failed { Text(preferences.text("pair_failed")).foregroundStyle(.secondary) }
+            if let failure { Text(preferences.text(failure)).foregroundStyle(.secondary) }
+            if store.inaccessible { Text(preferences.text("vault_failed")).foregroundStyle(.secondary) }
         }
         .navigationTitle(preferences.text("pair"))
         .toolbar {
@@ -95,24 +108,27 @@ struct TVPairing: View {
         .sheet(isPresented: $scan) {
             TVCodeScanner { result in
                 scan = false
-                if let result { begin(result) } else { failed = true }
+                if let result { begin(result) } else { failure = "pair_failed" }
             }
         }
+        .onAppear { phoneName = savedPhoneName }
         .onDisappear { task?.cancel() }
         .onChange(of: scenePhase) { _, phase in if phase == .background { task?.cancel() } }
     }
 
     private func begin(_ input: String) {
-        guard task == nil else { return }
-        failed = false
+        guard task == nil, let name = validName, !store.inaccessible else { return }
+        guard let qr = try? TVPairQR.decode(input) else { failure = "invalid_qr"; return }
+        failure = nil
+        savedPhoneName = name
         code = ""
         task = Task {
             defer { task = nil; displayCode = nil }
             do {
-                try await pair(input)
+                try await pair(qr, name: name)
                 dismiss()
             } catch {
-                failed = !Task.isCancelled
+                if !Task.isCancelled { failure = "pair_failed" }
             }
         }
     }
@@ -124,16 +140,16 @@ struct TVPairing: View {
         let secret: String?
     }
 
-    private func pair(_ input: String) async throws {
-        let pair = try TVPairQR.decode(input)
+    private func pair(_ pair: TVPairQR, name: String) async throws {
         let link = try TVConnection(pair.endpoint)
         defer { link.close() }
         if let saved = store.records.first(where: { $0.id == pair.pin }) {
             let repaired = PairedTV(endpoint: pair.endpoint, clientID: saved.clientID, secret: saved.secret,
                                    name: saved.name, profile: saved.profile, pending: saved.pending)
             let existing = try? await verify(repaired, link: link)
-            if let verified = existing {
+            if var verified = existing {
                 try Task.checkCancellation()
+                if !saved.pending { verified.name = saved.name }
                 try store.save(verified)
                 return
             }
@@ -148,8 +164,9 @@ struct TVPairing: View {
         let digest = TVPairQR.hexHash(Data((pair.token + ":" + nonce).utf8))
         guard let first = UInt32(digest.prefix(8), radix: 16) else { throw TVConnectionError.invalid }
         let expected = String(format: "%06u", first % 1_000_000)
+        try Task.checkCancellation()
         let started = try await link.request("pair", as: PairResponse.self,
-            body: ["token": pair.token, "nonce": nonce, "name": "Miqat iPhone"])
+            body: ["token": pair.token, "nonce": nonce, "name": name])
         guard started.state == "pending", started.code == expected else { throw TVConnectionError.unconfirmed }
         displayCode = expected
         let deadline = ContinuousClock.now + .milliseconds(TVProtocol.current.pairWindowMillis)
@@ -162,7 +179,9 @@ struct TVPairing: View {
             let grant = PairedTV(endpoint: pair.endpoint, clientID: id, secret: secret, name: "TV", profile: "", pending: true)
             try Task.checkCancellation()
             try store.save(grant)
-            try store.save(await verify(grant, link: link))
+            let confirmed = try await verify(grant, link: link)
+            try Task.checkCancellation()
+            try store.save(confirmed)
             return
         }
         throw TVConnectionError.unconfirmed
