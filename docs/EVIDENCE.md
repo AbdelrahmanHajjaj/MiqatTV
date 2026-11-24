@@ -2243,8 +2243,10 @@ fresh install. The settings show when background updates are off or unavailable.
 Swift syntax and all 14 generator checks passed. The two iOS prompts, Allow
 Once and changing authorization in iOS Settings remain in native acceptance.
 
-Android prayer reset retains named recordings. iPhone now preserves that
-library and paired TVs, saves defaults before stopping audio and reopens setup.
+The pinned Android reset clears preferences and its audio cleanup retains
+recordings in the separate library. The phone guide now reflects this. iPhone
+preserves that library and paired TVs, saves defaults before stopping audio and
+reopens setup.
 Swift syntax, the 14 generator checks and resource staging passed. The reset
 journey and a failed preferences write remain in native acceptance.
 
