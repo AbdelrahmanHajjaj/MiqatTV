@@ -9,6 +9,7 @@ const source = 'shared/design/branding/miqat-tv-v1/';
 for (const [input, output, width, height] of [
   ['miqat-tv-splash-1920x1080.png', 'shared/design/artwork/splash.png', 1920, 1080],
   ['miqat-tv-icon-source.png', 'shared/design/artwork/icon.png', 512, 512],
+  ['miqat-tv-icon-source.png', 'companion/ios/Sources/Assets.xcassets/AppIcon.appiconset/Miqat.png', 1024, 1024],
   ['miqat-tv-icon-source.png', 'platforms/webos/app/icon.png', 80, 80],
   ['miqat-tv-icon-source.png', 'platforms/webos/app/icon-large.png', 130, 130],
   ['miqat-tv-icon-source.png', 'platforms/android-tv/src/main/res/drawable-nodpi/miqat_icon.png', 512, 512],

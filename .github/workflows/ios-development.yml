@@ -108,6 +108,8 @@ jobs:
             -derivedDataPath state/ios-build CODE_SIGNING_ALLOWED=NO build
           app=state/ios-build/Build/Products/Debug-iphonesimulator/Miqat.app
           test -x "$app/Miqat"
+          test -s "$app/Assets.car"
+          test "$(plutil -extract CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName raw "$app/Info.plist")" = AppIcon
           test -f "$app/cities.json"
           test -f "$app/adhan.js"
           cmp tools/setup-steps.txt "$app/android-setup-steps.txt"
