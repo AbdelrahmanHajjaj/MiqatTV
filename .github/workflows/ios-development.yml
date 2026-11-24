@@ -36,6 +36,8 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Check portable phone and installer rules
+        run: ./gradlew -p companion/core jvmTest
       - name: Check iOS resources and astronomy
         run: |
           npm --prefix companion/ios ci --ignore-scripts

@@ -4,7 +4,9 @@ The `feature/ios-app-port` worktree owns the approved iPhone port. Start with
 the Apple build and offline prayer journey, then follow the
 [iOS parity queue](IOS-WORK.md) in order.
 The iPhone LG setup screen uses the SSH installer and separate installation
-credentials. Verify it against a local Developer Mode fixture.
+credentials. Verify it against a local Developer Mode fixture. The next
+Android TV setup step is connecting the tested classic ADB codec to iOS
+sockets and a separate RSA identity.
 
 Updated: 2026-11-24. Stable v0.7.7 contains phone 0.5.23/code 39,
 Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed

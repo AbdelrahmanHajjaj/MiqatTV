@@ -2337,3 +2337,10 @@ distinct Keychain services. Apple validation must exercise first-use approval,
 changed or declined host keys, remembered and cleared credentials, closing
 the screen with a transfer active, install verification and pairing handoff.
 The Windows checks did not run the app or contact a TV.
+
+Classic ADB frame validation, the authorization handshake and one-stream
+flow control now live in the Kotlin companion core. The JVM suite passed
+tests for legacy checksums, modern framing, oversized and malformed
+frames, authorization order, wireless negotiation detection, cross-stream
+replies and acknowledgement-gated writes. The iOS socket, RSA identity and
+live ADB installation remain pending. The test used only synthetic messages.
