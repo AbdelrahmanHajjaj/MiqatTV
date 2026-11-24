@@ -40,6 +40,7 @@ struct FastingAlerts: Codable, Equatable {
     var whiteDays = false
     var mondayThursday = false
 
+    var enabled: Bool { eve || suhoor || iftar }
     var valid: Bool { (5...120).contains(suhoorMinutes) && (0...1439).contains(eveMinute) }
 }
 
@@ -48,9 +49,12 @@ final class PrayerNotifications: ObservableObject {
     static let shared = PrayerNotifications()
     @Published private(set) var permission = UNAuthorizationStatus.notDetermined
     @Published private(set) var scheduleFailed = false
+    @Published private(set) var alertSoundsBlocked = false
     private let center = UNUserNotificationCenter.current()
     private var pending: (id: UUID, work: Task<Bool, Never>)?
     private static let schedulePrefix = "miqat.schedule."
+
+    var permissionMissing: Bool { permission == .denied || alertSoundsBlocked }
 
     func authorize() async -> Bool {
         do {
@@ -139,17 +143,18 @@ final class PrayerNotifications: ObservableObject {
             center.removePendingNotificationRequests(withIdentifiers: ours.map(\.identifier))
             PrayerBackgroundRefresh.schedule(enabled: preferences.valid && hasWidget)
             scheduleFailed = false
+            alertSoundsBlocked = false
             return true
         }
 
         let now = Date.now
-        let fasting = preferences.fastingAlerts
-        PrayerBackgroundRefresh.schedule(enabled: hasWidget || preferences.alertsEnabled || fasting.eve || fasting.suhoor || fasting.iftar)
+        PrayerBackgroundRefresh.schedule(enabled: hasWidget || preferences.alertsEnabled || preferences.fastingAlerts.enabled)
         let requests = Self.plans(preferences, schedule: schedule, now: now).prefix(60).map { plan in
             PrayerNotificationRequest(id: Self.schedulePrefix + plan.event.id, time: plan.event.time,
                 title: plan.title, body: plan.body, audible: plan.audible,
                 adhanPrayer: plan.fullAdhan && permissions.soundSetting == .enabled ? Int(plan.event.prayer) : nil)
         }
+        alertSoundsBlocked = permissions.soundSetting == .disabled && requests.contains(where: \.audible)
         let ids = Set(requests.map(\.id))
         let existingByID = Dictionary(ours.map { ($0.identifier, $0) }, uniquingKeysWith: { first, _ in first })
         center.removePendingNotificationRequests(withIdentifiers: existingByID.keys.filter { !ids.contains($0) })
@@ -221,7 +226,7 @@ final class PrayerNotifications: ObservableObject {
 
     private static func fastingPlans(_ prefs: PhonePreferences, calendar: Calendar, date: Date, times: [Date]?, weekday: Int) -> [Plan] {
         let options = prefs.fastingAlerts
-        guard options.eve || options.suhoor || options.iftar,
+        guard options.enabled,
               let corrected = calendar.date(byAdding: .day, value: prefs.hijriOffset, to: date) else { return [] }
         let hijri = PrayerSchedule.hijriCalendar(prefs).dateComponents([.month, .day], from: corrected)
         guard let month = hijri.month, let day = hijri.day else { return [] }

@@ -101,6 +101,7 @@ struct MiqatApp: App {
             .environmentObject(library)
             .environmentObject(radio)
             .environmentObject(tvs)
+            .environmentObject(notifications)
             .environment(\.requestBackgroundLocation, { delegate.travel.requestBackground() })
             .alert(store.preferences.text("phone_save_failed"), isPresented: $store.saveFailed) {
                 Button(store.preferences.text("done"), role: .cancel) {}
@@ -213,6 +214,7 @@ final class PhoneApplicationDelegate: NSObject, UIApplicationDelegate, UNUserNot
 struct PrayerHome: View {
     @EnvironmentObject private var audio: PhoneAdhan
     @EnvironmentObject private var radio: QuranRadio
+    @EnvironmentObject private var notifications: PrayerNotifications
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
     var preview = false
@@ -292,6 +294,15 @@ struct PrayerHome: View {
                         PrayerTimesList(preferences: preferences, times: times, next: next.map { Int($0.next) })
                     } else {
                         Text(preferences.text("phone_unavailable")).foregroundStyle(.secondary)
+                    }
+                    if !preview && preferences.locationConfirmed {
+                        if notifications.permissionMissing && (preferences.alertsEnabled || preferences.fastingAlerts.enabled) {
+                            AlertPermissionRepair(preferences: preferences)
+                        } else if notifications.scheduleFailed {
+                            Text(preferences.text("phone_alert_schedule_failed")).foregroundStyle(.secondary)
+                        } else if !preferences.alertsEnabled {
+                            Text(preferences.text("phone_alerts_off")).foregroundStyle(.secondary)
+                        }
                     }
                     if !preview && audio.prayer != nil {
                         Button { showPlayback = true } label: {

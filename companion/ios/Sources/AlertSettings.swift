@@ -5,7 +5,6 @@ struct AlertSettings: View {
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
     @ObservedObject var notifications: PrayerNotifications
-    @Environment(\.openURL) private var openURL
     @State private var testDate: Date?
     @State private var testFailed = false
     @State private var testTask: Task<Void, Never>?
@@ -14,10 +13,8 @@ struct AlertSettings: View {
         Form {
             Section {
                 Toggle(preferences.text("phone_alerts"), isOn: $preferences.alertsEnabled)
-                if notifications.permission == .denied {
-                    Button(preferences.text("phone_permissions")) {
-                        if let settings = URL(string: UIApplication.openSettingsURLString) { openURL(settings) }
-                    }
+                if notifications.permissionMissing {
+                    AlertPermissionRepair(preferences: preferences)
                 }
                 if !preferences.locationConfirmed {
                     Text(preferences.text("phone_location_needed")).foregroundStyle(.secondary)
@@ -93,6 +90,19 @@ struct AlertSettings: View {
         testTask?.cancel()
         notifications.cancelTest()
         testDate = nil
+    }
+}
+
+struct AlertPermissionRepair: View {
+    @Environment(\.openURL) private var openURL
+    let preferences: PhonePreferences
+
+    var body: some View {
+        Button {
+            if let settings = URL(string: UIApplication.openSettingsURLString) { openURL(settings) }
+        } label: {
+            Label(preferences.text("phone_repair"), systemImage: "gearshape")
+        }
     }
 }
 
@@ -188,8 +198,8 @@ struct FastingSettings: View {
                 if !preferences.locationConfirmed {
                     Text(preferences.text("phone_location_needed")).foregroundStyle(.secondary)
                 }
-                if notifications.permission == .denied {
-                    Text(preferences.text("phone_permission_missing")).foregroundStyle(.secondary)
+                if notifications.permissionMissing {
+                    AlertPermissionRepair(preferences: preferences)
                 }
             }
             Section(preferences.text("phone_fasting_days")) {

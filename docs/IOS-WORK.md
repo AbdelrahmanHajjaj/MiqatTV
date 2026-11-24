@@ -16,7 +16,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | 3 | Prayer Home, greeting and exact verse, Hijri/Gregorian date, next prayer, countdown seconds and six times, next-Fajr rollover, calculated city, method/school/high-latitude rule and offsets | Coded. 570 minute-for-minute Android comparisons passed across five cities, all presets, both Asr schools and three high-latitude rules. Offset and polar fixtures passed. Native UI pending. |
 | 4 | Hijri month/day navigation, swipes and timetable, Hijri adjustment, current/upcoming and all recurring events | Month browsing keeps the prayer day selected, events can select their day, and civil navigation is limited to 366 days in either direction. The Apple fixture covers Umm al-Qura month/year boundaries and DST with an offset. Verify the fixture and both Arabic and English UI journeys on Apple. |
 | 5 | English/Arabic and RTL, digits, 12/24-hour clocks, type scale, palettes, backgrounds, full-page previews, Home artwork and reduce motion | Setup and settings share visual palette and scene choices, and the full-page preview is read-only. Prayer Home and Adhan use the selected artwork and palette. Verify both locales, artwork visibility, reduced motion and scale extremes on iOS. |
-| 6 | Prayer alerts, enablement, mode, timing previews, weekday inclusion/overrides, quiet hours, before/after, explicit tests, permission and recovery | Local notification planner uses absolute times and keeps existing requests when they still match. An offline Background App Refresh task can replenish the queue. Validate delivery, expired and repeat taps, revoked permission, changed alert settings, device timezone changes and background refresh expiration. |
+| 6 | Prayer alerts, enablement, mode, timing previews, weekday inclusion/overrides, quiet hours, before/after, explicit tests, permission and recovery | The planner keeps matching absolute-time requests and can replenish the queue in offline Background App Refresh. Home and alert settings offer permission recovery for blocked delivery or required sounds. Validate delivery, expired and repeat taps, the permission regression below, device timezone changes and background refresh expiration. |
 | 7 | Fasting eve, Suhoor and Iftar, choices, exclusions and overlapping selections | Coded using Kotlin fasting rules. Check day edges and independent delivery on iOS. |
 | 8 | Approved voices including Fajr, named audio library/import and CRUD, previews, per-prayer selection, level/length and playback controls, foreground Adhan screen | Packaged 13 checksum-verified voices. Named imports share Android's validation and preserve an unreadable library index. Deleting a recording restores affected voice selections. Active Adhan publishes progress to Now Playing and supports swipe or tap to stop. Verify Files import/cancellation, duplicate naming, deletion across slots, reset during import, system controls and headphone removal. |
 | 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Coded with the canonical HTTPS stations. Radio releases Now Playing when Adhan takes over. Verify a queued radio command cannot affect Adhan, headphone removal pauses the stream, and radio resumes by request after Adhan. |
@@ -62,6 +62,15 @@ new Android releases to this pinned baseline before expanding the queue.
    that detection returns. Start a fix, immediately choose a manual city, and
    verify a late fix cannot replace it. On Home, a failed refresh should preserve
    the previously confirmed location. Reopen Qibla and verify it gets a new fix.
+
+## Alert permission regression on iPhone
+
+With a confirmed location and an upcoming audible alert, disable notification
+Sounds in iOS Settings and return to Miqat. Home and alert settings should offer
+**Fix prayer alerts**. Enable Sounds again and verify the action disappears.
+Repeat with all scheduled alerts silent and confirm that disabled Sounds alone
+does not show the action. Disable all notifications and verify recovery remains
+available on Home and under Fasting when only fasting alerts are enabled.
 
 ## Platform differences to verify
 
