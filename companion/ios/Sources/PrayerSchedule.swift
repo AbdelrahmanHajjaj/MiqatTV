@@ -19,6 +19,7 @@ final class PrayerSchedule {
 
     static func civilCalendar(_ prefs: PhonePreferences) -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: prefs.arabic ? "ar" : "en")
         calendar.timeZone = prefs.zone
         return calendar
     }

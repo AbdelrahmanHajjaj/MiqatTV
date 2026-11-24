@@ -114,8 +114,10 @@ struct PrayerAlertSettings: View {
     private let soundModes: [(Int, String)] = [(2, "phone_adhan"), (1, "phone_notification"), (4, "phone_silent")]
 
     var body: some View {
-        let plain = schedule.day(at: .now, prefs: preferences)?[index]
+        let time = preferences.locationConfirmed ? schedule.day(at: .now, prefs: preferences)?[index] : nil
         let setting = $preferences.prayerAlerts[index]
+        let before = setting.before.wrappedValue
+        let after = setting.after.wrappedValue
         let calendar = PrayerSchedule.civilCalendar(preferences)
         let symbols = calendar.shortStandaloneWeekdaySymbols
         Form {
@@ -126,11 +128,14 @@ struct PrayerAlertSettings: View {
                         Text(preferences.text(soundModes[i].1)).tag(soundModes[i].0)
                     }
                 }
-                timeStepper("phone_offset", value: $preferences.offsets[index], range: -30...30, date: plain)
-                timeStepper("phone_before", value: setting.before, range: 0...60,
-                            date: plain?.addingTimeInterval(-Double(setting.before.wrappedValue * 60)))
-                timeStepper("phone_after", value: setting.after, range: 0...60,
-                            date: plain?.addingTimeInterval(Double(setting.after.wrappedValue * 60)))
+                PrayerMinuteControl(preferences: preferences, label: preferences.text("phone_offset"),
+                                    value: $preferences.offsets[index], range: -30...30, preview: time)
+                PrayerMinuteControl(preferences: preferences, label: preferences.text("phone_before"),
+                                    value: setting.before, range: 0...60,
+                                    preview: before == 0 ? nil : time?.addingTimeInterval(-Double(before * 60)))
+                PrayerMinuteControl(preferences: preferences, label: preferences.text("phone_after"),
+                                    value: setting.after, range: 0...60,
+                                    preview: after == 0 ? nil : time?.addingTimeInterval(Double(after * 60)))
             }
             .disabled(!setting.enabled.wrappedValue)
             Section(preferences.text("phone_adhan")) {
@@ -165,15 +170,6 @@ struct PrayerAlertSettings: View {
         .onDisappear { audio.stop(previewOnly: true) }
     }
 
-    private func timeStepper(_ label: String, value: Binding<Int>, range: ClosedRange<Int>, date: Date?) -> some View {
-        Stepper(value: value, in: range) {
-            VStack(alignment: .leading) {
-                Text(preferences.text(label))
-                let number = preferences.displayDigits(String(value.wrappedValue))
-                Text(number + (date.map { " · " + preferences.time($0) } ?? "")).foregroundStyle(.secondary)
-            }
-        }
-    }
 }
 
 struct FastingSettings: View {

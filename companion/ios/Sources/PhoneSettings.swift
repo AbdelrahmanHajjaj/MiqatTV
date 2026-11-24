@@ -1,3 +1,4 @@
+import MiqatKit
 import SwiftUI
 
 struct PhoneSettings: View {
@@ -176,20 +177,58 @@ struct PrayerOffsets: View {
     let schedule: PrayerSchedule
 
     var body: some View {
-        let times = schedule.day(at: .now, prefs: preferences)
+        let times = preferences.locationConfirmed ? schedule.day(at: .now, prefs: preferences) : nil
         Form {
             ForEach(preferences.prayerNames().indices, id: \.self) { index in
-                Stepper(value: $preferences.offsets[index], in: -30...30) {
-                    VStack(alignment: .leading) {
-                        Text(preferences.prayerNames()[index])
-                        Text(preferences.displayDigits(String(preferences.offsets[index]))
-                             + (times.map { " · " + preferences.time($0[index]) } ?? ""))
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                PrayerMinuteControl(preferences: preferences, label: preferences.prayerNames()[index],
+                                    value: $preferences.offsets[index], range: -30...30, preview: times?[index])
             }
         }
         .navigationTitle(preferences.text("prayerOffsets"))
+    }
+}
+
+struct PrayerMinuteControl: View {
+    let preferences: PhonePreferences
+    let label: String
+    @Binding var value: Int
+    let range: ClosedRange<Int>
+    let preview: Date?
+    @State private var draft = ""
+    @FocusState private var editing: Bool
+    @ScaledMetric private var inputWidth = 48.0
+
+    private var formatted: String { preferences.displayDigits(String(value)) }
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(label)
+            HStack {
+                TextField(label, text: Binding(get: { editing ? draft : formatted }, set: update))
+                    .focused($editing)
+                    .keyboardType(.numbersAndPunctuation)
+                    .submitLabel(.done)
+                    .onSubmit { editing = false }
+                    .textFieldStyle(.roundedBorder)
+                    .monospacedDigit()
+                    .frame(width: inputWidth)
+                    .onChange(of: editing) { _, active in if active { draft = formatted } }
+                Text(preview.map(preferences.time) ?? "—").foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                Stepper(label, value: Binding(get: { value }, set: { next in
+                    editing = false
+                    value = next
+                }), in: range)
+                .labelsHidden()
+            }
+        }
+    }
+
+    private func update(_ text: String) {
+        draft = text
+        let normalized = DisplayText.shared.digits(value: text, eastern: false)
+            .replacingOccurrences(of: "−", with: "-").trimmingCharacters(in: .whitespacesAndNewlines)
+        if let next = Int(normalized), range.contains(next), next != value { value = next }
     }
 }
 

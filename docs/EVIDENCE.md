@@ -2283,6 +2283,11 @@ reminder's local delivery minute for quiet hours. On Windows, Swift syntax
 checks passed and the independent date check confirmed the Apple fixture's
 Saturday/Sunday inputs. The Swift fixture still awaits macOS execution.
 
+The iPhone sunrise, offsets and prayer alert editors share typed minute entry
+and bounded steppers. Zero-length reminders and unconfirmed locations show no
+preview time. Swift syntax and all 14 generator checks passed. Native keyboard,
+preview and weekday localization are in the iPhone acceptance queue.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

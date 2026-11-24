@@ -72,6 +72,17 @@ Repeat with all scheduled alerts silent and confirm that disabled Sounds alone
 does not show the action. Disable all notifications and verify recovery remains
 available on Home and under Fasting when only fasting alerts are enabled.
 
+## Prayer timing editor regression on iPhone
+
+With a confirmed location, type `−٥` in the sunrise and Fajr adjustment fields
+and verify each preview moves back five minutes. Increment Fajr in the general
+offset screen and reopen its alert editor to verify both show the saved value.
+Paste `31` over a −30 to 30 field and verify the last valid value stays saved.
+Set Before and After to zero and verify both previews disappear. Select Arabic
+while iOS uses English and verify the weekday names and digits follow Miqat's
+preferences. Repeat before confirming a location and check time previews stay
+unavailable until confirmation.
+
 ## Platform differences to verify
 
 - Apple local notification sounds must be under 30 seconds. The short tone is

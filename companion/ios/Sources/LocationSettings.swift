@@ -212,14 +212,9 @@ struct LocationSettings: View {
                         Text(preferences.text("phone_" + option)).tag(option)
                     }
                 }
-                let sunrise = schedule.day(at: .now, prefs: preferences).map { preferences.time($0[1]) }
-                Stepper(value: $preferences.offsets[1], in: -30...30) {
-                    VStack(alignment: .leading) {
-                        Text(preferences.text("phone_sunrise_offset"))
-                        Text(preferences.displayDigits(String(preferences.offsets[1])) + (sunrise.map { " · " + $0 } ?? ""))
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                let sunrise = preferences.locationConfirmed ? schedule.day(at: .now, prefs: preferences)?[1] : nil
+                PrayerMinuteControl(preferences: preferences, label: preferences.text("phone_sunrise_offset"),
+                                    value: $preferences.offsets[1], range: -30...30, preview: sunrise)
                 Stepper(value: $preferences.hijriOffset, in: -2...2) {
                     Text(preferences.text("phone_hijri_offset") + " · " + preferences.displayDigits(String(preferences.hijriOffset)))
                 }
