@@ -105,7 +105,8 @@ final class PrayerSchedule {
             eastern: preferences.digits == "eastern" || (preferences.digits == "auto" && preferences.arabic),
             clock: preferences.clock, timezone: preferences.zone.identifier, colors: colors, palettes: palettes,
             scenes: scenes, phoneScene: preferences.background, locationConfirmed: preferences.locationConfirmed,
-            locationMessage: preferences.text("phone_location_needed"), unavailableMessage: preferences.text("phone_unavailable"))
+            locationMessage: preferences.text("phone_location_needed"), unavailableMessage: preferences.text("phone_unavailable"),
+            refreshMessage: preferences.text("widget_refresh_times"))
         do {
             let data = try JSONEncoder().encode(snapshot)
             try data.write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])

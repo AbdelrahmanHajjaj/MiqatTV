@@ -461,6 +461,7 @@
   "phone_widgets":{"en":"Home-screen widgets","ar":"أدوات الشاشة الرئيسية"},
   "widget_add":{"en":"Add prayer widget","ar":"إضافة أداة الصلاة"},
   "widget_update":{"en":"Update prayer widget","ar":"تحديث أداة الصلاة"},
+  "widget_refresh_times":{"en":"Open Miqat to refresh prayer times","ar":"افتح ميقات لتحديث مواقيت الصلاة"},
   "widget_manual":{"en":"Add from your home screen’s Widgets menu.","ar":"أضف الأداة من قائمة الأدوات على شاشتك الرئيسية."},
   "widget_updated":{"en":"Updated","ar":"آخر تحديث"},
   "phone_more":{"en":"Explore","ar":"المزيد"},

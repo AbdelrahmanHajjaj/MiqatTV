@@ -46,6 +46,7 @@ struct WidgetSnapshot: Codable {
     var locationConfirmed: Bool?
     var locationMessage: String?
     var unavailableMessage: String?
+    var refreshMessage: String?
 
     static func load() -> Self? {
         guard let url = file, let data = try? Data(contentsOf: url),
@@ -75,6 +76,12 @@ struct WidgetSnapshot: Codable {
               let transition = day.transitions?.last(where: { $0.start <= date }),
               [0, 2, 3, 4, 5].contains(transition.nextIndex), transition.nextTime > date else { return nil }
         return (transition.nextIndex, transition.nextTime)
+    }
+
+    func needsRefresh(at date: Date) -> Bool {
+        guard locationConfirmed == true else { return false }
+        guard let current = day(at: date) else { return true }
+        return current.start == days.last?.start && current.times != nil && nextPrayer(at: date) == nil
     }
 
     func previousPrayer(at date: Date, next: (index: Int, time: Date)) -> Date? {

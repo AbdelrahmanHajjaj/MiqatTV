@@ -47,6 +47,7 @@ var widget = WidgetSnapshot(days: [prayerDay(first, nextFajr: tomorrowTimes[0]),
     .init(start: unavailable, times: nil, hijri: "", gregorian: ""), prayerDay(unavailable.addingTimeInterval(86400))],
     names: snapshot.names, arabic: false, eastern: true, clock: "24", timezone: "UTC", colors: snapshot.colors)
 precondition(widget.nextPrayer(at: first) == nil)
+precondition(!widget.needsRefresh(at: first.addingTimeInterval(5 * 86400)))
 widget.locationConfirmed = true
 let afterFajr = firstTimes[0]
 let dhuhr = widget.nextPrayer(at: afterFajr)!
@@ -60,4 +61,9 @@ precondition(widget.previousPrayer(at: tomorrow, next: fajr) == isha)
 precondition(widget.nextPrayer(at: tomorrowTimes[5]) == nil)
 precondition(widget.day(at: unavailable)?.times == nil && widget.nextPrayer(at: unavailable) == nil)
 precondition(widget.day(at: first.addingTimeInterval(5 * 86400)) == nil)
-print("Widget rejects unconfirmed, unavailable and stale days and rolls from Isha to the next day's Fajr.")
+precondition(!widget.needsRefresh(at: afterFajr) && !widget.needsRefresh(at: unavailable))
+let lastDay = unavailable.addingTimeInterval(86400)
+precondition(!widget.needsRefresh(at: lastDay))
+precondition(widget.needsRefresh(at: lastDay.addingTimeInterval(20 * 3600)))
+precondition(widget.needsRefresh(at: lastDay.addingTimeInterval(86400)))
+print("Widget distinguishes unconfirmed, unavailable and expired schedules and rolls from Isha to Fajr.")

@@ -33,7 +33,8 @@ struct PrayerWidgetEntry: TimelineEntry {
     var next: (index: Int, time: Date)? { snapshot?.nextPrayer(at: date) }
 
     var message: String {
-        let fallback = snapshot?.arabic == true ? "افتح ميقات" : "Open Miqat"
+        let fallback = String(localized: "Open Miqat")
+        if snapshot?.needsRefresh(at: date) == true { return snapshot?.refreshMessage ?? fallback }
         if snapshot?.locationConfirmed == true { return snapshot?.unavailableMessage ?? fallback }
         return snapshot?.locationMessage ?? fallback
     }
@@ -57,7 +58,10 @@ struct PrayerWidgetProvider: AppIntentTimelineProvider {
             for time in [day.start] + (day.times ?? []) where time > now && time <= horizon { updates.insert(time) }
         }
         if configuration.layout == .circle, snapshot?.locationConfirmed == true {
-            for halfHour in 1...72 { updates.insert(now.addingTimeInterval(Double(halfHour) * 1800)) }
+            for halfHour in 1...72 {
+                let time = now.addingTimeInterval(Double(halfHour) * 1800)
+                if snapshot?.nextPrayer(at: time) != nil { updates.insert(time) }
+            }
         }
         let entries = updates.sorted().map { PrayerWidgetEntry(date: $0, snapshot: snapshot, options: configuration) }
         return Timeline(entries: entries, policy: .after(horizon))
