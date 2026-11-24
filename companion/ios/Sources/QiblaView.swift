@@ -14,12 +14,15 @@ struct QiblaView: View {
     private static let kaaba = CLLocationCoordinate2D(latitude: 21.4225241, longitude: 39.8261818)
 
     var body: some View {
-        Group {
-            if let coordinates = location.fix?.coordinate {
-                if map {
-                    qiblaMap(coordinates)
-                } else if let bearing = QiblaRules.shared.bearing(latitude: coordinates.latitude, longitude: coordinates.longitude) {
-                    compass(bearing.doubleValue)
+        let origin = location.fix?.coordinate
+        let bearing = origin.flatMap {
+            QiblaRules.shared.bearing(latitude: $0.latitude, longitude: $0.longitude)?.doubleValue
+        }
+        return Group {
+            if let origin {
+                if let bearing {
+                    if map { qiblaMap(origin, bearing: bearing) }
+                    else { compass(bearing) }
                 } else {
                     Text(preferences.text("qibla_at_kaaba"))
                 }
@@ -42,15 +45,18 @@ struct QiblaView: View {
         }
         .navigationTitle(preferences.text("phone_qibla"))
         .toolbar {
-            if let fix = location.fix {
+            if let origin, bearing != nil {
                 Button(preferences.text(map ? "phone_compass" : "phone_map")) {
-                    if !map { recenter(fix.coordinate) }
+                    if !map { recenter(origin) }
                     map.toggle()
                 }
             }
         }
         .onAppear { location.find() }
         .onDisappear { location.cancel() }
+        .onChange(of: location.fix) { _, fix in
+            if map, let fix { recenter(fix.coordinate) }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { location.cancel() }
             else if phase == .active { location.find() }
@@ -65,17 +71,18 @@ struct QiblaView: View {
         let relative = (bearing - heading + 360).truncatingRemainder(dividingBy: 360)
         return ScrollView {
             VStack(spacing: 22) {
-                ZStack {
-                    Circle().strokeBorder(.secondary.opacity(0.5), lineWidth: 2)
-                    Image(systemName: "location.north.fill")
-                        .font(.system(size: 82, weight: .medium))
-                        .foregroundStyle(.tint)
-                        .rotationEffect(.degrees(reliable ? relative : bearing))
+                if reliable {
+                    ZStack {
+                        Circle().strokeBorder(.secondary.opacity(0.5), lineWidth: 2)
+                        Image(systemName: "location.north.fill")
+                            .font(.system(size: 82, weight: .medium))
+                            .foregroundStyle(.tint)
+                            .rotationEffect(.degrees(relative))
+                    }
+                    .frame(width: 190, height: 190)
+                    .accessibilityHidden(true)
                 }
-                .frame(width: 190, height: 190)
-                .accessibilityHidden(true)
-                Text(preferences.text("qibla_bearing")).font(.headline)
-                Text(preferences.displayDigits("\(Int(bearing.rounded()) % 360)°")).font(.largeTitle.monospacedDigit())
+                bearingLabel(bearing)
                 if reliable {
                     Text(preferences.text("qibla_direction").replacingOccurrences(of: "%s",
                         with: preferences.displayDigits(String(Int(relative.rounded()) % 360))))
@@ -91,26 +98,39 @@ struct QiblaView: View {
         }
     }
 
-    private func qiblaMap(_ origin: CLLocationCoordinate2D) -> some View {
+    private func bearingLabel(_ bearing: Double) -> some View {
+        VStack(spacing: 4) {
+            Text(preferences.text("qibla_bearing")).font(.headline)
+            Text(preferences.displayDigits(String(format: "%.1f°", bearing)))
+                .font(.title.monospacedDigit())
+        }
+    }
+
+    private func qiblaMap(_ origin: CLLocationCoordinate2D, bearing: Double) -> some View {
         Map(position: $camera, interactionModes: [.pan, .zoom]) {
             Marker(preferences.text("phone_location_title"), systemImage: "location", coordinate: origin)
-            Marker(preferences.arabic ? "الكعبة" : "Kaaba", coordinate: Self.kaaba)
+            Marker(preferences.text("phone_kaaba"), coordinate: Self.kaaba)
             MapPolyline(coordinates: [origin, Self.kaaba], contourStyle: .geodesic).stroke(.teal, lineWidth: 4)
         }
         .mapControls { MapScaleView() }
         .onMapCameraChange(frequency: .onEnd) { context in visibleRegion = context.region }
         .safeAreaInset(edge: .bottom) {
-            HStack {
-                Button { adjustZoom(0.5) } label: { Image(systemName: "plus.magnifyingglass") }
-                    .accessibilityLabel(preferences.arabic ? "تكبير" : "Zoom in")
-                Button { recenter(origin) } label: {
-                    Label(preferences.text("phone_location_title"), systemImage: "location.fill")
+            VStack {
+                bearingLabel(bearing)
+                HStack {
+                    Button { adjustZoom(0.5) } label: { Image(systemName: "plus.magnifyingglass") }
+                        .accessibilityLabel(preferences.text("phone_map_zoom_in"))
+                    Button { recenter(origin) } label: {
+                        Label(preferences.text("phone_location_title"), systemImage: "location.fill")
+                    }
+                    Button { adjustZoom(2) } label: { Image(systemName: "minus.magnifyingglass") }
+                        .accessibilityLabel(preferences.text("phone_map_zoom_out"))
                 }
-                Button { adjustZoom(2) } label: { Image(systemName: "minus.magnifyingglass") }
-                    .accessibilityLabel(preferences.arabic ? "تصغير" : "Zoom out")
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
             .padding()
+            .frame(maxWidth: .infinity)
+            .background(.regularMaterial)
         }
     }
 

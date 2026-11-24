@@ -20,7 +20,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | 7 | Fasting eve, Suhoor and Iftar, choices, exclusions and overlapping selections | Coded using Kotlin fasting rules. Check day edges and independent delivery on iOS. |
 | 8 | Approved voices including Fajr, named audio library/import and CRUD, previews, per-prayer selection, level/length and playback controls, foreground Adhan screen | Packaged 13 checksum-verified voices. Named imports share Android's validation. Active Adhan shows the scheduled time and recording on its controls and publishes progress to Now Playing. Home opens the controls from a full-width shortcut. Verify Files lifecycle, playback controls, motion, system controls and headphone removal. |
 | 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Uses canonical HTTPS stations. Stream completion and terminal failures can reconnect up to four times. Thirty seconds of stable playback restores the budget. Verify the radio regression below, including audio ownership during Adhan and headphone removal. |
-| 10 | Independent Qibla fix, true-north compass, numeric fallback, explicit map with route/pan/zoom/recenter | Coded with Core Location and an explicit Apple MapKit view. Test simulator fallback and a physical iPhone heading. |
+| 10 | Independent Qibla fix, true-north compass, numeric fallback, explicit map with route/pan/zoom/recenter | Compass and map share the displayed bearing. The phone-relative arrow waits for reliable true north. Run the Qibla regression below and check sighted and VoiceOver operation on a physical iPhone. |
 | 11 | Home widgets, adaptive/strip/daily/circle presentations, settings per instance, date options, countdown and ring | Confirmed location gates the timetable. The app stages prayer transitions from Kotlin and can replenish an installed widget during offline background refresh. Each placement retains appearance, date and 120% text choices. Verify signed App Group transfer, medium timetable fit, timer locale and rollover, and per-instance choices. |
 | 12 | About, feedback, update action, independent local storage and prayer reset | About, GitHub feedback, protected prayer settings and reset coded. iOS update action remains open until there is a stable iOS distribution channel. |
 | 13 | Your TVs, demo, QR pairing/approval, pinned identity, independent credentials, settings/conflicts, local rename, Home/inputs/radio/Adhan/forget | Edits retain their original snapshot and submitted values across navigation. An uncertain save requires refresh before explicit retry, and readback can confirm an edit already applied. Remote validates offers and keeps Stop available after uncertainty. Verify native demo, TLS, Keychain, rename, readback, cancellation and conflict behavior. |
@@ -101,6 +101,14 @@ state, and opening it shows the recording name. Turn on Reduce Motion in
 Miqat or iOS and verify the symbol stays still. Turn off artwork and verify
 the controls show a plain background. Check Back confirmation, Pause and
 swipe or tap to Stop. Repeat at the largest in-app text size and in Arabic.
+
+## Qibla fallback on iPhone
+
+With a simulated Cairo fix and no heading data, verify that Qibla shows a
+bearing near 136.1° from true north without an arrow. Open Map and verify the
+same bearing, route, pan, zoom and recenter. At the Kaaba or its antipode,
+verify that Miqat reports no reliable direction. On a physical iPhone, verify
+the arrow appears with a reliable heading and disappears when it is unreliable.
 
 ## Platform differences to verify
 

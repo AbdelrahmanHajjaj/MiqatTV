@@ -2298,6 +2298,11 @@ Home uses a full-width playback shortcut and respects both Reduce Motion
 settings. The touched Swift sources parsed and all 14 generator checks passed.
 Artwork, layout, VoiceOver and animation still need native acceptance.
 
+The iPhone Qibla compass and map now show the same decimal bearing, and the
+phone-relative arrow is shown only with a reliable true-north heading. The
+focused Kotlin Qibla test, Swift syntax and all 14 generator checks passed.
+The simulator fallback and physical heading remain in the native queue.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both
