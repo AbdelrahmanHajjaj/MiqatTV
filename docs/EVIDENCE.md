@@ -2264,3 +2264,9 @@ current generated profiles and checked 60 Android and 42 LG defaults, one-shot
 save failure, read-only reconnect and city-dependent changes. The changed iPhone
 demo and TV views passed host Swift syntax checks. iPhone demo UI, persistence
 and remote-state display still need the simulator.
+
+The iPhone TV appearance preview now uses shared mihrab geometry and TV layout
+and display settings, with synthetic clock and prayer times. The host branding
+check, Swift syntax check, and staging of the canonical geometry, demo locale
+and both TV layout catalogs passed. Apple layout assertions and visual checks
+remain pending.

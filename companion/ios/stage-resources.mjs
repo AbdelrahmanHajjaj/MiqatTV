@@ -17,14 +17,15 @@ for (const name of [
   copyFileSync(join(root, 'shared/data', name + '.json'), join(destination, name + '.json'));
 }
 copyFileSync(join(root, 'companion/strings.json'), join(destination, 'phone-strings.json'));
-const { themes, profiles, sections, themeKeys, themeSurfaces } = generate();
+const { themes, profiles, sections, themeKeys, themeSurfaces, demoSystemLanguage } = generate();
 const { backgrounds, voices } = generatePhone();
 const themeOrder = JSON.parse(readFileSync(join(root, 'shared/design/themes.json'), 'utf8'));
 writeFileSync(join(destination, 'phone-appearance.json'), JSON.stringify({
   themes, backgrounds, themeOrder: themeOrder.filter(id => id in themes),
 }));
-writeFileSync(join(destination, 'tv-profiles.json'), JSON.stringify({ profiles, sections, themeKeys, themeSurfaces }));
+writeFileSync(join(destination, 'tv-profiles.json'), JSON.stringify({ profiles, sections, themeKeys, themeSurfaces, demoSystemLanguage }));
 copyFileSync(join(root, 'companion/protocol/lan.json'), join(destination, 'lan.json'));
+copyFileSync(join(root, 'shared/design/mihrab.json'), join(destination, 'mihrab.json'));
 copyFileSync(join(root, 'companion/qr.js'), join(destination, 'PairingQr.js'));
 for (const id of backgrounds.filter(id => id !== 'plain')) {
   copyFileSync(join(root, 'shared/design/assets/backgrounds', id + '.jpg'), join(destination, id + '.jpg'));

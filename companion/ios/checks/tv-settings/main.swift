@@ -52,3 +52,26 @@ var bounded = TVRedirects("", apps: apps, maximum: 8)!
 bounded.add(from: "tv.a", to: "tv.b")
 precondition(bounded.value.isEmpty)
 print("TV redirects allow valid chains and reject cycles, unknown apps, duplicate sources and oversized payloads.")
+
+var values = ["display.language": "system", "display.digits": "auto", "display.clock": "12",
+              "appearance.position": "auto", "appearance.prayers": "both"]
+var layout = TVPreviewLayout(values: values, systemLanguage: "ar")
+precondition(layout.arabic && layout.easternDigits && layout.twelveHourClock)
+precondition(layout.countdown == .mihrabRight && layout.prayerIndices == [2, 3])
+
+values["display.language"] = "en"
+values["appearance.prayers"] = "next"
+values["appearance.favourites"] = "classic"
+layout = TVPreviewLayout(values: values, systemLanguage: "ar")
+precondition(!layout.arabic && !layout.easternDigits)
+precondition(layout.countdown == .mihrabLeft && layout.prayerIndices == [3] && layout.favouriteRows == 1)
+
+values["appearance.countdown"] = "compact"
+precondition(TVPreviewLayout(values: values, systemLanguage: nil).countdown == .stripTop)
+values["appearance.compact-position"] = "bottom"
+precondition(TVPreviewLayout(values: values, systemLanguage: nil).countdown == .stripBottom)
+values["appearance.countdown"] = "hidden"
+values["appearance.prayers"] = "none"
+layout = TVPreviewLayout(values: values, systemLanguage: nil)
+precondition(layout.countdown == .hidden && layout.prayerIndices.isEmpty)
+print("TV preview follows countdown placement, prayer selection, TV language and display settings.")

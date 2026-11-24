@@ -74,6 +74,7 @@ struct TVSettingsState: Decodable {
     let controls: [TVControl]
     var values: [String: String]
     var status: String?
+    var systemLanguage: String?
 }
 
 struct TVProfileCatalog: Decodable {
@@ -81,6 +82,7 @@ struct TVProfileCatalog: Decodable {
     let sections: [String: Localized<String>]
     let themeKeys: [String]
     let themeSurfaces: [String]
+    let demoSystemLanguage: String
     static let data: Self = PhoneData.load("tv-profiles")
 }
 
@@ -107,6 +109,7 @@ struct TVDetails: View {
         let backgrounds: [String]
         let maximum: Int
         let draft: TVThemeDraft
+        let layout: TVPreviewLayout
     }
 
     private struct RedirectEdit: Identifiable {
@@ -150,7 +153,7 @@ struct TVDetails: View {
                     Section(TVProfileCatalog.data.sections[section]?.value(preferences.arabic)
                         ?? preferences.text("settings")) {
                         if section == "appearance" {
-                            appearancePreview(snapshot.values)
+                            appearancePreview(snapshot)
                         }
                         ForEach(sections[section] ?? []) { control in
                             if control.id == "appearance.custom-theme" {
@@ -177,7 +180,7 @@ struct TVDetails: View {
                 save: { changes in
                     unsavedText["appearance.custom-theme"] = changes["appearance.custom-theme"]
                     apply(changes, expected: edit.baseline)
-                }, draft: edit.draft)
+                }, layout: edit.layout, draft: edit.draft)
         }
         .sheet(item: $redirectEdit) { edit in
             TVRedirectEditor(preferences: preferences, title: edit.title, apps: edit.apps,
@@ -297,7 +300,8 @@ struct TVDetails: View {
             (draft.colors?[key] ?? colors[key]).map { (key, $0) }
         })
         themeEdit = ThemeEdit(baseline: values, title: control.title.value(preferences.arabic),
-                              backgrounds: backgrounds, maximum: control.textLimit, draft: draft)
+                              backgrounds: backgrounds, maximum: control.textLimit, draft: draft,
+                              layout: TVPreviewLayout(values: values, systemLanguage: snapshot.systemLanguage))
     }
 
     private func editRedirects(_ snapshot: TVSettingsState, control: TVControl) {
@@ -322,12 +326,14 @@ struct TVDetails: View {
         return base.merging(themes[id]?.colors ?? [:]) { _, selected in selected }
     }
 
-    private func appearancePreview(_ values: [String: String]) -> some View {
+    private func appearancePreview(_ snapshot: TVSettingsState) -> some View {
+        let values = snapshot.values
         let id = values["appearance.theme"] ?? "mihrab"
         let theme = PhoneAppearance.catalog.themes[id]
         let custom = id == "custom" ? TVThemeDraft.read(values["appearance.custom-theme"] ?? "") : nil
         let background = values["appearance.background"]
-        return TVAppearancePreview(preferences: preferences, colors: themeColors(values),
+        return TVAppearancePreview(layout: TVPreviewLayout(values: values, systemLanguage: snapshot.systemLanguage),
+            colors: themeColors(values),
             background: background == "theme" || background == nil ? custom?.background ?? theme?.background : background,
             lighting: values["appearance.lighting"].flatMap { Int($0) } ?? custom?.lighting ?? theme?.lighting)
     }

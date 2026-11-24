@@ -45,6 +45,7 @@ jobs:
           DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
         run: |
           swiftc companion/ios/Sources/TVThemeDraft.swift companion/ios/Sources/TVRedirects.swift \
+            companion/ios/Sources/TVPreviewLayout.swift \
             companion/ios/checks/tv-settings/main.swift -o "$RUNNER_TEMP/tv-settings-check"
           "$RUNNER_TEMP/tv-settings-check"
       - name: Link Kotlin and build the unsigned simulator app

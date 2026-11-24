@@ -7,6 +7,7 @@
   The [iOS parity queue](docs/IOS-WORK.md) tracks remaining build and device checks.
 - The iPhone companion development target can edit Android TV palettes and app redirects.
 - The iPhone companion demo can simulate disconnection, a failed save, HDMI selection, radio and Adhan controls.
+- The iPhone companion TV preview reflects countdown placement, prayer rows, favourites, and TV language and clock settings.
 - Miqat Phone TV setup defaults to Production and offers Staging for prereleases.
   Select a downloaded Development package in Advanced.
 - Development and Staging builds run on demand. Production promotion tests
