@@ -2296,6 +2296,12 @@ Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
 
+The manual simulator launch check passed at `4e11076`. GitHub Actions installed
+Miqat on a fresh iPhone 16 with iOS 18.4 and verified the launched process
+was still running five seconds later. Onboarding and offline prayer times
+remain open for simulator UI acceptance.
+[Simulator launch result](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45478905946/job/138746461670)
+
 GitHub Actions built Miqat and its widget for iPhone and Simulator on arm64
 with Xcode 16.3 at `ecb1dbf`. Both jobs verified the platform, icon, Arabic
 bundle names, privacy manifest, catalog, approved audio, and notices. The
