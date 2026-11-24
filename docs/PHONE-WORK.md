@@ -5,7 +5,7 @@ The Android APK is the feature baseline for the approved iPhone port. See the
 The iPhone development target includes TV package downloads, local APK/IPK
 identity checks and direct TV installation. Native validation is open.
 
-Updated: 2026-11-24. Stable v0.7.8 includes phone 0.5.24/code 40 with TV
+Updated: 2026-11-24. Stable v0.7.9 includes phone 0.7.9/code 7009003 with TV
 setup and recovery, Quran Radio, Hijri ranges, and opt-in day-before,
 suhoor and iftar alerts.
 The phone marks all days of Ramadan and Eid and includes core and common Hijri
@@ -23,7 +23,7 @@ Download and install verifies the APK against the installed app before opening
 Android's confirmation screen.
 Miqat Phone TV setup selects Production or Staging public downloads. Development
 packages use the local file picker. See [Releasing](RELEASING.md).
-Release-signed installs with the update check can detect code 40 in Production.
+Release-signed installs with the update check can detect code 7009003 in Production.
 Subsequent Staging builds assign the phone version and code before signing.
 
 About Miqat shows the installed phone app version, developer credit

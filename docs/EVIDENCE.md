@@ -1,5 +1,20 @@
 # Validation evidence
 
+## Stable v0.7.9 — 24 November 2026
+
+[Signed Staging](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/tag/v0.7.9-staging.3)
+from `3e6af77` verified the persistent Android signing identities and both APKs
+as 0.7.9/code 7009003. LG is 0.7.9. The standalone
+[hosted simulation](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45477843399)
+passed Android phone, Android TV and LG. Android TV passed the full API 34 size
+sweep, including forced refreshes at 150% and the 90% layout.
+
+[Production](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45480783489)
+passed all three simulations, published all five assets with matching Staging
+digests, and deployed Pages. Both live website languages link to v0.7.9 and
+the live feed reports version code 7009003 for both Android apps. Physical
+upgrades remain unverified.
+
 ## v0.7.9 promotion focus diagnostics
 
 [Production attempt](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45466201679)
@@ -2295,6 +2310,14 @@ browser Umm al-Qura; prayer times are illustrative fixtures, not calculations.
 Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
+
+On iPhone 16 Simulator with iOS 18.4, XCTest at `54a54a9` confirmed the location
+denial message, searched the bundled catalog for London, confirmed the city,
+and preserved the alert opt-out through Skip and relaunch. The journey finished
+with all six prayer rows visible. Both unsigned Apple builds also passed.
+The runner remained network-connected, and the UI test did not compare
+displayed minutes or cover notification authorization.
+[First-use XCTest](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45492818410/job/138795362406)
 
 The manual simulator launch check passed at `4e11076`. GitHub Actions installed
 Miqat on a fresh iPhone 16 with iOS 18.4 and verified the launched process
