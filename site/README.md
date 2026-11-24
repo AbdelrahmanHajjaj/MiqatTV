@@ -1,6 +1,6 @@
 # Miqat website
 
-Bilingual product showcase and interactive TV preview, published by GitHub Pages
+Bilingual product showcase with interactive phone and TV demos, published by GitHub Pages
 at [MiqatTV](https://abdelrahmanhajjaj.github.io/MiqatTV/). Arabic is at the root;
 English is under `/en/`. The static Astro site presents four product surfaces:
 standalone Android phone, TV companion mode, Android/Google TV and LG webOS.
@@ -33,6 +33,8 @@ the Staging release and checks all three device links and `/updates.json`.
 
 - `src/components/ProductShowcase.astro`: phone feature gallery, companion mode,
   TV platform captures, package information and product hero, in both languages.
+- `src/components/PhoneDemo.astro`: shared phone interface with a live prayer
+  timetable, Hijri date browsing, Qibla, alert settings and a sample TV remote.
 - `src/layouts/Layout.astro`: shared navigation, accessibility, metadata/social
   cards, structured data, footer and the interactive TV stage.
 - `src/lib/site.ts`: existing TV screen routes and their bilingual copy.
@@ -40,11 +42,12 @@ the Staging release and checks all three device links and `/updates.json`.
   creates responsive WebP images; full-size links keep the original screenshot.
 - `public/branding/product-{en,ar}.png`: social cards captured from the product hero.
 
-Phone screenshots show the native app. The TV preview has local prayer calculation/settings,
-with simulated device/network/media boundaries and no Adhan playback. Its screen
-links update the TV stage in place; existing deep links and browser Back remain.
-Product links navigate the website separately. Normal page arrow keys keep
-scrolling when the TV is off screen.
+The phone demo calculates prayer times for Cairo, Makkah and London using each
+city's time zone. The sample Adhan plays on request. Alert preferences and sample
+TV pairing are local to the demo. The TV demo is shared by Android TV and LG
+webOS and supports the existing screen links, deep links, and browser Back.
+Normal page arrow keys scroll when the TV is off screen. Expand **Screenshots**
+on a product section to see the native or LG browser captures.
 
 ## Build and review
 

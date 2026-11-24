@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { CITIES, DEFAULT_PREFS } from '../src/lib/data';
 import { hijriOf, prayerDay } from '../src/lib/prayer';
+import { phoneDemoDay } from '../src/lib/phone-demo';
 
 const calendar = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', {
   timeZone: 'UTC', year: 'numeric', month: 'numeric', day: 'numeric',
@@ -24,6 +25,14 @@ for (const date of ['2026-03-28', '2026-03-29', '2026-10-24', '2026-10-25', '202
   assert.equal(+afterIsha.suhoorEnd, +tomorrow.times[0]);
 }
 assert.throws(() => prayerDay(new Date(NaN), DEFAULT_PREFS), /Invalid prayer time/);
+const newYearsEve = new Date('2026-12-31T22:30:00Z');
+const cairo = phoneDemoDay(newYearsEve, 'cairo');
+const london = phoneDemoDay(newYearsEve, 'london');
+assert.equal(cairo.calendar.getDate(), 1, 'Cairo is already on the next civil day');
+assert.equal(london.calendar.getDate(), 31, 'London is still on the previous civil day');
+assert.equal(london.today.nextIndex, 0);
+assert.ok(+london.times[0] < +newYearsEve && +london.today.nextTime > +newYearsEve,
+  'After Isha the countdown uses tomorrow’s Fajr and the timetable keeps today’s Fajr');
 const city = CITIES.find(c => c.id === DEFAULT_PREFS.city)!;
 const latitude = city.lat;
 try {

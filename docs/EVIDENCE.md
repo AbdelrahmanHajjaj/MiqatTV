@@ -1,5 +1,14 @@
 # Validation evidence
 
+## Shared phone and TV website demos — 25 November 2026
+
+The Android API 37 phone UI and live Qibla map fixture passed in Arabic and
+English. Reviewed the recaptured Fajr settings, voice picker, location and
+Qibla map in Miqat Signature at 1080×2400, with notification icons hidden.
+The website build and full browser suite passed, including the bilingual
+phone demo, TV focus, date and city changes, per-prayer sounds, sample TV
+pairing and the expandable screenshot galleries.
+
 ## Miqat Signature website captures — 25 November 2026
 
 An isolated API 37 phone emulator captured all 26 Android phone and companion

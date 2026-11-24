@@ -1,0 +1,195 @@
+---
+import Icon from './Icon.astro';
+import { PHONE_DEMO_CITIES, phoneDemoDay } from '../lib/phone-demo';
+import { prayerLabel } from '../lib/prayer-icon';
+import { makeText, type Lang } from '../lib/text';
+import { BASE, REPO } from '../lib/site';
+import background from '../../../shared/design/assets/backgrounds/miqat_signature.jpg?url';
+import sample from '../../../shared/media/adhan/makkah.mp3?url';
+import sacred from '../../../shared/data/sacred-text.json';
+import phoneText from '../../../companion/strings.json';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = makeText(lang);
+const { ar } = t;
+const names = t.list('prayerNames');
+const { today } = phoneDemoDay(new Date(), 'cairo');
+const label = (key: keyof typeof phoneText) => phoneText[key][lang];
+const sharedLabels = {
+  greeting: label('phone_greeting'), prayer: label('prayers'), calendar: label('phone_calendar'), qibla: label('phone_qibla'),
+  tvs: label('tvs'), settings: label('phone_settings'), bearing: label('qibla_bearing'), alerts: label('phone_alerts'),
+  sound: label('phone_mode'), adhan: label('phone_adhan'), silent: label('phone_silent'), paired: label('connected'),
+  previous: label('phone_previous_day'), next: label('phone_next_day'), now: label('phone_today'),
+};
+const L = ar ? {
+  ...sharedLabels,
+  title: 'جرّب ميقات على الهاتف', countdown: 'الوقت المتبقي', north: 'ش',
+  alertOn: 'تنبيهات العرض مفعّلة', alertOff: 'تنبيهات العرض متوقفة', tone: 'نغمة قصيرة',
+  sample: 'استمع إلى أذان مكة', audioSource: 'مصدر التسجيل', pair: 'اربط تلفازًا تجريبيًا', room: 'غرفة المعيشة',
+  unpair: 'إلغاء الربط', radioOn: 'الإذاعة تعمل', radioOff: 'الإذاعة متوقفة',
+} : {
+  ...sharedLabels,
+  title: 'Try Miqat on your phone', countdown: 'Time remaining', north: 'N',
+  alertOn: 'Demo alerts on', alertOff: 'Demo alerts off', tone: 'Short tone',
+  sample: 'Listen to the Makkah Adhan', audioSource: 'Recording source', pair: 'Pair a demo TV', room: 'Living room',
+  unpair: 'Unpair', radioOn: 'Radio on', radioOff: 'Radio off',
+};
+const nav = [
+  { id: 'prayer', label: L.prayer, icon: 'mihrab' },
+  { id: 'tvs', label: L.tvs, icon: 'tv' },
+  { id: 'settings', label: L.settings, icon: 'gear' },
+] as const;
+---
+<section class="phone-demo" id="phone-demo" data-phone-demo aria-labelledby="phone-demo-title"
+  data-alert-on={L.alertOn} data-alert-off={L.alertOff} data-radio-on={L.radioOn} data-radio-off={L.radioOff}
+  style={`--phone-scene: url("${background}")`}>
+  <div class="phone-demo-copy">
+    <h3 id="phone-demo-title">{L.title}</h3>
+    <div class="phone-demo-shortcuts">
+      <button type="button" data-phone-open="calendar"><Icon name="clock" size={20} />{L.calendar}</button>
+      <button type="button" data-phone-open="qibla"><Icon name="compass" size={20} />{L.qibla}</button>
+      <button type="button" data-phone-open="tvs"><Icon name="tv" size={20} />{L.tvs}</button>
+    </div>
+  </div>
+  <div class="phone-demo-device">
+    <header class="phone-demo-header">
+      <img src={BASE + 'branding/icon.png'} width="30" height="30" alt="" />
+      <strong>{L.greeting}</strong>
+      <label class="phone-city">
+        <span class="visually-hidden">{t.s('location')}</span>
+        <select data-phone-city>{PHONE_DEMO_CITIES.map(city => <option value={city.id}>{city[lang]}</option>)}</select>
+      </label>
+    </header>
+    <div class="phone-demo-body">
+      <div data-phone-panel="prayer" id="phone-demo-prayer">
+        <p class="sacred phone-demo-verse" lang="ar" dir="rtl">{sacred.prayerVerse.join(' ')}</p>
+        <div class="phone-next">
+          <time data-phone-hijri></time>
+          <p>{t.s('nextPrayer')}</p>
+          <div><h4 data-phone-next-name>{names[today.nextIndex]}</h4><span data-phone-next-time></span></div>
+          <p>{L.countdown} <b data-phone-countdown dir="ltr"></b></p>
+        </div>
+        <p class="phone-status" data-phone-alert-status>{L.alertOff}</p>
+        <ul class="phone-rows" data-phone-prayers>
+          {names.map((name, i) => <li>
+            {i === 1 ? <span set:html={prayerLabel(i, name)} /> : <button type="button" data-phone-prayer={i} set:html={prayerLabel(i, name)} />}
+            <time></time>
+          </li>)}
+        </ul>
+        <div class="phone-demo-actions">
+          <button type="button" data-phone-open="calendar"><Icon name="clock" size={18} />{L.calendar}</button>
+          <button type="button" data-phone-open="qibla"><Icon name="compass" size={18} />{L.qibla}</button>
+        </div>
+      </div>
+      <div data-phone-panel="calendar" hidden>
+        <h4 tabindex="-1">{L.calendar}</h4>
+        <div class="phone-demo-actions">
+          <button type="button" data-phone-date="-1">{L.previous}</button>
+          <button type="button" data-phone-date="0">{L.now}</button>
+          <button type="button" data-phone-date="1">{L.next}</button>
+        </div>
+        <div class="phone-calendar-date" aria-live="polite"><b data-phone-calendar-hijri></b><br /><time data-phone-calendar-date></time></div>
+        <ul class="phone-rows" data-phone-calendar-prayers>
+          {names.map((name, i) => <li><span set:html={prayerLabel(i, name)} /><time></time></li>)}
+        </ul>
+      </div>
+      <div data-phone-panel="qibla" hidden>
+        <h4 tabindex="-1">{L.qibla}</h4>
+        <div class="phone-compass" aria-hidden="true" dir="ltr"><span>{L.north}</span><i data-phone-needle></i></div>
+        <p class="phone-bearing">{L.bearing} <b data-phone-bearing></b></p>
+      </div>
+      <div data-phone-panel="tvs" id="phone-demo-tvs" hidden>
+        <h4 tabindex="-1">{L.tvs}</h4>
+        <button class="phone-primary" type="button" data-phone-pair>{L.pair}</button>
+        <div data-phone-remote hidden>
+          <div class="phone-remote-display">
+            <Icon name="tv" size={30} />
+            <strong>{L.room}</strong>
+            <span>{L.paired} · <b data-phone-input-label>{t.s('home')}</b></span>
+          </div>
+          <div class="phone-demo-actions">
+            {[t.s('home'), 'HDMI 1', 'HDMI 2'].map((label, index) => <button type="button" data-phone-input aria-pressed={index === 0 ? 'true' : 'false'}>{label}</button>)}
+          </div>
+          <label class="phone-row"><span data-phone-radio-status>{L.radioOff}</span><input type="checkbox" data-phone-radio /></label>
+          <button type="button" data-phone-unpair>{L.unpair}</button>
+        </div>
+      </div>
+      <div data-phone-panel="settings" id="phone-demo-settings" hidden>
+        <h4 tabindex="-1">{L.settings}</h4>
+        <label class="phone-row">{L.alerts}<input type="checkbox" data-phone-alert /></label>
+        <div class="phone-sound">
+          <label>{L.prayer}<select data-phone-prayer-select>
+            {names.map((name, i) => i !== 1 && <option value={i}>{name}</option>)}
+          </select></label>
+          <label>{L.sound}<select data-phone-sound>
+            <option value="adhan">{L.adhan}</option><option value="tone">{L.tone}</option><option value="silent">{L.silent}</option>
+          </select></label>
+        </div>
+        <p>{L.sample}</p>
+        <audio controls preload="none" src={sample} aria-label={L.sample}></audio>
+        <a href={`${REPO}/blob/main/docs/THIRD-PARTY.md`}>{L.audioSource}</a>
+      </div>
+    </div>
+    <nav class="phone-demo-nav" aria-label={L.title}>
+      {nav.map(item => <button type="button" data-phone-open={item.id} aria-controls={`phone-demo-${item.id}`}
+        aria-current={item.id === 'prayer' ? 'true' : undefined}><Icon name={item.icon} size={20} />{item.label}</button>)}
+    </nav>
+  </div>
+</section>
+
+<script>
+  import '../scripts/phone-demo';
+</script>
+
+<style>
+  .phone-demo { scroll-margin-top:2rem; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,420px); align-items:center; gap:clamp(24px,7vw,108px); padding:clamp(24px,5vw,72px); border:1px solid var(--color-line-soft); border-radius:30px; background:linear-gradient(110deg,#061f25 10%,#061f25ab),var(--phone-scene) center/cover; }
+  .phone-demo-copy h3 { font-size:clamp(2rem,4vw,4rem); max-width:12ch; text-wrap:balance; }
+  .phone-demo-shortcuts { display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
+  .phone-demo-device { display:grid; grid-template-rows:auto minmax(0,1fr) auto; min-width:0; min-height:650px; border:1px solid var(--color-line-soft); border-radius:28px; overflow:hidden; box-shadow:0 25px 65px #0005; background:linear-gradient(#0a2d3370,#0a2d33c0),var(--phone-scene) center/cover; font-size:.875rem; }
+  .phone-demo-header, .phone-demo-body, .phone-demo-nav { padding:14px; }
+  .phone-demo-header { display:flex; align-items:center; gap:8px; }
+  .phone-demo-header img { border-radius:7px; }
+  .phone-demo-header strong { font-family:var(--display); font-size:1.2rem; }
+  .phone-city { margin-inline-start:auto; }
+  .phone-demo button, .phone-demo select { border:1px solid var(--color-line-soft); border-radius:12px; padding:8px 10px; background:var(--color-lapis-800); color:inherit; font:inherit; cursor:pointer; min-height:42px; }
+  .phone-demo :is(button,select,input,a):focus-visible { outline:2px solid var(--color-gold-400); outline-offset:2px; }
+  .phone-demo button:hover, .phone-demo button[aria-pressed=true] { border-color:var(--color-gold-400); color:var(--color-gold-200); }
+  .phone-demo button:has(svg) { display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  .phone-demo svg { flex:none; }
+  .phone-demo-body h4 { margin:0 0 16px; font-size:1.3rem; font-weight:500; }
+  .phone-demo-verse { text-align:center; font-size:1.35rem; margin:0 0 12px; }
+  .phone-next, .phone-remote-display { background:#0a2d33da; border:1px solid var(--color-line-soft); padding:14px; border-radius:20px; }
+  .phone-next time, .phone-next p, .phone-status, .phone-calendar-date time { color:var(--color-mist-400); }
+  .phone-next p { margin:7px 0 0; }
+  .phone-next > div { display:flex; align-items:baseline; justify-content:space-between; gap:6px; color:var(--color-gold-400); }
+  .phone-next h4, .phone-next > div span { font:var(--display-weight) clamp(1.5rem,5vw,2.1rem)/1.3 var(--display); margin:0; }
+  .phone-status { font-size:.8rem; margin:12px 0 6px; }
+  .phone-rows { margin:0; padding:0; list-style:none; background:#123c42db; border-radius:16px; }
+  .phone-rows li { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:43px; padding-inline:10px; border:1px solid transparent; }
+  .phone-rows li + li { border-top-color:#adc8c62b; }
+  .phone-rows li[data-next] { border:1px solid var(--color-gold-400); border-radius:12px; color:var(--color-gold-200); }
+  .phone-rows li :is(button,span) { display:flex; align-items:center; gap:9px; }
+  .phone-demo .phone-rows button { background:none; border-color:transparent; justify-content:start; padding:0; text-align:start; flex:1; }
+  .phone-rows :global(.prayer-icon) { width:22px; height:22px; color:var(--color-gold-400); }
+  .phone-demo-actions, .phone-demo-nav { display:flex; gap:8px; }
+  .phone-demo-actions { margin:12px 0; flex-wrap:wrap; }
+  .phone-demo-actions button { flex:1; }
+  .phone-demo-nav { background:var(--color-lapis-900); }
+  .phone-demo-nav button { flex:1; min-width:0; flex-direction:column; gap:3px; padding:7px 4px; font-size:.75rem; }
+  .phone-demo-nav button[aria-current] { color:var(--color-gold-200); background:var(--color-lapis-700); }
+  .phone-calendar-date { margin:18px 0; }
+  .phone-compass { position:relative; display:grid; justify-items:center; align-items:start; width:min(100%, 225px); aspect-ratio:1; margin:28px auto; padding:12px; border:1px solid var(--color-gold-400); border-radius:50%; background:radial-gradient(circle,var(--color-lapis-800),var(--color-lapis-900)); }
+  .phone-compass i { position:absolute; inset:27%; transform:rotate(var(--bearing,0deg)); }
+  .phone-compass i::before { content:''; position:absolute; left:calc(50% - 11px); width:22px; height:50%; background:var(--color-gold-400); clip-path:polygon(50% 0,100% 100%,50% 80%,0 100%); }
+  .phone-bearing { text-align:center; }
+  .phone-remote-display { display:grid; justify-items:center; gap:8px; }
+  .phone-demo button.phone-primary { width:100%; color:var(--color-lapis-950); background:var(--color-gold-400); border-color:transparent; font-weight:600; }
+  .phone-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; margin-bottom:10px; border-bottom:1px solid var(--color-line-soft); }
+  .phone-row input { width:20px; height:20px; accent-color:var(--color-gold-400); }
+  .phone-sound { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .phone-sound label, .phone-demo audio { display:block; width:100%; }
+  .phone-sound select { display:block; width:100%; margin-top:5px; }
+  @media(max-width:850px) { .phone-demo { grid-template-columns:minmax(0,1fr); justify-items:center; } .phone-demo-copy { width:min(100%,420px); } .phone-demo-copy h3 { max-width:none; } .phone-demo-device { width:min(100%,420px); } }
+  @media(max-width:560px) { .phone-demo { padding:16px 8px 8px; gap:16px; } .phone-demo-copy { padding-inline:8px; } .phone-demo-header,.phone-demo-body,.phone-demo-nav { padding:10px; } .phone-demo-header strong { font-size:1rem; } .phone-demo-device { min-height:600px; } }
+</style>

@@ -82,6 +82,7 @@ final class PhoneUiCheck {
                     a.phoneUi.save("prayer.zone","system");a.getWindow().getDecorView().findViewWithTag("phone.location.confirm").performClick();
                     a.phoneUi.open("appearance");a.phoneUi.save("appearance.theme","dusk");check(a.ground==android.graphics.Color.parseColor("#211C32")&&a.color("lapis-700")==android.graphics.Color.parseColor("#403147"),"Phone theme not applied to all surfaces");
                     boundControls(a);
+                    a.phoneUi.save("appearance.theme", a.phoneUi.data.defaults.get("appearance.theme"));
                     a.tab("prayers");
                     try {
                         PhoneSchedule.Day day=a.phoneUi.settings.day(System.currentTimeMillis(),0);

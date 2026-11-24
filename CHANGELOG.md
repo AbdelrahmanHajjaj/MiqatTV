@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The website offers one interactive phone demo and one TV demo, with Miqat Signature across the screenshot galleries.
 - The landing page shows the Miqat Signature look on both devices. Refreshed phone and companion screenshots hide emulator notification icons.
 
 - Added a Miqat iPhone development target with shared Kotlin prayer rules,

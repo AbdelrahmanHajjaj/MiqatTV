@@ -69,5 +69,9 @@ onScreen('*', (stage, signal) => {
   });
 
   // Arriving from another screen of the TV (links end in #tv): focus lands where the app puts it.
-  if (location.hash === '#tv' && !stage.contains(document.activeElement)) start();
+  const focusFromLink = () => {
+    if (location.hash === '#tv' && !stage.contains(document.activeElement)) start();
+  };
+  window.addEventListener('hashchange', focusFromLink, {signal});
+  focusFromLink();
 });
