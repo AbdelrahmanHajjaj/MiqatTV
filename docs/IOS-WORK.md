@@ -12,7 +12,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | Order | User journey | Status and remaining acceptance |
 | --- | --- | --- |
 | 1 | Apple application, Kotlin framework, canonical bundles and unsigned build | App, widget and native libraries target arm64. The Xcode 16.3 workflow checks the bundle and archives it for simulator acceptance. Windows verified workflow parsing, Kotlin task registration, resource staging and the generated icon. Apple build and launch pending. |
-| 2 | Welcome, skip/resume, permission and confirmation, offline country/city search, fresh fix, manual coordinates and timezone, background location consent/travel refresh | Home can refresh a confirmed location directly with existing permission. Location mode changes retire the old request. Verify fresh/denied, cancel/retry, Always permission, significant-change delivery, and changing city or coordinates during travel refresh. |
+| 2 | Welcome, skip/resume, permission and confirmation, offline country/city search, fresh fix, manual coordinates and timezone, background location consent/travel refresh | Home resumes an unfinished setup. Location confirmation and continuation are saved independently, and continuing enables prayer alerts only with user and system consent. Location mode changes retire the old request. Run the first-use regression below and check Always permission, significant-change delivery and manual edits during travel refresh. |
 | 3 | Prayer Home, greeting and exact verse, Hijri/Gregorian date, next prayer, countdown seconds and six times, next-Fajr rollover, calculated city, method/school/high-latitude rule and offsets | Coded. 570 minute-for-minute Android comparisons passed across five cities, all presets, both Asr schools and three high-latitude rules. Offset and polar fixtures passed. Native UI pending. |
 | 4 | Hijri month/day navigation, swipes and timetable, Hijri adjustment, current/upcoming and all recurring events | Month browsing keeps the prayer day selected, events can select their day, and civil navigation is limited to 366 days in either direction. The Apple fixture covers Umm al-Qura month/year boundaries and DST with an offset. Verify the fixture and both Arabic and English UI journeys on Apple. |
 | 5 | English/Arabic and RTL, digits, 12/24-hour clocks, type scale, palettes, backgrounds, full-page previews, Home artwork and reduce motion | Setup and settings share visual palette and scene choices, and the full-page preview is read-only. Prayer Home and Adhan use the selected artwork and palette. Verify both locales, artwork visibility, reduced motion and scale extremes on iOS. |
@@ -39,6 +39,19 @@ new Android releases to this pinned baseline before expanding the queue.
 - GitHub CLI authentication returned HTTP 401. Git's credential manager passed
   a non-interactive dry run. Automatic approval review blocked the actual push
   pending explicit authorization to send the branch to the GitHub remote.
+
+## First-use regression on iPhone
+
+1. On a fresh install, deny location access, choose a city offline and confirm
+   it. Turn Prayer alerts off, Skip and relaunch. Use **Finish setting up Miqat**
+   on Home. Confirm the location and alert choice persisted and that Continue
+   opens Your style without a notification prompt. Finish and check the timetable.
+2. On a fresh install, leave Prayer alerts on, confirm a location and continue.
+   Allow notifications and confirm Prayer alerts is enabled in Settings. Repeat
+   with denial and confirm alerts are off and setup still reaches Your style.
+3. On a fresh install, select **Set up later** before confirming a location.
+   Finish Your style, then verify Home still offers location confirmation and
+   no prayer alerts are scheduled. Verify the same flow with Arabic enabled.
 
 ## Platform differences to verify
 

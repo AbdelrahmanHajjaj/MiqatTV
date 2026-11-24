@@ -107,6 +107,8 @@ struct PhonePreferences: Codable, Equatable {
     var showArtwork = true
     var setupStarted = false
     var setupFinished = false
+    var setupLocationContinued: Bool?
+    var setupAlerts: Bool?
     var triedSetupLocation = false
     var alertsEnabled = false
     var prayerAlerts = Array(repeating: PrayerAlert(), count: 6)

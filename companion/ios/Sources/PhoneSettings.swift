@@ -130,11 +130,11 @@ struct PhoneAppearanceEditor: View {
                 }
             }
             Section { DisplaySettings(preferences: $preferences) }
-            if let finish { Button(preferences.text("done"), action: finish) }
+            if let finish { Button(preferences.text("setup_finish"), action: finish) }
         }
         .scrollContentBackground(.hidden)
         .background { PhoneBackdrop(ground: ground, scene: preferences.background, shade: 0.76).ignoresSafeArea() }
-        .navigationTitle(preferences.text("phone_appearance"))
+        .navigationTitle(preferences.text(finish == nil ? "phone_appearance" : "setup_appearance"))
         .toolbarBackground(ground, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)

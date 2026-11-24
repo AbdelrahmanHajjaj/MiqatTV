@@ -2256,6 +2256,12 @@ preserve executable permissions. Windows checks confirmed that the workflow
 parses and that the archive path and launch identifier agree with the iPhone
 guide. Archive creation, upload and simulator launch await the Apple run.
 
+The iPhone first-use flow now saves location confirmation, the alert choice
+and progression independently. Existing preferences can omit the two new
+optional fields. The four touched Swift sources parsed on Windows and all 14
+companion generator checks passed, including bilingual copy. The native
+[first-use regression](IOS-WORK.md#first-use-regression-on-iphone) is pending.
+
 The iPhone TV appearance editor now reads canonical palette and surface
 metadata. Its settings write sets the custom theme value and selection together
 with the baseline captured on editor entry. Host checks passed for staging both

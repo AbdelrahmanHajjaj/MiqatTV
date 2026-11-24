@@ -29,7 +29,7 @@ struct MiqatApp: App {
         WindowGroup {
             TabView(selection: $tab) {
                 NavigationStack {
-                    PrayerHome(preferences: settings, schedule: schedule)
+                    PrayerHome(preferences: settings, schedule: schedule, resumeSetup: { setup = true })
                 }
                 .tabItem { Label(store.preferences.text("phone_home"), systemImage: "sun.horizon") }
                 .tag("prayer")
@@ -216,6 +216,7 @@ struct PrayerHome: View {
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
     var preview = false
+    var resumeSetup: (() -> Void)?
     @StateObject private var location = PhoneLocation()
     @State private var showPlayback = false
     @State private var showRadio = false
@@ -231,6 +232,12 @@ struct PrayerHome: View {
             let next = day.next(at: context.date)
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    if let resumeSetup, !preferences.setupFinished {
+                        Button(action: resumeSetup) {
+                            Label(preferences.text("setup_resume"), systemImage: "gearshape")
+                        }
+                        .buttonStyle(.bordered)
+                    }
                     VStack(alignment: .leading, spacing: 16) {
                         Text(preferences.text("phone_greeting")).font(.title2.weight(.semibold))
                         Text(preferences.arabic ? "ميقات" : "Miqat").font(.largeTitle.bold())
@@ -417,42 +424,38 @@ struct PhoneSetup: View {
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
     @ObservedObject var notifications: PrayerNotifications
-    @State private var stage = 0
+    @State private var continuing = false
 
     var body: some View {
         Group {
-            switch stage {
-            case 1:
+            if preferences.setupLocationContinued == true {
+                PhoneAppearanceEditor(preferences: $preferences, schedule: schedule) {
+                    preferences.setupFinished = true
+                    if preferences.setupFinished { dismiss() }
+                }
+            } else if preferences.setupStarted {
                 LocationSettings(preferences: $preferences, schedule: schedule, setup: true)
                     .safeAreaInset(edge: .bottom) {
-                        Button(preferences.text("done")) {
-                            stage = 2
-                            Task {
-                                if notifications.permission == .notDetermined {
-                                    _ = await notifications.authorize()
+                        VStack {
+                            Button(preferences.text("setup_next"), action: continueSetup)
+                                .buttonStyle(.borderedProminent)
+                                .disabled(!preferences.locationConfirmed)
+                            if !preferences.locationConfirmed {
+                                Button(preferences.text("setup_later")) {
+                                    preferences.setupLocationContinued = true
                                 }
                             }
                         }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(!preferences.locationConfirmed)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(.regularMaterial)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(.regularMaterial)
                     }
-            case 2:
-                PhoneAppearanceEditor(preferences: $preferences, schedule: schedule) {
-                    preferences.setupFinished = true
-                    dismiss()
-                }
-            default:
+            } else {
                 VStack(spacing: 20) {
                     Image(systemName: "sun.horizon").font(.system(size: 64)).accessibilityHidden(true)
                     Text(preferences.text("setup_welcome")).font(.largeTitle.bold())
-                    Button(preferences.text("setup_start")) {
-                        preferences.setupStarted = true
-                        stage = preferences.locationConfirmed ? 2 : 1
-                    }
-                    .buttonStyle(.borderedProminent)
+                    Button(preferences.text("setup_start")) { preferences.setupStarted = true }
+                        .buttonStyle(.borderedProminent)
                 }
                 .multilineTextAlignment(.center)
                 .padding()
@@ -464,10 +467,25 @@ struct PhoneSetup: View {
                     preferences.setupStarted = true
                     dismiss()
                 }
+                .disabled(continuing)
             }
         }
-        .onAppear {
-            if preferences.setupStarted { stage = preferences.locationConfirmed ? 2 : 1 }
+        .disabled(continuing)
+    }
+
+    private func continueSetup() {
+        guard preferences.locationConfirmed, !continuing else { return }
+        continuing = true
+        let wantsAlerts = preferences.setupAlerts ?? true
+        Task {
+            defer { continuing = false }
+            var allowed = false
+            if wantsAlerts { allowed = await notifications.authorize() }
+            guard preferences.locationConfirmed else { return }
+            var next = preferences
+            next.alertsEnabled = allowed
+            next.setupLocationContinued = true
+            preferences = next
         }
     }
 }

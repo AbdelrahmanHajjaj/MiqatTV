@@ -164,7 +164,15 @@ struct LocationSettings: View {
                     showCoordinates = true
                 }
                 Button(preferences.text("phone_confirm_location")) { preferences.locationConfirmed = true }
-                    .disabled(preferences.locationConfirmed)
+                    .disabled(preferences.locationConfirmed || location.pending)
+            }
+            if setup {
+                Section {
+                    Toggle(preferences.text("phone_alerts"), isOn: Binding(
+                        get: { preferences.setupAlerts ?? true },
+                        set: { preferences.setupAlerts = $0 }
+                    ))
+                }
             }
             Section {
                 Toggle(preferences.text("phone_travel_refresh"), isOn: $preferences.travelRefresh)
@@ -211,7 +219,7 @@ struct LocationSettings: View {
                 }
             }
         }
-        .navigationTitle(preferences.text("phone_location_title"))
+        .navigationTitle(preferences.text(setup ? "setup_essentials" : "phone_location_title"))
         .sheet(isPresented: $showCoordinates) {
             NavigationStack { AdvancedLocation(preferences: $preferences) }
         }
