@@ -1,12 +1,20 @@
 package tv.miqat.companion.core
 
+import tv.miqat.core.DisplayText
 import tv.miqat.core.PrayerRules
-import tv.miqat.core.ReminderEvent
 import tv.miqat.core.PrayerSelection
+import tv.miqat.core.ReminderEvent
 
 /** Phone policy only; shells supply astronomy, civil days, clocks and durable claims. */
 object PhonePrayerRules {
     const val LATE_WINDOW_MS = 120000.0
+    private val decimalCoordinate = Regex("[+-]?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
+
+    fun parseCoordinate(value: String): Double? {
+        val text = DisplayText.digits(value.trim(), eastern = false).replace('٫', '.').replace('−', '-')
+        if (!decimalCoordinate.matches(text)) return null
+        return text.toDoubleOrNull()?.takeIf { it.isFinite() }
+    }
 
     fun volumeIndex(percent: Int, maximum: Int): Int {
         require(percent in 0..100 && maximum > 0)
@@ -51,6 +59,18 @@ object PhonePrayerRules {
         val times = today ?: tomorrow ?: return null
         val next = PrayerRules.select(times, tomorrow?.get(0) ?: now, now)
         return next.takeIf { it.nextTime > now }
+    }
+
+    /** Batch of future events for shells that hand off a bounded schedule to the OS. */
+    fun futureDayEvents(times: DoubleArray, now: Double, modes: IntArray, before: IntArray,
+        after: IntArray): List<ReminderEvent> = buildList {
+        val days = arrayOf(times)
+        val seen = mutableListOf<String>()
+        while (true) {
+            val event = nextEvent(days, now, modes, before, after, seen.toTypedArray()) ?: break
+            seen.add(event.id)
+            if (event.time > now) add(event)
+        }
     }
 
     /** A weekday override changes sound only; it can never enable a disabled prayer. */

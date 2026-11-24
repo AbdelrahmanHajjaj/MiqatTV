@@ -1,0 +1,6 @@
+"CFBundleDisplayName" = "ميقات";
+"CFBundleName" = "ميقات";
+"NSLocationWhenInUseUsageDescription" = "يستخدم ميقات موقعك لحساب مواقيت الصلاة واتجاه القبلة.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "عند تفعيل الموقع التلقائي، يحدّث ميقات مواقيت الصلاة بعد السفر حتى عند إغلاق التطبيق.";
+"NSLocalNetworkUsageDescription" = "يعثر ميقات على أجهزة التلفاز لإعدادها ويتصل بالأجهزة المقترنة على شبكتك المنزلية.";
+"NSCameraUsageDescription" = "امسح رمز الاستجابة على شاشة التلفاز لإقرانه بميقات.";

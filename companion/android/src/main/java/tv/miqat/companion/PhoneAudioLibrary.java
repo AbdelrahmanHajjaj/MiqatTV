@@ -6,6 +6,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
+import tv.miqat.companion.core.RecordingName;
 
 /** Durable names for private immutable audio; an unreadable index is never replaced. */
 final class PhoneAudioLibrary {
@@ -15,9 +16,8 @@ final class PhoneAudioLibrary {
     }
 
     static String validName(String value) {
-        String name = value == null ? "" : value.trim();
-        if (name.isEmpty() || name.length() > 80 || name.chars().anyMatch(Character::isISOControl))
-            throw new IllegalArgumentException("Invalid recording name");
+        String name = RecordingName.INSTANCE.validated(value);
+        if (name == null) throw new IllegalArgumentException("Invalid recording name");
         return name;
     }
 

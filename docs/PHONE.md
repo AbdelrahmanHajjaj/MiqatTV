@@ -116,8 +116,9 @@ voice does not change the next scheduled Adhan.
 file name or choose a name; saved recordings remain searchable/reusable for the
 default or any prayer after switching voices. Imports must be audio Android can
 prepare, at most 20 MB and 10 minutes. Successful imports no longer need access to
-the source document; failed imports retain the previous selection. Files are
-excluded from backup/transfer and removed by Reset phone prayer settings.
+the source document; failed imports retain the previous selection. The named
+library survives Reset phone prayer settings and is excluded from backup and
+transfer. Use the library's delete action to remove an imported recording.
 
 Adhan and previews use media volume by default. **Use alarm sound** selects the
 alarm stream, independently of Android's timing permission. **Adhan level** uses
@@ -272,5 +273,6 @@ on the TV still requires its remote. [Companion guide](../companion/README.md).
 
 Phone prayers use protected local storage for pre-unlock recovery; paired TVs use
 a separate encrypted store. Neither is in Android backup/transfer. **Reset phone
-prayer settings** removes private prayer/audio data and leaves paired TVs intact.
+prayer settings** clears prayer and appearance preferences and turns off alerts.
+Named Adhan recordings and paired TVs stay available.
 There is no cloud sync.

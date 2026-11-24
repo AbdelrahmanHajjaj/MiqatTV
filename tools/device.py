@@ -53,6 +53,13 @@ def usable_home(component):
         word in component.lower() for word in FORBIDDEN_HOME)
 
 
+def same_home(left, right):
+    def full(value):
+        pkg, _, activity = value.partition("/")
+        return pkg + "/" + (pkg + activity if activity.startswith(".") else activity)
+    return full(left) == full(right)
+
+
 def packages(output):
     return {line.removeprefix("package:").strip() for line in output.splitlines()
             if line.startswith("package:")}
@@ -197,14 +204,8 @@ class Device:
         if not usable_home(component):
             raise ValueError("Refusing an unknown, setup or factory Home.")
         self.adb.shell("cmd package set-home-activity --user 0 " + shlex.quote(component))
-        if self.home() != component:
-            # Android may return either a full class name or its .Short form.
-            actual = self.home()
-            def full(value):
-                pkg, _, activity = value.partition("/")
-                return pkg + "/" + (pkg + activity if activity.startswith(".") else activity)
-            if full(actual) != full(component):
-                raise RuntimeError("TV did not select the requested Home.")
+        if not same_home(self.home(), component):
+            raise RuntimeError("TV did not select the requested Home.")
 
     def activate(self, exclusive=False):
         sdk = self.adb.shell("getprop ro.build.version.sdk").strip()
@@ -243,6 +244,10 @@ class Device:
     def restore(self):
         if not self.path.exists():
             raise ValueError("No recovery record. Refusing to guess the original Home or settings.")
+        record = json.loads(self.path.read_text(encoding="utf-8"))
+        if isinstance(record, dict) and record.get("version") == 2:
+            self.restore_ios_setup(record)
+            return
         record = self.backup()
         # Only packages changed by this tool, only ones originally enabled.
         for package in record["packages_changed"]:
@@ -286,6 +291,68 @@ class Device:
             if self.setting(ns, key) != old:
                 raise RuntimeError("Could not restore " + key)
         self.start(original)
+
+
+    def restore_ios_setup(self, record):
+        ownership = ("homeChanged", "remoteAdded", "enabledBySetup")
+        if (type(record["version"]) is not int
+                or record.keys() - {"version", "device", "home", "services", "enabled", "disabledBySetup", *ownership}
+                or any(type(record.get(key)) is not bool for key in ownership)):
+            raise ValueError("Invalid iPhone setup backup.")
+        disabled = record.get("disabledBySetup", [])
+        if not isinstance(disabled, list) or len(disabled) > 128 or not (disabled or any(record[key] for key in ownership)):
+            raise ValueError("Invalid cleanup list in iPhone setup backup.")
+        for package in disabled:
+            validate_disable(package)
+            if len(package) > 255 or package.lower().startswith("com.cvte."):
+                raise ValueError("Protected package in iPhone setup backup.")
+        original = record.get("home")
+        if not isinstance(original, str) or not usable_home(original) or len(original) > 256:
+            raise ValueError("The iPhone backup has no usable Home.")
+        for value in (record.get("services"), record.get("enabled")):
+            if value is not None and (not isinstance(value, str) or len(value.encode()) > 16384
+                                      or any(c in value for c in "\r\n\x00")):
+                raise ValueError("Invalid setting in iPhone setup backup.")
+        if record.get("device") != self.identity():
+            raise ValueError("The iPhone backup belongs to another TV.")
+
+        if disabled:
+            still_disabled = packages(self.adb.shell("pm list packages -d --user 0"))
+            for package in sorted(set(disabled) & still_disabled):
+                self.adb.shell("pm enable --user 0 " + package)
+                if package not in self.enabled():
+                    raise RuntimeError("Could not re-enable " + package + ". Keep the backup.")
+
+        if record["homeChanged"]:
+            current = self.home()
+            if same_home(current, HOME):
+                self.start(original)
+                if not same_home(self.home(), current):
+                    raise RuntimeError("Home changed during restore. Keep the backup.")
+                self.set_home(original)
+
+        def write_setting(name, before, value):
+            if self.setting("secure", name) != before:
+                raise RuntimeError("The setting changed during restore. Keep the backup.")
+            command = ("settings delete secure " + name if value is None else
+                       "settings put secure " + name + " " + shlex.quote(value))
+            self.adb.shell(command)
+            if self.setting("secure", name) != value:
+                raise RuntimeError("Could not verify " + name + ". Keep the backup.")
+
+        service_key = "enabled_accessibility_services"
+        if record["remoteAdded"]:
+            current = self.setting("secure", service_key)
+            services = [s for s in (current or "").split(":") if s]
+            remote = PACKAGE + "/.RemoteKeys"
+            kept = [s for s in services if not same_home(s, remote)]
+            if kept != services:
+                original_services = record.get("services")
+                original_entries = [s for s in (original_services or "").split(":") if s]
+                write_setting(service_key, current, original_services if kept == original_entries else ":".join(kept))
+        if record["enabledBySetup"] and self.setting("secure", "accessibility_enabled") == "1":
+            if not any((self.setting("secure", service_key) or "").split(":")):
+                write_setting("accessibility_enabled", "1", record.get("enabled"))
 
 
     def configure(self):

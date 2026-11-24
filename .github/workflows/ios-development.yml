@@ -1,0 +1,178 @@
+name: iOS development build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/ios-app-port]
+    paths:
+      - '.github/workflows/ios-development.yml'
+      - 'companion/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'tools/setup-steps.txt'
+      - 'tools/clean-catalog.tsv'
+      - 'tools/device.py'
+      - 'tests/test_device.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-development-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apple:
+    name: Apple (${{ matrix.sdk }})
+    runs-on: macos-15
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sdk: iphonesimulator
+            destination: generic/platform=iOS Simulator
+            binary-platform: IOSSIMULATOR
+          - sdk: iphoneos
+            destination: generic/platform=iOS
+            binary-platform: IOS
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.3.app/Contents/Developer
+      MIQAT_BUILD_SDK: ${{ matrix.sdk }}
+      MIQAT_BUILD_DESTINATION: ${{ matrix.destination }}
+      MIQAT_BINARY_PLATFORM: ${{ matrix.binary-platform }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: companion/ios/package-lock.json
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v5.4.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Ensure the Xcode 16.3 iOS runtime is available
+        run: |
+          if ! xcrun simctl list runtimes --json | jq -e '.runtimes[] | select(.identifier == "com.apple.CoreSimulator.SimRuntime.iOS-18-4" and .isAvailable)' >/dev/null; then
+            xcodebuild -downloadPlatform iOS -buildVersion 18.4
+          fi
+      - name: Check portable phone and installer rules
+        if: matrix.sdk == 'iphonesimulator'
+        run: ./gradlew -p companion/core jvmTest
+      - name: Check Android wireless pairing key exchange
+        if: matrix.sdk == 'iphonesimulator'
+        run: |
+          cmake -S companion/ios/adb-crypto -B "$RUNNER_TEMP/adb-crypto" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$RUNNER_TEMP/adb-crypto" --target miqat_adb_spake_check miqat_adb_tls_check --parallel 4
+          ctest --test-dir "$RUNNER_TEMP/adb-crypto" --output-on-failure
+      - name: Install iOS resource dependencies
+        run: npm --prefix companion/ios ci --ignore-scripts
+      - name: Check iOS resources and astronomy
+        if: matrix.sdk == 'iphonesimulator'
+        run: node companion/ios/astronomy.test.mjs
+      - name: Check TV settings edit payloads
+        if: matrix.sdk == 'iphonesimulator'
+        run: |
+          swiftc companion/ios/Sources/TVThemeDraft.swift companion/ios/Sources/TVRedirects.swift \
+            companion/ios/Sources/TVPreviewLayout.swift companion/ios/Sources/TVRemoteState.swift companion/ios/Sources/TVSettingEdit.swift \
+            companion/ios/checks/tv-settings/main.swift -o "$RUNNER_TEMP/tv-settings-check"
+          "$RUNNER_TEMP/tv-settings-check"
+      - name: Check widget appearance snapshots
+        if: matrix.sdk == 'iphonesimulator'
+        run: |
+          swiftc companion/ios/Sources/WidgetSnapshot.swift companion/ios/checks/widget-appearance/main.swift \
+            -o "$RUNNER_TEMP/widget-appearance-check"
+          "$RUNNER_TEMP/widget-appearance-check"
+      - name: Check Adhan notification payloads
+        if: matrix.sdk == 'iphonesimulator'
+        run: |
+          swiftc companion/ios/Sources/AdhanNotification.swift companion/ios/checks/adhan-notification/main.swift \
+            -o "$RUNNER_TEMP/adhan-notification-check"
+          "$RUNNER_TEMP/adhan-notification-check"
+      - name: Check prayer notification replacement
+        if: matrix.sdk == 'iphonesimulator'
+        run: |
+          swiftc companion/ios/Sources/PrayerNotificationRequest.swift companion/ios/Sources/PrayerCivilDates.swift \
+            companion/ios/checks/prayer-notification/main.swift \
+            -o "$RUNNER_TEMP/prayer-notification-check"
+          "$RUNNER_TEMP/prayer-notification-check"
+      - name: Check Hijri calendar selection
+        if: matrix.sdk == 'iphonesimulator'
+        run: |
+          swiftc companion/ios/Sources/HijriCalendarSelection.swift companion/ios/checks/hijri-calendar/main.swift \
+            -o "$RUNNER_TEMP/hijri-calendar-check"
+          "$RUNNER_TEMP/hijri-calendar-check"
+      - name: Check TV packages and installation sequences
+        if: matrix.sdk == 'iphonesimulator'
+        run: |
+          python3 -S -B companion/ios/checks/tv-download/ipk-fixtures.py "$RUNNER_TEMP/ipk-fixtures"
+          python3 -S -B companion/ios/checks/tv-download/apk-fixtures.py "$RUNNER_TEMP/apk-fixtures"
+          swiftc -parse-as-library -import-objc-header companion/ios/Miqat-Bridging-Header.h -lz \
+            companion/ios/Sources/AndroidTVPackage.swift companion/ios/Sources/AndroidTVInstallation.swift \
+            companion/ios/Sources/AndroidTVRecovery.swift companion/ios/Sources/AndroidTVCleanup.swift \
+            companion/ios/Sources/AndroidTVOptions.swift \
+            companion/ios/Sources/AndroidTVPersonalization.swift \
+            companion/ios/Sources/LgPackage.swift companion/ios/Sources/LGInstallation.swift \
+            companion/ios/Sources/TVRelease.swift companion/ios/Sources/TVPackageDownload.swift \
+            companion/ios/checks/tv-download/lg-installation.swift companion/ios/checks/tv-download/android-installation.swift \
+            companion/ios/checks/tv-download/android-recovery.swift companion/ios/checks/tv-download/android-cleanup.swift \
+            companion/ios/checks/tv-download/android-options.swift \
+            companion/ios/checks/tv-download/android-personalization.swift \
+            companion/ios/checks/tv-download/main.swift -o "$RUNNER_TEMP/tv-download-check"
+          "$RUNNER_TEMP/tv-download-check" "$RUNNER_TEMP/ipk-fixtures" "$RUNNER_TEMP/apk-fixtures" \
+            tools/setup-steps.txt "$RUNNER_TEMP/ios-recovery.json"
+          MIQAT_IOS_RECOVERY_FIXTURE="$RUNNER_TEMP/ios-recovery.json" \
+            python3 -S -B -m unittest discover -s tests -p test_device.py
+      - name: Link Kotlin and build the unsigned iOS app
+        run: |
+          sh companion/ios/prepare-ssh.sh "$MIQAT_BUILD_SDK"
+          sh companion/ios/prepare-adb-crypto.sh "$MIQAT_BUILD_SDK"
+          xcodebuild -project companion/ios/Miqat.xcodeproj -scheme Miqat \
+            -configuration Debug -sdk "$MIQAT_BUILD_SDK" -destination "$MIQAT_BUILD_DESTINATION" \
+            -derivedDataPath state/ios-build CODE_SIGNING_ALLOWED=NO build
+      - name: Verify Apple binaries and packaged resources
+        run: |
+          set -x
+          app="state/ios-build/Build/Products/Debug-$MIQAT_BUILD_SDK/Miqat.app"
+          widget="$app/PlugIns/MiqatPrayerWidget.appex"
+          for binary in "$app/Miqat" "$widget/MiqatPrayerWidget"; do
+            test -x "$binary"
+            xcrun lipo "$binary" -verify_arch arm64
+            platform=$(xcrun vtool -show-build "$binary" | awk '$1 == "platform" { print $2 }')
+            test "$platform" = "$MIQAT_BINARY_PLATFORM"
+          done
+          test -s "$app/Assets.car"
+          for bundle in "$app" "$widget"; do
+            test "$(plutil -extract CFBundleDisplayName raw "$bundle/Info.plist")" = Miqat
+            test "$(plutil -extract CFBundleDisplayName raw "$bundle/ar.lproj/InfoPlist.strings")" = ميقات
+          done
+          test "$(plutil -extract CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName raw "$app/Info.plist")" = AppIcon
+          plutil -lint "$app/PrivacyInfo.xcprivacy"
+          test "$(plutil -extract NSPrivacyAccessedAPITypes.0.NSPrivacyAccessedAPIType raw "$app/PrivacyInfo.xcprivacy")" = NSPrivacyAccessedAPICategoryUserDefaults
+          test "$(plutil -extract NSPrivacyAccessedAPITypes.0.NSPrivacyAccessedAPITypeReasons.0 raw "$app/PrivacyInfo.xcprivacy")" = CA92.1
+          test -f "$app/cities.json"
+          test -f "$app/adhan.js"
+          cmp tools/setup-steps.txt "$app/android-setup-steps.txt"
+          cmp tools/clean-catalog.tsv "$app/android-clean-catalog.tsv"
+          test -f "$app/Notices/Adhan.txt"
+          test -f "$app/Notices/libssh2.txt"
+          test -f "$app/Notices/OpenSSL.txt"
+          test -f "$app/Notices/BoringSSL.txt"
+          test -f "$app/Adhan/chebae_fajr.mp3"
+          for scene in shared/design/assets/backgrounds/*.jpg; do
+            cmp "$scene" "$widget/backgrounds/${scene##*/}"
+          done
+      - name: Package simulator build
+        if: matrix.sdk == 'iphonesimulator'
+        run: ditto -c -k --keepParent state/ios-build/Build/Products/Debug-iphonesimulator/Miqat.app "$RUNNER_TEMP/Miqat-iOS-Simulator.zip"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: matrix.sdk == 'iphonesimulator'
+        with:
+          path: ${{ runner.temp }}/Miqat-iOS-Simulator.zip
+          archive: false
+          if-no-files-found: error

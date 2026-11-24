@@ -1,5 +1,16 @@
 # Current work
 
+For the iPhone port, launch the unsigned simulator build and run the offline
+prayer journey, then follow the
+[iOS parity queue](IOS-WORK.md) in order.
+The iPhone LG setup screen uses the SSH installer and separate installation
+credentials. Verify it against a local Developer Mode fixture. Classic Android
+TV installation and Home/remote setup with a recovery journal are wired.
+Android cleanup, recovery export and guided personalisation are wired.
+Wireless pairing and its separate TLS debugging connection are wired into the
+Android setup screen. The app reads and updates the TV-wide cleanup history.
+The unsigned iPhone and simulator builds passed. Native acceptance is open.
+
 Updated: 2026-11-24. Stable v0.7.8 contains phone 0.5.24/code 40,
 Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed
 checksum and identity verification. Website downloads and update metadata

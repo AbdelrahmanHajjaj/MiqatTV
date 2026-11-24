@@ -2294,3 +2294,461 @@ permission/OEM behavior and scheduled delivery were not accepted. Dates use
 browser Umm al-Qura; prayer times are illustrative fixtures, not calculations.
 Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
+## iPhone port development checkpoint
+
+GitHub Actions built Miqat and its widget for iPhone and Simulator on arm64
+with Xcode 16.3 at `ecb1dbf`. Both jobs verified the platform, icon, Arabic
+bundle names, privacy manifest, catalog, approved audio, and notices. The
+simulator ZIP matched the Actions SHA-256 digest and contained both expected
+simulator binaries. The standard PR gate also passed on that revision.
+Simulator launch, signed App Group transfer, and physical-device behavior
+still need acceptance. [Apple build](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45474659710)
+
+The iOS app and widget bundle names match Android's Arabic Miqat label. The
+source plist and locale values were checked on Windows and the workflow lint
+passed. The Apple build now checks the bundled values. The Home Screen and
+widget gallery labels still need a native check.
+
+Quiet hours and the day-before fasting reminder use Miqat's clock and digit
+settings in the time editor. Swift syntax, all 14 phone generator checks and
+canonical iOS resource staging passed. The native regression covers midnight,
+noon, 23:59, cancel, Arabic and VoiceOver.
+
+Automatic location asks for foreground access before requesting Always on a
+fresh install. The settings show when background updates are off or unavailable.
+Swift syntax and all 14 generator checks passed. The two iOS prompts, Allow
+Once and changing authorization in iOS Settings remain in native acceptance.
+
+The pinned Android reset clears preferences and its audio cleanup retains
+recordings in the separate library. The phone guide now reflects this. iPhone
+preserves that library and paired TVs, saves defaults before stopping audio and
+reopens setup.
+Swift syntax, the 14 generator checks and resource staging passed. The reset
+journey and a failed preferences write remain in native acceptance.
+
+On 2026-11-24, branch `feature/ios-app-port` configured the Kotlin iOS device
+and simulator framework tasks and added a native iOS application target.
+Companion JVM tests, its 13 catalog generator checks, resource staging and the
+offline astronomy adapter checks passed on Windows. The astronomy fixture
+matches the Android Cairo vector and verifies one application of offsets for
+every method and explicit polar unavailability. Apple linking, simulator UI
+and device behavior are still open in [IOS-WORK.md](IOS-WORK.md).
+
+A follow-up comparison compiled Android's pinned Java astronomy and evaluated
+570 equivalent schedules from the iOS Adhan adapter. Cairo, New York, London,
+Tokyo and São Paulo covered all 19 methods, both Asr schools and all three
+high-latitude options. All six prayer times matched at the minute in every
+case. The Android civil-zone/DST fixture and shared compact QR vectors passed.
+Host-side staging verified all 13 approved recordings against shared hashes.
+All Swift app/widget sources parsed in the host syntax check. The Xcode project
+references, scheme XML, Info plists and App Group entitlement parsed as well.
+These checks did not compile SwiftUI, link the Apple framework or launch the app.
+
+The shared artwork generator produced an opaque 1024×1024 iPhone icon. The
+other artwork exports were byte-identical. Local checks verified the catalog
+metadata, PNG format and workflow YAML. The Apple build checks the compiled
+asset catalog and the primary icon name in the bundled plist.
+
+The macOS workflow now packages the checked simulator bundle as one ZIP to
+preserve executable permissions. Windows checks confirmed that the workflow
+parses and that the archive path and launch identifier agree with the iPhone
+guide. Archive creation, upload and simulator launch await the Apple run.
+
+The iPhone first-use flow now saves location confirmation, the alert choice
+and progression independently. Existing preferences can omit the two new
+optional fields. The four touched Swift sources parsed on Windows and all 14
+companion generator checks passed, including bilingual copy. The native
+[first-use regression](IOS-WORK.md#first-use-regression-on-iphone) is pending.
+
+The manual iPhone coordinate editor uses the Kotlin phone parser for localized
+digits and rejects partial or non-finite values. The companion JVM suite passed
+its parser regression. The Swift editor parsed and all 14 generator checks
+passed. Native apply/cancel and fixed-timezone acceptance remain open.
+
+iPhone location denial now uses shared bilingual copy and links to app settings.
+Cancelling discards pending location state so a manual city stays authoritative.
+Swift syntax, iOS resource staging and Android companion generation passed.
+Permission recovery, cancellation and Qibla reacquisition await the native run.
+
+iPhone Home, prayer alerts and fasting settings now surface system notification
+permission recovery. The sound warning uses the audible requests in the queued
+schedule. The changed Swift files parsed and all 14 generator checks passed.
+Real notification permission and sound changes await the native regression.
+
+The iPhone reminder planner now uses a prayer's actual local weekday, matching
+Android when an astronomical time or its offset crosses midnight. It uses the
+reminder's local delivery minute for quiet hours. On Windows, Swift syntax
+checks passed and the independent date check confirmed the Apple fixture's
+Saturday/Sunday inputs. The Swift fixture still awaits macOS execution.
+
+The iPhone sunrise, offsets and prayer alert editors share typed minute entry
+and bounded steppers. Zero-length reminders and unconfirmed locations show no
+preview time. Swift syntax and all 14 generator checks passed. Native keyboard,
+preview and weekday localization are in the iPhone acceptance queue.
+
+The iPhone radio observes completion and terminal errors for the current
+player item. A stable connection replenishes the four-retry budget. The Swift
+source parsed and all 14 generator checks passed. Terminal stream callbacks,
+retry exhaustion and lock-screen transport await the native radio regression.
+The reconnect schedule now follows Android's 1.5-second increase per attempt.
+Swift syntax and whitespace checks passed. Native timing and cancellation are
+in the radio regression queue.
+
+The iPhone Adhan screen displays the same scheduled title as Now Playing.
+Home uses a full-width playback shortcut and respects both Reduce Motion
+settings. The touched Swift sources parsed and all 14 generator checks passed.
+Artwork, layout, VoiceOver and animation still need native acceptance.
+
+The iPhone Qibla compass and map now show the same decimal bearing, and the
+phone-relative arrow is shown only with a reliable true-north heading. The
+focused Kotlin Qibla test, Swift syntax and all 14 generator checks passed.
+The simulator fallback and physical heading remain in the native queue.
+
+The widget now distinguishes an expired offline snapshot from an unavailable
+prayer day. The existing Apple fixture covers the last Isha, stale days and
+unconfirmed location. The Swift sources and fixture parsed on Windows, and all
+14 generator checks and bilingual resource staging passed. Signed widget
+refresh and display still need native acceptance.
+
+The Apple workflow now builds the arm64 simulator and unsigned iPhone targets
+independently. Both jobs check the app bundle and embedded widget. Windows
+passed actionlint, Xcode workflow configuration and App Group plist checks,
+and the offline astronomy smoke test. Both Xcode builds and signed
+installation remain pending.
+
+The iPhone fasting planner and widget publisher normalize every civil-day
+boundary after date arithmetic. Fasting-eve time keeps the same local day
+and handles missing or repeated clock times. Five calendar vectors matched
+Android's Java time arithmetic. Actionlint, Swift syntax and the Kotlin fasting
+rules test passed on Windows. The Apple calendar fixture remains pending.
+
+The iPhone Home timetable continues showing today's times after Isha and
+labels the next Fajr as tomorrow. The five prayer rows open the existing alert
+editors. Swift syntax and all 14 generator checks passed. Rollover and row
+navigation still need native acceptance.
+
+The iPhone Home observance opens its civil date in the Hijri calendar and
+uses the bilingual relative-day labels. The Apple fixture covers opening an
+observance across an adjusted Hijri month boundary. Swift syntax, all 14
+generator checks and Kotlin Hijri event tests passed. The Apple fixture and
+Home navigation remain pending.
+
+The iPhone notification service now owns test registration and countdown state
+across settings navigation. Cancel and reset invalidate an in-flight test,
+including a queued playback callback. Swift syntax and all 14 generator
+checks passed. The iOS permission, reset and delivery race needs native testing.
+
+iPhone pairing now sends the chosen phone name and keeps the saved TV
+nickname on credential repair. Malformed codes stop before a connection is
+opened. Swift syntax, all 14 companion generator checks, the shared compact
+QR vectors and LG's pairing fixture passed. Check named user approval, Arabic
+verification digit order, and reconnect against the TV after obtaining an Apple build.
+
+The iPhone LG installer attempts to remove its temporary IPK after a failed
+upload or checksum check, before requesting installation. Its fixture checks
+the exact cleanup path and preserves files after an uncertain install. Swift
+syntax, IPK fixture generation and workflow lint passed locally. The Swift
+transport fixture and a physical LG transfer still await Apple execution.
+
+The iPhone target declares its app-local UserDefaults use in a privacy
+manifest. Plist parsing and workflow lint passed. Both unsigned Apple builds
+check the packaged manifest. The archive privacy report and dependency review
+remain pending for distribution.
+
+The Apple workflow selects the SDK independently from the destination and
+checks the app and widget Mach-O platform and arm64 slice. Windows validated
+the simulator and device Gradle dependency configurations, workflow lint and
+shell syntax. The runner lists both Xcode 16.3 SDKs. Mach-O verification needs
+the first macOS build.
+
+The iPhone tries the approved default voice if a scheduled recording cannot
+start and clears playback controls on a decoder failure. Swift syntax and
+staging of the checksum-verified voices passed. Missing/corrupt recording and
+audio callback cases remain in the native acceptance queue.
+
+iPhone pairing now requests Camera access when Scan is invoked and closes
+the scanner if it becomes unavailable or the app backgrounds. Swift syntax,
+the generator checks and the shared QR tests passed. Camera denial, recovery
+and scanner dismissal remain in the native queue.
+
+The iPhone TV appearance editor now reads canonical palette and surface
+metadata. Its settings write sets the custom theme value and selection together
+with the baseline captured on editor entry. Host checks passed for staging both
+TV profiles and their scene assets and parsing the edited Swift. A focused
+Swift payload check is wired into the Apple build and awaits that runner.
+
+The iPhone Android TV app redirect editor uses the TV's app choices and sends
+edits with the original snapshot. Host checks confirmed Android and LG
+capabilities, the 2,048 UTF-16-unit limit and bilingual labels. The changed
+Swift sources parsed. Apple fixtures for circular, duplicate, unknown and
+oversized redirects await the Apple runner.
+
+The Kotlin companion JVM suite passed after exposing nonthrowing setting
+validation to the iPhone demo. A JVM probe built both demo endpoints from the
+current generated profiles and checked 60 Android and 42 LG defaults, one-shot
+save failure, read-only reconnect and city-dependent changes. The changed iPhone
+demo and TV views passed host Swift syntax checks. iPhone demo UI, persistence
+and remote-state display still need the simulator.
+
+The iPhone TV appearance preview now uses shared mihrab geometry and TV layout
+and display settings, with synthetic clock and prayer times. The host branding
+check, Swift syntax check, and staging of the canonical geometry, demo locale
+and both TV layout catalogs passed. Apple layout assertions and visual checks
+remain pending.
+
+The iOS widget appearance source now supports independent canonical palette
+selection and 0–100% background opacity. The host Swift syntax check passed
+and all 20 projected palettes had bilingual names and the needed widget
+colors. The Apple workflow includes a snapshot decoding and appearance check.
+Widget configuration and system rendering remain pending on Apple hardware.
+
+Widget scene selection can follow the phone background, use a plain surface
+or load an original Miqat scene. The host verified the widget resource phase
+resolves to all eight canonical JPEGs, their bilingual labels and the changed
+Swift syntax. The Apple build checks embedded JPEG bytes and the snapshot
+selection fixture. Widget scene rendering and memory behavior remain unverified.
+
+The iPhone TV download flow stages canonical Android TV and LG choices and
+bilingual status labels. Host checks passed for these resources and the Swift
+sources parsed. The Apple check exercises fixture release selection, checksum
+fallback, origin checks and stream integrity with valid, truncated, oversized
+and altered packages. SHA-256 execution, network cancellation and the Files
+handoff remain unverified on Apple hardware. No TV was contacted.
+
+LG local import now stages a bounded private copy and reads the IPK identifier
+and version without extracting the payload. The Android IPK fixture suite
+passed all three host tests, nine iOS input fixtures were generated, and the
+changed Swift sources parsed. The Apple workflow exercises the Swift parser and
+copy with those files. Apple Files selection and zlib execution remain pending.
+
+iPhone Android TV APK import now reads only the bounded ZIP directory and
+binary manifest metadata to check the Miqat TV identifier and version code.
+Windows generated nine APK cases and nine IPK cases, parsed the five touched
+Swift sources, and staged the bilingual import status. Android build tools
+decoded the compressed UTF-8 and stored UTF-16 APK fixtures and produced a
+separate APK with the expected manifest layout. The macOS fixture run and
+iPhone Files handoff remain pending. No TV was contacted.
+
+The iPhone Android TV discovery screen resolves the same three Bonjour service
+types as the Android installer. Host checks matched the Swift declarations,
+Android Finder and iOS privacy manifest, verified the seven bilingual labels,
+and passed the 14 companion generator tests and Swift syntax parsing. On an
+iPhone, check Local Network permission, a TV entering/leaving its pairing
+screen, the 15-second deadline and background cancellation. The Windows check
+did not run those paths or contact a TV.
+
+The Swift LG installation sequence now checks the installed version before
+uploading, compares the remote IPK digest, waits for terminal install status,
+and reads the installed version again before removing its temporary upload.
+Windows parsed the changed Swift sources, generated the nine IPK inputs and
+passed the three Android IPK tests. The Apple workflow fixture covers success,
+changed content, downgrade, corrupt transfer, failed or missing status, and
+a stale installed version. That Swift fixture is pending Xcode execution.
+The sequence has no production SSH caller yet. No TV was contacted.
+
+The iPhone branch now includes a libssh2 transport, a private IPv4 Developer
+Mode key reader and a host-key gate before retrieving or using authentication
+material. Windows verified both upstream archive hashes, parsed the new Swift
+files and ATS property list, and checked both shell scripts with `sh -n`.
+The Apple workflow prepares ARM64 simulator libraries before Xcode links them.
+Native compilation, SSH negotiation, Key Server behavior and a TV run remain
+unverified. The setup screen and separate credentials still need integration.
+
+The LG screen now routes Developer Mode approval, foreground connection, IPK
+selection, installation, launch and companion pairing. The host parsed the
+six changed Swift files, passed the 14 companion generator tests, staged the
+33 bilingual LG labels and checked that installation and remote pairing use
+distinct Keychain services. Apple validation must exercise first-use approval,
+changed or declined host keys, remembered and cleared credentials, closing
+the screen with a transfer active, install verification and pairing handoff.
+The Windows checks did not run the app or contact a TV.
+
+Classic ADB frame validation, the authorization handshake and one-stream
+flow control now live in the Kotlin companion core. The JVM suite passed
+tests for legacy checksums, modern framing, oversized and malformed
+frames, authorization order, wireless negotiation detection, cross-stream
+replies and acknowledgement-gated writes. The iOS socket, RSA identity and
+live ADB installation remain pending. The test used only synthetic messages.
+
+The Swift classic ADB adapter now uses Network.framework and a device-only
+RSA Keychain key under a service tag separate from other TV credentials.
+The JVM suite passed all 33 tests. Two additions compare wire public keys
+against JVM big-integer arithmetic and reject malformed DER. Windows parsed
+the four touched Swift files. iOS Keychain generation, signature use, direct
+ADB authorization, install/recovery and wireless TLS remain unverified.
+
+The iPhone classic Android setup screen has a manual endpoint and a handoff
+from Bonjour classic results. The install flow checks the package ID and
+version code, refuses downgrades, streams a regular package-manager update and
+checks the code reported by the TV before launch. Windows parsed nine Swift
+files, passed the 14 companion checks and used Android build tools to inspect
+the Miqat APK fixture. The Apple fixture covers existing and fresh installs,
+changed selection, downgrade, Android signer rejection, stale installed
+version and unreadable status. Swift execution and TV behavior are pending.
+
+Android TV Home and remote-button setup now records a device-specific private
+journal before writes, and verifies the new Home and accessibility settings.
+Restore checks the original Home before replacing Miqat, and preserves other
+user-selected launchers and accessibility services. The Apple fixture covers
+journal write failure, an interrupted restore, retry, independent changes and
+CVTE deferral. Windows parsed all six changed Swift sources, passed the 14
+companion checks and staged the 21 bilingual Android setup labels. Apple
+execution and a real TV check remain pending.
+
+The iPhone installer packages the bundled Android setup catalogue and applies
+the three optional groups individually after consent: radio permissions, vendor
+startup flags and Wi-Fi-name permission. It verifies before and after attempting
+each change. Windows verified the staged file byte-for-byte, parsed all six
+touched Swift sources and passed the 14 companion checks. The Apple fixture
+covers missing checks, an existing grant, a successful change and a TV that
+does not confirm a startup flag. Apple execution and device checks are pending.
+
+The iPhone recovery journal can be exported to Files in a scoped format.
+The desktop tool verifies the TV identity and restores only owned Home and
+accessibility changes. All 26 desktop tool tests passed on Windows, including
+wrong-device rejection and later user choices. Five affected Swift files
+parsed. The Apple workflow will pass a Swift-generated backup to the desktop
+tests. The Files UI and Apple run remain pending. No physical TV was contacted.
+
+The iPhone cleanup review uses the bundled Android catalogue and omits
+favourites, remote redirects, protected packages and the screensaver. It
+checks the active Home, Wi-Fi owner and input permissions before disabling
+selected apps. Each planned disable is saved first. The desktop tool
+re-enables only listed apps that are still off. Windows passed 27 desktop and
+14 companion tests, verified the bundled catalogue bytes, and parsed six
+Swift files. The Swift cleanup fixture and physical TV checks remain pending.
+
+Android setup personalisation now reads the TV's cities and apps, then saves
+its prayer city, language, Adhan, spoken reminder and ordered favourites.
+The code checks for an intervening change and confirms readback. Windows
+parsed seven affected Swift files and passed 14 companion checks. The Apple
+fixture covers serialization, confirmed save, stale drafts, unavailable apps
+and missing readback. Apple execution and TV acceptance remain pending.
+
+The Kotlin wireless ADB codec covers version-one framing, six-digit input,
+TLS channel binding and fixed-size peer information. All 36 JVM tests passed
+on Windows. The pinned, separately prefixed BoringSSL adapter built with MSVC
+and Ninja. Its native fixture rejected wrong codes, a different TLS exporter
+and a changed authentication tag, and matched an independent AES-GCM vector.
+No pairing was sent to a TV. The native TLS connection, certificate identity
+and installer handoff are still pending.
+
+The wireless pairing adapter now makes a foreground TLS 1.3 connection,
+presents the installer RSA identity and exchanges authenticated peer data
+bound to that session. On Windows, two native fixtures passed through
+BoringSSL, including a TLS handshake using in-memory BIOs, certificate key
+verification, the ADB exporter, peer digest and encrypted peer exchange.
+The transport library and upstream notice installed to a scratch build
+directory. Swift syntax checks passed. The Apple adapter and the distinct
+wireless debugging STLS connection remain unverified. No TV was contacted.
+
+The Android TV setup screen now exposes code pairing and the separate wireless
+debugging port. Discovered endpoints can fill either field. The installer
+requires a TLS upgrade, checks the TV GUID from pairing and asks the user to
+confirm the debugging endpoint before showing installation actions. Windows
+passed 37 companion JVM tests, including rejection of plaintext CONNECT after
+STLS, two native crypto fixtures, 14 canonical generator checks and resource
+staging. Five touched Swift files parsed. Xcode compilation, Local Network
+permission, TV GUID readback and APK installation on a TV remain pending.
+
+The iPhone cleanup review reads the shared Android installer history. It
+distinguishes apps still disabled from apps that have since turned on, allows
+confirmed undo, and preserves unrelated entries. The macOS fixture now covers
+both cases, protected entries, new disables and local restore. Windows parsed
+five affected Swift files, passed 14 generator and 27 desktop recovery tests,
+and staged the resource bundle. The Swift fixture and hardware check are pending.
+
+The widget's existing per-placement larger-text setting now scales text by
+120% across the supported layouts, including prayer times and dates in the
+strip. The Circle layout places the prayer name above the time and countdown
+in its text hierarchy. The touched Swift file parsed on Windows and all 14
+companion generator checks passed. WidgetKit fit and Dynamic Type remain
+pending on Apple hardware.
+
+The Apple workflow selects Xcode 16.3 across the job, matching the Kotlin
+2.2.10 compatibility guide. The app and widget build for arm64, the architecture
+provided by both Kotlin and the native installer libraries. Windows parsed the
+workflow and confirmed the device and simulator framework tasks register.
+The Xcode build remains pending.
+
+Adhan notifications now carry their scheduled time. A tap can reopen active
+playback or start playback after app activation when the request is still due
+and matches current settings. A protected local claim prevents duplicate
+playback across launches. Windows passed the focused Kotlin timing suite,
+14 generator checks and Swift syntax checks for the touched files. The macOS
+payload fixture, actual notification responses and audio interaction still need
+Apple validation.
+
+The Home city action can request a fresh fix with existing permission while
+keeping the confirmed calculation method, Asr school and offsets. Travel
+updates retire pending requests when location mode changes and preserve the
+chosen timezone for the on-open refresh. Windows passed the shared Kotlin
+location-quality check and syntax checks for the affected Swift sources.
+Actual permission changes, delayed Core Location callbacks and significant-change
+delivery still need iPhone validation.
+
+The Hijri calendar keeps month browsing separate from the selected prayer
+day. Day selection, event rows, arrows and swipes follow the Android calendar
+behavior within the same civil-date limit. Windows verified the shared Kotlin
+observance rules, checked the reference Ramadan, Eid, Arafah and Hijri rollover
+dates with Intl Umm al-Qura, and parsed the changed Swift sources and workflow.
+Apple Foundation date conversion, the new Swift fixture and the native RTL
+and LTR calendar interactions remain pending.
+
+Adhan and Quran Radio now share ownership of the iPhone's Now Playing
+commands and metadata. Starting Adhan invalidates queued radio commands.
+The Adhan screen offers swipe or tap to stop. An output device disconnect
+pauses active media, and a lost audio session stops Adhan. Windows passed
+Kotlin playback-policy and 14 generator checks and parsed the changed Swift
+files. The iPhone lock screen, audio routes, system commands and swipe still
+need native acceptance.
+
+iPhone Files import now prompts for a recording name and uses the same
+Kotlin validation as Android. It checks the byte limit during reading,
+requires audio-only content, and preserves an unreadable library index.
+Deleting a selected recording restores its default, Fajr or per-prayer
+voice slot. Windows passed the shared naming fixture, Android phone Java
+compilation, 14 companion generator checks and Swift syntax checks. Files
+permission, media decoding, corrupt-index recovery and deletion across slots
+still need iPhone validation.
+
+Prayer and fasting alerts use one-shot UTC calendar triggers. Reconciliation
+retains matching pending requests and replaces changed requests, including
+older relative triggers. The offline iOS background refresh replenishes the
+queue when the system schedules it. If protected preferences are unreadable,
+the task leaves the pending queue alone. Windows passed focused Kotlin prayer
+and fasting tests, the 14 companion generator checks, Swift syntax parsing,
+and the workflow and background-task declaration checks. Apple trigger
+execution, protected-data recovery and background delivery remain pending.
+
+Appearance choices now show canonical palette swatches and scene thumbnails
+in setup and settings. The full-page preview has no playback or location
+actions. Home and Adhan use the selected palette and staged artwork. Windows
+passed 14 generator checks, verified all scene files staged and parsed the
+changed Swift sources. Estimated sRGB contrast for the checked surfaces stayed
+above 4.5 across all 20 palettes after dimming the scene. Native layout,
+Dynamic Type, Right-to-Left behavior and actual artwork rendering remain pending.
+
+The iPhone widget gates prayer times on a confirmed location and consumes the
+Kotlin next-prayer decisions staged by the app for each civil day. Missing or
+expired days show an unavailable state. The medium timetable uses two columns,
+and installed widgets can refresh without notification permission when iOS runs
+the background task. Windows passed the shared prayer-rule tests, 14 generator
+checks and Swift syntax parsing. The extended Apple widget fixture, compact
+layout, system countdown digits and App Group transfer remain pending.
+
+iPhone TV names can be changed locally for a paired TV or a demo. Remote
+readback validates the advertised commands and input inventory. After an
+uncertain response, only a previously offered Stop command remains available
+until refresh. An acknowledged command followed by a failed state read is
+reported separately. Windows passed the 14 generator checks, Swift syntax
+parsing and workflow validation. The Apple capability fixture, Keychain
+rename persistence and foreground TV interaction remain pending.
+
+iPhone TV settings preserve the submitted patch in memory while navigating
+between views. After a conflict, review shows the current value and the
+submitted edit. A lost reply requires refreshed readback before an explicit
+retry. A matching readback clears the pending edit without sending it again.
+Windows passed the shared Kotlin settings tests, 14 generator checks, Swift
+syntax parsing and workflow validation. Native sheet handling and recovery
+against both TV shells remain pending.

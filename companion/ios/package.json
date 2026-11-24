@@ -1,0 +1,7 @@
+{
+  "name": "miqat-ios-build",
+  "private": true,
+  "dependencies": {
+    "adhan": "4.4.6"
+  }
+}

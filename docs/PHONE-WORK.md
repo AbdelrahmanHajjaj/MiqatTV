@@ -1,5 +1,10 @@
 # Miqat phone app delivery ledger
 
+The Android APK is the feature baseline for the approved iPhone port. See the
+[iOS parity queue](IOS-WORK.md) for active work and Apple acceptance.
+The iPhone development target includes TV package downloads, local APK/IPK
+identity checks and direct TV installation. Native validation is open.
+
 Updated: 2026-11-24. Stable v0.7.8 includes phone 0.5.24/code 40 with TV
 setup and recovery, Quran Radio, Hijri ranges, and opt-in day-before,
 suhoor and iftar alerts.

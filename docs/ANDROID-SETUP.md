@@ -19,6 +19,11 @@ before removing it. PC recovery can use that export. Authorize Miqat Phone
 separately when prompted. Download installation requires a published compatible APK;
 use a local APK when no release is available.
 
+The iPhone development build exports its Home and accessibility changes from
+**Install Miqat on Android TV → Save recovery backup**. Put `recovery.json`
+in a private folder and point the current desktop tool's `--backup-dir`
+at that folder when running `restore` against the same TV.
+
 Tested on TCL 50C641K, Android 11 (API 30), firmware V8-R51MT02-LF1V903.021315. Installation, exclusive Home and reboot passed; see [validation and remaining hardware checks](EVIDENCE.md). The tools read the actual API version and refuse anything below 26.
 
 ## Install from Windows

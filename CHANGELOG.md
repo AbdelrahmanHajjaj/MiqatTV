@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+- Added a Miqat iPhone development target with shared Kotlin prayer rules,
+  a native Prayer screen, Hijri calendar, Qibla, alerts and companion views.
+  The [iOS parity queue](docs/IOS-WORK.md) tracks remaining build and device checks.
+- The iPhone companion development target can edit Android TV palettes and app redirects.
+- The iPhone companion demo can simulate disconnection, a failed save, HDMI selection, radio and Adhan controls.
+- The iPhone companion TV preview reflects countdown placement, prayer rows, favourites, and TV language and clock settings.
+- iPhone prayer widgets can use a different Miqat palette, scene and background opacity for each placement.
+- The iPhone prayer widget's 120% text option applies to all layouts.
+- Opening a recent Adhan notification can start playback or reopen its controls on iPhone.
+- Active Adhan uses iPhone Now Playing controls, and the playback screen supports swiping up to stop.
+- On iPhone, choose a name before importing an Adhan recording. Deleting a recording restores the affected voice selections.
+- Resetting iPhone prayer settings keeps imported Adhan recordings and paired TVs, then reopens setup.
+- iPhone can replenish prayer and fasting notifications through Background App Refresh when iOS runs it.
+- iPhone appearance settings show palette and scene previews, and apply the selected theme across Prayer Home and the Adhan screen.
+- The iPhone prayer widget waits for a confirmed location, follows the phone's prayer rollover, and uses a compact medium timetable.
+- iPhone can rename paired TVs locally and can send an offered Stop command when a TV's state needs refreshing.
+- iPhone keeps interrupted TV settings edits for review and can recognize a save that reached the TV before the reply was lost.
+- The iPhone prayer Home city button can refresh a confirmed location when permission is already granted.
+- The iPhone Hijri calendar keeps the selected prayer day while browsing months and opens dates from the month’s observance list.
+- The iPhone development target can download and share verified Miqat TV packages from Production and Staging.
+- The iPhone development target can inspect and share local Miqat Android TV APKs and LG webOS IPKs.
+- The iPhone development target can find advertised Android TV debugging and pairing ports.
+- The iPhone development target adds Android TV APK installation through classic network debugging.
+- The iPhone development target adds six-digit Android TV Wireless debugging setup.
+- The iPhone development target can configure Android TV Home and remote buttons and restore its saved changes.
+- The iPhone development target offers the optional Android TV radio, startup and Wi-Fi name controls.
+- iPhone Android TV setup backups can be saved to Files and restored with the desktop tool.
+- The iPhone development target adds reviewed Android TV cleanup and recovery, including apps disabled by earlier Miqat installers.
+- The iPhone development target adds Android TV prayer preferences and Home favourites during setup.
+- The iPhone development target adds LG Developer Mode setup, installation and pairing handoff.
 - Staging sets app versions and Android version codes automatically for Production.
 - Sideloaded Miqat Phone and Android TV can download updates from About and
   open Android's installation confirmation.
