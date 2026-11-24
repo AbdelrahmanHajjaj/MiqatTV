@@ -19,21 +19,25 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
     @Published private(set) var fix: CLLocation?
     @Published private(set) var heading: CLHeading?
     @Published private(set) var authorizationStatus = CLAuthorizationStatus.notDetermined
-    private let manager = CLLocationManager()
+    private var manager = CLLocationManager()
     private var timeout: Task<Void, Never>?
     private var requested = false
     private var compass = false
 
+    var canLocate: Bool { [.authorizedAlways, .authorizedWhenInUse].contains(authorizationStatus) }
+
     init(compass: Bool = false) {
         self.compass = compass
         super.init()
-        manager.delegate = self
-        manager.desiredAccuracy = compass ? kCLLocationAccuracyBest : kCLLocationAccuracyHundredMeters
-        authorizationStatus = manager.authorizationStatus
+        configureManager()
     }
 
     func find() {
         guard !pending else { return }
+        cancel()
+        manager.delegate = nil
+        manager = CLLocationManager()
+        configureManager()
         pending = true
         failed = false
         fix = nil
@@ -55,6 +59,7 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard manager === self.manager else { return }
         authorizationStatus = manager.authorizationStatus
         if pending { startIfAuthorized() }
         else if compass && requested &&
@@ -87,7 +92,7 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard (pending || (compass && requested)), let latest = locations.last,
+        guard manager === self.manager, (pending || (compass && requested)), let latest = locations.last,
               !compass || (manager.accuracyAuthorization == .fullAccuracy && latest.horizontalAccuracy <= 1000),
               LocationRules.shared.usableLocation(latitude: latest.coordinate.latitude,
                  longitude: latest.coordinate.longitude, accuracyMetres: latest.horizontalAccuracy,
@@ -103,19 +108,25 @@ final class PhoneLocation: NSObject, ObservableObject, CLLocationManagerDelegate
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateHeading heading: CLHeading) {
-        if compass && requested { self.heading = heading }
+        if manager === self.manager && compass && requested { self.heading = heading }
     }
 
     func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool { compass }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        guard pending, (error as? CLError)?.code != .locationUnknown else { return }
+        guard manager === self.manager, pending, (error as? CLError)?.code != .locationUnknown else { return }
         fail()
     }
 
     private func fail() {
         cancel()
         failed = true
+    }
+
+    private func configureManager() {
+        manager.desiredAccuracy = compass ? kCLLocationAccuracyBest : kCLLocationAccuracyHundredMeters
+        authorizationStatus = manager.authorizationStatus
+        manager.delegate = self
     }
 }
 
@@ -213,11 +224,8 @@ struct LocationSettings: View {
         } message: { Text(preferences.text("phone_background_location_body")) }
         .onChange(of: location.fix) { _, fix in
             guard let fix else { return }
-            let coordinates = fix.coordinate
-            let closest = PhoneData.closestCity(latitude: coordinates.latitude, longitude: coordinates.longitude)
-            var next = preferences.select(city: closest)
-            next.custom = .init(latitude: coordinates.latitude, longitude: coordinates.longitude)
-            preferences = next
+            preferences = preferences.useDeviceLocation(.init(latitude: fix.coordinate.latitude,
+                                                               longitude: fix.coordinate.longitude), confirmed: false)
         }
         .onAppear {
             if setup && !preferences.triedSetupLocation && !preferences.locationConfirmed {

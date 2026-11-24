@@ -156,6 +156,20 @@ struct PhonePreferences: Codable, Equatable {
         next.travelRefresh = false
         return next
     }
+
+    func useDeviceLocation(_ point: Coordinates, confirmed: Bool) -> Self {
+        let nearest = PhoneData.closestCity(latitude: point.latitude, longitude: point.longitude)
+        var next = self
+        next.cityID = nearest.id
+        next.custom = point
+        next.zoneID = ""
+        if !locationConfirmed {
+            next.method = nearest.method
+            next.hanafi = nearest.hanafi
+        }
+        next.locationConfirmed = confirmed
+        return next
+    }
 }
 
 @MainActor

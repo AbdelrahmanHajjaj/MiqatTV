@@ -1,6 +1,6 @@
 import AVFoundation
+import Combine
 import CoreLocation
-import MiqatKit
 import SwiftUI
 import UserNotifications
 
@@ -64,7 +64,6 @@ struct MiqatApp: App {
                 else if store.preferences.adhan.showScreen && !setup { showAdhan = true }
             }
             .onChange(of: store.preferences, initial: true) { _, prefs in
-                delegate.travel.update(prefs)
                 refreshAlerts()
                 radio.refreshMetadata(prefs)
             }
@@ -74,7 +73,7 @@ struct MiqatApp: App {
                 if phase == .active {
                     delegate.presentPendingAdhan()
                     delegate.travel.update(store.preferences)
-                    delegate.travel.refresh(store.preferences)
+                    delegate.travel.refresh()
                     refreshAlerts()
                 }
                 if phase == .background { adhan.stop(previewOnly: true) }
@@ -131,26 +130,30 @@ struct MiqatApp: App {
 final class PhoneApplicationDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     var presentAdhan: ((AdhanNotification, Bool) -> Bool)?
     private var pendingAdhan: AdhanNotification?
+    private var travelPreferences: AnyCancellable?
     let travel = TravelLocation()
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         UNUserNotificationCenter.current().delegate = self
         travel.authorizationChanged = { [weak self] in self?.travel.update(PhoneStore.shared.preferences) }
-        travel.didLocate = { fix in
+        travel.didLocate = { fix, useSystemZone in
             let store = PhoneStore.shared
             var prefs = store.preferences
             guard prefs.locationConfirmed, prefs.automaticLocation || prefs.travelRefresh else { return }
             let point = fix.coordinate
-            let existing = prefs.coordinates
-            if LocationRules.shared.distanceKm(latitude: existing.latitude, longitude: existing.longitude,
-                otherLatitude: point.latitude, otherLongitude: point.longitude) < 5 { return }
-            prefs.cityID = PhoneData.closestCity(latitude: point.latitude, longitude: point.longitude).id
-            prefs.custom = .init(latitude: point.latitude, longitude: point.longitude)
-            prefs.zoneID = ""
+            let city = PhoneData.closestCity(latitude: point.latitude, longitude: point.longitude).id
+            let coordinates = PhonePreferences.Coordinates(latitude: point.latitude, longitude: point.longitude)
+            let zone = useSystemZone ? "" : prefs.zoneID
+            guard prefs.cityID != city || prefs.custom != coordinates || prefs.zoneID != zone else { return }
+            prefs.cityID = city
+            prefs.custom = coordinates
+            prefs.zoneID = zone
             store.save(prefs)
             PrayerNotifications.shared.refresh(preferences: store.preferences, schedule: PrayerSchedule.shared)
             PrayerSchedule.shared.publishWidget(preferences: store.preferences)
         }
-        travel.update(PhoneStore.shared.preferences)
+        travelPreferences = PhoneStore.shared.$preferences.sink { [weak self] prefs in
+            self?.travel.update(prefs)
+        }
         return true
     }
 
@@ -186,6 +189,7 @@ struct PrayerHome: View {
     @EnvironmentObject private var radio: QuranRadio
     @Binding var preferences: PhonePreferences
     let schedule: PrayerSchedule
+    @StateObject private var location = PhoneLocation()
     @State private var showPlayback = false
     @State private var showRadio = false
 
@@ -230,12 +234,7 @@ struct PrayerHome: View {
                                 Text(preferences.gregorianDate(context.date)).font(.subheadline)
                             }
                         }
-                        NavigationLink {
-                            LocationSettings(preferences: $preferences, schedule: schedule)
-                        } label: {
-                            Label(preferences.locationConfirmed ? preferences.city.name(preferences.arabic)
-                                  : preferences.text("phone_confirm_location"), systemImage: "location")
-                        }
+                        cityAction
                         let events = HijriObservance.upcoming(from: context.date, preferences: preferences)
                         ForEach(events, id: \.self) { event in
                             Label(event, systemImage: "calendar.badge.clock").font(.subheadline)
@@ -294,6 +293,15 @@ struct PrayerHome: View {
         }
         .navigationTitle(preferences.text("phone_home"))
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: location.fix) { _, fix in
+            guard let fix, preferences.locationConfirmed else { return }
+            preferences = preferences.useDeviceLocation(.init(latitude: fix.coordinate.latitude,
+                                                               longitude: fix.coordinate.longitude), confirmed: true)
+        }
+        .onChange(of: preferences.locationConfirmed) { _, confirmed in
+            if !confirmed { location.cancel() }
+        }
+        .onDisappear { location.cancel() }
         .toolbar {
             NavigationLink {
                 QiblaView(preferences: preferences)
@@ -310,6 +318,26 @@ struct PrayerHome: View {
                 RadioSettings(preferences: $preferences).toolbar {
                     Button(preferences.text("done")) { showRadio = false }
                 }
+            }
+        }
+    }
+
+    private var cityAction: some View {
+        let title = preferences.locationConfirmed ? preferences.city.name(preferences.arabic)
+            : preferences.text("phone_confirm_location")
+        return Group {
+            if location.pending {
+                ProgressView(preferences.text("phone_location_working"))
+                Button(preferences.text("phone_location_cancel")) { location.cancel() }
+            } else if preferences.locationConfirmed && location.canLocate {
+                Button { location.find() } label: { Label(title, systemImage: "location") }
+            } else {
+                NavigationLink {
+                    LocationSettings(preferences: $preferences, schedule: schedule)
+                } label: { Label(title, systemImage: "location") }
+            }
+            if location.failed {
+                Text(preferences.text("phone_location_timeout")).foregroundStyle(.secondary)
             }
         }
     }

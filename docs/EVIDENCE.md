@@ -2453,3 +2453,11 @@ playback across launches. Windows passed the focused Kotlin timing suite,
 14 generator checks and Swift syntax checks for the touched files. The macOS
 payload fixture, actual notification responses and audio interaction still need
 Apple validation.
+
+The Home city action can request a fresh fix with existing permission while
+keeping the confirmed calculation method, Asr school and offsets. Travel
+updates retire pending requests when location mode changes and preserve the
+chosen timezone for the on-open refresh. Windows passed the shared Kotlin
+location-quality check and syntax checks for the affected Swift sources.
+Actual permission changes, delayed Core Location callbacks and significant-change
+delivery still need iPhone validation.
