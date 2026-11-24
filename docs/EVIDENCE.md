@@ -23,6 +23,12 @@ Workflow lint and focused tests cover Validate's selected check summary and
 release candidate links. A read-only rehearsal resolved the published
 `v0.7.8-staging.1` tag and linked its exact commit and originating Build run.
 
+Production run 45377698149 stopped at preflight with publication approval
+unchecked. The revised step reports the remedy in Summary and passed local
+checks with both approval values. Read-only verification of
+`v0.7.8-staging.2` passed the Production asset list, checksums and both
+release signing identities.
+
 ## Stable v0.7.7 — 24 November 2026
 
 [PR #39](https://github.com/AbdelrahmanHajjaj/MiqatTV/pull/39) passed its required

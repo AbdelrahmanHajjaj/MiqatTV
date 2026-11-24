@@ -21,9 +21,9 @@ of the standalone Android phone app. [CI](CI.md) describes the PR gate.
    run in the release notes.
 
 The Actions run title shows its channel and branch. Open the run's **Summary**
-for the published Staging tag and release link. For a Development build, open
-the run's source commit or check **About Miqat** after installation for the app
-version. An individual app's version is independent of the release tag.
+for **Built app versions**, including both Android version codes. A Staging
+run also links the published release tag. An individual app's version is
+independent of the release tag.
 
 The Staging prerelease contains `miqat-phone.apk`, `miqat.apk`,
 `tv.miqat.webos_<version>_all.ipk`, `screenshots.zip` and `SHA256SUMS`.
@@ -35,7 +35,9 @@ tracked under [docs/screenshots](screenshots/README.md) at the candidate commit.
 1. Open [Promote to Production](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/promote.yml)
    on `main`. Leave **Staging tag** blank for the most recently published
    Staging candidate, or enter a full tag such as `v0.7.8-staging.2`.
-2. Select the publication approval and run the workflow. It pins the tag,
+2. Check **Approve live Production publication and website deployment** and
+   run the workflow. If the checkbox was left clear, start a new run with it
+   checked. The workflow pins the tag,
    source and asset digests before running **Device simulation**. In parallel
    it prepares and verifies the website using the candidate's screenshots and
    signed versions. A failed prerequisite blocks publication.
