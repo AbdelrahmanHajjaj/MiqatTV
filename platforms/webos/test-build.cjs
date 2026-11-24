@@ -23,6 +23,8 @@ for (const file of sentinels) {
 execFileSync(process.execPath, [path.join(__dirname, 'build.cjs')], {stdio: 'inherit'});
 for (const file of sentinels) assert.ok(!fs.existsSync(file), 'stale generated output must not be packaged');
 const appinfo = readJson('build/app/appinfo.json');
+assert.equal(appinfo.version, process.env.MIQAT_RELEASE_VERSION || version);
+assert.equal(readJson('build/service/package.json').version, appinfo.version);
 assert.equal(appinfo.title, 'Miqat');
 assert.equal(appinfo.id, 'tv.miqat.webos', 'independent Miqat application identity');
 const serviceInfo = readJson('build/service/services.json');

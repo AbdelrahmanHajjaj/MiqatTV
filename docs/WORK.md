@@ -31,6 +31,7 @@ Keys stay outside Git and PR jobs, in private recovery and the main-only
 android-release environment. Validate is PR-only. Build provides Development
 artifacts and signed Staging prereleases. Production verifies a pinned Staging
 candidate with Device simulation and deploys its screenshots and update metadata.
+Staging assigns app versions and Android version codes before signing.
 See [CI](CI.md) and [Releasing](RELEASING.md).
 
 Transition from debug signing requires one fresh install and removes local data;

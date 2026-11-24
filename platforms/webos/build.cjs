@@ -22,6 +22,13 @@ for (const directory of [out, ...outputs]) {
 }
 for (const directory of outputs) fs.rmSync(directory, {recursive: true, force: true});
 for (const part of ['app', 'service']) fs.cpSync(path.join(__dirname, part), path.join(out, part), { recursive: true });
+const appVersion = process.env.MIQAT_RELEASE_VERSION || json('platforms/webos/app/appinfo.json').version;
+if (process.env.MIQAT_RELEASE_VERSION) {
+  for (const name of ['app/appinfo.json', 'service/package.json']) {
+    const metadata = json('platforms/webos/' + name);
+    write(path.join(out, name), JSON.stringify({...metadata, version: appVersion}));
+  }
+}
 write(path.join(out, 'app/splash.png'), fs.readFileSync(path.join(root, 'shared/design/artwork/splash.png')));
 execFileSync(process.execPath, [path.join(root, 'companion/generate.mjs'), '--lg-tv'], {stdio: 'inherit'});
 write(path.join(out, 'service/companion-lan.json'), read('companion/protocol/lan.json'));
@@ -38,7 +45,7 @@ write(path.join(out, 'app/qrcode.js'), fs.readFileSync(require.resolve('qrcode-g
 write(path.join(out, 'app/qr-style.js'), read('shared/design/qr.js'));
 write(path.join(out, 'app/pairing-qr.js'), read('companion/qr.js'));
   const data = {
-    appVersion: json('platforms/webos/app/appinfo.json').version,
+    appVersion,
     feedbackUrl: json('shared/data/feedback.json').github,
     qrStyle: json('shared/design/assets/qr-style.json'),
     qrMark: 'data:image/png;base64,' + fs.readFileSync(path.join(root, 'shared/design/assets/qr-mark.png')).toString('base64'),

@@ -24,8 +24,8 @@ android {
         applicationId 'tv.miqat.home'
         minSdk 26
         targetSdk 34
-        versionCode 16
-        versionName '0.7.5'
+        versionCode((providers.environmentVariable('MIQAT_RELEASE_CODE').getOrElse('') ?: '16').toInteger())
+        versionName(providers.environmentVariable('MIQAT_RELEASE_VERSION').getOrElse('') ?: '0.7.5')
         testInstrumentationRunner 'tv.miqat.home.AppearanceCycleDeviceCheck'
     }
 

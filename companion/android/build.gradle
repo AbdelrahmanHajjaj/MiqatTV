@@ -20,8 +20,8 @@ android {
         applicationId 'tv.miqat.companion'
         minSdk 26
         targetSdk 34
-        versionCode 40
-        versionName '0.5.24'
+        versionCode((providers.environmentVariable('MIQAT_RELEASE_CODE').getOrElse('') ?: '40').toInteger())
+        versionName(providers.environmentVariable('MIQAT_RELEASE_VERSION').getOrElse('') ?: '0.5.24')
         testInstrumentationRunner 'tv.miqat.companion.CompanionCheck'
     }
     compileOptions {
