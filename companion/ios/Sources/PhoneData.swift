@@ -204,13 +204,16 @@ final class PhoneStore: ObservableObject {
         return true
     }
 
-    func save(_ value: PhonePreferences) {
-        guard loaded else { saveFailed = true; return }
+    @discardableResult
+    func save(_ value: PhonePreferences) -> Bool {
+        guard loaded else { saveFailed = true; return false }
         do {
             try Self.write(value, to: Self.file)
             preferences = value
+            return true
         } catch {
             saveFailed = true
+            return false
         }
     }
 

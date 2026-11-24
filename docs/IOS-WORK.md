@@ -22,7 +22,7 @@ new Android releases to this pinned baseline before expanding the queue.
 | 9 | Quran Radio station picker, play/pause/stop, reconnect, metadata, lock-screen playback and Adhan interruption | Uses canonical HTTPS stations. Stream completion and terminal failures can reconnect up to four times with Android's increasing retry delays. Thirty seconds of stable playback restores the budget. Verify the radio regression below, including audio ownership during Adhan and headphone removal. |
 | 10 | Independent Qibla fix, true-north compass, numeric fallback, explicit map with route/pan/zoom/recenter | Compass and map share the displayed bearing. The phone-relative arrow waits for reliable true north. Run the Qibla regression below and check sighted and VoiceOver operation on a physical iPhone. |
 | 11 | Home widgets, adaptive/strip/daily/circle presentations, settings per instance, date options, countdown and ring | The app stages prayer transitions from Kotlin and can replenish an installed widget during offline background refresh. Expired data offers an app refresh, with no Circle countdown updates until there is a target. Verify the Apple fixture, signed App Group transfer, timer and date rollover, medium timetable fit and per-instance choices. |
-| 12 | About, feedback, update action, independent local storage and prayer reset | About, GitHub feedback, protected prayer settings and reset coded. iOS update action remains open until there is a stable iOS distribution channel. |
+| 12 | About, feedback, update action, independent local storage and prayer reset | About, GitHub feedback and protected prayer settings are wired. Reset retains the recordings library and paired TVs, and reopens setup. Verify the reset regression below. The iOS update action awaits a stable iOS distribution channel. |
 | 13 | Your TVs, demo, QR pairing/approval, pinned identity, independent credentials, settings/conflicts, local rename, Home/inputs/radio/Adhan/forget | Pairing sends a user-selected phone name and retains the local TV nickname when a saved credential reconnects. Uncertain settings writes require refresh and explicit retry. Verify native demo, TLS, Keychain, name and QR approval, readback, cancellation and conflict behavior. |
 | 14 | Android/Google TV and LG setup, channels, local APK/IPK, download/transfer progress, verification, install/recovery, separate credentials | Public/local packages, LG SSH, Android classic and wireless setup, recovery/export, optional grants and personalisation are wired. LG removes its rejected temporary upload if the connection is still usable before install. Wireless setup checks the paired TV GUID. Cleanup reads TV history and offers undo. Apple fixtures and physical setup remain open. |
 | 15 | End-to-end parity audit and local handoff, focused checks, support docs and changelog | Compared the Android phone guide and setup sources against the iPhone feature paths. The remaining acceptance starts with the unsigned Apple build, then the first-run and offline prayer journey. Carry forward the platform differences and deferred features below. |
@@ -89,6 +89,12 @@ delivery. Verify the same countdown is visible and Cancel prevents delivery.
 Repeat with Reset phone prayer settings while a test is being registered or
 counting down. Verify no test alert or playback appears after reset, then start
 a new test and check that it can still play.
+
+With a paired TV and a named custom Adhan selected, reset phone prayer
+settings. Verify setup reopens, alerts are off, the TV is still paired and the
+custom recording remains playable and selectable. With a development fixture
+that fails the preferences write, check that reset leaves the current selection,
+recording, alerts and TV pairing in place.
 
 ## Prayer timing editor regression on iPhone
 

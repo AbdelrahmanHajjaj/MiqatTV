@@ -2243,6 +2243,11 @@ fresh install. The settings show when background updates are off or unavailable.
 Swift syntax and all 14 generator checks passed. The two iOS prompts, Allow
 Once and changing authorization in iOS Settings remain in native acceptance.
 
+Android prayer reset retains named recordings. iPhone now preserves that
+library and paired TVs, saves defaults before stopping audio and reopens setup.
+Swift syntax, the 14 generator checks and resource staging passed. The reset
+journey and a failed preferences write remain in native acceptance.
+
 On 2026-11-24, branch `feature/ios-app-port` configured the Kotlin iOS device
 and simulator framework tasks and added a native iOS application target.
 Companion JVM tests, its 13 catalog generator checks, resource staging and the

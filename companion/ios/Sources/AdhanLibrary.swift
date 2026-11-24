@@ -44,7 +44,6 @@ final class AdhanLibrary: ObservableObject {
     nonisolated private static let maximumBytes = 20 * 1024 * 1024
     private static let storage = URL.applicationSupportDirectory.appending(path: "Adhan", directoryHint: .isDirectory)
     private let index = AdhanLibrary.storage.appending(path: "library.json")
-    private var resetVersion = UUID()
     let removedRecording = PassthroughSubject<String, Never>()
     @Published private(set) var records: [Recording] = []
 
@@ -85,10 +84,8 @@ final class AdhanLibrary: ObservableObject {
 
     func importFile(_ source: URL, name: String) async throws -> String {
         guard let name = RecordingName.shared.validated(value: name) else { throw ImportError.invalidName }
-        let version = resetVersion
         let (data, ext) = try await Self.prepareAudio(source)
         try Task.checkCancellation()
-        guard version == resetVersion else { throw CancellationError() }
         let current = try readIndex()
         let id = "custom-" + SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
         if let existing = current.firstIndex(where: { $0.id == id }) {
@@ -161,12 +158,6 @@ final class AdhanLibrary: ObservableObject {
             throw error
         }
         removedRecording.send(id)
-    }
-
-    func reset() throws {
-        if FileManager.default.fileExists(atPath: Self.storage.path) { try FileManager.default.removeItem(at: Self.storage) }
-        resetVersion = UUID()
-        records = []
     }
 
     private func readIndex() throws -> [Recording] {

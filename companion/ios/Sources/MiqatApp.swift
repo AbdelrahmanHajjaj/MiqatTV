@@ -22,7 +22,7 @@ struct MiqatApp: App {
     private let schedule = PrayerSchedule.shared
 
     private var settings: Binding<PhonePreferences> {
-        Binding(get: { store.preferences }, set: store.save)
+        Binding(get: { store.preferences }, set: { _ = store.save($0) })
     }
 
     var body: some Scene {
@@ -38,7 +38,10 @@ struct MiqatApp: App {
                     .tag("tvs")
                 NavigationStack {
                     PhoneSettings(preferences: settings, schedule: schedule, notifications: notifications,
-                                  startSetup: { setup = true })
+                                  startSetup: {
+                                      tab = "prayer"
+                                      setup = true
+                                  })
                 }
                 .tabItem { Label(store.preferences.text("settings"), systemImage: "gearshape") }
                 .tag("settings")

@@ -2,7 +2,6 @@ import MiqatKit
 import SwiftUI
 
 struct PhoneSettings: View {
-    @EnvironmentObject private var library: AdhanLibrary
     @EnvironmentObject private var audio: PhoneAdhan
     @EnvironmentObject private var radio: QuranRadio
     @Binding var preferences: PhonePreferences
@@ -46,20 +45,20 @@ struct PhoneSettings: View {
         .navigationTitle(preferences.text("phone_settings"))
         .alert(preferences.text("phone_reset"), isPresented: $reset) {
             Button(preferences.text("phone_reset"), role: .destructive) {
+                guard PhoneStore.shared.save(PhonePreferences()) else { return }
                 notifications.cancelTest()
+                audio.stop()
+                radio.stop()
                 do {
-                    audio.stop()
-                    radio.stop()
-                    try library.reset()
                     try PhoneStore.shared.clearAdhanClaims()
-                    preferences = PhonePreferences()
+                    startSetup()
                 } catch { resetFailed = true }
             }
             Button(preferences.text("cancel"), role: .cancel) {}
         } message: {
             Text(preferences.text("phone_reset_confirm"))
         }
-        .alert(preferences.text("phone_save_failed"), isPresented: $resetFailed) {
+        .alert(preferences.text("phone_reset_cleanup_failed"), isPresented: $resetFailed) {
             Button(preferences.text("done"), role: .cancel) {}
         }
     }

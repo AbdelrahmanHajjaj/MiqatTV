@@ -162,6 +162,7 @@
   "phone_minutes":{"en":"%s minutes","ar":"%s دقيقة"},
   "phone_seconds":{"en":"%s seconds","ar":"%s ثانية"},
   "phone_save_failed":{"en":"Phone settings were not saved. Your previous settings are preserved.","ar":"لم تُحفظ إعدادات الهاتف. احتُفظ بإعداداتك السابقة."},
+  "phone_reset_cleanup_failed":{"en":"Reset again to finish clearing old alert history.","ar":"أعِد الضبط لإكمال مسح سجل التنبيهات السابق."},
   "phone_settings_failed":{"en":"Phone prayer settings could not be loaded. TV pairing is still available. Reset only the phone prayer settings if you want to start again.","ar":"تعذّر تحميل إعدادات الصلاة للهاتف. يظل إقران التلفاز متاحًا. يمكنك إعادة ضبط إعدادات الصلاة للهاتف فقط للبدء مجددًا."},
   "phone_reset":{"en":"Reset phone prayer settings","ar":"إعادة ضبط إعدادات الصلاة للهاتف"},
   "phone_reset_confirm":{"en":"Reset this phone’s prayer and appearance preferences and turn its alerts off? Your paired TVs and their settings are preserved.","ar":"هل تريد إعادة ضبط تفضيلات الصلاة والمظهر لهذا الهاتف وإيقاف تنبيهاته؟ يُحتفظ بأجهزة التلفاز المقترنة وإعداداتها."},
