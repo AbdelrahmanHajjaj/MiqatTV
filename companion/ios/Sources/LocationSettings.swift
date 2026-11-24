@@ -174,6 +174,7 @@ struct LocationSettings: View {
                 LabeledContent(preferences.text("phone_zone"), value: preferences.zone.identifier)
                 Button(preferences.text("phone_confirm_location")) { preferences.locationConfirmed = true }
                     .disabled(preferences.locationConfirmed || location.pending)
+                    .accessibilityIdentifier("miqat.location.confirm")
             }
             if setup {
                 Section {

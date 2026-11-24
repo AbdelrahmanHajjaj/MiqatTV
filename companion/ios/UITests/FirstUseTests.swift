@@ -17,7 +17,7 @@ final class FirstUseTests: XCTestCase {
         tap(search)
         search.typeText("London")
         tap(app.buttons["London"])
-        tap(app.buttons["Confirm location"])
+        tap(app.buttons["miqat.location.confirm"])
 
         let alerts = app.switches["Prayer alerts"]
         reveal(alerts, in: app)
