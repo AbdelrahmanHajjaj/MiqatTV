@@ -12,6 +12,9 @@ final class AndroidTVSetup: ObservableObject {
     @Published private(set) var fraction: Double?
     @Published private(set) var optionStatus: [AndroidTVOptions.ID: Bool] = [:]
     @Published private(set) var recoveryBackup: Data?
+    @Published private(set) var cleanupCandidates: [AndroidTVCleanup.Candidate]?
+    @Published var cleanupSelection: Set<String> = []
+    @Published private(set) var cleanupResult: Int?
     private var client: AndroidADB?
     private var task: Task<Void, Never>?
 
@@ -78,7 +81,30 @@ final class AndroidTVSetup: ObservableObject {
         run("tv_adb_restoring") {
             try await Self.recovery(client).restore()
             try Task.checkCancellation()
+            self.resetCleanup()
             self.status = "tv_adb_restored"
+        }
+    }
+
+    func reviewCleanup() {
+        guard let client, installed != nil, !busy else { return }
+        resetCleanup()
+        run("tv_adb_cleanup_loading") {
+            let list = try await Self.recovery(client).cleanupReview(catalog: AndroidTVCleanup.bundled)
+            try Task.checkCancellation()
+            self.cleanupCandidates = list
+            self.cleanupSelection = Set(list.filter(\.suggested).map(\.id))
+        }
+    }
+
+    func applyCleanup() {
+        guard let client, installed != nil, !busy, !cleanupSelection.isEmpty else { return }
+        let selection = cleanupSelection
+        resetCleanup()
+        run("tv_adb_cleanup_working") {
+            let count = try await Self.recovery(client).clean(selection, catalog: AndroidTVCleanup.bundled)
+            try Task.checkCancellation()
+            self.cleanupResult = count
         }
     }
 
@@ -133,6 +159,13 @@ final class AndroidTVSetup: ObservableObject {
         installed = nil
         optionStatus = [:]
         recoveryBackup = nil
+        resetCleanup()
+    }
+
+    private func resetCleanup() {
+        cleanupCandidates = nil
+        cleanupSelection = []
+        cleanupResult = nil
     }
 
     private func run(_ label: String, operation: @escaping @MainActor () async throws -> Void) {
@@ -156,6 +189,8 @@ final class AndroidTVSetup: ObservableObject {
                 if !Task.isCancelled { status = "tv_adb_no_recovery" }
             } catch AndroidTVRecovery.Failure.unsupportedTV {
                 if !Task.isCancelled { status = "tv_adb_setup_unsupported" }
+            } catch AndroidTVRecovery.Failure.cleanupNotReady {
+                if !Task.isCancelled { status = "tv_adb_cleanup_unavailable" }
             } catch {
                 guard !Task.isCancelled else { return }
                 resetConnection()

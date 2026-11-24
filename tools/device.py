@@ -296,10 +296,16 @@ class Device:
     def restore_ios_setup(self, record):
         ownership = ("homeChanged", "remoteAdded", "enabledBySetup")
         if (type(record["version"]) is not int
-                or record.keys() - {"version", "device", "home", "services", "enabled", *ownership}
-                or any(type(record.get(key)) is not bool for key in ownership)
-                or not any(record[key] for key in ownership)):
+                or record.keys() - {"version", "device", "home", "services", "enabled", "disabledBySetup", *ownership}
+                or any(type(record.get(key)) is not bool for key in ownership)):
             raise ValueError("Invalid iPhone setup backup.")
+        disabled = record.get("disabledBySetup", [])
+        if not isinstance(disabled, list) or len(disabled) > 128 or not (disabled or any(record[key] for key in ownership)):
+            raise ValueError("Invalid cleanup list in iPhone setup backup.")
+        for package in disabled:
+            validate_disable(package)
+            if len(package) > 255 or package.lower().startswith("com.cvte."):
+                raise ValueError("Protected package in iPhone setup backup.")
         original = record.get("home")
         if not isinstance(original, str) or not usable_home(original) or len(original) > 256:
             raise ValueError("The iPhone backup has no usable Home.")
@@ -309,6 +315,13 @@ class Device:
                 raise ValueError("Invalid setting in iPhone setup backup.")
         if record.get("device") != self.identity():
             raise ValueError("The iPhone backup belongs to another TV.")
+
+        if disabled:
+            still_disabled = packages(self.adb.shell("pm list packages -d --user 0"))
+            for package in sorted(set(disabled) & still_disabled):
+                self.adb.shell("pm enable --user 0 " + package)
+                if package not in self.enabled():
+                    raise RuntimeError("Could not re-enable " + package + ". Keep the backup.")
 
         if record["homeChanged"]:
             current = self.home()

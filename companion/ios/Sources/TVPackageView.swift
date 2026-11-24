@@ -28,6 +28,7 @@ struct TVPackageView: View {
     @State private var confirmingRestore = false
     @State private var selectedOption: AndroidTVOptions.Step?
     @State private var exportingRecovery = false
+    @State private var confirmingCleanup = false
 
     init(preferences: PhonePreferences, setup: TVPackagePlatform? = nil, host: String = "", port: Int = 5555) {
         self.preferences = preferences
@@ -115,6 +116,7 @@ struct TVPackageView: View {
             confirmingSetup = false
             confirmingRestore = false
             selectedOption = nil
+            confirmingCleanup = false
             stopSetup()
         }
         .onChange(of: connected) { _, connected in
@@ -179,6 +181,7 @@ struct TVPackageView: View {
                             Button(preferences.text("cancel"), role: .cancel) {}
                         }
                     androidOptions
+                    androidCleanup
                 } else {
                     Text(preferences.text("lg_not_installed")).foregroundStyle(.secondary)
                 }
@@ -200,6 +203,39 @@ struct TVPackageView: View {
                 NavigationLink(preferences.text("tv_already")) { TVPairing(preferences: preferences) }
             }
         }
+    }
+
+    private var androidCleanup: some View {
+        DisclosureGroup(preferences.text("tv_adb_cleanup")) {
+            Button(preferences.text("tv_adb_cleanup_scan")) { android.reviewCleanup() }
+            if let count = android.cleanupResult {
+                LabeledContent(preferences.text("tv_adb_cleanup_disabled"), value: String(count))
+            }
+            if let candidates = android.cleanupCandidates {
+                if candidates.isEmpty {
+                    Text(preferences.text("tv_adb_cleanup_empty")).foregroundStyle(.secondary)
+                }
+                ForEach(candidates) { app in
+                    Toggle(isOn: Binding(get: { android.cleanupSelection.contains(app.id) }, set: { value in
+                        if value { android.cleanupSelection.insert(app.id) }
+                        else { android.cleanupSelection.remove(app.id) }
+                    })) {
+                        VStack(alignment: .leading) {
+                            Text(app.id).lineLimit(2)
+                            Text(preferences.text("tv_adb_cleanup_" + app.kind)).font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                Button(preferences.text("tv_adb_cleanup_apply")) { confirmingCleanup = true }
+                    .disabled(android.cleanupSelection.isEmpty)
+                    .confirmationDialog(preferences.text("tv_adb_cleanup_confirm"), isPresented: $confirmingCleanup,
+                                        titleVisibility: .visible) {
+                        Button(preferences.text("tv_adb_cleanup_apply")) { android.applyCleanup() }
+                        Button(preferences.text("cancel"), role: .cancel) {}
+                    }
+            }
+        }
+        .disabled(task != nil)
     }
 
     private var androidOptions: some View {
@@ -284,6 +320,7 @@ struct TVPackageView: View {
 
     private func stopSetup() {
         selectedOption = nil
+        confirmingCleanup = false
         if setup == .lg { lg.disconnect() }
         if setup == .android { android.disconnect() }
         task?.cancel()

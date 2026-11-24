@@ -3,7 +3,7 @@ import Foundation
 
 struct AndroidTVRecovery {
     enum Failure: Error {
-        case noRecord, unsupportedTV, invalidHome, changedHome, invalidRecord, unconfirmed
+        case noRecord, unsupportedTV, invalidHome, changedHome, invalidRecord, unconfirmed, cleanupNotReady
     }
 
     private struct Journal: Codable {
@@ -15,7 +15,8 @@ struct AndroidTVRecovery {
         var enabledBySetup = false
         var services: String?
         var enabled: String?
-        var hasChanges: Bool { homeChanged || remoteAdded || enabledBySetup }
+        var disabledBySetup: [String]?
+        var hasChanges: Bool { homeChanged || remoteAdded || enabledBySetup || !(disabledBySetup ?? []).isEmpty }
     }
 
     private static let miqat = "tv.miqat.home/.MainActivity"
@@ -75,6 +76,13 @@ struct AndroidTVRecovery {
         let device = try await deviceID()
         let file = journalURL(device)
         guard var journal = try load(file, device: device), journal.hasChanges else { throw Failure.noRecord }
+        if let disabled = journal.disabledBySetup, !disabled.isEmpty {
+            let stillDisabled = try await packages("-d")
+            for package in disabled where stillDisabled.contains(package) {
+                _ = try await shell("pm enable --user 0 \(package)")
+                guard try await packages("-e").contains(package) else { throw Failure.unconfirmed }
+            }
+        }
         if journal.homeChanged {
             let live = try await currentHome()
             if Self.sameHome(live, Self.miqat) {
@@ -102,7 +110,88 @@ struct AndroidTVRecovery {
         journal.homeChanged = false
         journal.remoteAdded = false
         journal.enabledBySetup = false
+        journal.disabledBySetup = nil
         try save(journal, to: file)
+    }
+
+    func cleanupReview(catalog: [AndroidTVCleanup.Candidate]) async throws -> [AndroidTVCleanup.Candidate] {
+        let home = try await currentHome()
+        let installed = try await packages("")
+        guard Self.sameHome(home, Self.miqat), !installed.contains(where: { $0.hasPrefix("com.cvte.") }) else {
+            throw Failure.cleanupNotReady
+        }
+        let enabled = try await packages("-e")
+        guard enabled.contains(AndroidTVPackage.packageID) else { throw Failure.cleanupNotReady }
+
+        struct App: Decodable { let p: String; let fav: Int }
+        struct Key: Decodable { let p: String }
+        let apps = try await provider([App].self, path: "apps")
+        let keys = try await provider([Key].self, path: "keys")
+        let favorites = Set(apps.filter { $0.fav >= 0 }.map(\.p))
+        let redirects = Set(keys.map(\.p))
+        let screensaver = try await setting("screensaver_components") ?? ""
+        return catalog.filter {
+            enabled.contains($0.id) && !favorites.contains($0.id) && !redirects.contains($0.id)
+                && !screensaver.contains($0.id + "/")
+        }
+    }
+
+    func clean(_ selection: Set<String>, catalog: [AndroidTVCleanup.Candidate]) async throws -> Int {
+        guard !selection.isEmpty, selection.count <= 128 else { throw Failure.cleanupNotReady }
+        let review = try await cleanupReview(catalog: catalog)
+        let available = Set(review.map(\.id))
+        guard selection.isSubset(of: available), selection.allSatisfy(AndroidTVCleanup.safePackage) else {
+            throw Failure.cleanupNotReady
+        }
+        let device = try await deviceID()
+        let file = journalURL(device)
+        var journal = try load(file, device: device) ?? Journal(version: 1, device: device, home: Self.miqat)
+        try await startHome(Self.miqat)
+        let active = try await currentHome()
+        let visible = try await shell("dumpsys activity activities | grep -E 'mResumedActivity|mFocusedApp|topResumedActivity'")
+        guard Self.sameHome(active, Self.miqat), visible.contains(AndroidTVPackage.packageID + "/") else {
+            throw Failure.cleanupNotReady
+        }
+
+        var count = 0
+        for name in selection.sorted() {
+            let current = try await currentHome()
+            guard Self.sameHome(current, Self.miqat), try await packages("-e").contains(name) else {
+                throw Failure.cleanupNotReady
+            }
+            let currentScreensaver = try await setting("screensaver_components") ?? ""
+            if currentScreensaver.contains(name + "/") { continue }
+            if name == "com.google.android.tungsten.setupwraith" {
+                let wifi = try await shell("dumpsys wifi | grep -F 'cname='")
+                if wifi.isEmpty || wifi.contains("cname=" + name) { continue }
+            }
+            let details = try await shell("dumpsys package \(name)")
+            guard !details.isEmpty, !details.contains("android.permission.TV_INPUT_HARDWARE") else { continue }
+            let disabled = Set(journal.disabledBySetup ?? []).union([name])
+            guard disabled.count <= 128 else { throw Failure.cleanupNotReady }
+            journal.disabledBySetup = disabled.sorted()
+            try save(journal, to: file)
+            let result = try await shell("pm disable-user --user 0 \(name)")
+            guard result.contains("disabled-user"), try await packages("-d").contains(name) else {
+                throw Failure.unconfirmed
+            }
+            count += 1
+        }
+        return count
+    }
+
+    private func packages(_ flags: String) async throws -> Set<String> {
+        let option = flags.isEmpty ? "" : flags + " "
+        let response = try await shell("pm list packages \(option)--user 0")
+        let rows = response.split(whereSeparator: \.isNewline)
+        guard rows.allSatisfy({ $0.hasPrefix("package:") }) else { throw Failure.unconfirmed }
+        return Set(rows.map { String($0.dropFirst("package:".count)) })
+    }
+
+    private func provider<Value: Decodable>(_ type: Value.Type, path: String) async throws -> Value {
+        let text = try await shell("content query --uri content://tv.miqat.home.setup/\(path)")
+        guard text.hasPrefix("Row: 0 json=") else { throw Failure.cleanupNotReady }
+        return try JSONDecoder().decode(type, from: Data(text.dropFirst("Row: 0 json=".count).utf8))
     }
 
     func export() async throws -> Data {
@@ -167,7 +256,9 @@ struct AndroidTVRecovery {
         let size = try file.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
         guard (1...65536).contains(size) else { throw Failure.invalidRecord }
         let journal = try JSONDecoder().decode(Journal.self, from: Data(contentsOf: file))
-        guard journal.version == 1, journal.device == device, Self.validHome(journal.home) else { throw Failure.invalidRecord }
+        let disabled = journal.disabledBySetup ?? []
+        guard journal.version == 1, journal.device == device, Self.validHome(journal.home),
+              disabled.count <= 128, disabled.allSatisfy(AndroidTVCleanup.safePackage) else { throw Failure.invalidRecord }
         return journal
     }
 

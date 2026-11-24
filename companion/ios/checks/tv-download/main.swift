@@ -71,6 +71,7 @@ struct DownloadCheck {
         let apkFixture = URL(fileURLWithPath: CommandLine.arguments[2], isDirectory: true).appending(path: "valid.apk")
         try await AndroidInstallationCheck.run(apkFixture)
         try await AndroidRecoveryCheck.run(exportTo: URL(fileURLWithPath: CommandLine.arguments[4]))
+        try await AndroidCleanupCheck.run()
         try await AndroidOptionsCheck.run(URL(fileURLWithPath: CommandLine.arguments[3]))
     }
 

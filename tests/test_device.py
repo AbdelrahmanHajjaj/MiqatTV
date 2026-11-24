@@ -153,9 +153,19 @@ class RecoveryTest(unittest.TestCase):
         self.assertEqual(self.adb.settings[services], "new.app/.Reader")
         self.assertEqual(self.adb.settings[enabled], "1")
 
+    def test_ios_cleanup_backup_reenables_only_recorded_disabled_apps(self):
+        self.ios_backup(homeChanged=False, remoteAdded=False, enabledBySetup=False,
+                        disabledBySetup=["com.example.optional"])
+        self.adb.enabled.remove("com.example.optional")
+        self.adb.disabled.add("com.example.optional")
+        self.tv.restore()
+        self.assertIn("com.example.optional", self.adb.enabled)
+        self.assertIn("com.example.alreadyoff", self.adb.disabled)
+
     def test_ios_backup_wrong_tv_or_unsafe_input_changes_nothing(self):
         for override in ({"device": "wrong-tv"}, {"home": "android/.FallbackHome"},
-                         {"remoteAdded": "true"}, {"services": "other.app/.Reader\nreboot"}):
+                         {"remoteAdded": "true"}, {"services": "other.app/.Reader\nreboot"},
+                         {"disabledBySetup": ["com.android.systemui"]}):
             with self.subTest(override=override):
                 self.ios_backup(**override)
                 with self.assertRaises(ValueError):

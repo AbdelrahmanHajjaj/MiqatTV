@@ -2384,3 +2384,11 @@ accessibility changes. All 26 desktop tool tests passed on Windows, including
 wrong-device rejection and later user choices. Five affected Swift files
 parsed. The Apple workflow will pass a Swift-generated backup to the desktop
 tests. The Files UI and Apple run remain pending. No physical TV was contacted.
+
+The iPhone cleanup review uses the bundled Android catalogue and omits
+favourites, remote redirects, protected packages and the screensaver. It
+checks the active Home, Wi-Fi owner and input permissions before disabling
+selected apps. Each planned disable is saved first. The desktop tool
+re-enables only listed apps that are still off. Windows passed 27 desktop and
+14 companion tests, verified the bundled catalogue bytes, and parsed six
+Swift files. The Swift cleanup fixture and physical TV checks remain pending.

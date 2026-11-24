@@ -62,10 +62,12 @@ this version of the desktop tools, put the export in a private folder and
 use `python -S -B tools/device.py --backup-dir <folder> restore` against the same TV.
 Under **Optional TV setup**, you can enable the TV app's radio level and
 sleep-timer permissions, startup on supported models, or Wi-Fi name display.
-Miqat checks each option after applying it.
+Miqat checks each option after applying it. Once Miqat is the active Home,
+**Review TV apps** uses the bundled cleanup catalogue to offer optional apps.
+Review the selection before turning apps off. Restore or export the saved
+setup to re-enable apps turned off by this iPhone.
 
 The Android TV development flow currently uses classic network debugging.
-Use the desktop guide above for wireless-code pairing, CVTE setup and package
-cleanup.
+Use the desktop guide above for wireless-code pairing and CVTE setup.
 
 [Parity queue and validation status](../../docs/IOS-WORK.md).
