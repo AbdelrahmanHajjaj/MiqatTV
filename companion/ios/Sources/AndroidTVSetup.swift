@@ -61,6 +61,24 @@ final class AndroidTVSetup: ObservableObject {
         }
     }
 
+    func configureTV() {
+        guard let client, installed != nil, !busy else { return }
+        run("tv_adb_configuring") {
+            try await Self.recovery(client).configure()
+            try Task.checkCancellation()
+            self.status = "tv_adb_configured"
+        }
+    }
+
+    func restoreTV() {
+        guard let client, !busy else { return }
+        run("tv_adb_restoring") {
+            try await Self.recovery(client).restore()
+            try Task.checkCancellation()
+            self.status = "tv_adb_restored"
+        }
+    }
+
     func disconnect() {
         task?.cancel()
         task = nil
@@ -74,6 +92,11 @@ final class AndroidTVSetup: ObservableObject {
         AndroidTVInstallation { command, input, progress in
             try await client.exchange(command, input: input, progress: progress)
         }
+    }
+
+    private static func recovery(_ client: AndroidADB) -> AndroidTVRecovery {
+        let installer = installer(client)
+        return AndroidTVRecovery { command in try await installer.shell(command) }
     }
 
     private func resetConnection() {
@@ -100,6 +123,10 @@ final class AndroidTVSetup: ObservableObject {
                 if !Task.isCancelled { status = "tv_adb_wireless_required" }
             } catch AndroidTVInstallation.Failure.downgrade {
                 if !Task.isCancelled { status = "tv_adb_downgrade" }
+            } catch AndroidTVRecovery.Failure.noRecord {
+                if !Task.isCancelled { status = "tv_adb_no_recovery" }
+            } catch AndroidTVRecovery.Failure.unsupportedTV {
+                if !Task.isCancelled { status = "tv_adb_setup_unsupported" }
             } catch {
                 guard !Task.isCancelled else { return }
                 resetConnection()

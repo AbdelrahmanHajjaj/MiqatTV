@@ -24,6 +24,8 @@ struct TVPackageView: View {
     @State private var importing = false
     @State private var confirmingInstall = false
     @State private var confirmingForget = false
+    @State private var confirmingSetup = false
+    @State private var confirmingRestore = false
 
     init(preferences: PhonePreferences, setup: TVPackagePlatform? = nil, host: String = "", port: Int = 5555) {
         self.preferences = preferences
@@ -108,6 +110,8 @@ struct TVPackageView: View {
             guard setup != nil, phase == .background else { return }
             confirmingInstall = false
             confirmingForget = false
+            confirmingSetup = false
+            confirmingRestore = false
             stopSetup()
         }
         .onChange(of: connected) { _, connected in
@@ -153,15 +157,29 @@ struct TVPackageView: View {
                 if let version = android.installed {
                     LabeledContent(preferences.text("tv_adb_version"), value: String(version))
                     Button(preferences.text("lg_launch")) { android.launch() }.disabled(task != nil)
+                    Button(preferences.text("tv_adb_configure")) { confirmingSetup = true }
+                        .disabled(task != nil)
+                        .confirmationDialog(preferences.text("tv_adb_configure_info"), isPresented: $confirmingSetup,
+                                            titleVisibility: .visible) {
+                            Button(preferences.text("tv_adb_configure")) { android.configureTV() }
+                            Button(preferences.text("cancel"), role: .cancel) {}
+                        }
                 } else {
                     Text(preferences.text("lg_not_installed")).foregroundStyle(.secondary)
                 }
+                Button(preferences.text("tv_adb_restore")) { confirmingRestore = true }
+                    .disabled(task != nil)
+                    .confirmationDialog(preferences.text("tv_adb_restore_info"), isPresented: $confirmingRestore,
+                                        titleVisibility: .visible) {
+                        Button(preferences.text("tv_adb_restore")) { android.restoreTV() }
+                        Button(preferences.text("cancel"), role: .cancel) {}
+                    }
                 Button(preferences.text("lg_disconnect")) { stopSetup() }
             } else {
                 Button(preferences.text("lg_connect")) { android.connect() }.disabled(task != nil || importing)
             }
             if let status = android.status { Text(preferences.text(status)).foregroundStyle(.secondary) }
-            if android.status == "lg_installed" || android.status == "lg_launched" {
+            if ["lg_installed", "lg_launched", "tv_adb_configured"].contains(android.status ?? "") {
                 NavigationLink(preferences.text("tv_already")) { TVPairing(preferences: preferences) }
             }
         }

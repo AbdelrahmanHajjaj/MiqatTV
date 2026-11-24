@@ -2360,3 +2360,12 @@ files, passed the 14 companion checks and used Android build tools to inspect
 the Miqat APK fixture. The Apple fixture covers existing and fresh installs,
 changed selection, downgrade, Android signer rejection, stale installed
 version and unreadable status. Swift execution and TV behavior are pending.
+
+Android TV Home and remote-button setup now records a device-specific private
+journal before writes, and verifies the new Home and accessibility settings.
+Restore checks the original Home before replacing Miqat, and preserves other
+user-selected launchers and accessibility services. The Apple fixture covers
+journal write failure, an interrupted restore, retry, independent changes and
+CVTE deferral. Windows parsed all six changed Swift sources, passed the 14
+companion checks and staged the 21 bilingual Android setup labels. Apple
+execution and a real TV check remain pending.

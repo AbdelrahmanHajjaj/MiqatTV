@@ -53,10 +53,13 @@ debugging result can open the install screen with its address and port filled
 in. You can also open **Your TVs → Install Miqat on Android TV** and enter the
 TV's private IPv4 address and debugging port directly. After the TV approves
 the connection, select a build or local APK, confirm installation and check
-the installed version before launching Miqat.
+the installed version before launching Miqat. To set Miqat as Home and enable
+its remote-button service, choose **Set up Home and remote buttons**. The
+iPhone saves the prior configuration before applying changes. Reconnect to the
+same TV and choose **Restore saved TV setup** to undo those changes.
 
-The Android TV development flow currently supports classic network debugging.
-Use the desktop guide above for wireless-code pairing and TV changes such as
-launcher setup or recovery.
+The Android TV development flow currently uses classic network debugging.
+Use the desktop guide above for wireless-code pairing, CVTE setup, package
+cleanup and recovery backup export.
 
 [Parity queue and validation status](../../docs/IOS-WORK.md).

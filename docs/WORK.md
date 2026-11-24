@@ -5,8 +5,9 @@ the Apple build and offline prayer journey, then follow the
 [iOS parity queue](IOS-WORK.md) in order.
 The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android
-TV discovery, manual connection and APK installation are wired. Verify the
-install fixture and port wireless pairing and recovery.
+TV installation and Home/remote setup with a recovery journal are wired.
+Verify the Apple fixtures, then port wireless pairing and remaining Android
+installer controls.
 
 Updated: 2026-11-24. Stable v0.7.7 contains phone 0.5.23/code 39,
 Android TV 0.7.5/code 16 and LG 0.2.32. The three published packages passed

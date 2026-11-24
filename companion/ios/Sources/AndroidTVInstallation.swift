@@ -58,7 +58,7 @@ struct AndroidTVInstallation {
         guard response.split(whereSeparator: \.isNewline).contains("Status: ok") else { throw Failure.unconfirmed }
     }
 
-    private func shell(_ command: String) async throws -> String {
+    func shell(_ command: String) async throws -> String {
         try Task.checkCancellation()
         let stream = "shell:\(command); printf '\\nMIQAT_RC=%s\\n' \"$?\""
         let response = Self.text(try await exchange(stream, nil) { _ in })
