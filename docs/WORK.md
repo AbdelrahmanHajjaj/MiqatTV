@@ -1,6 +1,7 @@
 # Current work
 
-For the iPhone port, run the offline prayer journey in Simulator, then follow the
+For the iPhone port, verify notification authorization and the remaining
+first-use journeys, then follow the
 [iOS parity queue](IOS-WORK.md) in order.
 The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android

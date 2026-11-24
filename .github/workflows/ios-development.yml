@@ -7,6 +7,10 @@ on:
         description: Install and launch Miqat on a fresh iPhone simulator
         type: boolean
         default: false
+      simulator_first_use:
+        description: Exercise manual city selection and first use on a fresh iPhone simulator
+        type: boolean
+        default: false
   push:
     branches: [feature/ios-app-port]
     paths:
@@ -31,7 +35,7 @@ jobs:
   apple:
     name: Apple (${{ matrix.sdk }})
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: ${{ inputs.simulator_first_use && matrix.sdk == 'iphonesimulator' && 40 || 30 }}
     strategy:
       fail-fast: false
       matrix:
@@ -173,8 +177,10 @@ jobs:
             cmp "$scene" "$widget/backgrounds/${scene##*/}"
           done
       - name: Check first launch on an iPhone simulator
-        if: github.event_name == 'workflow_dispatch' && inputs.simulator_launch && matrix.sdk == 'iphonesimulator'
-        timeout-minutes: 5
+        if: github.event_name == 'workflow_dispatch' && (inputs.simulator_launch || inputs.simulator_first_use) && matrix.sdk == 'iphonesimulator'
+        timeout-minutes: 12
+        env:
+          MIQAT_FIRST_USE: ${{ inputs.simulator_first_use }}
         run: |
           app="state/ios-build/Build/Products/Debug-iphonesimulator/Miqat.app"
           device=$(xcrun simctl create 'Miqat launch check' \
@@ -191,6 +197,13 @@ jobs:
           case "$pid" in ''|*[!0-9]*) exit 1 ;; esac
           sleep 5
           ps -p "$pid" -o comm= | grep -E '(^|[[:space:]]|/)Miqat$'
+          if [ "$MIQAT_FIRST_USE" = true ]; then
+            xcrun simctl privacy "$device" revoke location "$bundle"
+            xcodebuild -project companion/ios/Miqat.xcodeproj -scheme Miqat \
+              -configuration Debug -sdk iphonesimulator -destination "id=$device" \
+              -derivedDataPath state/ios-build -parallel-testing-enabled NO \
+              -only-testing:MiqatUITests/FirstUseTests CODE_SIGNING_ALLOWED=NO test
+          fi
       - name: Package simulator build
         if: matrix.sdk == 'iphonesimulator'
         run: ditto -c -k --keepParent state/ios-build/Build/Products/Debug-iphonesimulator/Miqat.app "$RUNNER_TEMP/Miqat-iOS-Simulator.zip"
