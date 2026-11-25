@@ -2336,6 +2336,13 @@ Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
 
+Arabic first-use XCTest passed at `7693735` on iPhone 16 Simulator with
+iOS 18.4. Setup finished with location deferred. After relaunch, Prayer
+was right of Settings, Prayer alerts remained off, and Home opened the
+location editor. Both unsigned Apple builds passed. Arabic coordinate
+entry, alert delivery, and physical iPhone behavior remain open.
+[Arabic first-use result](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45524015941/job/138902922055)
+
 The custom location XCTest passed on iPhone 16 Simulator with iOS 18.4 at
 `f961614`, along with both unsigned Apple builds. Cancel retained the original
 values, latitude 999 blocked Apply, and returning from timezone search kept the
