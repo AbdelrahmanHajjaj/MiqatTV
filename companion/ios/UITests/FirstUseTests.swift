@@ -1,3 +1,4 @@
+import CoreLocation
 import XCTest
 
 final class FirstUseTests: XCTestCase {
@@ -226,6 +227,84 @@ final class FirstUseTests: XCTestCase {
             XCTAssertTrue(displayed.isHittable, "\(prayer) should show \(time)")
             XCTAssertEqual(name.frame.midY, displayed.frame.midY, accuracy: 2, "\(prayer) row")
         }
+    }
+
+    @MainActor
+    func testOfflinePhoneSettingsAndTVDemo() {
+        let app = launch()
+        tap(app.buttons["Get started"])
+        tap(app.buttons["Set up later"])
+        finishSetup(in: app)
+
+        let settings = app.tabBars.buttons["Settings"]
+        let tvs = app.tabBars.buttons["Your TVs"]
+        let fasting = app.buttons["Fasting reminders"]
+        let fastingDays = app.switches["Mondays and Thursdays"]
+        tap(settings)
+        tap(fasting)
+        reveal(fastingDays, in: app)
+        XCTAssertEqual(fastingDays.value as? String, "0")
+        fastingDays.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: fastingDays)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 5), .completed)
+
+        let demo = app.switches["Demo TVs · no real TV connection"]
+        let android = app.buttons["Android / Google TV"]
+        tap(tvs)
+        reveal(demo, in: app)
+        XCTAssertEqual(demo.value as? String, "0")
+        demo.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        reveal(android, in: app)
+        tap(android)
+        XCTAssertTrue(app.navigationBars["Android / Google TV"].waitForExistence(timeout: 10))
+        tap(app.segmentedControls.buttons["Remote"])
+        reveal(app.buttons["Home"], in: app)
+
+        app.terminate()
+        app.launch()
+        tap(settings)
+        tap(fasting)
+        reveal(fastingDays, in: app)
+        XCTAssertEqual(fastingDays.value as? String, "1")
+        tap(app.navigationBars["Fasting reminders"].buttons.firstMatch)
+
+        let resetTitle = "Reset phone prayer settings"
+        let reset = app.buttons[resetTitle]
+        reveal(reset, in: app)
+        tap(reset)
+        tap(app.alerts.buttons[resetTitle])
+        tap(app.buttons["Get started"])
+        tap(app.buttons["Set up later"])
+        finishSetup(in: app)
+
+        tap(settings)
+        tap(fasting)
+        reveal(fastingDays, in: app)
+        XCTAssertEqual(fastingDays.value as? String, "0")
+        tap(tvs)
+        reveal(demo, in: app)
+        XCTAssertEqual(demo.value as? String, "1")
+        reveal(android, in: app)
+    }
+
+    @MainActor
+    func testQiblaWithSimulatedCairoLocation() {
+        let app = launch()
+        tap(app.buttons["Get started"])
+        tap(app.buttons["Set up later"])
+        finishSetup(in: app)
+
+        XCUIDevice.shared.location = XCUILocation(location: CLLocation(latitude: 30.0444, longitude: 31.2357))
+        defer { XCUIDevice.shared.location = nil }
+        tap(app.buttons["Qibla"])
+        XCTAssertTrue(app.navigationBars["Qibla"].waitForExistence(timeout: 10))
+        let bearing = app.staticTexts["136.1°"]
+        XCTAssertTrue(bearing.waitForExistence(timeout: 18))
+        tap(app.buttons["Map"])
+        XCTAssertTrue(app.buttons["Compass"].waitForExistence(timeout: 10))
+        XCTAssertTrue(bearing.isHittable)
+        tap(app.buttons["Compass"])
+        XCTAssertTrue(bearing.isHittable)
     }
 
     @MainActor

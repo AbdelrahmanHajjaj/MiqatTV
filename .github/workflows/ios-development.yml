@@ -8,7 +8,7 @@ on:
         type: boolean
         default: false
       simulator_first_use:
-        description: Exercise manual city selection and first use on a fresh iPhone simulator
+        description: Run the iPhone simulator parity journeys
         type: boolean
         default: false
       simulator_first_use_case:
@@ -23,6 +23,8 @@ on:
           - testCustomCoordinatesAndTimeZone
           - testDeferLocationInArabic
           - testCairoTimetableMatchesAndroid
+          - testOfflinePhoneSettingsAndTVDemo
+          - testQiblaWithSimulatedCairoLocation
   push:
     branches: [feature/ios-app-port]
     paths:
@@ -47,7 +49,7 @@ jobs:
   apple:
     name: Apple (${{ matrix.sdk }})
     runs-on: macos-15
-    timeout-minutes: ${{ inputs.simulator_first_use && matrix.sdk == 'iphonesimulator' && 55 || 30 }}
+    timeout-minutes: ${{ inputs.simulator_first_use && matrix.sdk == 'iphonesimulator' && 75 || 30 }}
     strategy:
       fail-fast: false
       matrix:
@@ -190,7 +192,7 @@ jobs:
           done
       - name: Check first launch on an iPhone simulator
         if: github.event_name == 'workflow_dispatch' && (inputs.simulator_launch || inputs.simulator_first_use) && matrix.sdk == 'iphonesimulator'
-        timeout-minutes: 32
+        timeout-minutes: 48
         env:
           MIQAT_FIRST_USE: ${{ inputs.simulator_first_use }}
           MIQAT_FIRST_USE_CASE: ${{ inputs.simulator_first_use_case }}
@@ -224,20 +226,29 @@ jobs:
             cases=(
               testManualCityWithLocationDenied testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup
               testCustomCoordinatesAndTimeZone testDeferLocationInArabic testCairoTimetableMatchesAndroid
+              testOfflinePhoneSettingsAndTVDemo testQiblaWithSimulatedCairoLocation
             )
             if [ -n "$MIQAT_FIRST_USE_CASE" ] && [ "$MIQAT_FIRST_USE_CASE" != all ]; then
               cases=("$MIQAT_FIRST_USE_CASE")
             fi
             # Each case starts with a fresh app install and permissions.
+            failed=0
             for scenario in "${cases[@]}"; do
               if [ "$scenario" != "${cases[0]}" ]; then
                 xcrun simctl shutdown "$device"
                 xcrun simctl erase "$device"
                 boot_and_install
               fi
-              xcrun simctl privacy "$device" revoke location "$bundle"
-              sim_test "-only-testing:MiqatUITests/FirstUseTests/$scenario" test-without-building
+              if [ "$scenario" = testQiblaWithSimulatedCairoLocation ]; then
+                xcrun simctl privacy "$device" grant location "$bundle"
+              else
+                xcrun simctl privacy "$device" revoke location "$bundle"
+              fi
+              if ! sim_test "-only-testing:MiqatUITests/FirstUseTests/$scenario" test-without-building; then
+                failed=1
+              fi
             done
+            test "$failed" -eq 0
           fi
       - name: Package simulator build
         if: matrix.sdk == 'iphonesimulator'

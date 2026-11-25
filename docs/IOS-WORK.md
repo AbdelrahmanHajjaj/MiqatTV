@@ -5,9 +5,11 @@ Branch `feature/ios-app-port`, forked at `e0c46d3`. Baseline is Miqat Phone
 [Android instrumentation](../companion/android/src/androidTest/java/tv/miqat/companion)
 and [LAN contract](COMPANION-LAN.md) as acceptance inputs.
 
-Work in order. Record finished code and validation here before starting the next
-row. Leave an unfinished row open and record its next concrete action. Compare
-new Android releases to this pinned baseline before expanding the queue.
+Use the row order for implementation and record evidence for each journey.
+Batch the remaining development changes before dispatching the full iPhone
+Simulator suite once. Keep device, signing and live TV acceptance open until
+tested. Compare new Android releases to this pinned baseline before expanding
+the queue.
 Android 0.5.24 and subsequent in-app APK updates were integrated from main.
 The iOS update action still depends on an iOS distribution channel.
 
