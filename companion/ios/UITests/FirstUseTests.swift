@@ -86,7 +86,9 @@ final class FirstUseTests: XCTestCase {
         tap(zonePicker)
         search("Africa/Cairo", in: app)
         tap(app.buttons["Africa/Cairo"])
-        XCTAssertEqual(zonePicker.value as? String, "Africa/Cairo")
+        let cairoSelected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Africa/Cairo"),
+                                                     object: zonePicker)
+        XCTAssertEqual(XCTWaiter.wait(for: [cairoSelected], timeout: 10), .completed)
         tap(apply)
         XCTAssertTrue(savedZone.waitForExistence(timeout: 10))
         XCTAssertEqual(savedZone.value as? String, "Africa/Cairo")

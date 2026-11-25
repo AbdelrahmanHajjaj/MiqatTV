@@ -295,6 +295,7 @@ struct AdvancedLocation: View {
     @State private var latitude = ""
     @State private var longitude = ""
     @State private var zone = ""
+    @State private var choosingZone = false
 
     private var coordinates: PhonePreferences.Coordinates? {
         guard let lat = PhonePrayerRules.shared.parseCoordinate(value: latitude)?.doubleValue,
@@ -307,14 +308,20 @@ struct AdvancedLocation: View {
         Form {
             TextField(preferences.text("phone_latitude"), text: $latitude).keyboardType(.numbersAndPunctuation)
             TextField(preferences.text("phone_longitude"), text: $longitude).keyboardType(.numbersAndPunctuation)
-            NavigationLink {
-                PrayerTimeZonePicker(preferences: preferences, zone: $zone)
+            Button {
+                choosingZone = true
             } label: {
                 LabeledContent(preferences.text("phone_zone"),
                                value: zone.isEmpty ? preferences.text("phone_system") : zone)
             }
             .accessibilityValue(zone.isEmpty ? preferences.text("phone_system") : zone)
             .accessibilityIdentifier("miqat.location.timezone")
+        }
+        .navigationDestination(isPresented: $choosingZone) {
+            PrayerTimeZonePicker(preferences: preferences, zone: zone) { selected in
+                zone = selected
+                choosingZone = false
+            }
         }
         .navigationTitle(preferences.text("phone_custom_location"))
         .toolbar {
@@ -347,9 +354,9 @@ struct AdvancedLocation: View {
 }
 
 private struct PrayerTimeZonePicker: View {
-    @Environment(\.dismiss) private var dismiss
     let preferences: PhonePreferences
-    @Binding var zone: String
+    let zone: String
+    let select: (String) -> Void
     @State private var query = ""
 
     var body: some View {
@@ -358,14 +365,14 @@ private struct PrayerTimeZonePicker: View {
         }
         List(zones, id: \.self) { id in
             Button {
-                zone = id
-                dismiss()
+                select(id)
             } label: {
                 HStack {
                     Text(label(id))
                     Spacer()
                     if id == zone { Image(systemName: "checkmark").accessibilityHidden(true) }
                 }
+                .contentShape(Rectangle())
             }
             .accessibilityAddTraits(id == zone ? .isSelected : [])
         }
