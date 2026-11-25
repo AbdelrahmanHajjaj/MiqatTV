@@ -177,8 +177,8 @@ final class UiScaleDeviceCheck {
     private static void afterLayout(Instrumentation test, Screen screen, Runnable check) {
         awaitReady(test, () -> {
             View root = screen.root;
-            if (!root.isLaidOut() || root.isLayoutRequested() || !(root.getParent() instanceof View viewport)
-                    || !viewport.isLaidOut() || viewport.isLayoutRequested()) return null;
+            if (root.getWidth() == 0 || root.getHeight() == 0 || !(root.getParent() instanceof View viewport)
+                    || viewport.getWidth() == 0 || viewport.getHeight() == 0) return null;
             // A catalog refresh can replace the view tree between two main-thread snapshots.
             check.run();
             return "";
