@@ -49,13 +49,17 @@ class CiChecks(unittest.TestCase):
                                  {name: "true" for name in JOBS})
             self.assertIn(f"https://github.com/owner/miqat/commit/{head}", summary.read_text())
             self.assertIn("Core, Android TV, LG webOS, Website preview, Miqat Phone", summary.read_text())
-            output.write_text("")
-            subprocess.run([sys.executable, "-S", "-B", str(script), "select"], cwd=root,
-                           env={**os.environ, "GITHUB_EVENT_PATH": str(event),
-                                "GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_OUTPUT": str(output),
-                                "BUILD_CHANNEL": "staging"}, check=True, capture_output=True)
-            self.assertEqual(dict(line.split("=") for line in output.read_text().splitlines()),
-                             {name: str(name != "preview").lower() for name in JOBS})
+            for channel, selected in (("staging", set(JOBS) - {"preview"}),
+                                      ("development", {"core", "android"})):
+                output.write_text("")
+                subprocess.run([sys.executable, "-S", "-B", str(script), "select"], cwd=root,
+                               env={**os.environ, "GITHUB_EVENT_PATH": str(event),
+                                    "GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_OUTPUT": str(output),
+                                    "BUILD_CHANNEL": channel, "BUILD_PHONE": "false",
+                                    "BUILD_ANDROID_TV": "true", "BUILD_WEBOS": "false"},
+                               check=True, capture_output=True)
+                self.assertEqual(dict(line.split("=") for line in output.read_text().splitlines()),
+                                 {name: str(name in selected).lower() for name in JOBS})
 
     def test_affected_consumers(self):
         cases = [

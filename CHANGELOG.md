@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Build can export an optional Miqat development IPA for registered iPhones. The website shows iOS as coming soon.
+
 - Search for a prayer timezone in the iPhone custom coordinates editor.
 - The website offers one interactive phone demo and one TV demo, with Miqat Signature across the screenshot galleries.
 - The landing page shows the Miqat Signature look on both devices. Refreshed phone and companion screenshots hide emulator notification icons.
