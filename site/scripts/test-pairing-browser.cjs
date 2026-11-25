@@ -34,6 +34,16 @@ const server=http.createServer((request,response)=>{
         const download='https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/download/'+release.tag+'/'+asset;
         assert.equal(await page.locator('#get-miqat a[href="'+download+'"]').count(),1);
       }
+      const cards = page.locator('#get-miqat .download-card');
+      assert.equal(await cards.count(), 4);
+      const ios = cards.filter({has: page.getByRole('heading', {name: 'iOS', exact: true})});
+      assert.ok(await ios.getByRole('button', {name: language === 'en' ? 'Download for iOS' : 'تنزيل لـ iOS'}).isDisabled());
+      assert.equal(await ios.locator('#ios-availability').innerText(), language === 'en' ? 'Coming soon' : 'قريبًا');
+      assert.equal(await ios.getByRole('link').count(), 0);
+      if (width > 800) {
+        const tops = await cards.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top));
+        assert.ok(tops.every(top => top === tops[0]), 'all desktop download cards share one row');
+      }
       const phoneDemo=page.locator('#phone-demo');
       const phoneTimes=phoneDemo.locator('[data-phone-prayers] time');
       await phoneTimes.first().waitFor({state:'visible'});
