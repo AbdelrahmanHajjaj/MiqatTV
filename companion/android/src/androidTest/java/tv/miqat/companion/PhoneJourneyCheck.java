@@ -273,7 +273,7 @@ final class PhoneJourneyCheck {
                         () -> {
                             resumed.tab("tvs");
                             resumed.body.findViewWithTag("pair.open").performClick();
-                            check(resumed.page.equals("pair") && resumed.body.findViewWithTag("pair.scan") != null,
+                            check(resumed.page.equals("pair") && resumed.actionHost.findViewWithTag("pair.scan") != null,
                                     "Pair TV must open QR pairing directly");
                             resumed.back();
                             resumed.body.findViewWithTag("install.open").performClick();
