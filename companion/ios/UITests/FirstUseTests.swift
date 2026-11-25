@@ -89,6 +89,8 @@ final class FirstUseTests: XCTestCase {
         let cairoSelected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Africa/Cairo"),
                                                      object: zonePicker)
         XCTAssertEqual(XCTWaiter.wait(for: [cairoSelected], timeout: 10), .completed)
+        XCTAssertEqual(latitude.value as? String, "30.0501")
+        XCTAssertEqual(longitude.value as? String, "31.2401")
         tap(apply)
         XCTAssertTrue(savedZone.waitForExistence(timeout: 10))
         XCTAssertEqual(savedZone.value as? String, "Africa/Cairo")

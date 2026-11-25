@@ -292,10 +292,18 @@ struct CityPicker: View {
 struct AdvancedLocation: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var preferences: PhonePreferences
-    @State private var latitude = ""
-    @State private var longitude = ""
-    @State private var zone = ""
+    @State private var latitude: String
+    @State private var longitude: String
+    @State private var zone: String
     @State private var choosingZone = false
+
+    init(preferences: Binding<PhonePreferences>) {
+        _preferences = preferences
+        let saved = preferences.wrappedValue
+        _latitude = State(initialValue: String(saved.coordinates.latitude))
+        _longitude = State(initialValue: String(saved.coordinates.longitude))
+        _zone = State(initialValue: saved.zoneID)
+    }
 
     private var coordinates: PhonePreferences.Coordinates? {
         guard let lat = PhonePrayerRules.shared.parseCoordinate(value: latitude)?.doubleValue,
@@ -344,11 +352,6 @@ struct AdvancedLocation: View {
                 }
                 .disabled(coordinates == nil)
             }
-        }
-        .onAppear {
-            latitude = String(preferences.coordinates.latitude)
-            longitude = String(preferences.coordinates.longitude)
-            zone = preferences.zoneID
         }
     }
 }
