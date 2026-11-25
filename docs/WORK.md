@@ -1,7 +1,7 @@
 # Current work
 
-For the iPhone port, verify manual coordinates and timezone in Simulator, then follow the
-[iOS parity queue](IOS-WORK.md) in order.
+For the iPhone port, verify Arabic first use and completing setup before
+confirming a location. Follow the [iOS parity queue](IOS-WORK.md) in order.
 The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android
 TV installation and Home/remote setup with a recovery journal are wired.

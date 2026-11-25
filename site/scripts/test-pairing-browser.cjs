@@ -5,7 +5,7 @@ const server=http.createServer((request,response)=>{
   let route=new URL(request.url,'http://localhost').pathname.replace(/^\/MiqatTV/,'');if(route.endsWith('/'))route+='index.html';
   const file=path.resolve(base,'.'+route);
   if(!file.startsWith(base+path.sep)||!fs.existsSync(file)){response.writeHead(404);response.end();return;}
-  response.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.ttf':'font/ttf','.woff2':'font/woff2'})[path.extname(file)]||'application/octet-stream');response.end(fs.readFileSync(file));
+  response.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.ttf':'font/ttf','.woff2':'font/woff2','.mp3':'audio/mpeg'})[path.extname(file)]||'application/octet-stream');response.end(fs.readFileSync(file));
 });
 (async()=>{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));let browser,page;
@@ -33,6 +33,55 @@ const server=http.createServer((request,response)=>{
       for(const asset of ['miqat-phone.apk','miqat.apk',release.lgAsset]){
         const download='https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/download/'+release.tag+'/'+asset;
         assert.equal(await page.locator('#get-miqat a[href="'+download+'"]').count(),1);
+      }
+      const phoneDemo=page.locator('#phone-demo');
+      const phoneTimes=phoneDemo.locator('[data-phone-prayers] time');
+      await phoneTimes.first().waitFor({state:'visible'});
+      assert.ok((await phoneTimes.allTextContents()).every(Boolean),'the phone displays all six prayer times');
+      if(width===390){
+        const cairo=await phoneTimes.allTextContents();
+        await phoneDemo.locator('[data-phone-city]').selectOption('london');
+        assert.notDeepEqual(await phoneTimes.allTextContents(),cairo,'changing the phone city recalculates prayer times');
+        await phoneDemo.locator('[data-phone-open="calendar"]').last().click();
+        const date=phoneDemo.locator('[data-phone-calendar-date]');
+        const today=await date.innerText();
+        await phoneDemo.locator('[data-phone-date="1"]').click();
+        assert.notEqual(await date.innerText(),today);
+        await phoneDemo.locator('[data-phone-date="0"]').click();
+        assert.equal(await date.innerText(),today);
+        await phoneDemo.locator('[data-phone-open="qibla"]').first().click();
+        assert.ok((await phoneDemo.locator('[data-phone-bearing]').innerText()).includes('°'));
+        await phoneDemo.locator('[data-phone-open="prayer"]').click();
+        await phoneDemo.locator('[data-phone-prayer="0"]').click();
+        assert.equal(await phoneDemo.locator('[data-phone-prayer-select]').inputValue(),'0');
+        await phoneDemo.locator('[data-phone-sound]').selectOption('silent');
+        await phoneDemo.locator('[data-phone-prayer-select]').selectOption('2');
+        assert.equal(await phoneDemo.locator('[data-phone-sound]').inputValue(),'adhan');
+        await phoneDemo.locator('[data-phone-prayer-select]').selectOption('0');
+        assert.equal(await phoneDemo.locator('[data-phone-sound]').inputValue(),'silent');
+        const sample=await phoneDemo.locator('audio').getAttribute('src');
+        assert.equal((await page.request.get(new URL(sample,home).href)).status(),200);
+        await phoneDemo.locator('[data-phone-alert]').check();
+        await phoneDemo.locator('[data-phone-open="prayer"]').click();
+        assert.equal(await phoneDemo.locator('[data-phone-alert-status]').innerText(),await phoneDemo.getAttribute('data-alert-on'));
+        await page.locator('[data-open-phone-tvs]').click();
+        await phoneDemo.locator('[data-phone-pair]').click();
+        await phoneDemo.locator('[data-phone-input]').nth(1).click();
+        assert.equal(await phoneDemo.locator('[data-phone-input-label]').innerText(),'HDMI 1');
+        await phoneDemo.locator('[data-phone-radio]').check();
+        assert.equal(await phoneDemo.locator('[data-phone-radio-status]').innerText(),await phoneDemo.getAttribute('data-radio-on'));
+        await phoneDemo.locator('[data-phone-unpair]').click();
+        assert.equal(await phoneDemo.locator('[data-phone-remote]').isVisible(),false);
+        await page.locator('.product-hero a[href="#tv"]').click();
+        await page.locator('.tv :focus').waitFor({state:'visible'});
+        await phoneDemo.locator('[data-phone-open="prayer"]').click();
+      }
+      if(process.argv.includes('--capture')&&width!==900){
+        await phoneDemo.screenshot({path:path.resolve(__dirname,'../../state/phone-demo-'+language+'-'+width+'.png')});
+      }
+      for(const gallery of await page.locator('details[data-gallery]').all()){
+        assert.equal(await gallery.getAttribute('open'),null,'screenshots start collapsed');
+        await gallery.locator('summary').click();
       }
       for(const image of await page.locator('main img').all()){
         await image.scrollIntoViewIfNeeded();await image.evaluate(el=>el.decode());

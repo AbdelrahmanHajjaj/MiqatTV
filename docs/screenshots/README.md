@@ -29,7 +29,8 @@ the public website.
 Phone and companion captures use Miqat 0.7.9/code 7009001 on an Android API 37
 emulator at 1080×2400, density 420. Fixtures supply dates, locations, audio names,
 sensor headings and demo TVs. The emulator's status bar hides notification icons
-during capture.
+during capture. Public phone captures use the Mihrab palette and Miqat Signature.
+The UI check returns to the canonical palette after testing a theme change.
 
 Android TV 0.7.2/code 13 captures use native Views in a landscape API 34 Google APIs
 emulator at 1920×1080/density 160. Original PNGs include its system navigation

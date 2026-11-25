@@ -1,5 +1,14 @@
 # Validation evidence
 
+## Shared phone and TV website demos — 25 November 2026
+
+The Android API 37 phone UI and live Qibla map fixture passed in Arabic and
+English. Reviewed the recaptured Fajr settings, voice picker, location and
+Qibla map in Miqat Signature at 1080×2400, with notification icons hidden.
+The website build and full browser suite passed, including the bilingual
+phone demo, TV focus, date and city changes, per-prayer sounds, sample TV
+pairing and the expandable screenshot galleries.
+
 ## Miqat Signature website captures — 25 November 2026
 
 An isolated API 37 phone emulator captured all 26 Android phone and companion
@@ -2326,6 +2335,14 @@ browser Umm al-Qura; prayer times are illustrative fixtures, not calculations.
 Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
+
+The custom location XCTest passed on iPhone 16 Simulator with iOS 18.4 at
+`f961614`, along with both unsigned Apple builds. Cancel retained the original
+values, latitude 999 blocked Apply, and returning from timezone search kept the
+coordinate draft. The test confirmed `30.0501`, `31.2401` and `Africa/Cairo`
+survived confirmation and relaunch. It used Western digits and did not compare
+prayer minutes against Android.
+[Custom location result](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45520162323/job/138889702772)
 
 At `bf9523f`, three first-use XCUITests passed on iPhone 16 Simulator with
 iOS 18.4. On fresh simulator data, Allow and Don't Allow both reached Your style.

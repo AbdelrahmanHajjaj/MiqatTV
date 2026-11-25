@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import PhoneDemo from './PhoneDemo.astro';
 import type { Lang } from '../lib/text';
 import { LG_ASSET, REPO, RELEASE_TAG } from '../lib/site';
 import widgetStrip from '../../../companion/android/src/main/res/drawable-nodpi/widget_preview_strip.png';
@@ -19,7 +20,8 @@ const shot = (name: string) => {
 const L = ar ? {
   eyebrow: 'MIQAT · ميقات', title: ['مواقيت الصلاة', 'على هاتفك وتلفازك'],
   intro: 'تابع مواقيت صلاتك واستمع إلى الأذان على هاتف أندرويد وتلفاز البيت، حتى دون إنترنت.',
-  getCta: 'نزّل ميقات', phoneCta: 'اكتشف المزايا', tvCta: 'جرّب ميقات للتلفاز',
+  getCta: 'نزّل ميقات', phoneCta: 'عرض الهاتف', tvCta: 'عرض التلفاز',
+  gallery: 'لقطات الشاشة', companionCta: 'جرّب التحكم بالتلفاز',
   phone: 'الهاتف', companion: 'التحكم بالتلفاز', android: 'أندرويد TV', lg: 'LG webOS',
   phoneTitle: 'ميقات على هاتف أندرويد', phoneIntro: 'مواقيت الصلاة والأذان، والقبلة، والتقويم الهجري، وإذاعة القرآن.',
   phoneGuide: 'دليل الهاتف',
@@ -56,7 +58,8 @@ const L = ar ? {
 } : {
   eyebrow: 'MIQAT · ميقات', title: ['Prayer times for', 'your phone and TV'],
   intro: 'Keep up with daily prayers on your Android phone and TV, with offline prayer times and Adhan.',
-  getCta: 'Download Miqat', phoneCta: 'Explore features', tvCta: 'Try the TV demo',
+  getCta: 'Download Miqat', phoneCta: 'Phone demo', tvCta: 'TV demo',
+  gallery: 'Screenshots', companionCta: 'Try the phone remote',
   phone: 'Phone', companion: 'TV controls', android: 'Android TV', lg: 'LG webOS',
   phoneTitle: 'Miqat on Android phones', phoneIntro: 'Prayer times, Adhan, Qibla, the Hijri calendar and Quran radio.',
   phoneGuide: 'Phone guide',
@@ -97,7 +100,7 @@ const L = ar ? {
     <p class="kicker">{L.eyebrow}</p>
     <h1 id="product-title">{L.title.map(line => <span>{line}</span>)}</h1>
     <p class="hero-intro">{L.intro}</p>
-    <div class="actions"><a class="primary" href="#get-miqat">{L.getCta}</a><a href="#phone">{L.phoneCta}</a></div>
+    <div class="actions"><a class="primary" href="#get-miqat">{L.getCta}</a><a href="#phone-demo">{L.phoneCta}</a><a href="#tv">{L.tvCta}</a></div>
   </div>
   <figure class="hero-images">
     <div class="hero-tv"><Image src={shot('android-home')} alt={L.androidTitle} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 54vw" loading="eager" format="webp" /></div>
@@ -110,36 +113,44 @@ const L = ar ? {
 <section id="phone" class="product-section" aria-labelledby="phone-title">
   <div class="section-heading"><div><p class="kicker">{L.phone} · Android 8+</p><h2 id="phone-title">{L.phoneTitle}</h2></div><a href={`${REPO}/blob/main/docs/PHONE.md`}>{L.phoneGuide}</a></div>
   <p class="section-intro">{L.phoneIntro}</p>
+  <PhoneDemo lang={lang} />
+  <details class="product-gallery" data-gallery><summary>{L.gallery}</summary>
   <div class="phone-gallery">
     {L.screens.map(([name, title, description]) => <figure>
       <a class="phone-image" href={shot(name).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><Image src={shot(name)} alt={title} widths={[320, 480, 720]} sizes="(max-width: 560px) 84vw, (max-width: 1000px) 40vw, 21vw" format="webp" /></a>
       <figcaption><h3>{title}</h3><p>{description}</p></figcaption>
     </figure>)}
   </div>
+  </details>
   <div class="widget-feature"><div><h3>{L.widgets}</h3><p>{L.widgetCopy}</p></div><Image src={ar ? widgetStripAr : widgetStrip} alt={L.widgetAlt} widths={[480, 800, 1200]} sizes="(max-width: 800px) 85vw, 48vw" format="webp" /></div>
 </section>
 <section id="companion" class="product-section companion-section" aria-labelledby="companion-title">
   <div class="section-heading"><div><p class="kicker">{L.companion}</p><h2 id="companion-title">{L.companionTitle}</h2></div><a href={`${REPO}/blob/main/companion/README.md`}>{L.companionGuide}</a></div>
   <p class="section-intro">{L.companionIntro}</p>
+  <div class="actions"><a href="#phone-demo" data-open-phone-tvs>{L.companionCta}</a></div>
+  <details class="product-gallery" data-gallery><summary>{L.gallery}</summary>
   <div class="phone-gallery companion-gallery">
     {L.companionScreens.map(([name, title, description]) => <figure>
       <a class="phone-image" href={shot(name).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><Image src={shot(name)} alt={title} widths={[320, 480, 720]} sizes="(max-width: 560px) 84vw, (max-width: 1000px) 40vw, 24vw" format="webp" /></a>
       <figcaption><h3>{title}</h3><p>{description}</p></figcaption>
     </figure>)}
   </div>
+  </details>
 </section>
 <section class="product-section" aria-labelledby="tvs-title">
   <p class="kicker">{L.android} · {L.lg}</p><h2 id="tvs-title">{L.tvTitle}</h2><p class="section-intro">{L.tvIntro}</p>
+  <div class="actions tv-demo-link"><a class="primary" href="#tv">{L.tvCta}</a></div>
   <div class="tv-gallery">
     {[
       ['android-tv', 'android-home', L.androidTitle, L.androidCopy],
       ['lg-webos', 'lg-home', L.lgTitle, L.lgCopy],
     ].map(([id, image, title, copy]) => <figure id={id}>
-      <a class:list={['tv-image', { native: id === 'android-tv' }]} href={shot(image).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><Image src={shot(image)} alt={title} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 45vw" format="webp" /></a>
       <figcaption><h3>{title}</h3><p>{copy}</p></figcaption>
+      <details class="product-gallery" data-gallery><summary>{L.gallery}</summary>
+        <a class:list={['tv-image', { native: id === 'android-tv' }]} href={shot(image).src} target="_blank" rel="noreferrer" aria-label={`${title}: ${fullSize}`}><Image src={shot(image)} alt={title} widths={[640, 960, 1440]} sizes="(max-width: 800px) 90vw, 45vw" format="webp" /></a>
+      </details>
     </figure>)}
   </div>
-  <div class="actions tv-demo-link"><a href="#tv">{L.tvCta}</a></div>
 </section>
 <section id="get-miqat" class="product-section get-section" aria-labelledby="get-title">
   <h2 id="get-title">{L.getTitle}</h2>
@@ -172,6 +183,9 @@ const L = ar ? {
   h2 { font-size:clamp(2rem,3.2vw,3.5rem); line-height:1.25; text-wrap:balance; }
   h3 { font-size:1.4rem; line-height:1.45; }
   .section-intro { color:var(--color-mist-400); font-size:1.125rem; line-height:1.85; max-width:56rem; margin:24px 0 40px; }
+  .product-gallery { margin-top:20px; }
+  .product-gallery summary { width:fit-content; color:var(--color-gold-400); cursor:pointer; }
+  .product-gallery[open] summary { margin-bottom:24px; }
   .phone-gallery { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:44px 26px; }
   figure { margin:0; min-width:0; }
   .phone-image { display:block; padding:10px; background:linear-gradient(150deg,#1d474c88,#082b3088); border:1px solid var(--color-line-soft); border-radius:24px; cursor:zoom-in; }
@@ -186,7 +200,7 @@ const L = ar ? {
   .tv-image { display:block; position:relative; aspect-ratio:16/9; overflow:hidden; border-radius:12px; border:1px solid var(--color-line-soft); }
   .tv-image.native { aspect-ratio:1920/1020; }
   .tv-image :global(img) { position:absolute; inset:0; width:100%; height:auto; display:block; }
-  .tv-demo-link { margin-top:28px; }
+  .tv-demo-link { margin-bottom:24px; }
   .download-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin-top:32px; }
   .download-card { display:flex; flex-direction:column; gap:20px; padding:28px; background:#123b4088; border:1px solid var(--color-line-soft); border-radius:16px; }
   .download-card .actions { margin-top:auto; padding-top:12px; align-items:start; flex-direction:column; gap:8px; }
