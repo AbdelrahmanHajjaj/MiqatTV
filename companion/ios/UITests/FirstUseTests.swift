@@ -79,7 +79,29 @@ final class FirstUseTests: XCTestCase {
 
         tap(prayer)
         tap(confirmLocation)
-        XCTAssertTrue(app.buttons["miqat.location.confirm"].waitForExistence(timeout: 10))
+        let confirm = app.buttons["miqat.location.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+
+        let custom = app.buttons["إحداثيات مخصّصة"]
+        let latitude = app.textFields["خط العرض"]
+        let longitude = app.textFields["خط الطول"]
+        let apply = app.buttons["تطبيق"]
+        tap(custom)
+        tap(latitude)
+        latitude.typeKey("a", modifierFlags: .command)
+        latitude.typeText("٣٠٫٠٥٠١")
+        tap(longitude)
+        longitude.typeKey("a", modifierFlags: .command)
+        longitude.typeText("٣١٫٢٤٠١")
+        XCTAssertEqual(latitude.value as? String, "٣٠٫٠٥٠١")
+        XCTAssertEqual(longitude.value as? String, "٣١٫٢٤٠١")
+        XCTAssertTrue(apply.isEnabled)
+        tap(apply)
+        tap(confirm)
+        tap(custom)
+        XCTAssertTrue(latitude.waitForExistence(timeout: 10))
+        XCTAssertEqual(latitude.value as? String, "30.0501")
+        XCTAssertEqual(longitude.value as? String, "31.2401")
     }
 
     @MainActor

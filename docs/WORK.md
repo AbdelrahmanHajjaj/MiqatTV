@@ -1,7 +1,7 @@
 # Current work
 
-For the iPhone port, verify Arabic coordinate entry and compare displayed
-prayer times with Android. Follow the [iOS parity queue](IOS-WORK.md) in order.
+For the iPhone port, compare displayed Cairo prayer times and the civil date
+with Android. Follow the [iOS parity queue](IOS-WORK.md) in order.
 The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android
 TV installation and Home/remote setup with a recovery journal are wired.
