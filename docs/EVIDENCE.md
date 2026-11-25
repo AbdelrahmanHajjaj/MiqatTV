@@ -2336,6 +2336,13 @@ Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
 
+At `65e0705`, XCTest confirmed Cairo as the prayer timezone on iPhone 16
+Simulator with a different system UTC offset. The calendar showed Thursday,
+November 12, 2026, and every displayed row matched Android's `PhoneScheduleCheck`
+reference: 4:48 AM, 6:17 AM, 11:40 AM, 2:39 PM, 5:00 PM and 6:20 PM, from
+Fajr through Isha. Both unsigned Apple builds passed.
+[Cairo timetable result](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45537101209/job/138946272008)
+
 At `0098db3`, XCTest entered `٣٠٫٠٥٠١` and `٣١٫٢٤٠١` on iPhone 16 Simulator
 with iOS 18.4. After Apply and location confirmation, reopening the coordinate
 editor showed `30.0501` and `31.2401`. Both unsigned Apple builds passed.
