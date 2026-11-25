@@ -86,7 +86,7 @@ final class UiScaleDeviceCheck {
                     int rows = ((java.util.List<?>) UiContractDeviceCheck.field(settings, "rows")).size();
                     for (int i = 1; i < rows; i++) key(test, settings, KeyEvent.KEYCODE_DPAD_DOWN);
                     SystemClock.sleep(200); test.waitForIdleSync();
-                    UiContractDeviceCheck.onMain(test, () -> pageBounds(settings, size));
+                    afterLayout(test, settings, () -> pageBounds(settings, size));
                     key(test, settings, KeyEvent.KEYCODE_BACK);
                     if (section < 6) key(test, settings, KeyEvent.KEYCODE_DPAD_DOWN);
                 }
@@ -94,7 +94,7 @@ final class UiScaleDeviceCheck {
                 for (Class<? extends Screen> type : Arrays.asList(MainActivity.class, AllAppsActivity.class, PrayerDayActivity.class, NowActivity.class, OnlinePrayerActivity.class)) {
                     Screen screen = launch(test, type); active[0] = screen;
                     if (screen instanceof AllAppsActivity) {
-                        awaitApp(test, () -> selectFirstApp(screen), "Actual installed-app row is loaded and focused");
+                        awaitReady(test, () -> selectFirstApp(screen), "Actual installed-app row is loaded and focused");
                     }
                     if (screen instanceof OnlinePrayerActivity) UiContractDeviceCheck.onMain(test, () -> {
                         OnlinePrayerActivity online = (OnlinePrayerActivity) screen;
@@ -114,7 +114,7 @@ final class UiScaleDeviceCheck {
                     }
                     if (screen instanceof AllAppsActivity) {
                         if (refreshCase) UiContractDeviceCheck.onMain(test, screen::build);
-                        String focused = awaitApp(test, () -> {
+                        String focused = awaitReady(test, () -> {
                             String app = selectFirstApp(screen);
                             if (app == null) return null;
                             long now = SystemClock.uptimeMillis();
@@ -125,7 +125,7 @@ final class UiScaleDeviceCheck {
                             return app;
                         }, "A loaded app tile is available for long OK");
                         modal(test, screen, "menu"); key(test, screen, KeyEvent.KEYCODE_BACK);
-                        check(focused.equals(awaitApp(test, () -> focusedApp(screen), "An app tile receives focus after the menu")),
+                        check(focused.equals(awaitReady(test, () -> focusedApp(screen), "An app tile receives focus after the menu")),
                             "App menu returns to its original app");
                     }
                     finish(test, screen); active[0] = null;
@@ -163,7 +163,7 @@ final class UiScaleDeviceCheck {
     private static void finish(Instrumentation test, Activity activity) { test.runOnMainSync(activity::finish); test.waitForIdleSync(); }
     private static void key(Instrumentation test, Activity activity, int key) { UiContractDeviceCheck.key(test, activity, key); }
 
-    private static String awaitApp(Instrumentation test, Supplier<String> action, String message) {
+    private static String awaitReady(Instrumentation test, Supplier<String> action, String message) {
         long deadline = SystemClock.uptimeMillis() + 7000;
         String[] result = new String[1];
         do {
@@ -172,6 +172,17 @@ final class UiScaleDeviceCheck {
             SystemClock.sleep(50);
         } while (SystemClock.uptimeMillis() < deadline);
         throw new AssertionError(message);
+    }
+
+    private static void afterLayout(Instrumentation test, Screen screen, Runnable check) {
+        awaitReady(test, () -> {
+            View root = screen.root;
+            if (root.getWidth() == 0 || root.getHeight() == 0 || !(root.getParent() instanceof View viewport)
+                    || viewport.getWidth() == 0 || viewport.getHeight() == 0) return null;
+            // A catalog refresh can replace the view tree between two main-thread snapshots.
+            check.run();
+            return "";
+        }, screen.getClass().getSimpleName() + " did not lay out the current viewport");
     }
 
     private static String selectFirstApp(Screen screen) {
@@ -199,10 +210,8 @@ final class UiScaleDeviceCheck {
     }
 
     private static void scene(Instrumentation test, Screen screen, String language, int size, boolean refreshAfterUp) throws Exception {
+        afterLayout(test, screen, () -> pageBounds(screen, size));
         capture(test, language, size, screen.getClass().getSimpleName());
-        UiContractDeviceCheck.onMain(test, () -> {
-            pageBounds(screen, size);
-        });
         if (screen instanceof MainActivity && size > 110) {
             String scenario = "Home focus " + language + " " + size + "%"
                 + " countdown=" + Prefs.of(screen).getInt("home_countdown", 0)
@@ -214,9 +223,12 @@ final class UiScaleDeviceCheck {
             check(Arrays.asList(FavouriteChoice.QIBLA, FavouriteChoice.WIFI, FavouriteChoice.SETTINGS, FavouriteChoice.RADIO, FavouriteChoice.INPUTS)
                 .contains(up.slot()), "Large Home Up reaches top controls\n" + scenario + "\nstart: " + start.detail() + "\nafter Up: " + up.detail());
             SystemClock.sleep(200); test.waitForIdleSync();
-            UiContractDeviceCheck.onMain(test, () -> pageBounds(screen, size));
+            afterLayout(test, screen, () -> pageBounds(screen, size));
             capture(test, language, size, "home-header");
-            if (refreshAfterUp) UiContractDeviceCheck.onMain(test, screen::build);
+            if (refreshAfterUp) {
+                UiContractDeviceCheck.onMain(test, screen::build);
+                afterLayout(test, screen, () -> pageBounds(screen, size));
+            }
             HomeFocus beforeDown = homeFocus(test, screen, start.view());
             key(test, screen, KeyEvent.KEYCODE_DPAD_DOWN);
             HomeFocus down = homeFocus(test, screen, start.view());
@@ -232,7 +244,7 @@ final class UiScaleDeviceCheck {
             View[] nodes = (View[]) UiContractDeviceCheck.field(screen, "nodes");
             for (int i = 0; i < 20 && screen.getCurrentFocus() != nodes[FavouriteChoice.ALL]; i++) key(test, screen, KeyEvent.KEYCODE_DPAD_DOWN);
             check(screen.getCurrentFocus() == nodes[FavouriteChoice.ALL], "Large Home Down reaches All apps");
-            UiContractDeviceCheck.onMain(test, () -> pageBounds(screen, size));
+            afterLayout(test, screen, () -> pageBounds(screen, size));
         }
     }
 
@@ -326,7 +338,7 @@ final class UiScaleDeviceCheck {
 
     private static void modal(Instrumentation test, Screen screen, String field) {
         SystemClock.sleep(200); test.waitForIdleSync();
-        UiContractDeviceCheck.onMain(test, () -> {
+        afterLayout(test, screen, () -> {
             View overlay = (View) UiContractDeviceCheck.field(screen, field);
             check(overlay != null && overlay.isShown(), "Actual modal is open: " + field);
             View viewport = Prefs.uiScale(screen) == 100 ? screen.root : (View) screen.root.getParent();
