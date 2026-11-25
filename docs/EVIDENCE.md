@@ -9,6 +9,11 @@ automatic startup registration, a saved HDMI choice, and Home fallback when
 the input is missing. The signed candidate and simulator run are verified
 through [Build and Device simulation](CI.md#release-evidence).
 
+Staging v0.7.10-staging.1 exposed an Android TV sizing check that sampled a
+replacement Home view before Android laid it out. The check now verifies
+layout readiness and geometry in the same main-thread snapshot, including
+after the forced Home rebuild.
+
 Physical TV boot, paired-TV installation and launcher resize acceptance remain open.
 
 ## Documentation cleanup (25 November 2026)
