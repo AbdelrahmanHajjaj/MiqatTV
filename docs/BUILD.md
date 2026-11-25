@@ -1,8 +1,8 @@
 # Build and install Miqat
 
-Use JDK 17 and Node 24. Android builds also need SDK 34 and ANDROID_HOME or an
-ignored local.properties. Run commands from the repository root. On Windows use
-gradlew.bat and npm.cmd in place of ./gradlew and npm.
+Use JDK 17 and Node 24. Android also needs SDK 34 and `ANDROID_HOME` or an
+ignored `local.properties`. Run commands from the repository root. On Windows
+use `gradlew.bat` and `npm.cmd` in place of `./gradlew` and `npm`.
 
 ## Android phone
 
@@ -10,13 +10,12 @@ gradlew.bat and npm.cmd in place of ./gradlew and npm.
 ./gradlew :companion:assembleDebug :companion:lintDebug --no-daemon
 ```
 
-Output: companion/android/build/outputs/apk/debug/companion-debug.apk. Install it
-on Android 8+ for standalone prayers, calendar, alerts, Qibla and widgets. The
-same app's **Your TVs** includes Android/LG setup and ordinary pairing/control;
-neither is required for phone prayers. See the [phone guide](PHONE.md).
+Install `companion/android/build/outputs/apk/debug/companion-debug.apk` on Android
+8 or later. The public release package is `miqat-phone.apk`.
+[Phone guide](PHONE.md)
 
-The published package name will be `miqat-phone.apk`. Owner review exports replace
-only `state/builds/companion/Miqat-latest.apk` through companion/export-apk.ps1.
+For owner review, `companion/export-apk.ps1` replaces
+`state/builds/companion/Miqat-latest.apk`.
 
 ## Android TV
 
@@ -24,21 +23,16 @@ only `state/builds/companion/Miqat-latest.apk` through companion/export-apk.ps1.
 ./gradlew -p platforms/android-tv verifyApkSize lintDebug --no-daemon
 ```
 
-Output: platforms/android-tv/build/outputs/apk/debug/app-debug.apk.
-Follow [Android setup](ANDROID-SETUP.md) to install and configure Home, prayer
-service and permissions. Keep the stock Home available until setup works.
-
-To install a locally built TV APK from Miqat Phone, copy it to the phone and
-choose **Your TVs → Set up my TV → Android / Google TV**. Under Advanced,
-choose **Install a local launcher APK**. The in-app release picker downloads
-`miqat.apk` from a public release.
+The APK is `platforms/android-tv/build/outputs/apk/debug/app-debug.apk`.
+To install it from Miqat Phone, copy it to the phone, then open **Your TVs →
+Set up my TV → Android / Google TV → Advanced → Choose a local package**.
+The public release package is `miqat.apk`. Keep stock Home available until
+setup works. [Android TV setup and recovery](ANDROID-SETUP.md)
 
 ## LG webOS
 
-Prepare the local audio files below, then follow the [LG guide](WEBOS.md).
-The output is an IPK, not an Android APK. The new app ID is tv.miqat.webos and
-its service is tv.miqat.webos.service. Developer Mode and CLI device pairing
-are required for the documented installation path.
+Follow the LG guide to build an IPK and install it through Developer Mode.
+[LG setup](WEBOS.md)
 
 ## Product website and TV preview
 
@@ -48,49 +42,37 @@ npm --prefix site ci
 npm --prefix site run dev
 ```
 
-Explore the [website](https://abdelrahmanhajjaj.github.io/MiqatTV/en/) or follow
-[website deployment](CI.md#website) for its automatic main-branch updates.
-The bilingual site presents the phone, TV companion mode and both TVs using current
-screenshots. Its interactive TV preview simulates device integrations.
-Run core, preview and LG builds sequentially
-because they generate the same shared JavaScript files.
+Run core, preview and LG builds in sequence. They write the same generated
+JavaScript files. The preview simulates TV features. [Website deployment](CI.md#website)
 
 ## Audio assets
 
-The repository includes the reviewed 13 adhan recordings and 12 announcement
-clips under shared/media/. Android and LG package the same bytes. Run
-sha256sum --check shared/media/SHA256SUMS to check the complete set, then
-node tools/prepare-adhans.mjs --check to verify the approved prepared files.
+Android and LG ship the same 13 Adhan recordings and 12 announcement clips
+from `shared/media/`. Restore missing approved files from Git. Source fetch
+scripts retrieve the original recordings. Keep originals and preparation stamps
+under ignored `state/media-originals/`.
 
-The maintainer approved their inclusion in public builds on 18 November 2026.
-Media retains its own attribution and terms; see [notices](THIRD-PARTY.md).
-Originals and preparation stamps stay under ignored state/media-originals/.
-The 13 retained adhan voices received maintainer-approved mild cleanup on 21 November
-2026; the reminder clips are unchanged. Restore missing reviewed files from Git.
-The fetch scripts retrieve source material, not the exact cleaned outputs, and
-are not build prerequisites. Review changed recordings and update checksums
-before publishing replacements.
+```sh
+sha256sum --check shared/media/SHA256SUMS
+node tools/prepare-adhans.mjs --check
+```
+
+Review changed recordings and update checksums before publishing replacements.
+[Audio audit](AUDIO-AUDIT.md) · [Attribution and terms](THIRD-PARTY.md)
 
 ## CI builds
 
-[Build](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/build.yml)
-produces full-audio phone and TV packages. Select **Development** for a branch
-build with seven-day artifacts. Android uses a CI debug key that can differ
-between runs. Select **Staging** on main for a signed prerelease. See
-[Releasing](RELEASING.md) and [CI](CI.md).
+Choose **Development** for a branch build with seven-day artifacts. Its Android
+debug key can vary between runs. Choose **Staging** on main for a signed
+prerelease. [Build workflow](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/build.yml) · [Release procedure](RELEASING.md)
 
 ## Fresh installation
 
-Miqat uses tv.miqat.companion (phone), tv.miqat.home (Android TV)
-and tv.miqat.webos (LG).
-They install separately from earlier builds. Before removing a previous launcher,
-record its prayer, appearance, input and startup choices and disable its scheduled
-alerts/startup. On Android, restore a working stock Home before removing it.
+The app IDs are `tv.miqat.companion`, `tv.miqat.home` and `tv.miqat.webos`.
+Before removing an earlier launcher, record its prayer, appearance, input and
+startup choices, then turn off scheduled alerts and startup. On Android,
+restore stock Home before removing the previous launcher.
 
-Miqat Phone exports a device setup/recovery record. That record restores Android
-system setup; it does not export Miqat prayer or appearance preferences. A portable
-settings export/import feature is not included in this foundation. Re-enter those
-choices after installation and check the prayer schedule before enabling alerts.
-
-No physical TV is changed by building this checkout. Hardware installation and
-watched picture/sound/remote checks need a separate authorized session.
+The phone's recovery export restores Android system setup. Record Miqat's
+prayer and appearance preferences separately and re-enter them after
+installing. Check the schedule before enabling alerts.

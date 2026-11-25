@@ -1,10 +1,8 @@
 # Test requirements
 
-These are Miqat's requirements for changes into this project's
-`main`. Choose checks from the changed behavior and its consumers, rather than
-running every platform for a documentation edit. The PR must record commands,
-results and untested paths. [CONTRIBUTING.md](../CONTRIBUTING.md) owns the contribution
-workflow; the [architecture queue](WORK.md) owns current acceptance gates.
+Run the checks for the changed behavior and affected consumers. Record commands,
+results and untested paths in the PR. [Contribution guide](CONTRIBUTING.md) ·
+[Current acceptance checks](WORK.md)
 
 ## Required evidence
 

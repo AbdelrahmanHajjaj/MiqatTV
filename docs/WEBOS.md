@@ -1,40 +1,33 @@
 # LG webOS
 
-Miqat runs alongside LG Home as a Developer Mode app with an ES5 UI and a
-JavaScript service. It displays HDMI inside the app while the TV is on.
-
-The LG integration supports the LF6300 / webOS 2.2 runtime: WebKit 538.2 and
-service Node 0.10.25.
+Miqat runs alongside LG Home and can show HDMI inside the app while the TV
+is on. The legacy target is the LF6300 on webOS 2.2 (WebKit 538.2 and
+Node 0.10.25).
 
 ## Build and install
 
-On the Android Miqat phone app, choose **Your TVs → Set up my TV** (or **Pair a
-new TV**) → **LG webOS**. Follow the preparation guide to enable LG Developer
-Mode and Key Server. Select Latest (default), Stable or Preview, or choose a
-local IPK through the Advanced icon. Enter the TV's private IPv4 address; public
-IPK download follows the approved Developer Mode connection, with size/SHA-256
-verification. Enter LG's case-sensitive passphrase and connect. Confirm the SSH
-identity on your trusted home network to continue the connection.
-Review the installed/selected version before explicitly installing or updating.
-The phone verifies transfer bytes and the installed version, refuses downgrades,
-and can launch Miqat before ordinary phone pairing. It does not uninstall apps.
+### Install from Miqat Phone
 
-Miqat shows the percentage downloaded or sent to the TV. It names the install
-and verification stages while it waits for the TV.
+1. Open **Your TVs → Set up my TV → LG webOS**. Follow the preparation steps
+   to enable LG Developer Mode and Key Server.
+2. Choose **Production** for the stable release, **Staging** for a prerelease
+   or **Advanced** for a local IPK.
+3. Enter the TV's private IPv4 address and LG's case-sensitive passphrase.
+   Approve the SSH identity on your home network.
+4. Review the installed and selected versions before confirming. Miqat
+   verifies the download, transfer and installed version and blocks downgrades.
+5. Launch Miqat on the TV and pair it to enable everyday remote control.
 
-Enable **Remember address and passphrase** before connecting to reuse them in
-future sessions. The passphrase is encrypted on the phone and tied to the
-approved TV identity. **Forget installation identity** removes the saved
-passphrase and SSH identity. If LG shows a new passphrase, enter it again.
-The SSH private key stays in memory. Leaving setup closes SSH. LG's key server uses local
-HTTP for the encrypted private-key file; SSH identity checking remains strict.
-Old Developer Mode servers may require legacy RSA/SHA-1 SSH algorithms, confined
-to this installer. Ordinary companion pairing remains pinned HTTPS.
+To reuse credentials, turn on **Remember address and passphrase** before
+connecting. Miqat encrypts the passphrase and ties it to the approved TV
+identity. **Forget installation identity** clears the saved passphrase and SSH
+identity. If LG displays a new passphrase, enter it again.
 
-If interrupted or refused, reconnect to read the installed version before retrying;
-do not uninstall Miqat to recover an update. Keep Developer Mode active and extend
-its session in LG's app before expiry; expiry can remove developer-installed apps.
-An expired session needs Developer Mode setup and installation again.
+If installation stops, reconnect and check the installed version before
+retrying. Extend the Developer Mode session in LG's app before it expires.
+Expiry can remove developer-installed apps and require setup again.
+
+### Build from source
 
 Use JDK 17 and Node 24, and prepare the shared audio inputs in [BUILD.md](BUILD.md).
 Run from the repository root:
@@ -127,66 +120,23 @@ test through Settings. Remove only tv.miqat.webos using the configured CLI alias
 Do not use historical probes, firmware changes or root recipes for routine testing.
 
 Physical picture, sound, remote and power checks require a ready watcher. LG
-capture APIs do not reliably show the video plane. See [TESTING.md](TESTING.md)
+capture APIs do not reliably show the video plane. On the legacy profile, use
+Web Inspector for console and timeline logs. See [TESTING.md](TESTING.md)
 and the platform [agent rules](../platforms/webos/AGENTS.md).
 
 ## Foreground phone pairing
 
-Settings / Phones provides themed local QR and physical
-remote approval/revocation. Its listener follows the foreground app subscription.
-See [protocol and legacy TLS limits](COMPANION-LAN.md) and
-[companion development history](COMPANION-WORK.md).
-
-The approved pairing QR now uses the shared Miqat centre mark, theme body fill
-and accent tint, no border and half-width (0.35-module) centre clearance with
-high error correction.
+Open **Paired phones → Pair phone** to show the pairing QR, approve a phone with the
+remote or revoke access. The listener runs while the app is in the foreground.
+[Pairing protocol and legacy TLS limits](COMPANION-LAN.md)
 
 ## Appearance
 
-Appearance also offers six bundled illustrated landscapes: Dusk peaks, Golden
-coast, Moon lake, Aurora sky, Tea hills and Monsoon. These static choices retain
-full color with a 20% dark overlay in Home and appearance previews. Android's procedural
-Mountains/Dunes and time-based light fields remain Android-specific.
+Choose a preset or customize its background and palette in **Appearance**.
+Changes save immediately. The Miqat preset restores the Signature background.
+LG includes six illustrated landscapes. If a preset's procedural background
+is unavailable on LG, it uses a plain fill.
 
-The Appearance preset carousel now comes first, above Customize controls. Choosing
-a different preset immediately saves its supported canonical background;
-manual overrides also save immediately. Six scenic presets pair their
-landscape, palette and surface. Unsupported procedural defaults use plain fill;
-this does not add Android's procedural renderer to LG.
-
-Miqat's default preset now pairs its branded palette with the original Signature
-background. Fresh preferences select it; existing explicit background selections
-remain unchanged. Choosing Miqat in the preset carousel restores the Signature
-background immediately. It appears first in the background list. The scene is a bundled JPEG, not a runtime effect.
-
-Home mihrab fill opacity is adjustable from 50–100% in 5% steps, recommended 85%,
-using portable numeric rules and immediate saving. It changes the opaque panel
-fill only; text/outlines retain full opacity. Different presets restore 85%.
-Prayer labels use the canonical shared vector family. Home icons occupy the
-header strip so long labels retain their own line at larger interface sizes.
-
-Miqat quiet is an additional canonical scene; the original Signature stays default.
-Home next-prayer fill is 75% of the selected surface panel color, with opaque gold
-labels/outline. This alpha is independent of the Home mihrab setting and Glass.
-
-
-The app displays the shared splash artwork for at least 600 ms while its first
-screen loads. It does not replay on foreground resume.
-
-
-Legacy pairing preparation uses bounded native OpenSSL RSA-2048 generation when
-Node lacks its own key-generation API. Stored identity is reused; keys are not
-passed through shell arguments or temporary files. If the binary is absent, the
-existing OS-random Forge path remains available. The app reuses unchanged QR
-artwork while awaiting approval.
-
-
-On the pairing page, Down from Back enters the first enabled control; Up returns
-to Back. Up/Down follow the visible control order, including Reject and Approve.
-With a QR open, the controls scroll independently so the complete code remains
-visible.
-
-
-The QR element stays in place while pending/approval controls update.
-This legacy TV profile uses Web Inspector console/timeline diagnostics;
-`ares-log` is not supported for the TV profile.
+Adjust **Home mihrab fill opacity** from 50% to 100% in steps of 5%. A preset
+change restores 85%. The setting controls the panel fill. Text and outlines
+stay opaque. [Themes and backgrounds](THEMES.md)

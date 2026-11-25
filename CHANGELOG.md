@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Simplified the README, phone guide and TV setup docs.
+
 - Build can export an optional Miqat development IPA for registered iPhones. The website shows iOS as coming soon.
 
 - Search for a prayer timezone in the iPhone custom coordinates editor.

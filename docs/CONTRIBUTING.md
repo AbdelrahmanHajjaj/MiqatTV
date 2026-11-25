@@ -1,8 +1,7 @@
 # Contributing to Miqat
 
-Miqat serves Android phone users and households using TV remotes. Issues and pull requests may use Arabic
-or English. Describe a problem with platform, model, OS, app version and steps to
-reproduce it. Keep private device details out of public reports.
+File issues and PRs in Arabic or English. Report the platform, model, OS, app
+version and steps to reproduce. Keep private device details out of reports.
 
 Use a feature branch and submit a PR to this repository's main branch. Keep the
 change coherent, include its affected tests/docs, and use the PR template. Preserve

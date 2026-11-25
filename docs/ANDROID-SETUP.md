@@ -1,32 +1,31 @@
-# Local TV setup and recovery
+# Android TV setup and recovery
 
-The PC tools install your locally built Miqat; they never fetch or push Git. Python 3.9+, JDK 17 and Android SDK 34 are required for PC setup. Miqat Phone can download the published TV APK from [Miqat releases](https://github.com/AbdelrahmanHajjaj/MiqatTV/releases), verifies its size/SHA-256 and package identity, and refuses a version-code downgrade. Published previews are labelled. Local APKs are under **Advanced → Install a local launcher APK**; choose **Use public download** to return to the default.
+## Install from Miqat Phone
 
-In Miqat Phone, choose **Your TVs → Set up my TV** (or **Pair a
-new TV**) → **Android / Google TV**. Read the preparation guide, then choose
-Latest (default), Stable or Preview; the Advanced icon selects a local APK.
-Setup shows separate percentages for downloading the APK, sending it to the TV
-and applying setup steps. Installation and verification have their own status.
-Setup includes optional reviewed cleanup and recovery in the phone's selected
-language and theme. After successful setup,
-**Pair TV** opens ordinary pairing; confirm access using the TV's remote. Cancelling
-or finishing incomplete setup does not start pairing. This setup entry supports
-Android/Google TV; the phone's LG option uses its separate SSH flow described in
-[the LG guide](WEBOS.md).
+1. Open **Your TVs → Set up my TV → Android / Google TV** and follow the preparation steps.
+2. Select **Production** for the stable release or **Staging** for a prerelease.
+   To use your own APK, choose **Advanced → Choose a local package**.
+   **Download from Miqat** switches back to public releases.
+3. Review the setup and any optional cleanup. Miqat checks the downloaded
+   APK's size, SHA-256 and package ID and blocks version-code downgrades.
+4. After setup succeeds, choose **Pair TV** and approve with the TV remote.
 
-If you previously used the standalone installer, export its recovery backup
-before removing it. PC recovery can use that export. Authorize Miqat Phone
-separately when prompted. Download installation requires a published compatible APK;
-use a local APK when no release is available.
+If you used the standalone installer, export its recovery backup before
+removing it. Authorize Miqat Phone separately when the TV prompts you.
+[LG setup](WEBOS.md)
 
 The iPhone development build exports its Home and accessibility changes from
 **Install Miqat on Android TV → Save recovery backup**. Put `recovery.json`
 in a private folder and point the current desktop tool's `--backup-dir`
 at that folder when running `restore` against the same TV.
 
-Tested on TCL 50C641K, Android 11 (API 30), firmware V8-R51MT02-LF1V903.021315. Installation, exclusive Home and reboot passed; see [validation and remaining hardware checks](EVIDENCE.md). The tools read the actual API version and refuse anything below 26.
+The installer requires Android TV API 26 or later and reads the version from
+the TV. [Tested models and open checks](EVIDENCE.md)
 
 ## Install from Windows
+
+Install Python 3.9+, JDK 17 and Android SDK 34 with platform-tools. The PC
+installer builds Miqat from your checkout.
 
 Enable debugging, connect with Android platform-tools and approve the TV prompt. Use the same address and backup folder throughout. Replace the example address with your TV address.
 
@@ -37,7 +36,10 @@ $env:TV = '192.168.1.50:5555'
 python -S -B tools/device.py configure
 ```
 
-Linux/macOS: set `TV`, then `bash tools/install.sh`; use `python3 tools/device.py configure`. Install builds source, saves the original state, installs with replacement allowed only for a matching signature, starts Miqat and checks the selected Home. It preserves the screensaver. It never uninstalls an app. The reviewed adhan and announcement recordings are included under shared/media/.
+On Linux or macOS, set `TV`, run `bash tools/install.sh`, then run
+`python3 tools/device.py configure`. The installer saves the original state,
+keeps the screensaver and checks the selected Home. An update requires a
+matching APK signature.
 
 After checking Home, Settings, HDMI and the remote, disable known stock Home packages:
 
@@ -45,7 +47,12 @@ After checking Home, Settings, HDMI and the remote, disable known stock Home pac
 python -S -B tools/device.py home --exclusive
 ```
 
-An initial install can also use `./tools/install.ps1 -Exclusive`. A handover failure attempts to restore the original Home. When Miqat is already Home, an ordinary update verifies it without repeating the original handover or restoring earlier cleanup/helper settings. Wake the TV and leave Home visible during installation; a failed visibility check stops the command. Unknown launchers, CVTE boards and TVs without a verified foreground Miqat are refused. On CVTE, verify Home and ADB after a reboot before enabling any helper. Package removal is never used.
+For an initial install, you can also pass `-Exclusive` to `./tools/install.ps1`.
+Wake the TV and leave Home visible. The tool checks that Miqat is in the
+foreground and attempts to restore the original Home if handover fails.
+Exclusive setup blocks unknown launchers and CVTE boards. On CVTE, verify
+Home and ADB after a reboot before enabling any helper. An ordinary update
+checks the existing Home and keeps earlier cleanup and helper choices.
 
 ## Back up and undo
 
