@@ -99,7 +99,9 @@ const server = http.createServer((req, res) => {
           localStorage.setItem('fixture', JSON.stringify(state));
           const reply = {returnValue: true, state, prefs: state.prefs, enabled: state.startup && state.startup.enabled,
             current: window.Miqat.input(state.input || 'HDMI_1'),
-            inputs: (state.inputInventory || ['HDMI_1', 'HDMI_2', 'HDMI_3', 'HDMI_4', 'DTV', 'ATV', 'AV_1', 'AV_2', 'COMP_1']).map(window.Miqat.input)};
+            inputs: (state.inputInventory || (sessionStorage.getItem('full-input-inventory')
+              ? ['HDMI_1', 'HDMI_2', 'HDMI_3', 'HDMI_4', 'DTV', 'ATV', 'AV_1', 'AV_2', 'COMP_1']
+              : ['HDMI_1', 'HDMI_2', 'HDMI_3', 'DTV'])).map(window.Miqat.input)};
           if (method === 'onlinePrayer') {
             window.onlineCalls.push(p);
             if (p.action === 'check') {
@@ -203,6 +205,7 @@ const server = http.createServer((req, res) => {
     await page.evaluate(() => {
       localStorage.removeItem('fixture');
       sessionStorage.setItem('exercise-input', 'true');
+      sessionStorage.setItem('full-input-inventory', 'true');
     });
     await page.reload();
     await inputRestored();
@@ -814,6 +817,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('html').getAttribute('dir'), 'ltr');
     await settingsValuesFit();
     await settingsCoverage();
+    await page.evaluate(() => sessionStorage.removeItem('full-input-inventory'));
     await onlineChecks();
     await page.locator('[data-action=section][data-value=prayer]').click();
     await page.locator('[data-action=city]').click();
