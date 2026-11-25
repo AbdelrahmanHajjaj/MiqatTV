@@ -61,6 +61,7 @@ onboarding, offline prayer times, and permission behavior. Dispatch with
 `simulator_first_use=true` to run the XCTest journeys for manual city selection,
 Skip and resume, the prayer timetable, and both answers to the iOS notification
 prompt. Each journey starts with fresh simulator data.
+Use `simulator_first_use_case` to rerun a specific case.
 
 The app and widget targets use the `group.tv.miqat.ios` App Group to share
 an offline prayer timetable. A signed widget check needs both targets in a

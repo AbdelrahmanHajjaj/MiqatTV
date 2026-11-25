@@ -11,6 +11,16 @@ on:
         description: Exercise manual city selection and first use on a fresh iPhone simulator
         type: boolean
         default: false
+      simulator_first_use_case:
+        description: Run a single FirstUseTests method when simulator_first_use is enabled
+        type: choice
+        default: all
+        options:
+          - all
+          - testManualCityWithLocationDenied
+          - testAllowNotificationsDuringSetup
+          - testDenyNotificationsDuringSetup
+          - testCustomCoordinatesAndTimeZone
   push:
     branches: [feature/ios-app-port]
     paths:
@@ -181,6 +191,7 @@ jobs:
         timeout-minutes: 26
         env:
           MIQAT_FIRST_USE: ${{ inputs.simulator_first_use }}
+          MIQAT_FIRST_USE_CASE: ${{ inputs.simulator_first_use_case }}
         run: |
           app="state/ios-build/Build/Products/Debug-iphonesimulator/Miqat.app"
           device=$(xcrun simctl create 'Miqat launch check' \
@@ -208,13 +219,17 @@ jobs:
                 CODE_SIGNING_ALLOWED=NO "$@"
             }
             sim_test build-for-testing
-            xcrun simctl privacy "$device" revoke location "$bundle"
-            sim_test -only-testing:MiqatUITests/FirstUseTests/testManualCityWithLocationDenied test-without-building
-            # Neither notification choice may inherit a prior app install or permission.
-            for scenario in testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup; do
-              xcrun simctl shutdown "$device"
-              xcrun simctl erase "$device"
-              boot_and_install
+            cases=(testManualCityWithLocationDenied testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup testCustomCoordinatesAndTimeZone)
+            if [ -n "$MIQAT_FIRST_USE_CASE" ] && [ "$MIQAT_FIRST_USE_CASE" != all ]; then
+              cases=("$MIQAT_FIRST_USE_CASE")
+            fi
+            # Each case starts with a fresh app install and permissions.
+            for scenario in "${cases[@]}"; do
+              if [ "$scenario" != "${cases[0]}" ]; then
+                xcrun simctl shutdown "$device"
+                xcrun simctl erase "$device"
+                boot_and_install
+              fi
               xcrun simctl privacy "$device" revoke location "$bundle"
               sim_test "-only-testing:MiqatUITests/FirstUseTests/$scenario" test-without-building
             done

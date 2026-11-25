@@ -2336,6 +2336,14 @@ Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
 
+The custom location XCTest passed on iPhone 16 Simulator with iOS 18.4 at
+`f961614`, along with both unsigned Apple builds. Cancel retained the original
+values, latitude 999 blocked Apply, and returning from timezone search kept the
+coordinate draft. The test confirmed `30.0501`, `31.2401` and `Africa/Cairo`
+survived confirmation and relaunch. It used Western digits and did not compare
+prayer minutes against Android.
+[Custom location result](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45520162323/job/138889702772)
+
 At `bf9523f`, three first-use XCUITests passed on iPhone 16 Simulator with
 iOS 18.4. On fresh simulator data, Allow and Don't Allow both reached Your style.
 After setup and relaunch, Prayer alerts was on after allowance and off after

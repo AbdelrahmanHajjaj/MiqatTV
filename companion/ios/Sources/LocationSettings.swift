@@ -172,6 +172,10 @@ struct LocationSettings: View {
                     showCoordinates = true
                 }
                 LabeledContent(preferences.text("phone_zone"), value: preferences.zone.identifier)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(preferences.text("phone_zone"))
+                    .accessibilityValue(preferences.zone.identifier)
+                    .accessibilityIdentifier("miqat.location.saved-timezone")
                 Button(preferences.text("phone_confirm_location")) { preferences.locationConfirmed = true }
                     .disabled(preferences.locationConfirmed || location.pending)
                     .accessibilityIdentifier("miqat.location.confirm")
@@ -288,9 +292,18 @@ struct CityPicker: View {
 struct AdvancedLocation: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var preferences: PhonePreferences
-    @State private var latitude = ""
-    @State private var longitude = ""
-    @State private var zone = ""
+    @State private var latitude: String
+    @State private var longitude: String
+    @State private var zone: String
+    @State private var choosingZone = false
+
+    init(preferences: Binding<PhonePreferences>) {
+        _preferences = preferences
+        let saved = preferences.wrappedValue
+        _latitude = State(initialValue: String(saved.coordinates.latitude))
+        _longitude = State(initialValue: String(saved.coordinates.longitude))
+        _zone = State(initialValue: saved.zoneID)
+    }
 
     private var coordinates: PhonePreferences.Coordinates? {
         guard let lat = PhonePrayerRules.shared.parseCoordinate(value: latitude)?.doubleValue,
@@ -303,9 +316,19 @@ struct AdvancedLocation: View {
         Form {
             TextField(preferences.text("phone_latitude"), text: $latitude).keyboardType(.numbersAndPunctuation)
             TextField(preferences.text("phone_longitude"), text: $longitude).keyboardType(.numbersAndPunctuation)
-            Picker(preferences.text("phone_zone"), selection: $zone) {
-                Text(preferences.text("phone_system")).tag("")
-                ForEach(TimeZone.knownTimeZoneIdentifiers, id: \.self) { Text($0).tag($0) }
+            Button {
+                choosingZone = true
+            } label: {
+                LabeledContent(preferences.text("phone_zone"),
+                               value: zone.isEmpty ? preferences.text("phone_system") : zone)
+            }
+            .accessibilityValue(zone.isEmpty ? preferences.text("phone_system") : zone)
+            .accessibilityIdentifier("miqat.location.timezone")
+        }
+        .navigationDestination(isPresented: $choosingZone) {
+            PrayerTimeZonePicker(preferences: preferences, zone: zone) { selected in
+                zone = selected
+                choosingZone = false
             }
         }
         .navigationTitle(preferences.text("phone_custom_location"))
@@ -330,10 +353,37 @@ struct AdvancedLocation: View {
                 .disabled(coordinates == nil)
             }
         }
-        .onAppear {
-            latitude = String(preferences.coordinates.latitude)
-            longitude = String(preferences.coordinates.longitude)
-            zone = preferences.zoneID
+    }
+}
+
+private struct PrayerTimeZonePicker: View {
+    let preferences: PhonePreferences
+    let zone: String
+    let select: (String) -> Void
+    @State private var query = ""
+
+    var body: some View {
+        let zones = ([""] + TimeZone.knownTimeZoneIdentifiers).filter {
+            query.isEmpty || label($0).localizedStandardContains(query)
         }
+        List(zones, id: \.self) { id in
+            Button {
+                select(id)
+            } label: {
+                HStack {
+                    Text(label(id))
+                    Spacer()
+                    if id == zone { Image(systemName: "checkmark").accessibilityHidden(true) }
+                }
+                .contentShape(Rectangle())
+            }
+            .accessibilityAddTraits(id == zone ? .isSelected : [])
+        }
+        .navigationTitle(preferences.text("phone_zone"))
+        .searchable(text: $query, prompt: preferences.text("phone_search"))
+    }
+
+    private func label(_ id: String) -> String {
+        id.isEmpty ? preferences.text("phone_system") : id
     }
 }
