@@ -1,8 +1,8 @@
 # Current work
 
-For the iPhone port, finish the remaining development changes in one batch,
-then run the Apple builds, fixtures and complete simulator suite together.
-Record actual coverage in the [iOS parity queue](IOS-WORK.md).
+For the iPhone port, the consolidated Apple builds, fixtures, eight simulator
+journeys and package integrity check passed. The [iOS parity queue](IOS-WORK.md)
+records the remaining signed iPhone, device behavior and live TV acceptance.
 The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android
 TV installation and Home/remote setup with a recovery journal are wired.

@@ -2336,6 +2336,19 @@ Exact-alarm fallback, existing schedule migration and production map provider/
 privacy remain implementation work. No APK, release, deployment or merge.
 ## iPhone port development checkpoint
 
+The consolidated Apple run at `ed93b49` passed both unsigned Xcode 16.3 builds
+and all eight XCTest journeys on fresh iPhone 16 simulators with iOS 18.4.
+The journeys covered city selection with location denied, setup skip and resume,
+both notification choices, custom coordinates and timezone, Arabic first use
+and coordinates, the six Cairo prayer rows and civil date, fasting preference
+persistence and reset with the Android TV demo retained, and the 136.1° Qibla
+bearing in both compass and map. The same run passed the Kotlin rules, astronomy,
+notification, calendar, widget snapshot, TV settings, and TV installer fixtures.
+The simulator ZIP matched the published SHA-256 and contained both app and
+widget executables. Signed on-device behavior, live TV connections and
+system-managed delivery remain open.
+[Consolidated Apple build and tests](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/runs/45541033641)
+
 At `65e0705`, XCTest confirmed Cairo as the prayer timezone on iPhone 16
 Simulator with a different system UTC offset. The calendar showed Thursday,
 November 12, 2026, and every displayed row matched Android's `PhoneScheduleCheck`
