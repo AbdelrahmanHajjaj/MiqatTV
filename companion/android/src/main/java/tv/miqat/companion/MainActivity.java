@@ -903,6 +903,17 @@ public final class MainActivity extends Activity {
         return resumed.get() == this;
     }
 
+    private boolean checkedReleaseNotes;
+
+    @Override
+    public void onWindowFocusChanged(boolean focused) {
+        super.onWindowFocusChanged(focused);
+        if (!focused || checkedReleaseNotes || phoneUi == null || page.equals("onboarding")
+                || android.appwidget.AppWidgetManager.ACTION_APPWIDGET_CONFIGURE.equals(getIntent().getAction())) return;
+        checkedReleaseNotes = true;
+        phoneUi.showReleaseNotesAfterUpdate();
+    }
+
     @Override
     protected void onPause() {
         if(resumed.get()==this)resumed.clear();

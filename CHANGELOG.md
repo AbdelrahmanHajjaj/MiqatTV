@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Android self-updates show download progress and APK verification. The bundled changelog opens once after an upgrade and remains available under Settings → About Miqat.
+
 - Pair TV opens the QR scanner entry directly. Update a paired Android TV or LG TV from its phone controls using its saved installation connection.
 - Android phone adds optional update checks when the app opens or returns to the foreground, and the Countdown circle widget can be resized.
 - LG opens Miqat Home by default after TV startup. TV & startup can open a selected input instead.

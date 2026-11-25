@@ -16,6 +16,7 @@ import org.json.*;
 
 import tv.miqat.companion.about.AboutMiqat;
 import tv.miqat.companion.about.AboutUpdates;
+import tv.miqat.companion.about.ReleaseNotes;
 import tv.miqat.companion.core.CompanionContract;
 import tv.miqat.companion.core.SettingSpec;
 
@@ -285,6 +286,10 @@ final class PhoneUi {
                     .setTag("phone.about.check-updates");
             control(data.controls.get("about.auto-updates"));
         }
+        String changelog = a.t(data.actionLabel("about.changelog"));
+        a.views.button(a.body, changelog, () -> updateDialog = ReleaseNotes.show(
+                a.views.dialog(), a.ar, changelog, a.t("aboutReleaseNotes"), a.t("back")))
+                .setTag("phone.about.changelog");
         a.views.button(a.body, a.t(data.actionLabel("about.github")),
                 () -> openAboutLink(AboutMiqat.FEEDBACK_URL)).setTag("phone.about.github");
         Button email = a.views.button(a.body, a.t(data.actionLabel("about.email")), () -> {});
@@ -295,8 +300,14 @@ final class PhoneUi {
     private AboutUpdates.Labels updateLabels() {
         return new AboutUpdates.Labels(a.t(data.actionLabel("about.check-updates")),
                 a.t("aboutCheckingUpdates"), a.t("aboutNoUpdate"), a.t("aboutNewUpdate"),
-                a.t("aboutUpdateFailed"), a.t("aboutInstallUpdate"), a.t("aboutDownloadingUpdate"),
+                a.t("aboutUpdateFailed"), a.t("aboutInstallUpdate"), a.t("aboutDownloadingUpdate"), a.t("aboutVerifyingUpdate"),
                 a.t("aboutInstallUpdateFailed"), a.t("back"));
+    }
+
+    void showReleaseNotesAfterUpdate() {
+        if (updateDialog != null && updateDialog.isShowing()) return;
+        updateDialog = ReleaseNotes.showAfterUpdate(a.views.dialog(), a.ar, a.t(data.actionLabel("about.changelog")),
+                a.t("aboutReleaseNotes"), a.t("back"));
     }
 
     private boolean automaticUpdatesEnabled() {

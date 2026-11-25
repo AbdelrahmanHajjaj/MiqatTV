@@ -5,7 +5,10 @@ feedback QR code to open the public GitHub form on your phone. GitHub sign-in is
 required. Email feedback is currently disabled.
 
 For a sideloaded build, **Check for updates** compares your installed version
-with the stable GitHub release. If a newer build is available, scan its release QR.
+with the stable GitHub release. If a newer build is available, choose **Download
+and install**. Miqat shows progress and verifies the APK before opening Android's
+installer. The changelog opens on the first Home launch after an upgrade, and
+you can reopen it from **About Miqat → Changelog**.
 
 The native Java Views launcher uses package `tv.miqat.home`, its existing settings
 and debug signing configuration. The portable domain rules come from `shared/core`;

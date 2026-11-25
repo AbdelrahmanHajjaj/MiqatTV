@@ -5,6 +5,11 @@
     "reason": "LG updates are checked and installed through Miqat Phone TV setup."
   },
   {
+    "id": "about.changelog",
+    "state": "unimplemented",
+    "reason": "The local changelog is bundled with the Android updater."
+  },
+  {
     "id": "prayer.facing",
     "state": "unimplemented",
     "reason": "Qibla shows true north; manual screen-facing calibration is not ported."

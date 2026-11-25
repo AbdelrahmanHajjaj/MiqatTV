@@ -19,6 +19,7 @@
   ],
   "actionRoutes": {
     "about.check-updates":"tv-step",
+    "about.changelog":"tv-step",
     "device.about":"tv-step", "device.companion":"tv-step", "pairing.open":"tv-step", "pairing.cancel":"tv-step", "pairing.approve":"tv-step", "pairing.reject":"tv-step", "pairing.revoke":"tv-step",
     "prayer.offsets":"offsets", "prayer.today":"today", "prayer.online":"tv-step",
     "reminders.per-prayer":"prayer-day", "tests.open":"tests",

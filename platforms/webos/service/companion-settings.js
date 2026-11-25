@@ -2,7 +2,7 @@
 var core = require('./core');
 var portable = require('./Miqat-core').tv.miqat.core;
 var controls = require('./companion-catalog.json').filter(function (control) {
-  return control.id !== 'device.startup-show-input' && control.id !== 'device.startup-input';
+  return control.id !== 'device.startup-show-input' && control.id !== 'device.startup-input' && control.id !== 'about.changelog';
 });
 var fields = {
   'prayer.location': 'city', 'prayer.hijri': 'hijriOffset', 'reminders.enabled': 'automatic',

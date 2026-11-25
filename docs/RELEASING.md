@@ -11,6 +11,10 @@ of the standalone Android phone app. [CI](CI.md) describes the PR gate.
 
 ## Development or Staging build
 
+Refresh the Arabic and English `aboutReleaseNotes` in `shared/data/strings.json`
+for each Android release. Miqat bundles the notes and displays them with the
+installed version on the first launch after an upgrade.
+
 1. Open [Build](https://github.com/AbdelrahmanHajjaj/MiqatTV/actions/workflows/build.yml).
 2. Select **development** for a branch review build. Download
    `phone-development`, `android-tv-development` and `lg-development` from the

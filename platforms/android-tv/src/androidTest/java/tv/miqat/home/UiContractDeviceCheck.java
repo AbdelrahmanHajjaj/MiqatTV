@@ -98,6 +98,7 @@ final class UiContractDeviceCheck {
                 }
                 checkAbout(test, active[0]);
                 bound.add("about.check-updates");
+                bound.add("about.changelog");
                 key(test, active[0], KeyEvent.KEYCODE_BACK);
                 // Rebuild Appearance with a valid imported-theme prerequisite, then visit all position modes.
                 check(prefs.edit().putString("theme_json", "{\"version\":1}").commit(), "Set custom-theme prerequisite");
@@ -180,6 +181,7 @@ final class UiContractDeviceCheck {
                 check(name.getText().toString().contains(version), "About must show the installed TV version");
                 check(opened.root.findViewWithTag("about.github") != null, "About shows the GitHub feedback QR");
                 check(opened.root.findViewWithTag("about.check-updates").isFocusable(), "Sideloaded TV has a manual update check");
+                check(opened.root.findViewWithTag("about.changelog").isFocusable(), "TV About offers a changelog");
                 check(!opened.root.findViewWithTag("about.email").isEnabled(), "Email feedback must be disabled");
             });
         } finally {

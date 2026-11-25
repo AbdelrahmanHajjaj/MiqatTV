@@ -163,7 +163,10 @@ excluded from Android backup and transfer.
 Under **Phone settings → About Miqat**, check the installed version or open
 the public GitHub feedback form, which requires sign-in. For sideloaded builds,
 select **Check for updates**, then **Download and install** if available.
+Miqat shows download progress and verifies the APK before opening Android's installer.
 Confirm in Android. You may need to allow installs from Miqat the first time.
 Turn on **Check for updates automatically** to check in the background when
 Miqat opens or comes back to the foreground. A dialog appears when a newer
 Production version is available.
+The changelog opens once when you return to Miqat after upgrading. Reopen it
+from **Phone settings → About Miqat → Changelog**.

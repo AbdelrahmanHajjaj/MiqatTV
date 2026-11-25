@@ -159,6 +159,17 @@ public class MainActivity extends Screen {
         return new Date(System.currentTimeMillis() + shift);
     }
 
+    private boolean checkedReleaseNotes;
+
+    @Override
+    public void onWindowFocusChanged(boolean focused) {
+        super.onWindowFocusChanged(focused);
+        if (!focused || checkedReleaseNotes || t == null) return;
+        checkedReleaseNotes = true;
+        tv.miqat.companion.about.ReleaseNotes.showAfterUpdate(new android.app.AlertDialog.Builder(this), rtl,
+                t.aboutChangelog(), t.aboutReleaseNotes(), t.back());
+    }
+
     @Override
     protected void onResume() {
         Apps.invalidate();

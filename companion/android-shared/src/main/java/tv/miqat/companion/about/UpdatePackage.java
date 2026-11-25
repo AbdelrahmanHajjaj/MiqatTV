@@ -18,18 +18,23 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.IntConsumer;
 import javax.net.ssl.HttpsURLConnection;
 
 final class UpdatePackage {
+    static final int INDETERMINATE = -1;
+    static final int VERIFYING = -2;
     private static final int MAX_SIZE = 100 * 1024 * 1024;
     private static final int TIMEOUT_MS = 15_000;
 
     private UpdatePackage() {}
 
-    static int stage(Context context, AboutUpdates.Result update) throws IOException, PackageManager.NameNotFoundException {
+    static int stage(Context context, AboutUpdates.Result update, IntConsumer progress)
+            throws IOException, PackageManager.NameNotFoundException {
         Path apk = Files.createTempFile(context.getCacheDir().toPath(), "miqat-update-", ".apk");
         try {
-            download(new URL(update.url()), apk);
+            download(new URL(update.url()), apk, progress);
+            progress.accept(VERIFYING);
             return stage(context, apk, update);
         } finally {
             try {
@@ -106,7 +111,7 @@ final class UpdatePackage {
                     || url.getHost().equals("objects.githubusercontent.com"));
     }
 
-    private static void download(URL url, Path apk) throws IOException {
+    private static void download(URL url, Path apk, IntConsumer progress) throws IOException {
         long deadline = SystemClock.elapsedRealtime() + 180_000;
         for (int hop = 0; hop <= 5; hop++) {
             checkTime(deadline);
@@ -122,15 +127,7 @@ final class UpdatePackage {
                     long expected = connection.getContentLengthLong();
                     if (expected > MAX_SIZE) throw new IOException("Update APK is too large");
                     try (InputStream input = connection.getInputStream(); OutputStream output = Files.newOutputStream(apk)) {
-                        byte[] buffer = new byte[64 * 1024];
-                        long bytes = 0;
-                        for (int length; (length = input.read(buffer)) != -1; ) {
-                            checkTime(deadline);
-                            bytes += length;
-                            if (bytes > MAX_SIZE) throw new IOException("Update APK is too large");
-                            output.write(buffer, 0, length);
-                        }
-                        if (bytes == 0 || expected >= 0 && bytes != expected) throw new IOException("Incomplete update APK");
+                        copyDownload(input, output, expected, deadline, progress);
                     }
                     return;
                 }
@@ -142,6 +139,28 @@ final class UpdatePackage {
             }
         }
         throw new IOException("Too many update redirects");
+    }
+
+    static void copyDownload(InputStream input, OutputStream output, long expected, long deadline,
+                             IntConsumer progress) throws IOException {
+        byte[] buffer = new byte[64 * 1024];
+        long bytes = 0;
+        int previous = expected > 0 ? 0 : INDETERMINATE;
+        progress.accept(previous);
+        for (int length; (length = input.read(buffer)) != -1; ) {
+            checkTime(deadline);
+            bytes += length;
+            if (bytes > MAX_SIZE) throw new IOException("Update APK is too large");
+            if (expected >= 0 && bytes > expected) throw new IOException("Update APK exceeds response length");
+            output.write(buffer, 0, length);
+            if (expected <= 0) continue;
+            int percent = (int) (bytes * 100 / expected);
+            if (percent != previous) {
+                progress.accept(percent);
+                previous = percent;
+            }
+        }
+        if (bytes == 0 || expected >= 0 && bytes != expected) throw new IOException("Incomplete update APK");
     }
 
     private static void checkTime(long deadline) throws IOException {
