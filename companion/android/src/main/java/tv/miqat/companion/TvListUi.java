@@ -63,7 +63,7 @@ final class TvListUi {
                             });
             more.setTag(tv.key + ".forget");
         }
-        Button pair = a.views.button(a.body, a.t("pair"), () -> a.tvSetup.open());
+        Button pair = a.views.button(a.body, a.t("pair"), () -> a.navigate("pair"));
         a.views.leadingIcon(pair, "add");
         pair.setTag("pair.open");
         pair.setEnabled(!a.vaultFailed);

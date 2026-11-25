@@ -127,7 +127,8 @@ receives your IP address and the area you view.
 Open **Phone settings → Home-screen widgets** or the launcher's Widgets menu.
 **Next prayer** starts at 1×1 on compatible launchers. Resize to see a timetable
 strip or daily list. **Circle** (called **Countdown circle** in the launcher)
-uses a 2×2 slot. Choose 120% under **Text size** for larger Circle text.
+starts at 2×2 and can grow in either direction. Choose 120% under **Text size**
+for larger Circle text.
 
 Each widget keeps its own theme, date and text size. Tap **Add prayer widget**
 to place it or **Update prayer widget** on re-entry. Back keeps your changes.
@@ -148,8 +149,9 @@ as you make them.
 ## Your TVs
 
 Use **Your TVs** to install Miqat on Android TV or LG webOS, pair with your TV,
-and control settings, inputs and radio. The phone's prayer settings are
-independent. [TV installation and pairing](../companion/README.md)
+and control settings, inputs and radio. **Pair a TV** goes straight to QR pairing.
+Open a paired TV and choose **Check for updates** to update Miqat using the TV's
+saved installation connection. [TV installation and pairing](../companion/README.md)
 
 ## Storage and updates
 
@@ -162,3 +164,6 @@ Under **Phone settings → About Miqat**, check the installed version or open
 the public GitHub feedback form, which requires sign-in. For sideloaded builds,
 select **Check for updates**, then **Download and install** if available.
 Confirm in Android. You may need to allow installs from Miqat the first time.
+Turn on **Check for updates automatically** to check in the background when
+Miqat opens or comes back to the foreground. A dialog appears when a newer
+Production version is available.

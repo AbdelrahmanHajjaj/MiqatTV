@@ -162,8 +162,8 @@ AVD PATH_TO_INSTALLED_WEBOS_CLI MIQAT_IPK [ADB]`. The CLI dependency supplies it
 existing ssh2 test server. This fixture binds only local ports 9922/9991, verifies
 the emulator/AVD identity, and exercises native SSH/key/install behavior with
 ephemeral keys and a real local package. The native phone flow confirms a new
-identity, persists an opted-in encrypted passphrase and reconnects from a blank
-passphrase field. The transfer reports increasing percentages and moves through
+identity, persists opted-in encrypted installation credentials and reconnects
+without downloading the key again. The transfer reports increasing percentages and moves through
 verification and installation. It never contacts a physical TV. Do not
 reuse these fixture credentials for a TV. Physical LG installation remains a
 separate owner acceptance step.

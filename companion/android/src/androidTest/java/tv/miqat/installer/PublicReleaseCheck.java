@@ -27,6 +27,10 @@ public final class PublicReleaseCheck {
         String mixed=new JSONArray().put(production).put(r).put(oldPreview).toString();
         check(!PublicRelease.parse(mixed,false).staging,"Production must be the default");
         check(PublicRelease.parse(mixed,false,"staging").tag.equals("v1.0.0-staging.1"),"Staging must ignore old previews");
+        PublicRelease.Asset staged = PublicRelease.parse(mixed, false, "staging");
+        check(staged.version().equals("1.0.0") && staged.stagingAndroidCode() == 100000001,
+                "Staging update must compare the same code that the signed build uses");
+        rejects(() -> PublicRelease.parse(mixed, false).stagingAndroidCode());
         rejects(()->PublicRelease.parse(mixed,false,"other"));
         rejects(()->PublicRelease.parse("[]",false));rejects(()->PublicRelease.parse("broken",false));
         r.put("draft",true);rejects(()->PublicRelease.parse(new JSONArray().put(r).toString(),false,"staging"));r.put("draft",false);

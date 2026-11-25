@@ -349,7 +349,7 @@ public abstract class MainActivity extends Activity {
                     try {
                         a.disconnect();
                         if (a.connect(host, port)) {
-                            post(g, this::install);
+                            connected(g, port);
                             return;
                         }
                     } catch (AdbPairingRequiredException e) {
@@ -392,7 +392,7 @@ public abstract class MainActivity extends Activity {
             if (tls > 0) {
                 try {
                     if (a.connect(host, tls)) {
-                        post(g, this::install);
+                        connected(g, tls);
                         return;
                     }
                 } catch (AdbPairingRequiredException e) {
@@ -409,7 +409,7 @@ public abstract class MainActivity extends Activity {
                 post(g, this::showAllow);
                 try {
                     if (a.connect(host, classic)) {
-                        post(g, this::install);
+                        connected(g, classic);
                         return;
                     }
                     fail(g, getString(R.string.not_accepted));
@@ -523,7 +523,7 @@ public abstract class MainActivity extends Activity {
                 a.pair(host, pairPort, code);
                 a.disconnect();
                 if (a.connect(host, tlsPort)) {
-                    post(g, this::install);
+                    connected(g, tlsPort);
                 } else {
                     fail(g, getString(R.string.error_connect, host));
                 }
@@ -547,6 +547,14 @@ public abstract class MainActivity extends Activity {
     private String host;
     private Tv tv;
     private File localApk;
+    private int connectedPort;
+
+    private void connected(int generation, int port) {
+        post(generation, () -> {
+            connectedPort = port;
+            install();
+        });
+    }
 
     private void install() {
         stopFinders();
@@ -710,6 +718,11 @@ public abstract class MainActivity extends Activity {
             });
         }
         tv.requireHome();
+        try {
+            PairedAndroidUpdate.remember(this, host, connectedPort, a);
+        } catch (IOException unavailable) {
+            android.util.Log.w("MiqatInstaller", "Could not remember the TV debugging identity");
+        }
         installedOk = true;
         post(g, () -> installPhase(R.string.install_setup_checked, 1));
         // A moment on the finished list, then the next stage.

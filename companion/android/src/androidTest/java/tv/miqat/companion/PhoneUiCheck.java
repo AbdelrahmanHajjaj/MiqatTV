@@ -37,6 +37,13 @@ final class PhoneUiCheck {
                     check(version.getText().toString().contains(installedVersion), "About must show the installed phone version");
                     check(a.body.findViewWithTag("phone.about.github").isEnabled(), "GitHub feedback must be available");
                     check(a.body.findViewWithTag("phone.about.check-updates").isEnabled(), "Sideloaded phone has a manual update check");
+                    Switch automatic = a.body.findViewWithTag("phone.about.auto-updates.edit");
+                    check(automatic != null && !automatic.isChecked(), "Automatic updates must require opt-in");
+                    automatic.performClick();
+                    check(a.phoneUi.settings.value("about.auto-updates").equals("true"), "Update opt-in must save immediately");
+                    a.body.findViewWithTag("phone.about.auto-updates.edit").performClick();
+                    check(a.phoneUi.settings.value("about.auto-updates").equals("false"), "Update opt-out must save immediately");
+                    tv.miqat.companion.about.UpdateMetadataCheck.automaticOffer(a, a.views.dialog(), a.ar);
                     check(!a.body.findViewWithTag("phone.about.email").isEnabled(), "Email feedback must be disabled");
                 });
                 if (test instanceof CompanionCheck && ((CompanionCheck) test).mapNetwork)

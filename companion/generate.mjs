@@ -25,7 +25,7 @@ export function generatePhone() {
   const backgrounds=['plain',...read('shared/design/appearance.json').scenes],text=phoneText(read('shared/data/strings.json'));
   const choices={methods:read('shared/data/methods.json').map(x=>x.id),voices:[...voices.map(x=>x.id),'custom'],
     prayerVoices:['inherit',...voices.map(x=>x.id),'custom'],timezones:['system'],themes:read('shared/design/themes.json').filter(x=>x!=='custom'),backgrounds};
-  if(contract.version!==9||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
+  if(contract.version!==10||!cities.some(c=>c.id===contract.defaultCity)||!voices.some(v=>v.id===contract.defaultFajrVoice))throw Error('Invalid phone catalog version/location');
   const ids=new Set();
   for(const control of [...contract.controls,...contract.perPrayer]) {
     const id=control.id??control.suffix;
@@ -102,6 +102,10 @@ export function generate(platforms = ['android','lg']) {
     if (c.id === 'display.digits') return [pair('تلقائي','Automatic'),pair('0123456789','0123456789'),pair('٠١٢٣٤٥٦٧٨٩','٠١٢٣٤٥٦٧٨٩')][index];
     if (c.id === 'display.bar-timeout') return value === '0' ? pair('دائماً','Always') : pair(value + ' ثانية', value + ' seconds');
     if (c.id === 'tests.prayer') return indexed('prayerNames', Number(value));
+    if (c.id === 'device.startup-input') {
+      if (value === 'DTV' || value === 'ATV') return pair('البث التلفزيوني', 'Live TV');
+      return pair(value.replace('_', ' '), value.replace('_', ' '));
+    }
     if (c.choices === 'zones') {
       if (value === 'system') return pair('توقيت التلفاز','TV timezone');
       const n = Number(value), text = 'UTC' + (n < 0 ? '−' : '+') + String(Math.floor(Math.abs(n)/60)).padStart(2,'0') + ':' + String(Math.abs(n)%60).padStart(2,'0');

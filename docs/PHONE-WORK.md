@@ -20,7 +20,8 @@ WORK.md owns the next action.
 
 Sideloaded phone builds offer a manual Production version check in About Miqat.
 Download and install verifies the APK against the installed app before opening
-Android's confirmation screen.
+Android's confirmation screen. The optional automatic check uses the same
+Production feed each time the app comes to the foreground.
 Miqat Phone TV setup selects Production or Staging public downloads. Development
 packages use the local file picker. See [Releasing](RELEASING.md).
 Release-signed installs with the update check can detect code 7009003 in Production.
@@ -35,11 +36,15 @@ Home and launcher widgets show live countdown seconds. Prayer and reminder contr
 calculated times. The Hijri grid and selected-day timetable accept horizontal
 swipes. Selecting the Qibla Map tab opens a pannable, zoomable map at the
 phone's current precise location. The compass uses that same reading separately
-from prayer settings. About uses Miqat's themed update sheet. The fixed
+from prayer settings. About uses Miqat's themed update sheet. The
 countdown circle shows the prayer icon, scheduled time and smaller seconds
 countdown. Its ring refreshes about once a minute while awake. The 120% text
 option enlarges Circle in its configuration preview and on the launcher.
 See [validation](EVIDENCE.md).
+
+The Android feedback candidate opens QR pairing directly, checks and installs
+updates from a paired TV using its remembered installation connection, and
+allows the 2×2 Countdown circle to grow in either direction.
 
 Earlier sections below are delivery history and may
 describe superseded preview/Apply controls. PHONE.md owns current behavior.

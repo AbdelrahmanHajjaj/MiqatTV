@@ -19,9 +19,9 @@ for(let offset=8;offset+60<=content.length;){
   offset+=60+size+(size%2);
 }
 assert(packageVersion,'Choose an actual Miqat IPK');
-let installs=0,launches=0,authenticated=0,version='0.2.0';
+let installs=0,launches=0,authenticated=0,keyDownloads=0,version='0.2.0';
 const api=http.createServer((req,res)=>{
-  if(req.url==='/webos_rsa'){res.writeHead(200);res.end(privateKey);}
+  if(req.url==='/webos_rsa'){keyDownloads++;res.writeHead(200);res.end(privateKey);}
   else if(req.url==='/fixture.ipk'){res.writeHead(200);res.end(content);}
   else {res.writeHead(404);res.end();}
 });
@@ -63,5 +63,6 @@ const listen=(server,port)=>new Promise((resolve,reject)=>{server.once('error',r
   const result=await exec(adb,['-s',serial,'shell','am','instrument','-r','-w','-e','suite','lg-install','tv.miqat.companion.test/tv.miqat.companion.CompanionCheck'],{timeout:240000,maxBuffer:1024*1024});
   process.stdout.write(result.stdout);assert.match(result.stdout,/INSTRUMENTATION_CODE: -1/);assert.match(result.stdout,/PASS: LG SSH identity/);
   assert.equal(authenticated,3);assert.equal(installs,2);assert.equal(launches,1);assert.equal(files.size,1);
+  assert.equal(keyDownloads,5,'the remembered setup reopens without requesting the Developer Mode key again');
   console.log('PASS: local SSH fixture observed only explicit Miqat operations; no arbitrary commands or automatic retry');
 })().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>{for(const c of clients)c.destroy();ssh.close();api.close();api.closeAllConnections();privateKey.fill?.(0);});

@@ -108,6 +108,7 @@ final class Adb extends AbsAdbConnectionManager {
         try (InputStream in = new FileInputStream(apk)) {
             int n;
             while ((n = in.read(buf)) > 0) {
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
                 out.write(buf, 0, n);
                 sent += n;
                 progress.on((float) sent / size);

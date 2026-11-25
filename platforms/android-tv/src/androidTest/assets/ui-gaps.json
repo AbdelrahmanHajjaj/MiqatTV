@@ -60,6 +60,16 @@
     "reason": "Uses Android default Home and accessibility lifecycle; no LG-style once-per-boot switch."
   },
   {
+    "id": "device.startup-show-input",
+    "state": "os-unsupported",
+    "reason": "Android TV uses the system Home lifecycle and does not embed inputs at startup."
+  },
+  {
+    "id": "device.startup-input",
+    "state": "os-unsupported",
+    "reason": "Android TV does not have an embedded startup input."
+  },
+  {
     "id": "device.exit-input",
     "state": "os-unsupported",
     "reason": "The Android shell is system HOME, not an app over an embedded LG input."

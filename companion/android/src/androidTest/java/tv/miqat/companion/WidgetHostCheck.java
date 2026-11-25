@@ -80,8 +80,8 @@ final class WidgetHostCheck {
                             .equals(a.phoneUi.digits(PhoneTime.hijri(a.phoneUi.settings, System.currentTimeMillis(), a.ar))));
             AppWidgetProviderInfo circle = AppWidgetManager.getInstance(a).getAppWidgetInfo(ids[4]);
             PhoneUiCheck.check(WidgetOptions.read(a, ids[4]).layout.equals("circle")
-                            && circle.resizeMode == AppWidgetProviderInfo.RESIZE_NONE,
-                    "Countdown circle lost its fixed launcher layout");
+                            && circle.resizeMode == (AppWidgetProviderInfo.RESIZE_HORIZONTAL | AppWidgetProviderInfo.RESIZE_VERTICAL),
+                    "Countdown circle must resize in both directions");
             int[] liveWidgets = {0, 2, 3, 4};
             String[] first = new String[liveWidgets.length];
             PhoneUiCheck.on(test, () -> {

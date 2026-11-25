@@ -12,7 +12,7 @@
     offsets: [0, 0, 0, 0, 0, 0], hijriOffset: 0, digits: 'auto', clock: '12', uiScale: portable.tv.miqat.core.UiScale.DEFAULT_PERCENT,
     dockPosition: 'top', dockAutoHide: 20, theme: 'mihrab', mihrabOpacity: portable.tv.miqat.core.UiContract.MIHRAB_OPACITY_DEFAULT, background: data.defaultBackground,
     homeLayout: 'mihrab', archSide: 'auto', homeBar: 'top', prayerMode: 'all', quickLabels: false,
-    station: 'cairo', radioResume: true};
+    station: 'cairo', radioResume: true, bootToInput: false, bootInput: 'DTV'};
   var methods = {EGYPTIAN: 'Egyptian', UMM_AL_QURA: 'UmmAlQura', MUSLIM_WORLD_LEAGUE: 'MuslimWorldLeague',
     KARACHI: 'Karachi', DUBAI: 'Dubai', KUWAIT: 'Kuwait', QATAR: 'Qatar', NORTH_AMERICA: 'NorthAmerica',
     MOON_SIGHTING_COMMITTEE: 'MoonsightingCommittee', SINGAPORE: 'Singapore', TURKEY: 'Turkey'};
@@ -34,7 +34,8 @@
     }
     function invalid(test) { if (test) { throw new Error('Invalid preferences'); } }
     function integer(n, min, max) { return typeof n === 'number' && isFinite(n) && n % 1 === 0 && n >= min && n <= max; }
-    ['automatic', 'adhan', 'remindVoice', 'announce', 'radioResume', 'quickLabels'].forEach(function (k) { invalid(typeof result[k] !== 'boolean'); });
+    ['automatic', 'adhan', 'remindVoice', 'announce', 'radioResume', 'quickLabels', 'bootToInput'].forEach(function (k) { invalid(typeof result[k] !== 'boolean'); });
+    invalid(typeof result.bootInput !== 'string' || !input(result.bootInput));
     invalid([0, 5, 10, 15, 20, 30].indexOf(result.remind) < 0 || [0, 1, 5, 10].indexOf(result.callClose) < 0);
     invalid(!integer(result.volume, 0, 100) || !integer(result.hijriOffset, -rules.MAX_HIJRI_OFFSET_DAYS, rules.MAX_HIJRI_OFFSET_DAYS));
     invalid(typeof result.mihrabOpacity !== 'number' || portable.tv.miqat.core.UiContract.mihrabOpacity(result.mihrabOpacity) !== result.mihrabOpacity);

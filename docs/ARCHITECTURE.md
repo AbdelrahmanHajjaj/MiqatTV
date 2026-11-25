@@ -73,9 +73,11 @@ and [companion delivery history](COMPANION-WORK.md).
 Miqat Phone also hosts `installer/runtime` through a private setup
 activity. Installation credentials and recovery records live in the phone
 app’s private storage, separately from ordinary companion LAN credentials. LG phone setup uses its own foreground SSH transport, explicit
-host-key approval and local IPK verification. The SSH private key stays in
-memory. An opted-in passphrase is encrypted with Android Keystore and bound to
-the TV address and approved SSH host key.
+host-key approval and local IPK verification. When users opt in to remembering
+LG credentials, Android Keystore protects the private key and passphrase at rest.
+The saved credentials are bound to the TV address and approved SSH host key.
+Paired-TV updates authenticate the paired LAN endpoint before using the same
+host's saved installation connection.
 Current approved work is sequenced in [WORK.md](WORK.md).
 
 ### Independent phone prayer runtime
@@ -106,8 +108,8 @@ schedule/launcher update lifecycle plus exact-size maps/legacy resize bounds.
 Allocated dimensions determine compact/next/daily detail; stored presets remain
 initial presentations and styles are independent. The one-cell minimum shows a
 next-prayer tile with adaptive text; larger bounds restore the existing detail.
-Next prayer's initial presentation is one cell. The countdown circle uses a
-fixed two-cell-square provider and draws the remaining interval at each refresh.
+Next prayer's initial presentation is one cell. The countdown circle starts as
+a resizable two-cell square and draws the remaining interval at each refresh.
 The launcher runs the widget's native second-by-second countdown. One shared
 non-wakeup alarm refreshes widgets at the next prayer boundary, with minute
 refreshes for placed circles between prayers.

@@ -30,6 +30,7 @@ public final class MainActivity extends Activity {
     LgSetup lgSetup;
     PhoneUi phoneUi;
     TvSetup tvSetup;
+    TvUpdates tvUpdates;
     PhoneOnboarding onboarding;
     QiblaUi qibla;
     PhoneRadioUi radio;
@@ -136,6 +137,7 @@ public final class MainActivity extends Activity {
             if (state != null) phoneUi.restore(state);
             pairingUi = new PairingUi(this);
             tvSetup = new TvSetup(this);
+            tvUpdates = new TvUpdates(this);
             onboarding = new PhoneOnboarding(this);
             qibla = new QiblaUi(this);
             radio = new PhoneRadioUi(this, PhoneData.get(this));
@@ -796,7 +798,7 @@ public final class MainActivity extends Activity {
 
     void renderUpdates() {
         if (real() != null) {
-            body.addView(views.text(t("real_updates"), 16, ink));
+            tvUpdates.render();
             return;
         }
         body.addView(views.text(t("update_info"), 16, ink));
@@ -893,7 +895,12 @@ public final class MainActivity extends Activity {
         super.onStart();
         phoneForeground = true;
         pairingUi.schedulePoll();
-        if (lgSetup != null && page.equals("lg-setup")) render();
+        if (phoneUi != null) phoneUi.checkForUpdates();
+        if (page.equals("updates") || lgSetup != null && page.equals("lg-setup")) render();
+    }
+
+    boolean isForegroundPhoneActivity() {
+        return resumed.get() == this;
     }
 
     @Override
@@ -911,6 +918,7 @@ public final class MainActivity extends Activity {
         pairingUi.pause();
         stopAudio();
         if (lgSetup != null) lgSetup.stop();
+        if (tvUpdates != null) tvUpdates.stop();
         if (toast != null) toast.cancel();
         super.onStop();
     }

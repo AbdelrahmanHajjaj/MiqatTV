@@ -263,13 +263,18 @@ final class LgSetup {
         setStage("lg_connecting", -1);
         a.network(
                 () -> {
-                    byte[] pass = pinned.isEmpty() ? new byte[0] : phrase.isEmpty()
-                            ? credentials.read(host, pinned) : phrase.getBytes(StandardCharsets.UTF_8);
+                    byte[] pass = pinned.isEmpty() ? new byte[0] : phrase.getBytes(StandardCharsets.UTF_8);
                     byte[] attempt = pass.clone();
+                    byte[] privateKey = new byte[0];
                     try {
                         if (client != transport) throw new IOException("Setup closed");
                         try {
-                            transport.connect(host, pinned, attempt);
+                            if (phrase.isEmpty() && credentials.has(host) && !pinned.isEmpty())
+                                credentials.connectSaved(transport, host, pinned);
+                            else {
+                                if (!pinned.isEmpty()) privateKey = LgInstall.downloadKey(host);
+                                transport.connect(host, pinned, attempt, privateKey);
+                            }
                         } catch (LgInstall.Trust trust) {
                             transport.close();
                             return new String[] {trust.key, ""};
@@ -279,7 +284,7 @@ final class LgSetup {
                             throw new IOException("Setup closed");
                         boolean saved = true;
                         try {
-                            if (keep && !phrase.isEmpty()) credentials.save(host, pinned, pass);
+                            if (keep && !phrase.isEmpty()) credentials.save(host, pinned, pass, privateKey);
                             else if (!keep) credentials.clearPassphrase(host);
                         } catch (Exception unavailable) {
                             saved = false;
@@ -288,6 +293,7 @@ final class LgSetup {
                     } finally {
                         Arrays.fill(attempt, (byte) 0);
                         Arrays.fill(pass, (byte) 0);
+                        Arrays.fill(privateKey, (byte) 0);
                     }
                 },
                 result -> {

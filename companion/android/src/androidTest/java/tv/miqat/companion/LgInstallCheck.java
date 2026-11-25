@@ -34,20 +34,24 @@ final class LgInstallCheck {
         SharedPreferences prefs = test.getTargetContext().getSharedPreferences("lg-credential-fixture", 0);
         LgCredentials credentials = new LgCredentials(prefs);
         byte[] remembered = password();
+        byte[] privateKey = LgInstall.downloadKey(host);
         try {
-            credentials.save(host, expected, remembered);
+            credentials.save(host, expected, remembered, privateKey);
             CompanionCheck.check(new LgCredentials(prefs).has(host), "Remembered LG passphrase missing");
             CompanionCheck.check(!credentials.has("10.0.2.3"), "Passphrase offered for a different TV");
             CompanionCheck.check(!prefs.getAll().toString().contains(new String(remembered, StandardCharsets.UTF_8)),
                     "LG passphrase persisted in plaintext");
+            CompanionCheck.check(!prefs.getAll().toString().contains("PRIVATE KEY"), "LG key persisted in plaintext");
             LanCheck.rejects(() -> credentials.read(host, "changed host key"));
             Arrays.fill(remembered, (byte) 0);
             remembered = new LgCredentials(prefs).read(host, expected);
             CompanionCheck.check(Arrays.equals(remembered, password()), "Remembered passphrase did not reopen");
         } finally {
+            Arrays.fill(privateKey, (byte) 0);
             credentials.forget(host);
         }
-        CompanionCheck.check(!credentials.has(host), "Forget left a saved LG passphrase");
+        CompanionCheck.check(!credentials.has(host) && !prefs.contains("lg-private-" + host),
+                "Forget left saved LG credentials");
         try(LgInstall wrong=new LgInstall()) {
             LanCheck.rejects(()->wrong.connect(host,Base64.getEncoder().encodeToString(new byte[64]),password()));
         }

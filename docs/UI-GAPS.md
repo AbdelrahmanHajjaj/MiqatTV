@@ -22,6 +22,8 @@ Migration scope/status live in WORK.md; verification facts live in EVIDENCE.md.
 | `appearance.home` | unimplemented | Back returns Home; no separate appearance Home row. |
 | `device.apps` | unimplemented | All apps opens from Home; no Device shortcut. |
 | `device.startup` | unimplemented | Uses Android default Home and accessibility lifecycle; no LG-style once-per-boot switch. |
+| `device.startup-show-input` | os-unsupported | Android TV uses the system Home lifecycle and does not embed inputs at startup. |
+| `device.startup-input` | os-unsupported | Android TV does not have an embedded startup input. |
 | `device.exit-input` | os-unsupported | The Android shell is system HOME, not an app over an embedded LG input. |
 | `tests.prayer` | unimplemented | Uses the native Test reminders/adhan chooser and PrayerWatch; this separate LG test control is not ported. |
 | `tests.banner` | unimplemented | Uses the native Test reminders/adhan chooser and PrayerWatch; this separate LG test control is not ported. |

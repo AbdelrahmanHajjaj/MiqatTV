@@ -18,10 +18,12 @@ Node 0.10.25).
    verifies the download, transfer and installed version and blocks downgrades.
 5. Launch Miqat on the TV and pair it to enable everyday remote control.
 
-To reuse credentials, turn on **Remember address and passphrase** before
-connecting. Miqat encrypts the passphrase and ties it to the approved TV
-identity. **Forget installation identity** clears the saved passphrase and SSH
-identity. If LG displays a new passphrase, enter it again.
+To reuse credentials, turn on **Remember installation credentials** before
+connecting. Miqat encrypts the credentials and ties them to the approved TV
+identity. Open the paired TV in Miqat Phone and use **Check for updates** to
+download and install a newer version. If you saved only the passphrase in an
+older phone build, enable LG Key Server for the first check. **Forget installation
+identity** clears both the saved credentials and approved SSH identity.
 
 If installation stops, reconnect and check the installed version before
 retrying. Extend the Developer Mode session in LG's app before it expires.
@@ -100,9 +102,13 @@ app conditionally restores the captured level. It preserves a different level
 chosen with the remote and never changes mute. Recovery after a process crash
 waits for a new silent app instance.
 
-Startup and scheduled alerts are off until enabled in Settings. Startup launches
-once per new kernel boot. Prayer activities can reopen the closed app while the
-TV is on; callbacks are claimed once, deduplicated and expired after 90 seconds.
+Miqat registers automatic startup when it first opens and shows Miqat Home once
+per new kernel boot. In **Settings → TV & startup**, enable **Show input at
+startup** and choose a **Startup input** to open it instead. If that input is
+unavailable, Miqat Home opens. You can turn off the automatic launch separately.
+Scheduled alerts require opting in. Prayer activities can reopen the closed app
+while the TV is on. Callbacks are claimed once, deduplicated and expired after
+90 seconds.
 The demand-started service is not a global remote listener. There is no supported
 closed-app colored-button shortcut or standby wake.
 

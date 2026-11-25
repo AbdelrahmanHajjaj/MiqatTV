@@ -1,5 +1,16 @@
 # Validation evidence
 
+## Android phone and LG feedback — 25 November 2026
+
+The focused checks cover the direct QR entry, automatic phone update opt-in and
+dialog conditions, Countdown circle resize, paired-TV update entry and package
+validation. Local LG browser and service fixtures cover Home by default,
+automatic startup registration, a saved HDMI choice, and Home fallback when
+the input is missing. The signed candidate and simulator run are verified
+through [Build and Device simulation](CI.md#release-evidence).
+
+Physical TV boot, paired-TV installation and launcher resize acceptance remain open.
+
 ## Documentation cleanup (25 November 2026)
 
 Checked local links, heading anchors, screenshot paths and documented commands

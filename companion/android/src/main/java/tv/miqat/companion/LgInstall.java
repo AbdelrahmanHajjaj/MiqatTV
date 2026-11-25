@@ -36,6 +36,16 @@ final class LgInstall implements AutoCloseable {
         return "SHA256:"+Base64.getEncoder().withoutPadding().encodeToString(MessageDigest.getInstance("SHA-256").digest(Base64.getDecoder().decode(key)));
     }
     void connect(String address,String expectedKey,byte[] passphrase)throws Exception {
+        byte[] key = new byte[0];
+        try {
+            if (!expectedKey.isEmpty()) key = downloadKey(address);
+            connect(address, expectedKey, passphrase, key);
+        } finally {
+            Arrays.fill(key, (byte) 0);
+            Arrays.fill(passphrase, (byte) 0);
+        }
+    }
+    void connect(String address,String expectedKey,byte[] passphrase,byte[] privateKey)throws Exception {
         host(address);final byte[][] observed={null};
         byte[] expected=expectedKey.isEmpty()?null:Base64.getDecoder().decode(expectedKey);
         ssh.setHostKeyRepository(new HostKeyRepository(){
@@ -48,8 +58,9 @@ final class LgInstall implements AutoCloseable {
             public HostKey[] getHostKey(String host,String type){return new HostKey[0];}
         });
         if(expected!=null) {
-            byte[] key=downloadKey(address);
-            try{ssh.addIdentity("LG Developer Mode",key,null,passphrase);}finally{Arrays.fill(key,(byte)0);}
+            byte[] workingKey = privateKey.clone();
+            try { ssh.addIdentity("LG Developer Mode",workingKey,null,passphrase); }
+            finally { Arrays.fill(workingKey, (byte) 0); }
         }
         Session next=ssh.getSession("prisoner",address,PORT);session=next;
         next.setConfig("StrictHostKeyChecking","yes");
@@ -66,7 +77,8 @@ final class LgInstall implements AutoCloseable {
             throw failure;
         } finally {Arrays.fill(passphrase,(byte)0);}
     }
-    private static byte[] downloadKey(String host)throws Exception {
+    static byte[] downloadKey(String host)throws Exception {
+        host(host);
         HttpURLConnection c=(HttpURLConnection)new URL("http://"+host+":9991/webos_rsa").openConnection();
         c.setInstanceFollowRedirects(false);c.setConnectTimeout(10000);c.setReadTimeout(10000);
         try {

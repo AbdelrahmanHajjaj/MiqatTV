@@ -375,6 +375,8 @@ final class Text {
     String clockScreen() { return ar ? "شاشة الساعة" : "Clock screen"; }
     String tvApps() { return ar ? "تطبيقات التلفاز" : "TV apps"; }
     String startupLauncher() { return ar ? "فتح المشغل عند تشغيل التلفاز" : "Open launcher after TV starts"; }
+    String startupShowInput() { return ar ? "عرض مدخل عند التشغيل" : "Show input at startup"; }
+    String startupInput() { return ar ? "مدخل بدء التشغيل" : "Startup input"; }
     String exitToInput() { return ar ? "الخروج للمدخل الأصلي" : "Exit to native input"; }
     String testPrayer() { return ar ? "الصلاة المستخدمة للاختبار" : "Test prayer"; }
     String testBanner() { return ar ? "اختبار لافتة فوق المدخل" : "Test banner over input"; }

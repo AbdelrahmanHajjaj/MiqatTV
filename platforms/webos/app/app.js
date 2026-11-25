@@ -13,7 +13,7 @@
   var companionBridge = null, companionSession = '', companionUi = '', companionTimer = null;
   var companion = {supported: null, starting: false, phones: [], open: false}, pairingMessage = '';
   var lastRemoteRequest = '', pairingSvgKey = '', pairingSvg = '', pairingRenderKey = '';
-  var input = null, inputs = [], view = 'input', picker = null, page = 0;
+  var input = null, inputs = [], view = 'input', picker = null, page = 0, resumeInput = false;
   var screen = document.getElementById('screen'), video = document.getElementById('input-video');
   var bridges = [], instance = String(Date.now()), cachedDay = null, cacheKey = '', noticeTimer;
   var lastError = null;
@@ -285,6 +285,9 @@
     }).join('') + '</div>';
   }
   function inputName() { return input ? (input.id === 'DTV' || input.id === 'ATV' ? t('البث التلفزيوني', 'Live TV') : input.label) : t('اختر المدخل', 'Choose an input'); }
+  function startupInputLabel(id) {
+    return id === 'DTV' || id === 'ATV' ? t('البث التلفزيوني', 'Live TV') : A.input(id).label;
+  }
   function actions(home) {
     return '<div class="actions">' + button('input', t('متابعة المشاهدة', 'Watch input')) +
       (home ? '' : button('home', t('الرئيسية', 'Home'))) +
@@ -417,6 +420,8 @@
         row('appearance.home', 'home', '');
     } else if (section === 'device') {
       result = row('device.startup', 'startup', onOff(startup), 'toggle') +
+        row('device.startup-show-input', 'bootToInput', onOff(prefs.bootToInput), 'toggle') +
+        (prefs.bootToInput ? row('device.startup-input', 'bootInput', startupInputLabel(prefs.bootInput), 'choice') : '') +
         row('device.inputs', 'inputs', inputName()) + row('device.apps', 'apps', '') +
         row('device.settings', 'tv-settings', '') +
         row('device.companion', 'companion', '') +
@@ -741,6 +746,7 @@
     if (nextView !== 'online-prayer') { cancelOnline(); }
     clearTimeout(noticeTimer); document.getElementById('notice').style.display = 'none';
     view = nextView; render(focusAction); armDock();
+    if ((nextView === 'input' || nextView === 'bar') && input && !media && !video.firstChild) { play(input); }
   }
   function aboutMarkup() {
     var code = window.qrcode(0, D.qrStyle.errorCorrection);
@@ -812,6 +818,9 @@
   }
   function choices(key, allCountries) {
     key = key || picker;
+    if (key === 'bootInput') {
+      return inputs.map(function (item) { return {value: item.id, label: startupInputLabel(item.id)}; });
+    }
     if (key === 'country') {
       var seen = {}, countries = [];
       D.cities.forEach(function (c) { if (!seen[c.countryEn]) { seen[c.countryEn] = true; countries.push({value: c.countryEn, label: c[prefs.lang === 'ar' ? 'countryAr' : 'countryEn']}); } });
@@ -856,6 +865,7 @@
     if (picker === 'city') { return t('المدينة', 'City'); }
     if (picker === 'method') { return t('طريقة الحساب', 'Calculation method'); }
     if (picker === 'zone') { return t('التوقيت', 'Time zone'); }
+    if (picker === 'bootInput') { return s('startupInput'); }
     if (/^offset-/.test(picker)) { return s('prayerNames')[Number(picker.slice(7))]; }
     return sectionName(section) || t('اختر', 'Choose');
   }
@@ -945,9 +955,11 @@
       }
       inputs = reply.inputs.filter(function (item) { return !!A.input(item.id); });
       if (initial) {
-        var target = reply.current && A.input(reply.current.id);
-        if (target) { request('selectInput', {id: target.id}); play(target); show('input'); consumeAlert(); }
-        else { show('inputs'); }
+        var target = prefs.bootToInput && inputs.some(function (item) { return item.id === prefs.bootInput; }) && A.input(prefs.bootInput);
+        input = target || reply.current && A.input(reply.current.id);
+        if (target) { play(target); show('input'); }
+        else { releaseVideo(); show('home'); }
+        consumeAlert();
       } else if (view === 'inputs') { render('refresh'); }
       if (reply.discoveryFailed) { notify(t('تعذر تحديث بعض المداخل؛ يمكنك المحاولة مجددًا.', 'Some inputs could not be refreshed. Please try again.')); }
     });
@@ -1197,6 +1209,7 @@
     }
     if (['input', 'home', 'settings', 'inputs', 'bar', 'prayer-day', 'radio', 'apps'].indexOf(action) >= 0) {
       if (action === 'input' && media) { radioBeforeCall = false; stopAudio('stopped', true); return; }
+      if (action === 'input' && !input) { show('inputs'); discover(false); return; }
       if (action === 'settings' && view !== 'picker' && view !== 'settings') { settingsParent = view === 'apps' ? 'apps' : 'home'; }
       if (action === 'prayer-day') { dayParent = view === 'apps' || view === 'settings' ? view : 'home'; }
       show(action, action === 'settings' && view === 'picker' ? picker === 'country' ? 'city' : picker : null);
@@ -1208,12 +1221,12 @@
     if (action === 'offsets') { section = 'offsets'; render(); return; }
     if (action === 'reset-offsets') { next.offsets = [0, 0, 0, 0, 0, 0]; savePrefs(next, action); return; }
     if (action === 'bell') { if (!prayerRules.isPrayer(Number(value))) { return; } next.bells[Number(value)] = !next.bells[Number(value)]; savePrefs(next, '[data-action=bell][data-value="' + value + '"]', 'prayer-day'); return; }
-    if (['automatic', 'adhan', 'remindVoice', 'announce', 'radioResume', 'quickLabels'].indexOf(action) >= 0) { next[action] = !next[action]; savePrefs(next, action); return; }
+    if (['automatic', 'adhan', 'remindVoice', 'announce', 'radioResume', 'quickLabels', 'bootToInput'].indexOf(action) >= 0) { next[action] = !next[action]; savePrefs(next, action); return; }
     if (action === 'language') { next.lang = prefs.lang === 'ar' ? 'en' : 'ar'; savePrefs(next, action); }
     if (action === 'hanafi') { next.hanafi = !next.hanafi; savePrefs(next, action); }
     if (action === 'city') { openPicker('country'); }
     if (['method', 'zone', 'voice', 'fajrVoice', 'station', 'testPrayer', 'remind', 'callClose', 'digits', 'clock', 'dockPosition',
-      'dockAutoHide'].indexOf(action) >= 0) { openPicker(action); }
+      'dockAutoHide', 'bootInput'].indexOf(action) >= 0) { openPicker(action); }
     if (action === 'next' || action === 'previous') { page += action === 'next' ? 1 : -1; render(); }
     if (action === 'choose') {
       if (!choices().some(function (item) { return String(item.value) === String(value); })) { throw new Error('Unknown offered UI value'); }
@@ -1424,13 +1437,16 @@
   function visibility() {
     if (document.hidden || document.webkitHidden) {
       stopCompanion();
+      resumeInput = resumeInput || !!video.firstChild;
       if (view === 'pairing') { render(); }
       cancelOnline();
       returnContext = null; radioBeforeCall = false; if (media) { stopAudio('stopped', false); } dismissOverlay(); releaseVideo(); report('hidden');
-    } else if (input && !media) {
-      play(input); if (view === 'online-prayer') { render('online-back'); } updateClock(); report();
+    } else {
+      if (input && !media && (resumeInput || view === 'input' || view === 'bar')) { play(input); }
+      resumeInput = false;
+      if (view === 'online-prayer') { render('online-back'); }
+      updateClock(); report(); startCompanion();
     }
-    if (!(document.hidden || document.webkitHidden)) { startCompanion(); }
   }
   document.addEventListener('visibilitychange', visibility);
   document.addEventListener('webkitvisibilitychange', visibility);
@@ -1460,6 +1476,13 @@
       }
       try { prefs = A.prefs(reply.state.prefs); } catch (error) { show('home'); notify(t('تعذر قراءة الإعدادات المحفوظة.', 'Saved settings could not be read.'), error.message); return; }
       startup = !!(reply.state.startup && reply.state.startup.enabled); loaded = true;
+      if (!reply.state.startup) {
+        request('setStartup', {enabled: true}, function (result) {
+          startup = !!result.enabled;
+          if (view === 'settings' && section === 'device') { render('startup'); }
+          if (!result.returnValue) { notify(t('تعذر تحديث التشغيل التلقائي.', 'Could not update automatic startup.'), result.errorText); }
+        });
+      }
       startCompanion();
       if (reply.state.pendingAlert && !reply.state.pendingAlert.displayedAt) { pendingLaunch = reply.state.pendingAlert.id; coldAlert = true; }
       request('audioVolume', {action: 'recover', id: instance + '-0'}, function (result) {

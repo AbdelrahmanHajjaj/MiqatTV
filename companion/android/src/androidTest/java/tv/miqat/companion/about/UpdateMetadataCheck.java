@@ -1,6 +1,7 @@
 package tv.miqat.companion.about;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
@@ -35,6 +36,20 @@ public final class UpdateMetadataCheck {
                 || UpdatePackage.trustedHost(new URL("https://github.com.example.org/example"))) {
             throw new AssertionError("APK redirects must stay on trusted HTTPS hosts");
         }
+    }
+
+    public static void automaticOffer(Activity activity, AlertDialog.Builder builder, boolean rtl) {
+        AboutUpdates.Labels labels = new AboutUpdates.Labels("Updates", "Checking", "Current", "Available",
+                "Failed", "Install", "Downloading", "Install failed", "Close");
+        AboutUpdates.Result candidate = new AboutUpdates.Result(20, "1.0.0", "");
+        if (AboutUpdates.showAvailable(activity, builder, rtl, labels, null, 19, () -> true) != null
+                || AboutUpdates.showAvailable(activity, builder, rtl, labels, candidate, 20, () -> true) != null
+                || AboutUpdates.showAvailable(activity, builder, rtl, labels, candidate, 19, () -> false) != null)
+            throw new AssertionError("Automatic checks must stay silent when unavailable, current or backgrounded");
+        AlertDialog dialog = AboutUpdates.showAvailable(activity, builder, rtl, labels, candidate, 19, () -> true);
+        if (dialog == null || !dialog.isShowing() || !dialog.getButton(AlertDialog.BUTTON_POSITIVE).isShown())
+            throw new AssertionError("An available foreground update must show its installation action");
+        dialog.dismiss();
     }
 
     public static void install(Instrumentation test) throws Exception {
