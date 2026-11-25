@@ -6,22 +6,21 @@ its own prayer settings. [Android phone guide](../docs/PHONE.md)
 
 ## Install Miqat on a TV
 
-In **Your TVs**, tap **Set up my TV** or **Pair a new TV** and choose your TV
+In **Your TVs**, tap **Set up my TV** and choose your TV
 platform. Follow the preparation steps. Select **Production** for the stable
 release or **Staging** for a prerelease. Use **Advanced** to select a local APK
 or IPK. Miqat shows download and transfer progress.
 
 Android uses ADB and offers optional cleanup and recovery. LG uses Developer
 Mode and asks you to approve the SSH identity. You can save the LG address and
-passphrase for later use. After installation, pair the TV to enable everyday
+credentials for later use. After installation, pair the TV to enable everyday
 control. [Android setup and recovery](../docs/ANDROID-SETUP.md) · [LG setup](../docs/WEBOS.md)
 
 ## Pair and control
 
 1. Connect the phone and TV to the same home network.
 2. On the TV, open **Paired phones → Pair phone**.
-3. On the phone, open **Your TVs → Pair a new TV**. Choose your TV platform,
-   tap **Pair an installed TV** and scan the TV's QR code.
+3. On the phone, open **Your TVs → Pair a TV** and scan the TV's QR code.
 4. Confirm the matching code with the TV remote.
 
 Open a paired TV to change supported settings or use Home, inputs, radio and
@@ -32,6 +31,15 @@ unrelated settings. Each phone has its own revocable credentials.
 Use **Your TVs → ⋮ → Forget TV** to remove the TV from your phone. To revoke
 that phone's access, use **Paired phones** on the TV. Pair again when
 moving from the old app identity. [Pairing protocol](../docs/COMPANION-LAN.md)
+
+## Update a paired TV
+
+Open a paired TV and choose **Check for updates**. Choose **Production** or
+**Staging**, then confirm the download and installation if a newer version is
+available. The phone uses the selected TV's saved installation connection.
+Android TV needs the phone's existing debugging authorization and LG needs an
+active Developer Mode session with remembered credentials. Android TV's
+wireless debugging may need to be turned back on after a restart.
 
 ## Development
 

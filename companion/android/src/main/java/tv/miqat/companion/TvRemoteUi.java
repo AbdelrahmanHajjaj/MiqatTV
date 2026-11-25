@@ -28,6 +28,9 @@ final class TvRemoteUi {
 
     void renderOverview() {
         renderRemote();
+        if (a.real() != null)
+            a.views.navigationRow(a.body, "gear", a.t("aboutCheckUpdates"), "", a.tvUpdates::open)
+                    .setTag("tv.updates");
         LinearLayout options = a.views.horizontal(a.body);
         options.setGravity(Gravity.END);
         a.views.iconButton(
@@ -42,7 +45,7 @@ final class TvRemoteUi {
                                 renameTv();
                                 return true;
                             });
-                    menu.getMenu()
+                    if (a.real() == null) menu.getMenu()
                             .add(a.t("updates"))
                             .setOnMenuItemClickListener(item -> {
                                 a.navigate("updates");

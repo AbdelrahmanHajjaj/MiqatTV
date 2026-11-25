@@ -22,6 +22,22 @@ public final class PublicRelease {
         final String url,digest,sums;
         final long size;
         Asset(String name,String tag,boolean staging,String url,String digest,String sums,long size){this.name=name;this.tag=tag;this.staging=staging;this.url=url;this.digest=digest;this.sums=sums;this.size=size;}
+        public String version() throws IOException {
+            if (!tag.matches("v[0-9]{1,6}\\.[0-9]{1,6}\\.[0-9]{1,6}(?:-staging\\.[1-9][0-9]{0,2})?"))
+                throw new IOException("Invalid Miqat release version");
+            return tag.substring(1).split("-", 2)[0];
+        }
+
+        public long stagingAndroidCode() throws IOException {
+            String[] parts = version().split("\\.");
+            if (!staging) throw new IOException("Expected a staging release");
+            int major = Integer.parseInt(parts[0]), minor = Integer.parseInt(parts[1]), patch = Integer.parseInt(parts[2]);
+            long code = ((major * 100L + minor) * 1000 + patch) * 1000
+                    + Integer.parseInt(tag.substring(tag.lastIndexOf('.') + 1));
+            if (minor >= 100 || patch >= 1000 || code <= 40 || code > 2_100_000_000L)
+                throw new IOException("Invalid staging Android version code");
+            return code;
+        }
         public File download(File directory,Progress progress)throws IOException {
             String expected=digest;
             if(expected.isEmpty())expected=checksum(text(sums,262144),name);

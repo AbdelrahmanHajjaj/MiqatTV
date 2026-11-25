@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 10,
   "defaultCity": "cairo",
   "defaultFajrVoice": "chebae_fajr",
   "actions": [
@@ -17,6 +17,7 @@
     {"id":"radio.stop","section":"radio","label":"phone_radio_stop"}
   ],
   "controls": [
+    {"id":"about.auto-updates","section":"about","kind":"toggle","label":"aboutAutoUpdates","default":"false","since":10},
     {"id":"fasting.eve","section":"fasting","kind":"toggle","label":"phone_fasting_eve","default":"false","since":9},
     {"id":"fasting.eve-time","section":"fasting","kind":"number","editor":"time","label":"phone_fasting_eve_time","minimum":0,"maximum":1439,"step":1,"default":"1200","since":9},
     {"id":"fasting.suhoor","section":"fasting","kind":"toggle","label":"phone_suhoor","default":"false","since":8},

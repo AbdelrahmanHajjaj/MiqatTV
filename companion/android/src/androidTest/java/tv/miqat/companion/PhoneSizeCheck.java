@@ -389,7 +389,7 @@ final class PhoneSizeCheck {
                     () -> {
                         a.back();
                         a.tab("tvs");
-                        a.body.findViewWithTag("pair.open").performClick();
+                        a.body.findViewWithTag("install.open").performClick();
                         a.body.findViewWithTag("setup.platform.lg").performClick();
                     });
             PhoneUiCheck.capture(

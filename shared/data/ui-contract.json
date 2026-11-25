@@ -529,6 +529,21 @@
     "save": "immediate"
   },
   {
+    "id": "device.startup-show-input",
+    "section": "device",
+    "kind": "toggle",
+    "label": "startupShowInput",
+    "save": "immediate"
+  },
+  {
+    "id": "device.startup-input",
+    "section": "device",
+    "kind": "choice",
+    "label": "startupInput",
+    "save": "immediate",
+    "choices": ["DTV", "ATV", "HDMI_1", "HDMI_2", "HDMI_3", "HDMI_4", "AV_1", "AV_2", "COMP_1"]
+  },
+  {
     "id": "device.exit-input",
     "section": "device",
     "kind": "action",

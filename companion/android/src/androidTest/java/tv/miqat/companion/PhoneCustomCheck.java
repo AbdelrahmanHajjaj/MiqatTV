@@ -183,7 +183,7 @@ final class PhoneCustomCheck {
             PhoneUiCheck.check(fourth.eventMode(legacyVibration) == 3 && fourth.eventVibrate(legacyVibration),
                     "Legacy vibration-only mode lost haptic output after upgrade");
             fourth.save(c);
-            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 9,
+            PhoneUiCheck.check(new JSONObject(PhoneStore.preferences(c).getString("settings", "")).getInt("version") == 10,
                     "Updated settings did not persist the new schema");
             Map<String, String> versionFour = new LinkedHashMap<>(fourth.values);
             versionFour.keySet().retainAll(fourth.data.idsAt(4));

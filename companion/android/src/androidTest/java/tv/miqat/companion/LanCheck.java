@@ -443,6 +443,10 @@ final class LanCheck {
                 test.runOnMainSync(() -> {
                     try {
                         check(activity.remoteUi.remoteLoading && !activity.networkBusy);
+                        activity.body.findViewWithTag("tv.updates").performClick();
+                        check(activity.page.equals("updates") && !activity.networkBusy
+                                && activity.body.findViewWithTag("tv.update.install") == null);
+                        activity.back();
                         check(
                                 activity.getWindow()
                                         .getDecorView()

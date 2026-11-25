@@ -30,7 +30,7 @@
             android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"
             android:autoSizeMaxTextSize="?attr/circleTimeSize" android:autoSizeStepGranularity="1sp" />
         <Chronometer android:id="@+id/widget_next_remaining" style="@style/MiqatWidgetMuted"
-            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.59"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.70"
             android:gravity="center" android:maxLines="1" android:includeFontPadding="false"
             android:visibility="gone"
             android:autoSizeTextType="uniform" android:autoSizeMinTextSize="4sp"

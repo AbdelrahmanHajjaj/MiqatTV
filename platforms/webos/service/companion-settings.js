@@ -1,7 +1,9 @@
 'use strict';
 var core = require('./core');
 var portable = require('./Miqat-core').tv.miqat.core;
-var controls = require('./companion-catalog.json');
+var controls = require('./companion-catalog.json').filter(function (control) {
+  return control.id !== 'device.startup-show-input' && control.id !== 'device.startup-input';
+});
 var fields = {
   'prayer.location': 'city', 'prayer.hijri': 'hijriOffset', 'reminders.enabled': 'automatic',
   'reminders.before': 'remind', 'reminders.spoken': 'remindVoice', 'reminders.adhan': 'adhan',

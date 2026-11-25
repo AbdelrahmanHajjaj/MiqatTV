@@ -152,7 +152,7 @@ function getInputs(message) {
         var target = core.input(item.id);
         if (target && !seen[target.id]) { inputs.push(target); seen[target.id] = true; }
       });
-      inputs.push(core.input('DTV'));
+      if (!seen.DTV) { inputs.push(core.input('DTV')); }
       var state = read(), selected = core.input(current.mainInputSourceId) || core.input(state.input);
       message.respond({returnValue: true, inputs: inputs, current: selected, discoveryFailed: !all.returnValue || !current.returnValue});
     }));

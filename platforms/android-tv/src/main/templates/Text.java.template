@@ -374,6 +374,8 @@ final class Text {
     String clockScreen() { {{STRINGS:clockScreen}} }
     String tvApps() { {{STRINGS:tvApps}} }
     String startupLauncher() { {{STRINGS:startupLauncher}} }
+    String startupShowInput() { {{STRINGS:startupShowInput}} }
+    String startupInput() { {{STRINGS:startupInput}} }
     String exitToInput() { {{STRINGS:exitToInput}} }
     String testPrayer() { {{STRINGS:testPrayer}} }
     String testBanner() { {{STRINGS:testBanner}} }

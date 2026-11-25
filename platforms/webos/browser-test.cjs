@@ -80,6 +80,11 @@ const server = http.createServer((req, res) => {
             }
           }
           const state = JSON.parse(localStorage.getItem('fixture') || '{}');
+          if (method === 'status' && sessionStorage.getItem('exercise-input')) {
+            state.prefs = window.Miqat.prefs({...state.prefs, bootToInput: true, bootInput: state.input || 'HDMI_1'});
+            state.input ||= 'HDMI_1';
+            state.startup ||= {enabled: false};
+          }
           if (method === 'savePrefs') {
             const merged = window.Miqat.mergePrefs(state.prefs, p.expected, p.prefs);
             if (merged.conflicts.length) {
@@ -93,7 +98,10 @@ const server = http.createServer((req, res) => {
           if (method === 'launchApp') state.launchedApp = p.id;
           localStorage.setItem('fixture', JSON.stringify(state));
           const reply = {returnValue: true, state, prefs: state.prefs, enabled: state.startup && state.startup.enabled,
-            current: window.Miqat.input(state.input || 'HDMI_1'), inputs: ['HDMI_1', 'HDMI_2', 'HDMI_3', 'DTV'].map(window.Miqat.input)};
+            current: window.Miqat.input(state.input || 'HDMI_1'),
+            inputs: (state.inputInventory || (sessionStorage.getItem('full-input-inventory')
+              ? ['HDMI_1', 'HDMI_2', 'HDMI_3', 'HDMI_4', 'DTV', 'ATV', 'AV_1', 'AV_2', 'COMP_1']
+              : [...new Set(['HDMI_1', 'HDMI_2', 'HDMI_3', 'DTV', state.input || 'HDMI_1'])])).map(window.Miqat.input)};
           if (method === 'onlinePrayer') {
             window.onlineCalls.push(p);
             if (p.action === 'check') {
@@ -165,6 +173,41 @@ const server = http.createServer((req, res) => {
     assert.notEqual(await page.locator('#stage').getAttribute('data-layout'),null,'startup hands off to the initialized layout');
     assert.match(await page.title(), /^Miqat/);
     await page.evaluate(() => document.fonts.ready);
+    await page.locator('.home-quick').waitFor();
+    assert.equal(await page.locator('#input-video source').count(), 0, 'fresh startup opens silent Miqat Home');
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem('fixture')).startup?.enabled === true);
+    await page.locator('[data-action=settings]').click();
+    await page.locator('[data-action=section][data-value=device]').click();
+    const bootToggle = page.locator('[data-action=bootToInput]');
+    assert.equal(await bootToggle.getAttribute('aria-checked'), 'false');
+    await bootToggle.click();
+    await page.locator('[data-action=bootInput]').click();
+    await page.locator('[data-action=choose][data-value=HDMI_2]').click();
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem('fixture')).prefs.bootInput === 'HDMI_2');
+    await page.reload(); await inputRestored();
+    assert.equal(await page.locator('#input-video source').getAttribute('src'), 'ext://hdmi:2');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture')).input), undefined,
+      'changing startup input does not change the manually watched input');
+    await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem('fixture'));
+      state.inputInventory = ['HDMI_1', 'DTV'];
+      localStorage.setItem('fixture', JSON.stringify(state));
+    });
+    await page.reload(); await page.locator('.home-quick').waitFor();
+    assert.equal(await page.locator('#input-video source').count(), 0, 'missing startup input falls back to Home');
+    await page.locator('[data-action=settings]').click();
+    await page.locator('[data-action=section][data-value=device]').click();
+    await bootToggle.click();
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem('fixture')).prefs.bootToInput === false);
+    await page.reload(); await page.locator('.home-quick').waitFor();
+    assert.equal(await page.locator('#input-video source').count(), 0, 'disabling startup input returns to Home on next launch');
+    // The remaining cases exercise navigation and playback from an already configured input.
+    await page.evaluate(() => {
+      localStorage.removeItem('fixture');
+      sessionStorage.setItem('exercise-input', 'true');
+      sessionStorage.setItem('full-input-inventory', 'true');
+    });
+    await page.reload();
     await inputRestored();
     const beforeSpacing = await page.evaluate(() => localStorage.getItem('fixture'));
     const smoke = process.argv.includes('--smoke');
@@ -774,6 +817,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('html').getAttribute('dir'), 'ltr');
     await settingsValuesFit();
     await settingsCoverage();
+    await page.evaluate(() => sessionStorage.removeItem('full-input-inventory'));
     await onlineChecks();
     await page.locator('[data-action=section][data-value=prayer]').click();
     await page.locator('[data-action=city]').click();

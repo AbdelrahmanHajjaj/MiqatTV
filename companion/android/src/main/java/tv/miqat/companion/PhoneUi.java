@@ -23,6 +23,8 @@ import java.util.*;
 
 /** Independent phone screens; TV settings never enter this controller. */
 final class PhoneUi {
+    private android.app.AlertDialog updateDialog;
+    private int foregroundUpdateCheck;
     final MainActivity a;
     PhoneData data;
     PhoneStore settings;
@@ -270,24 +272,48 @@ final class PhoneUi {
         }
     }
 
-    private void about() {
+    private void about() throws Exception {
         TextView version = a.views.text(a.t("aboutVersion") + " \u2066" + AboutMiqat.version(a) + "\u2069", 18, a.ink);
         version.setTag("phone.about.version");
         a.body.addView(version);
         a.body.addView(a.views.text(a.t("aboutDeveloper"), 16, a.ink));
         a.body.addView(a.views.text(a.t("aboutSadaqah"), 14, a.muted));
         if (AboutUpdates.available(a)) {
-            String title = a.t(data.actionLabel("about.check-updates"));
-            a.views.button(a.body, title, () -> AboutUpdates.show(a, a.views.dialog(), a.ar, new AboutUpdates.Labels(
-                    title, a.t("aboutCheckingUpdates"), a.t("aboutNoUpdate"), a.t("aboutNewUpdate"),
-                    a.t("aboutUpdateFailed"), a.t("aboutInstallUpdate"), a.t("aboutDownloadingUpdate"),
-                    a.t("aboutInstallUpdateFailed"), a.t("back")))).setTag("phone.about.check-updates");
+            AboutUpdates.Labels labels = updateLabels();
+            a.views.button(a.body, labels.title(),
+                    () -> updateDialog = AboutUpdates.show(a, a.views.dialog(), a.ar, labels))
+                    .setTag("phone.about.check-updates");
+            control(data.controls.get("about.auto-updates"));
         }
         a.views.button(a.body, a.t(data.actionLabel("about.github")),
                 () -> openAboutLink(AboutMiqat.FEEDBACK_URL)).setTag("phone.about.github");
         Button email = a.views.button(a.body, a.t(data.actionLabel("about.email")), () -> {});
         email.setEnabled(false);
         email.setTag("phone.about.email");
+    }
+
+    private AboutUpdates.Labels updateLabels() {
+        return new AboutUpdates.Labels(a.t(data.actionLabel("about.check-updates")),
+                a.t("aboutCheckingUpdates"), a.t("aboutNoUpdate"), a.t("aboutNewUpdate"),
+                a.t("aboutUpdateFailed"), a.t("aboutInstallUpdate"), a.t("aboutDownloadingUpdate"),
+                a.t("aboutInstallUpdateFailed"), a.t("back"));
+    }
+
+    private boolean automaticUpdatesEnabled() {
+        try {
+            return PhoneStore.read(a).value("about.auto-updates").equals("true");
+        } catch (Exception unavailable) {
+            return false;
+        }
+    }
+
+    void checkForUpdates() {
+        if (!automaticUpdatesEnabled()) return;
+        int check = ++foregroundUpdateCheck;
+        AboutUpdates.checkInBackground(a, a.views.dialog(), a.ar, updateLabels(),
+                () -> check == foregroundUpdateCheck && a.isForegroundPhoneActivity() && automaticUpdatesEnabled()
+                        && (updateDialog == null || !updateDialog.isShowing()),
+                dialog -> updateDialog = dialog);
     }
 
     private void openAboutLink(String url) {

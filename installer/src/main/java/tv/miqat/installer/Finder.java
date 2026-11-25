@@ -65,6 +65,14 @@ final class Finder {
     }
 
     synchronized void start() {
+        start(TYPES, true);
+    }
+
+    synchronized void startWireless() {
+        start(new String[] {TYPES[1]}, false);
+    }
+
+    private void start(String[] types, boolean sweep) {
         stop();
         WifiManager wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         if (wifi != null) {
@@ -72,7 +80,7 @@ final class Finder {
             multicast.setReferenceCounted(false);
             multicast.acquire();
         }
-        for (String type : TYPES) {
+        for (String type : types) {
             NsdManager.DiscoveryListener d = new Discovery();
             try {
                 nsd.discoverServices(type, NsdManager.PROTOCOL_DNS_SD, d);
@@ -81,7 +89,7 @@ final class Finder {
                 // Discovery can refuse to start (no Wi-Fi); the sweep still runs.
             }
         }
-        sweepClassic();
+        if (sweep) sweepClassic();
     }
 
     synchronized void stop() {

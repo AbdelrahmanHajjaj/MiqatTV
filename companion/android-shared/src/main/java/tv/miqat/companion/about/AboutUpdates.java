@@ -10,6 +10,9 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.SystemClock;
 import android.view.View;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.ObjLongConsumer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +22,7 @@ import javax.net.ssl.HttpsURLConnection;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/** Fetches public stable release metadata only when a user opens the check. */
+/** Checks public stable release metadata and offers verified Android updates. */
 public final class AboutUpdates {
     private static final String METADATA = "https://abdelrahmanhajjaj.github.io/MiqatTV/updates.json";
     private static final String DOWNLOAD = "https://github.com/AbdelrahmanHajjaj/MiqatTV/releases/download/";
@@ -31,6 +34,13 @@ public final class AboutUpdates {
     record Result(long code, String version, String url) {}
 
     private AboutUpdates() {}
+
+    public static long androidTvCode(String tag) throws IOException, JSONException {
+        Result result = read(stableMetadata(), "tv.miqat.home");
+        if (!result.url().equals(DOWNLOAD + tag + "/miqat.apk"))
+            throw new IOException("Stable package and version metadata disagree");
+        return result.code();
+    }
 
     @SuppressWarnings("deprecation")
     public static boolean available(Context context) {
@@ -60,15 +70,51 @@ public final class AboutUpdates {
         return Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode;
     }
 
-    public static void show(Activity activity, AlertDialog.Builder builder, boolean rtl, Labels labels) {
-        if (!available(activity)) return;
-        PackageInfo installed = AboutMiqat.packageInfo(activity);
-        AlertDialog dialog = builder
-                .setTitle(labels.title()).setMessage(labels.checking())
-                .setNegativeButton(labels.close(), null)
-                .setPositiveButton(labels.install(), null).show();
-        dialog.getWindow().getDecorView().setLayoutDirection(rtl ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+    public static AlertDialog show(Activity activity, AlertDialog.Builder builder, boolean rtl, Labels labels) {
+        if (!available(activity)) return null;
+        AlertDialog dialog = dialog(builder, rtl, labels, labels.checking());
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+        check(activity, (found, installed) -> {
+            if (!dialog.isShowing()) return;
+            if (found == null) dialog.setMessage(labels.failed());
+            else if (found.code() <= installed) dialog.setMessage(labels.current());
+            else offer(activity, dialog, found, labels);
+        });
+        return dialog;
+    }
+
+    public static void checkInBackground(Activity activity, AlertDialog.Builder builder, boolean rtl,
+                                         Labels labels, BooleanSupplier foreground, Consumer<AlertDialog> presented) {
+        if (!available(activity)) return;
+        check(activity, (found, installed) -> {
+            AlertDialog available = showAvailable(activity, builder, rtl, labels, found, installed, foreground);
+            if (available != null) presented.accept(available);
+        });
+    }
+
+    static AlertDialog showAvailable(Activity activity, AlertDialog.Builder builder, boolean rtl, Labels labels,
+                                     Result found, long installed, BooleanSupplier foreground) {
+        if (found == null || found.code() <= installed || !foreground.getAsBoolean()) return null;
+        AlertDialog available = dialog(builder, rtl, labels, labels.available());
+        offer(activity, available, found, labels);
+        return available;
+    }
+
+    private static AlertDialog dialog(AlertDialog.Builder builder, boolean rtl, Labels labels, String message) {
+        AlertDialog dialog = builder.setTitle(labels.title()).setMessage(message)
+                .setNegativeButton(labels.close(), null).setPositiveButton(labels.install(), null).show();
+        dialog.getWindow().getDecorView().setLayoutDirection(rtl ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+        return dialog;
+    }
+
+    private static void offer(Activity activity, AlertDialog dialog, Result update, Labels labels) {
+        dialog.setMessage(labels.available() + " · \u2066" + update.version() + "\u2069");
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.VISIBLE);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> download(activity, dialog, update, labels));
+    }
+
+    private static void check(Activity activity, ObjLongConsumer<Result> finished) {
+        PackageInfo installed = AboutMiqat.packageInfo(activity);
         new Thread(() -> {
             Result result;
             try {
@@ -78,14 +124,7 @@ public final class AboutUpdates {
             }
             Result found = result;
             activity.runOnUiThread(() -> {
-                if (activity.isFinishing() || activity.isDestroyed() || !dialog.isShowing()) return;
-                if (found == null) dialog.setMessage(labels.failed());
-                else if (found.code() <= code(installed)) dialog.setMessage(labels.current());
-                else {
-                    dialog.setMessage(labels.available() + " · \u2066" + found.version() + "\u2069");
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.VISIBLE);
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> download(activity, dialog, found, labels));
-                }
+                if (!activity.isFinishing() && !activity.isDestroyed()) finished.accept(found, code(installed));
             });
         }, "miqat-update-check").start();
     }

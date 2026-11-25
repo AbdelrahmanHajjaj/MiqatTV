@@ -1,5 +1,12 @@
 # Current work
 
+## Android phone and LG feedback
+
+Deliver direct QR pairing, paired-TV updates, the resizable Countdown circle,
+optional Android phone update checks and the LG startup destination. Run the
+required PR checks, build signed Staging and test that candidate in Device
+simulation. Physical acceptance remains separate.
+
 ## iPhone
 
 Follow the [iPhone parity queue](IOS-WORK.md). The unsigned app builds, fixtures,

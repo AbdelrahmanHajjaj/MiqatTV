@@ -7,6 +7,8 @@
   "aboutEmail": {"ar": "الملاحظات عبر البريد الإلكتروني", "en": "Feedback by email"},
   "aboutBrowserUnavailable": {"ar": "لا يوجد متصفح لفتح GitHub", "en": "No browser available to open GitHub"},
   "aboutCheckUpdates": {"ar": "التحقق من التحديثات", "en": "Check for updates"},
+  "startupShowInput": {"ar": "عرض مدخل عند التشغيل", "en": "Show input at startup"},
+  "startupInput": {"ar": "مدخل بدء التشغيل", "en": "Startup input"},
   "aboutCheckingUpdates": {"ar": "جارٍ التحقق من التحديثات…", "en": "Checking for updates…"},
   "aboutNoUpdate": {"ar": "لا يوجد إصدار مستقر أحدث.", "en": "No newer stable version is available."},
   "aboutNewUpdate": {"ar": "يتوفر تحديث", "en": "Update available"},
