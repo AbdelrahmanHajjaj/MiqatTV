@@ -13,7 +13,7 @@
   var companionBridge = null, companionSession = '', companionUi = '', companionTimer = null;
   var companion = {supported: null, starting: false, phones: [], open: false}, pairingMessage = '';
   var lastRemoteRequest = '', pairingSvgKey = '', pairingSvg = '', pairingRenderKey = '';
-  var input = null, inputs = [], view = 'input', picker = null, page = 0, resumeInput = false;
+  var input = null, inputs = [], view = 'input', picker = null, page = 0, inputStarted = false;
   var screen = document.getElementById('screen'), video = document.getElementById('input-video');
   var bridges = [], instance = String(Date.now()), cachedDay = null, cacheKey = '', noticeTimer;
   var lastError = null;
@@ -926,6 +926,7 @@
     input = target; lastError = null;
     var showVideo = tv && (!media || adhanInputMode) && !(document.hidden || document.webkitHidden);
     if (showVideo) {
+      if (!adhanInputMode) { inputStarted = true; }
       video.style.display = 'block';
       video.pause(); while (video.firstChild) { video.removeChild(video.firstChild); }
       video.muted = false;
@@ -958,7 +959,7 @@
         var target = prefs.bootToInput && inputs.some(function (item) { return item.id === prefs.bootInput; }) && A.input(prefs.bootInput);
         input = target || reply.current && A.input(reply.current.id);
         if (target) { play(target); show('input'); }
-        else { releaseVideo(); show('home'); }
+        else { inputStarted = false; releaseVideo(); show('home'); }
         consumeAlert();
       } else if (view === 'inputs') { render('refresh'); }
       if (reply.discoveryFailed) { notify(t('تعذر تحديث بعض المداخل؛ يمكنك المحاولة مجددًا.', 'Some inputs could not be refreshed. Please try again.')); }
@@ -1437,13 +1438,11 @@
   function visibility() {
     if (document.hidden || document.webkitHidden) {
       stopCompanion();
-      resumeInput = resumeInput || !!video.firstChild;
       if (view === 'pairing') { render(); }
       cancelOnline();
       returnContext = null; radioBeforeCall = false; if (media) { stopAudio('stopped', false); } dismissOverlay(); releaseVideo(); report('hidden');
     } else {
-      if (input && !media && (resumeInput || view === 'input' || view === 'bar')) { play(input); }
-      resumeInput = false;
+      if (input && !media && (inputStarted || view === 'input' || view === 'bar')) { play(input); }
       if (view === 'online-prayer') { render('online-back'); }
       updateClock(); report(); startCompanion();
     }

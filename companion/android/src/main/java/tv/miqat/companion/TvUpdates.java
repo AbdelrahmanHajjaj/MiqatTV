@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.text.NumberFormat;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Locale;
 import tv.miqat.companion.about.AboutUpdates;
 import tv.miqat.installer.PairedAndroidUpdate;
@@ -36,7 +36,7 @@ final class TvUpdates {
     }
 
     void render() {
-        a.views.segmentedChoices(a.body, "updates.channel", List.of(
+        a.views.segmentedChoices(a.body, "updates.channel", Arrays.asList(
                 new Choices.Option("production", a.t("tv_channel_production")),
                 new Choices.Option("staging", a.t("tv_channel_staging"))), channel, value -> {
             if (channel.equals(value)) return;
