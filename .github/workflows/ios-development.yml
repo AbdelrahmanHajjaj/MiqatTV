@@ -21,6 +21,7 @@ on:
           - testAllowNotificationsDuringSetup
           - testDenyNotificationsDuringSetup
           - testCustomCoordinatesAndTimeZone
+          - testDeferLocationInArabic
   push:
     branches: [feature/ios-app-port]
     paths:
@@ -45,7 +46,7 @@ jobs:
   apple:
     name: Apple (${{ matrix.sdk }})
     runs-on: macos-15
-    timeout-minutes: ${{ inputs.simulator_first_use && matrix.sdk == 'iphonesimulator' && 50 || 30 }}
+    timeout-minutes: ${{ inputs.simulator_first_use && matrix.sdk == 'iphonesimulator' && 55 || 30 }}
     strategy:
       fail-fast: false
       matrix:
@@ -188,7 +189,7 @@ jobs:
           done
       - name: Check first launch on an iPhone simulator
         if: github.event_name == 'workflow_dispatch' && (inputs.simulator_launch || inputs.simulator_first_use) && matrix.sdk == 'iphonesimulator'
-        timeout-minutes: 26
+        timeout-minutes: 32
         env:
           MIQAT_FIRST_USE: ${{ inputs.simulator_first_use }}
           MIQAT_FIRST_USE_CASE: ${{ inputs.simulator_first_use_case }}
@@ -219,7 +220,10 @@ jobs:
                 CODE_SIGNING_ALLOWED=NO "$@"
             }
             sim_test build-for-testing
-            cases=(testManualCityWithLocationDenied testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup testCustomCoordinatesAndTimeZone)
+            cases=(
+              testManualCityWithLocationDenied testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup
+              testCustomCoordinatesAndTimeZone testDeferLocationInArabic
+            )
             if [ -n "$MIQAT_FIRST_USE_CASE" ] && [ "$MIQAT_FIRST_USE_CASE" != all ]; then
               cases=("$MIQAT_FIRST_USE_CASE")
             fi
