@@ -51,6 +51,38 @@ final class FirstUseTests: XCTestCase {
     }
 
     @MainActor
+    func testDeferLocationInArabic() {
+        let app = launch(language: "ar", region: "EG")
+        XCTAssertTrue(app.staticTexts["مرحبًا بك في ميقات"].waitForExistence(timeout: 10))
+        tap(app.buttons["ابدأ الآن"])
+        let deferLocation = app.buttons["الإعداد لاحقاً"]
+        XCTAssertTrue(deferLocation.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["متابعة"].isEnabled)
+        tap(deferLocation)
+        finishSetup(in: app, arabic: true)
+
+        app.terminate()
+        app.launch()
+        let confirmLocation = app.buttons["تأكيد الموقع"]
+        XCTAssertTrue(confirmLocation.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["أكمل إعداد ميقات"].exists)
+        let prayer = app.tabBars.buttons["الصلاة"]
+        let settings = app.tabBars.buttons["الإعدادات"]
+        XCTAssertTrue(prayer.exists && settings.exists)
+        XCTAssertGreaterThan(prayer.frame.midX, settings.frame.midX)
+
+        tap(settings)
+        tap(app.buttons["تنبيهات الصلاة"])
+        let alerts = app.switches["تنبيهات الصلاة"]
+        XCTAssertTrue(alerts.waitForExistence(timeout: 10))
+        XCTAssertEqual(alerts.value as? String, "0")
+
+        tap(prayer)
+        tap(confirmLocation)
+        XCTAssertTrue(app.buttons["miqat.location.confirm"].waitForExistence(timeout: 10))
+    }
+
+    @MainActor
     func testCustomCoordinatesAndTimeZone() {
         let app = launch()
         tap(app.buttons["Get started"])
@@ -156,18 +188,18 @@ final class FirstUseTests: XCTestCase {
     }
 
     @MainActor
-    private func launch() -> XCUIApplication {
+    private func launch(language: String = "en", region: String = "US") -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_\(region)"]
         app.launch()
         return app
     }
 
     @MainActor
-    private func finishSetup(in app: XCUIApplication) {
-        XCTAssertTrue(app.navigationBars["Your style"].waitForExistence(timeout: 10))
-        let finish = app.buttons["Start using Miqat"]
+    private func finishSetup(in app: XCUIApplication, arabic: Bool = false) {
+        XCTAssertTrue(app.navigationBars[arabic ? "مظهرك" : "Your style"].waitForExistence(timeout: 10))
+        let finish = app.buttons[arabic ? "ابدأ استخدام ميقات" : "Start using Miqat"]
         reveal(finish, in: app)
         tap(finish)
     }
