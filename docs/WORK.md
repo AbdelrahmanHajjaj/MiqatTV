@@ -1,7 +1,8 @@
 # Current work
 
-For the iPhone port, compare displayed Cairo prayer times and the civil date
-with Android. Follow the [iOS parity queue](IOS-WORK.md) in order.
+For the iPhone port, the consolidated Apple builds, fixtures, eight simulator
+journeys and package integrity check passed. The [iOS parity queue](IOS-WORK.md)
+records the remaining signed iPhone, device behavior and live TV acceptance.
 The iPhone LG setup screen uses the SSH installer and separate installation
 credentials. Verify it against a local Developer Mode fixture. Classic Android
 TV installation and Home/remote setup with a recovery journal are wired.

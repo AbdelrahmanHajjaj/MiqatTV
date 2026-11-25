@@ -1,3 +1,4 @@
+import CoreLocation
 import XCTest
 
 final class FirstUseTests: XCTestCase {
@@ -162,6 +163,148 @@ final class FirstUseTests: XCTestCase {
         XCTAssertTrue(latitude.waitForExistence(timeout: 10))
         XCTAssertEqual(latitude.value as? String, "30.0501")
         XCTAssertEqual(longitude.value as? String, "31.2401")
+    }
+
+    @MainActor
+    func testCairoTimetableMatchesAndroid() throws {
+        let cairo = try XCTUnwrap(TimeZone(identifier: "Africa/Cairo"))
+        var civil = Calendar(identifier: .gregorian)
+        civil.timeZone = cairo
+        let reference = try XCTUnwrap(civil.date(from: DateComponents(year: 2026, month: 11, day: 12, hour: 12)))
+        let today = civil.startOfDay(for: .now)
+        let distance = try XCTUnwrap(civil.dateComponents([.day], from: today, to: civil.startOfDay(for: reference)).day)
+        // shortcut: the frozen Android date must be reachable in the calendar, refresh the vector when it ages out.
+        try XCTSkipIf(abs(distance) > 366, "The frozen Cairo date is outside the calendar's navigation range.")
+        try XCTSkipIf(TimeZone.current.secondsFromGMT(for: reference) == cairo.secondsFromGMT(for: reference),
+                      "Use a simulator with a different UTC offset from Cairo.")
+
+        let app = launch()
+        tap(app.buttons["Get started"])
+        tap(app.buttons["Custom coordinates"])
+        tap(app.descendants(matching: .any)["miqat.location.timezone"].firstMatch)
+        search("Africa/Cairo", in: app)
+        tap(app.buttons["Africa/Cairo"])
+        tap(app.buttons["Apply"])
+        let savedZone = app.descendants(matching: .any)["miqat.location.saved-timezone"].firstMatch
+        XCTAssertTrue(savedZone.waitForExistence(timeout: 10))
+        XCTAssertEqual(savedZone.value as? String, "Africa/Cairo")
+        tap(app.buttons["miqat.location.confirm"])
+        let alerts = app.switches["Prayer alerts"]
+        reveal(alerts, in: app)
+        alerts.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let alertsOff = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '0'"), object: alerts)
+        XCTAssertEqual(XCTWaiter.wait(for: [alertsOff], timeout: 5), .completed)
+        tap(app.buttons["Continue"])
+        finishSetup(in: app)
+
+        let calendarLink = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " AH")).firstMatch
+        reveal(calendarLink, in: app)
+        tap(calendarLink)
+        XCTAssertTrue(app.navigationBars["Hijri calendar"].waitForExistence(timeout: 10))
+
+        var hijri = Calendar(identifier: .islamicUmmAlQura)
+        hijri.timeZone = cairo
+        let currentMonth = try XCTUnwrap(hijri.dateInterval(of: .month, for: today)?.start)
+        let targetMonth = try XCTUnwrap(hijri.dateInterval(of: .month, for: reference)?.start)
+        let months = try XCTUnwrap(hijri.dateComponents([.month], from: currentMonth, to: targetMonth).month)
+        let monthButton = app.buttons[months < 0 ? "Previous month" : "Next month"]
+        for _ in 0..<abs(months) { tap(monthButton) }
+        let hijriDay = hijri.component(.day, from: reference)
+        let day = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(hijriDay) Jumada al-Akhirah 1448 AH"))
+        tap(day.firstMatch)
+
+        let date = NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@",
+                               "Thu", "Nov", "12", "2026")
+        reveal(app.staticTexts.matching(date).firstMatch, in: app)
+        // Android's PhoneScheduleCheck fixture for Cairo on 2026-11-12.
+        let expected = [("Fajr", "4:48 AM"), ("Sunrise", "6:17 AM"), ("Dhuhr", "11:40 AM"),
+                        ("Asr", "2:39 PM"), ("Maghrib", "5:00 PM"), ("Isha", "6:20 PM")]
+        for (prayer, time) in expected {
+            let name = app.staticTexts[prayer]
+            reveal(name, in: app)
+            let timePattern = time.replacingOccurrences(of: " ", with: "\\s+")
+            let displayed = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", timePattern)).firstMatch
+            XCTAssertTrue(displayed.isHittable, "\(prayer) should show \(time)")
+            XCTAssertEqual(name.frame.midY, displayed.frame.midY, accuracy: 2, "\(prayer) row")
+        }
+    }
+
+    @MainActor
+    func testOfflinePhoneSettingsAndTVDemo() {
+        let app = launch()
+        tap(app.buttons["Get started"])
+        tap(app.buttons["Set up later"])
+        finishSetup(in: app)
+
+        let settings = app.tabBars.buttons["Settings"]
+        let tvs = app.tabBars.buttons["Your TVs"]
+        let fasting = app.buttons["Fasting reminders"]
+        let fastingDays = app.switches["Mondays and Thursdays"]
+        tap(settings)
+        tap(fasting)
+        reveal(fastingDays, in: app)
+        XCTAssertEqual(fastingDays.value as? String, "0")
+        fastingDays.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: fastingDays)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 5), .completed)
+
+        let demo = app.switches["Demo TVs · no real TV connection"]
+        let android = app.buttons["Android / Google TV"]
+        tap(tvs)
+        reveal(demo, in: app)
+        XCTAssertEqual(demo.value as? String, "0")
+        demo.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        reveal(android, in: app)
+        tap(android)
+        XCTAssertTrue(app.navigationBars["Android / Google TV"].waitForExistence(timeout: 10))
+        tap(app.segmentedControls.buttons["Remote"])
+        reveal(app.buttons["Home"], in: app)
+
+        app.terminate()
+        app.launch()
+        tap(settings)
+        tap(fasting)
+        reveal(fastingDays, in: app)
+        XCTAssertEqual(fastingDays.value as? String, "1")
+        tap(app.navigationBars["Fasting reminders"].buttons.firstMatch)
+
+        let resetTitle = "Reset phone prayer settings"
+        let reset = app.buttons[resetTitle]
+        reveal(reset, in: app)
+        tap(reset)
+        tap(app.alerts.buttons[resetTitle])
+        tap(app.buttons["Get started"])
+        tap(app.buttons["Set up later"])
+        finishSetup(in: app)
+
+        tap(settings)
+        tap(fasting)
+        reveal(fastingDays, in: app)
+        XCTAssertEqual(fastingDays.value as? String, "0")
+        tap(tvs)
+        reveal(demo, in: app)
+        XCTAssertEqual(demo.value as? String, "1")
+        reveal(android, in: app)
+    }
+
+    @MainActor
+    func testQiblaWithSimulatedCairoLocation() {
+        let app = launch()
+        tap(app.buttons["Get started"])
+        tap(app.buttons["Set up later"])
+        finishSetup(in: app)
+
+        XCUIDevice.shared.location = XCUILocation(location: CLLocation(latitude: 30.0444, longitude: 31.2357))
+        defer { XCUIDevice.shared.location = nil }
+        tap(app.buttons["Qibla"])
+        XCTAssertTrue(app.navigationBars["Qibla"].waitForExistence(timeout: 10))
+        let bearing = app.staticTexts["136.1°"]
+        XCTAssertTrue(bearing.waitForExistence(timeout: 18))
+        tap(app.buttons["Map"])
+        XCTAssertTrue(app.buttons["Compass"].waitForExistence(timeout: 10))
+        XCTAssertTrue(bearing.isHittable)
+        tap(app.buttons["Compass"])
+        XCTAssertTrue(bearing.isHittable)
     }
 
     @MainActor

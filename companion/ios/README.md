@@ -57,10 +57,11 @@ For a targeted first-launch check, dispatch the development workflow with
 `simulator_launch=true`. The check uses a fresh iPhone 16 simulator to install
 the built app and confirm the process stays alive. Follow the
 [first-use steps](../../docs/IOS-WORK.md#first-use-regression-on-iphone) for
-onboarding, offline prayer times, and permission behavior. Dispatch with
-`simulator_first_use=true` to run the XCTest journeys for manual city selection,
-Skip and resume, the prayer timetable, and both answers to the iOS notification
-prompt. Each journey starts with fresh simulator data.
+onboarding, offline prayer times, and permission behavior. Dispatch once with
+`simulator_first_use=true` to run all simulator journeys alongside the unsigned
+builds and portable checks. The journeys cover onboarding, Cairo timetable parity,
+the simulated Qibla position, fasting choice persistence and reset, and the local
+TV demo. Each journey starts with fresh simulator data.
 Use `simulator_first_use_case` to rerun a specific case.
 
 The app and widget targets use the `group.tv.miqat.ios` App Group to share
