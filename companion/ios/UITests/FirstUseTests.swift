@@ -165,6 +165,70 @@ final class FirstUseTests: XCTestCase {
     }
 
     @MainActor
+    func testCairoTimetableMatchesAndroid() throws {
+        let cairo = try XCTUnwrap(TimeZone(identifier: "Africa/Cairo"))
+        var civil = Calendar(identifier: .gregorian)
+        civil.timeZone = cairo
+        let reference = try XCTUnwrap(civil.date(from: DateComponents(year: 2026, month: 11, day: 12, hour: 12)))
+        let today = civil.startOfDay(for: .now)
+        let distance = try XCTUnwrap(civil.dateComponents([.day], from: today, to: civil.startOfDay(for: reference)).day)
+        // shortcut: the frozen Android date must be reachable in the calendar, refresh the vector when it ages out.
+        try XCTSkipIf(abs(distance) > 366, "The frozen Cairo date is outside the calendar's navigation range.")
+        try XCTSkipIf(TimeZone.current.secondsFromGMT(for: reference) == cairo.secondsFromGMT(for: reference),
+                      "Use a simulator with a different UTC offset from Cairo.")
+
+        let app = launch()
+        tap(app.buttons["Get started"])
+        tap(app.buttons["Custom coordinates"])
+        tap(app.descendants(matching: .any)["miqat.location.timezone"].firstMatch)
+        search("Africa/Cairo", in: app)
+        tap(app.buttons["Africa/Cairo"])
+        tap(app.buttons["Apply"])
+        let savedZone = app.descendants(matching: .any)["miqat.location.saved-timezone"].firstMatch
+        XCTAssertTrue(savedZone.waitForExistence(timeout: 10))
+        XCTAssertEqual(savedZone.value as? String, "Africa/Cairo")
+        tap(app.buttons["miqat.location.confirm"])
+        let alerts = app.switches["Prayer alerts"]
+        reveal(alerts, in: app)
+        alerts.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let alertsOff = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '0'"), object: alerts)
+        XCTAssertEqual(XCTWaiter.wait(for: [alertsOff], timeout: 5), .completed)
+        tap(app.buttons["Continue"])
+        finishSetup(in: app)
+
+        let calendarLink = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " AH")).firstMatch
+        reveal(calendarLink, in: app)
+        tap(calendarLink)
+        XCTAssertTrue(app.navigationBars["Hijri calendar"].waitForExistence(timeout: 10))
+
+        var hijri = Calendar(identifier: .islamicUmmAlQura)
+        hijri.timeZone = cairo
+        let currentMonth = try XCTUnwrap(hijri.dateInterval(of: .month, for: today)?.start)
+        let targetMonth = try XCTUnwrap(hijri.dateInterval(of: .month, for: reference)?.start)
+        let months = try XCTUnwrap(hijri.dateComponents([.month], from: currentMonth, to: targetMonth).month)
+        let monthButton = app.buttons[months < 0 ? "Previous month" : "Next month"]
+        for _ in 0..<abs(months) { tap(monthButton) }
+        let hijriDay = hijri.component(.day, from: reference)
+        let day = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(hijriDay) Jumada al-Akhirah 1448 AH"))
+        tap(day.firstMatch)
+
+        let date = NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@",
+                               "Thu", "Nov", "12", "2026")
+        reveal(app.staticTexts.matching(date).firstMatch, in: app)
+        // Android's PhoneScheduleCheck fixture for Cairo on 2026-11-12.
+        let expected = [("Fajr", "4:48 AM"), ("Sunrise", "6:17 AM"), ("Dhuhr", "11:40 AM"),
+                        ("Asr", "2:39 PM"), ("Maghrib", "5:00 PM"), ("Isha", "6:20 PM")]
+        for (prayer, time) in expected {
+            let name = app.staticTexts[prayer]
+            reveal(name, in: app)
+            let timePattern = time.replacingOccurrences(of: " ", with: "\\s+")
+            let displayed = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", timePattern)).firstMatch
+            XCTAssertTrue(displayed.isHittable, "\(prayer) should show \(time)")
+            XCTAssertEqual(name.frame.midY, displayed.frame.midY, accuracy: 2, "\(prayer) row")
+        }
+    }
+
+    @MainActor
     private func search(_ text: String, in app: XCUIApplication) {
         let field = app.searchFields.firstMatch
         if !field.isHittable { app.swipeDown() }

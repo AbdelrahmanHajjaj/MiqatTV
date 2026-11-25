@@ -22,6 +22,7 @@ on:
           - testDenyNotificationsDuringSetup
           - testCustomCoordinatesAndTimeZone
           - testDeferLocationInArabic
+          - testCairoTimetableMatchesAndroid
   push:
     branches: [feature/ios-app-port]
     paths:
@@ -222,7 +223,7 @@ jobs:
             sim_test build-for-testing
             cases=(
               testManualCityWithLocationDenied testAllowNotificationsDuringSetup testDenyNotificationsDuringSetup
-              testCustomCoordinatesAndTimeZone testDeferLocationInArabic
+              testCustomCoordinatesAndTimeZone testDeferLocationInArabic testCairoTimetableMatchesAndroid
             )
             if [ -n "$MIQAT_FIRST_USE_CASE" ] && [ "$MIQAT_FIRST_USE_CASE" != all ]; then
               cases=("$MIQAT_FIRST_USE_CASE")
