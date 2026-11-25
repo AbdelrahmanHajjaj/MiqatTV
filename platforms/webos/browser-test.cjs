@@ -101,7 +101,7 @@ const server = http.createServer((req, res) => {
             current: window.Miqat.input(state.input || 'HDMI_1'),
             inputs: (state.inputInventory || (sessionStorage.getItem('full-input-inventory')
               ? ['HDMI_1', 'HDMI_2', 'HDMI_3', 'HDMI_4', 'DTV', 'ATV', 'AV_1', 'AV_2', 'COMP_1']
-              : ['HDMI_1', 'HDMI_2', 'HDMI_3', 'DTV'])).map(window.Miqat.input)};
+              : [...new Set(['HDMI_1', 'HDMI_2', 'HDMI_3', 'DTV', state.input || 'HDMI_1'])])).map(window.Miqat.input)};
           if (method === 'onlinePrayer') {
             window.onlineCalls.push(p);
             if (p.action === 'check') {
