@@ -1,8 +1,7 @@
 # Architecture
 
-Miqat has a portable product core and separate applications for each platform.
-The shells share rules, data and design sources; each renders its own interface
-and handles its operating system.
+The Android, LG and browser shells share rules, data and design sources. Each
+shell owns its interface and OS integration.
 
 ```mermaid
 flowchart TD
@@ -64,8 +63,6 @@ Each project builds independently with the root Gradle wrapper and shared source
 See [build instructions](BUILD.md), [core API](CORE.md), [data](DATA.md),
 [design](DESIGN.md) and [testing](TESTING.md). Shared JS generators run sequentially.
 
-The standalone Android phone app and TV companion mode are maintained in this
-repository. Sony Android/Google TV uses the Android shell.
 
 ## Android phone and TV companion mode
 

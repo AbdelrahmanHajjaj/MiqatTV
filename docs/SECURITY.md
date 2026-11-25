@@ -1,33 +1,35 @@
-# Security scope
+# Privacy and security
 
-Report unsafe access through Android phone/TV components, accessibility, imported
-audio/documents, LAN pairing, guarded setup, LG service methods or browser content. Include platform/model,
-OS, app version, reproduction and the access an attacker would gain. Use the
-repository's [private reporting options](https://github.com/AbdelrahmanHajjaj/MiqatTV/security).
+## Report a security issue
 
-Validate external input, restrict supported LG launches/inputs, preserve later
-user changes during setup/recovery, and keep temporary audio/input ownership bounded.
-Unexpected remote settings changes, exposed pairing keys or unsafe firmware writes
-are bugs. Credentials, Wi-Fi names, addresses and backups belong outside public reports.
+Include the device model, OS, app version, steps to reproduce and what access
+the issue exposes. Keep credentials, Wi-Fi names, addresses and backups private.
+[GitHub private reporting](https://github.com/AbdelrahmanHajjaj/MiqatTV/security)
 
-Prayer calculation and city catalogs work offline. Runtime networking is limited
-to selected radio, requested AlAdhan comparison, explicitly loaded/attributed Qibla
-maps and foreground authenticated household-LAN TV setup/control. Map providers
-receive the IP/viewed area. Android location APIs require permission; optional
-periodic background location is off until explicitly enabled. It adds no app-owned
-continuous listener or idle foreground service.
+## Network and location
 
-Phone prayer preferences/claims and private imported audio are separate from
-encrypted TV credentials. Neither is included in Android backup/transfer. Resetting
-phone prayers keeps paired TVs. Imports copy validated audio into private storage;
-there is no public audio upload or cloud sync.
+Prayer calculation and city search work offline. Miqat uses the internet when
+you play radio, request an AlAdhan comparison, open a Qibla map or check for
+or download an update. Map providers receive your IP address and the area you
+view. Android controls location access. Periodic background location starts
+only after you enable it and grant permission.
 
-Pairing requires physical remote approval, pinned HTTPS and individually revocable
-credentials. Reconnect must never upload cached settings or replay uncertain commands.
-Installation separately uses guarded ADB or LG SSH and verified package downloads;
-LG private keys stay in memory. Remembered passphrases are opt-in and encrypted
-with Android Keystore, bound to the saved TV address and SSH identity, and
-excluded from backup and transfer. Unrequested traffic, trust bypasses or remotely
-supplied setup commands are bugs. Provider servers and TV firmware fall outside
-the repository's control. The website has no analytics or live TV connection;
-preview settings remain in its browser.
+TV pairing and control run on your home network while you use the relevant
+screens. The website has no analytics or live TV connection. The preview saves
+its settings in your browser.
+
+## TV access and local data
+
+Pairing requires TV remote approval, a pinned HTTPS identity and credentials
+you can revoke per phone. After a disconnect, Miqat leaves cached edits and
+unconfirmed commands unsent. [Pairing protocol](COMPANION-LAN.md)
+
+TV installation uses guarded ADB or LG SSH and verifies downloaded packages.
+Miqat keeps the LG SSH private key in memory. If you choose to save the
+passphrase, Android Keystore protects it and Miqat ties it to the TV address
+and approved SSH identity. Older LG servers may require legacy RSA/SHA-1 for
+installation SSH. LG's local Key Server sends the encrypted key file over HTTP.
+
+Phone prayer settings, imported audio and encrypted TV credentials stay on
+the phone and are excluded from Android backup and transfer. Resetting prayer
+settings keeps your imported audio and paired TVs.

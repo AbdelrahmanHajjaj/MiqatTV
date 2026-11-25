@@ -1,5 +1,10 @@
 # Validation evidence
 
+## Documentation cleanup (25 November 2026)
+
+Checked local links, heading anchors, screenshot paths and documented commands
+in the edited guides. Compared setup labels with the app strings.
+
 ## Shared phone and TV website demos — 25 November 2026
 
 The Android API 37 phone UI and live Qibla map fixture passed in Arabic and
