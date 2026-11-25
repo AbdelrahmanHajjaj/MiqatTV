@@ -49,6 +49,9 @@ final class Text {
     String aboutUpdateFailed() { return ar ? "تعذر التحقق من التحديثات. حاول مرة أخرى." : "Couldn’t check for updates. Try again."; }
     String aboutInstallUpdate() { return ar ? "تنزيل وتثبيت" : "Download and install"; }
     String aboutDownloadingUpdate() { return ar ? "جارٍ تنزيل التحديث…" : "Downloading update…"; }
+    String aboutVerifyingUpdate() { return ar ? "جارٍ التحقّق من التحديث…" : "Verifying update…"; }
+    String aboutChangelog() { return ar ? "سجل التغييرات" : "Changelog"; }
+    String aboutReleaseNotes() { return ar ? "• يظهر تقدّم التنزيل أثناء تحديث ميقات.\n• يمكنك فتح سجل التغييرات من «عن ميقات» بعد التحديث." : "• See download progress while updating Miqat.\n• Reopen the changelog from About Miqat after an update."; }
     String aboutInstallUpdateFailed() { return ar ? "تعذر تنزيل التحديث أو تثبيته. حاول مرة أخرى." : "Couldn’t download or install the update. Try again."; }
     /** The saved city in this language; set by {@link Screen#loadText}. */
     String cityName = "";

@@ -522,6 +522,13 @@
     "save": "action"
   },
   {
+    "id": "about.changelog",
+    "section": "device",
+    "kind": "action",
+    "label": "aboutChangelog",
+    "save": "action"
+  },
+  {
     "id": "device.startup",
     "section": "device",
     "kind": "toggle",

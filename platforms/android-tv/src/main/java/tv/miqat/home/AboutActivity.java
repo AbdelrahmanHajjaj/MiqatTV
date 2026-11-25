@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import tv.miqat.companion.about.AboutMiqat;
 import tv.miqat.companion.about.AboutUpdates;
+import tv.miqat.companion.about.ReleaseNotes;
 import tv.miqat.companion.qr.QrImage;
 import tv.miqat.core.UiContract;
 
@@ -41,12 +42,18 @@ public final class AboutActivity extends Screen {
             feedback.setText(AboutMiqat.FEEDBACK_URL);
         }
 
-        if (AboutUpdates.available(this)) {
+        boolean sideloaded = AboutUpdates.available(this);
+        if (sideloaded) {
             UiContract.INSTANCE.bind("about.check-updates", "action");
             FocusTile check = action(t.aboutCheckUpdates(), this::checkForUpdates);
             check.setTag("about.check-updates");
             placeTile(check, start, 795, 670 / scale, 76);
         }
+        UiContract.INSTANCE.bind("about.changelog", "action");
+        FocusTile notes = action(t.aboutChangelog(), () -> ReleaseNotes.show(new AlertDialog.Builder(this), rtl,
+                t.aboutChangelog(), t.aboutReleaseNotes(), t.back()));
+        notes.setTag("about.changelog");
+        placeTile(notes, start + (sideloaded ? 696 / scale : 0), 795, 490 / scale, 76);
         FocusTile back = action(t.back(), this::finish);
         placeTile(back, start, 942, 280, 64);
         setContentView(root);
@@ -67,7 +74,7 @@ public final class AboutActivity extends Screen {
     private void checkForUpdates() {
         AboutUpdates.show(this, new AlertDialog.Builder(this), rtl, new AboutUpdates.Labels(t.aboutCheckUpdates(), t.aboutCheckingUpdates(),
                 t.aboutNoUpdate(), t.aboutNewUpdate(), t.aboutUpdateFailed(), t.aboutInstallUpdate(),
-                t.aboutDownloadingUpdate(), t.aboutInstallUpdateFailed(), t.back()));
+                t.aboutDownloadingUpdate(), t.aboutVerifyingUpdate(), t.aboutInstallUpdateFailed(), t.back()));
     }
 
     private void drawQr(ImageView image, String url) throws Exception {

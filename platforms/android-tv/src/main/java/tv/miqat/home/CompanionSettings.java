@@ -117,6 +117,7 @@ final class CompanionSettings implements PairingRoutes.Settings {
         Set<String> found=new HashSet<>();
         for(int i=0;i<source.length();i++) {
             JSONObject c=new JSONObject(source.getJSONObject(i).toString());String id=c.getString("id");found.add(id);
+            if(id.equals("about.changelog"))continue;
             if(id.equals("favourites.order"))c.put("options",options);
             if(remote.containsKey(id))remoteOptions(c,options);
             if(c.optBoolean("available") && !c.getString("kind").equals("action") && !c.getString("section").equals("tests")) {

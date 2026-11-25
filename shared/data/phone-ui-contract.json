@@ -7,6 +7,7 @@
     {"id":"about.github","section":"about","label":"aboutGithub"},
     {"id":"about.email","section":"about","label":"aboutEmail"},
     {"id":"about.check-updates","section":"about","label":"aboutCheckUpdates"},
+    {"id":"about.changelog","section":"about","label":"aboutChangelog"},
     {"id":"playback.controls","section":"audio","label":"phone_adhan_controls"},
     {"id":"tests.phone-adhan","section":"audio","label":"phone_test_adhan"},
     {"id":"tests.phone-notification","section":"audio","label":"phone_test_notification"},

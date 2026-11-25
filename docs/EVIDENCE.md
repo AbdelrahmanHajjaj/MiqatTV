@@ -1,5 +1,13 @@
 # Validation evidence
 
+## Android update progress and changelog
+
+The API 34 phone fixture passed measured download, unknown length, truncated
+response, verification status and changelog claim checks. The bilingual native
+Android TV Settings check passed. An in-place upgrade between two same-signed
+TV APKs showed the installed version's changelog on the first Home launch.
+Fresh install and a later cold launch stayed quiet.
+
 ## Android phone and LG feedback — 25 November 2026
 
 The focused checks cover the direct QR entry, automatic phone update opt-in and

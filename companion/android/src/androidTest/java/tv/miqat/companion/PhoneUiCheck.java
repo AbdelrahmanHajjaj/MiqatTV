@@ -14,6 +14,7 @@ final class PhoneUiCheck {
     static void run(Instrumentation test,boolean capture)throws Exception {
         tv.miqat.companion.about.UpdateMetadataCheck.run();
         Context context=test.getTargetContext();SharedPreferences prefs=PhoneStore.preferences(context);
+        tv.miqat.companion.about.UpdateMetadataCheck.releaseNotes(context);
         Map<String,?> original=new LinkedHashMap<>(prefs.getAll());String language=context.getSharedPreferences("companion",0).getString("language","system");
         MainActivity[] current={null};
         try {
@@ -37,6 +38,7 @@ final class PhoneUiCheck {
                     check(version.getText().toString().contains(installedVersion), "About must show the installed phone version");
                     check(a.body.findViewWithTag("phone.about.github").isEnabled(), "GitHub feedback must be available");
                     check(a.body.findViewWithTag("phone.about.check-updates").isEnabled(), "Sideloaded phone has a manual update check");
+                    check(a.body.findViewWithTag("phone.about.changelog").isEnabled(), "About must offer the changelog");
                     Switch automatic = a.body.findViewWithTag("phone.about.auto-updates.edit");
                     check(automatic != null && !automatic.isChecked(), "Automatic updates must require opt-in");
                     automatic.performClick();

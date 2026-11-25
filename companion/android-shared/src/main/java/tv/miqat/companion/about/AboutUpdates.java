@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.SystemClock;
 import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.ObjLongConsumer;
@@ -30,7 +32,8 @@ public final class AboutUpdates {
     private static final int TIMEOUT_MS = 5000;
 
     public record Labels(String title, String checking, String current, String available,
-                         String failed, String install, String downloading, String installFailed, String close) {}
+                         String failed, String install, String downloading, String verifying,
+                         String installFailed, String close) {}
     record Result(long code, String version, String url) {}
 
     private AboutUpdates() {}
@@ -101,7 +104,17 @@ public final class AboutUpdates {
     }
 
     private static AlertDialog dialog(AlertDialog.Builder builder, boolean rtl, Labels labels, String message) {
-        AlertDialog dialog = builder.setTitle(labels.title()).setMessage(message)
+        Context context = builder.getContext();
+        LinearLayout content = new LinearLayout(context);
+        ProgressBar progress = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
+        progress.setId(android.R.id.progress);
+        progress.setMax(100);
+        progress.setVisibility(View.GONE);
+        int inset = Math.round(24 * context.getResources().getDisplayMetrics().density);
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(-1, -2);
+        layout.setMargins(inset, 0, inset, 0);
+        content.addView(progress, layout);
+        AlertDialog dialog = builder.setTitle(labels.title()).setMessage(message).setView(content)
                 .setNegativeButton(labels.close(), null).setPositiveButton(labels.install(), null).show();
         dialog.getWindow().getDecorView().setLayoutDirection(rtl ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         return dialog;
@@ -131,11 +144,14 @@ public final class AboutUpdates {
 
     private static void download(Activity activity, AlertDialog dialog, Result update, Labels labels) {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-        dialog.setMessage(labels.downloading());
+        showProgress(dialog, labels, UpdatePackage.INDETERMINATE);
         Thread job = new Thread(() -> {
             int session;
             try {
-                session = UpdatePackage.stage(activity.getApplicationContext(), update);
+                session = UpdatePackage.stage(activity.getApplicationContext(), update, percent ->
+                        activity.runOnUiThread(() -> {
+                            if (dialog.isShowing() && !activity.isDestroyed()) showProgress(dialog, labels, percent);
+                        }));
             } catch (IOException | PackageManager.NameNotFoundException | RuntimeException failure) {
                 activity.runOnUiThread(() -> {
                     if (!activity.isFinishing() && !activity.isDestroyed()) installFailed(dialog, labels);
@@ -163,8 +179,19 @@ public final class AboutUpdates {
         job.start();
     }
 
+    static void showProgress(AlertDialog dialog, Labels labels, int percent) {
+        ProgressBar progress = dialog.findViewById(android.R.id.progress);
+        String phase = percent == UpdatePackage.VERIFYING ? labels.verifying() : labels.downloading();
+        dialog.setMessage(phase);
+        progress.setContentDescription(phase);
+        progress.setIndeterminate(percent < 0);
+        if (percent >= 0) progress.setProgress(percent);
+        progress.setVisibility(View.VISIBLE);
+    }
+
     private static void installFailed(AlertDialog dialog, Labels labels) {
         if (!dialog.isShowing()) return;
+        dialog.findViewById(android.R.id.progress).setVisibility(View.GONE);
         dialog.setMessage(labels.installFailed());
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
     }

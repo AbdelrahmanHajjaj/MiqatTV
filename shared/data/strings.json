@@ -15,6 +15,12 @@
   "aboutUpdateFailed": {"ar": "تعذر التحقق من التحديثات. حاول مرة أخرى.", "en": "Couldn’t check for updates. Try again."},
   "aboutInstallUpdate": {"ar": "تنزيل وتثبيت", "en": "Download and install"},
   "aboutDownloadingUpdate": {"ar": "جارٍ تنزيل التحديث…", "en": "Downloading update…"},
+  "aboutVerifyingUpdate": {"ar": "جارٍ التحقّق من التحديث…", "en": "Verifying update…"},
+  "aboutChangelog": {"ar": "سجل التغييرات", "en": "Changelog"},
+  "aboutReleaseNotes": {
+    "ar": "• يظهر تقدّم التنزيل أثناء تحديث ميقات.\n• يمكنك فتح سجل التغييرات من «عن ميقات» بعد التحديث.",
+    "en": "• See download progress while updating Miqat.\n• Reopen the changelog from About Miqat after an update."
+  },
   "aboutInstallUpdateFailed": {"ar": "تعذر تنزيل التحديث أو تثبيته. حاول مرة أخرى.", "en": "Couldn’t download or install the update. Try again."},
   "ref": {
     "ar": "النساء 103",

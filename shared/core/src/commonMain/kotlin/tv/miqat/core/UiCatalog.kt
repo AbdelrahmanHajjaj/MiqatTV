@@ -64,6 +64,7 @@ internal object UiCatalog {
         UiControl("device.repair", "device", "toggle", "repairService", "immediate", "", emptyArray()),
         UiControl("device.about", "device", "action", "aboutMiqat", "action", "", emptyArray()),
         UiControl("about.check-updates", "device", "action", "aboutCheckUpdates", "action", "", emptyArray()),
+        UiControl("about.changelog", "device", "action", "aboutChangelog", "action", "", emptyArray()),
         UiControl("device.startup", "device", "toggle", "startupLauncher", "immediate", "", emptyArray()),
         UiControl("device.startup-show-input", "device", "toggle", "startupShowInput", "immediate", "", emptyArray()),
         UiControl("device.startup-input", "device", "choice", "startupInput", "immediate", "", arrayOf("DTV", "ATV", "HDMI_1", "HDMI_2", "HDMI_3", "HDMI_4", "AV_1", "AV_2", "COMP_1")),

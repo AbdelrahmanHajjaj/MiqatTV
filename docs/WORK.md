@@ -1,11 +1,9 @@
 # Current work
 
-## Android phone and LG feedback
+## Android update experience
 
-Deliver direct QR pairing, paired-TV updates, the resizable Countdown circle,
-optional Android phone update checks and the LG startup destination. Run the
-required PR checks, build signed Staging and test that candidate in Device
-simulation. Physical acceptance remains separate.
+Show download progress in the Android phone and TV self-updater. Show the
+bundled changelog once after an upgrade and keep it in About Miqat.
 
 ## iPhone
 
@@ -17,11 +15,9 @@ cleanup, personalisation and wireless debugging pairing still need native accept
 
 ## Stable release
 
-As of 2026-11-24, stable v0.7.9 ships Android phone and Android TV version
-0.7.9 (code 7009003) and LG version 0.7.9. The five Production digests matched
-signed Staging, both Android emulator simulations and the LG browser mock
-passed, and the site points to v0.7.9. See [validation evidence](EVIDENCE.md)
-and [release procedure](RELEASING.md).
+Production v0.7.10 was published on 2026-11-25 from v0.7.10-staging.2.
+Both Android emulator simulations and the LG browser mock passed for that
+candidate. See [validation evidence](EVIDENCE.md) and [release procedure](RELEASING.md).
 
 Physical phone launcher, TV setup, legacy LG layout and newer LG audio checks
 remain open. Keep review exports in the existing ignored `state/builds/`

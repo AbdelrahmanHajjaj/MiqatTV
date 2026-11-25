@@ -9,8 +9,14 @@ import android.content.pm.PackageInfo;
 import android.os.SystemClock;
 import android.view.accessibility.AccessibilityNodeInfo;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.json.JSONException;
 
 public final class UpdateMetadataCheck {
@@ -36,11 +42,49 @@ public final class UpdateMetadataCheck {
                 || UpdatePackage.trustedHost(new URL("https://github.com.example.org/example"))) {
             throw new AssertionError("APK redirects must stay on trusted HTTPS hosts");
         }
+        byte[] payload = new byte[128 * 1024];
+        List<Integer> progress = new ArrayList<>();
+        ByteArrayOutputStream downloaded = new ByteArrayOutputStream();
+        UpdatePackage.copyDownload(new ByteArrayInputStream(payload), downloaded,
+                payload.length, Long.MAX_VALUE, progress::add);
+        if (!progress.equals(Arrays.asList(0, 50, 100)) || downloaded.size() != payload.length)
+            throw new AssertionError("Download progress must follow bytes written");
+        progress.clear();
+        UpdatePackage.copyDownload(new ByteArrayInputStream(payload), downloaded, -1, Long.MAX_VALUE, progress::add);
+        if (!progress.equals(Collections.singletonList(UpdatePackage.INDETERMINATE)))
+            throw new AssertionError("An unknown response length must stay indeterminate");
+        try {
+            UpdatePackage.copyDownload(new ByteArrayInputStream(payload), downloaded,
+                    payload.length + 1, Long.MAX_VALUE, progress::add);
+            throw new AssertionError("Truncated update accepted");
+        } catch (IOException expected) {}
+    }
+
+    @SuppressWarnings("deprecation")
+    public static void releaseNotes(Context context) {
+        String name = "miqat-release-notes-fixture";
+        var prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+        PackageInfo info = new PackageInfo();
+        info.versionCode = 40;
+        info.firstInstallTime = info.lastUpdateTime = 10;
+        prefs.edit().clear().commit();
+        try {
+            if (ReleaseNotes.claim(prefs, info)) throw new AssertionError("Fresh install opened release notes");
+            info.versionCode++;
+            info.lastUpdateTime++;
+            if (!ReleaseNotes.claim(prefs, info) || ReleaseNotes.claim(prefs, info))
+                throw new AssertionError("An upgrade must open release notes once");
+            prefs.edit().clear().commit();
+            if (!ReleaseNotes.claim(prefs, info) || ReleaseNotes.claim(prefs, info))
+                throw new AssertionError("An existing installation must see its first changelog once");
+        } finally {
+            context.deleteSharedPreferences(name);
+        }
     }
 
     public static void automaticOffer(Activity activity, AlertDialog.Builder builder, boolean rtl) {
         AboutUpdates.Labels labels = new AboutUpdates.Labels("Updates", "Checking", "Current", "Available",
-                "Failed", "Install", "Downloading", "Install failed", "Close");
+                "Failed", "Install", "Downloading", "Verifying", "Install failed", "Close");
         AboutUpdates.Result candidate = new AboutUpdates.Result(20, "1.0.0", "");
         if (AboutUpdates.showAvailable(activity, builder, rtl, labels, null, 19, () -> true) != null
                 || AboutUpdates.showAvailable(activity, builder, rtl, labels, candidate, 20, () -> true) != null
@@ -49,6 +93,14 @@ public final class UpdateMetadataCheck {
         AlertDialog dialog = AboutUpdates.showAvailable(activity, builder, rtl, labels, candidate, 19, () -> true);
         if (dialog == null || !dialog.isShowing() || !dialog.getButton(AlertDialog.BUTTON_POSITIVE).isShown())
             throw new AssertionError("An available foreground update must show its installation action");
+        android.widget.ProgressBar bar = dialog.findViewById(android.R.id.progress);
+        if (bar.isShown()) throw new AssertionError("An idle update offer must hide download progress");
+        AboutUpdates.showProgress(dialog, labels, 50);
+        if (!bar.isShown() || bar.isIndeterminate() || bar.getProgress() != 50)
+            throw new AssertionError("The update dialog must show measured download progress");
+        AboutUpdates.showProgress(dialog, labels, UpdatePackage.VERIFYING);
+        if (!bar.isIndeterminate() || !labels.verifying().contentEquals(bar.getContentDescription()))
+            throw new AssertionError("APK verification must have a distinct visible status");
         dialog.dismiss();
     }
 
