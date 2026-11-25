@@ -13,6 +13,15 @@ on:
         type: string
       version_code:
         type: string
+      phone:
+        type: boolean
+        default: true
+      android:
+        type: boolean
+        default: true
+      webos:
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -55,6 +64,9 @@ jobs:
         id: select
         env:
           BUILD_CHANNEL: ${{ inputs.channel }}
+          BUILD_PHONE: ${{ inputs.phone }}
+          BUILD_ANDROID_TV: ${{ inputs.android }}
+          BUILD_WEBOS: ${{ inputs.webos }}
         run: python3 -S -B tools/ci.py select
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: contains(toJSON(steps.select.outputs), 'true')
@@ -324,10 +336,13 @@ jobs:
           PHONE_VERSION: ${{ needs.companion.outputs.version }}
           TV_VERSION: ${{ needs.android.outputs.version }}
           LG_VERSION: ${{ needs.webos.outputs.version }}
+          PHONE_SELECTED: ${{ needs.changes.outputs.companion }}
+          TV_SELECTED: ${{ needs.changes.outputs.android }}
+          LG_SELECTED: ${{ needs.changes.outputs.webos }}
         run: |
-          test -n "$PHONE_VERSION"
-          test -n "$TV_VERSION"
-          test -n "$LG_VERSION"
+          if [[ "$PHONE_SELECTED" == true ]]; then test -n "$PHONE_VERSION"; fi
+          if [[ "$TV_SELECTED" == true ]]; then test -n "$TV_VERSION"; fi
+          if [[ "$LG_SELECTED" == true ]]; then test -n "$LG_VERSION"; fi
           if [[ "$CHANNEL" == staging ]]; then
             test -n "$RELEASE_VERSION"
             test -n "$RELEASE_CODE"
@@ -339,5 +354,5 @@ jobs:
             printf '## Built app versions\n\n'
             printf '| App | Version |\n| --- | --- |\n'
             printf '| Miqat Phone | %s |\n| Android TV | %s |\n| LG webOS | %s |\n' \
-              "$PHONE_VERSION" "$TV_VERSION" "$LG_VERSION"
+              "${PHONE_VERSION:-Not selected}" "${TV_VERSION:-Not selected}" "${LG_VERSION:-Not selected}"
           } >> "$GITHUB_STEP_SUMMARY"

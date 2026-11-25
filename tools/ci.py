@@ -71,6 +71,11 @@ if __name__ == "__main__":
             selected = affected(path for path in paths if path)
         elif os.environ.get("BUILD_CHANNEL") in ("development", "staging"):
             selected.remove("preview")
+            if os.environ["BUILD_CHANNEL"] == "development":
+                for job, option in (("companion", "BUILD_PHONE"), ("android", "BUILD_ANDROID_TV"),
+                                    ("webos", "BUILD_WEBOS")):
+                    if os.environ.get(option) == "false":
+                        selected.remove(job)
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
             for name in JOBS:
                 print(name + "=" + str(name in selected).lower(), file=output)

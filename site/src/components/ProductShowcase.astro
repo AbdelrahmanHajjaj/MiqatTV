@@ -49,6 +49,7 @@ const L = ar ? {
   androidTitle: 'Android TV / Google TV', androidCopy: 'اجمع تطبيقات التلفاز المفضّلة ومواقيت الصلاة في شاشة رئيسية واحدة، مع الأذان والتذكير وإذاعة القرآن.',
   lgTitle: 'LG webOS', lgCopy: 'تابع مدخل HDMI إلى جانب مواقيت الصلاة، واستمع إلى الأذان وإذاعة القرآن على تلفاز LG.',
   getTitle: 'نزّل ميقات لجهازك',
+  iosAvailability: 'قريبًا على iOS',
   guide: 'دليل التثبيت', releases: 'ملاحظات الإصدار وكل التنزيلات',
   downloads: [
     ['miqat-phone.apk', 'هاتف أندرويد', 'مواقيت الصلاة، وتذكيرات الصيام، وإذاعة القرآن، والتحكّم بالتلفاز.', 'تنزيل لأندرويد', 'docs/PHONE.md'],
@@ -87,6 +88,7 @@ const L = ar ? {
   androidTitle: 'Android TV / Google TV', androidCopy: 'Bring your favourite TV apps and prayer times together on the Home screen, with Adhan, reminders and Quran radio.',
   lgTitle: 'LG webOS', lgCopy: 'Watch HDMI alongside prayer times, and listen to Adhan and Quran radio on your LG TV.',
   getTitle: 'Download Miqat for your device',
+  iosAvailability: 'iOS coming soon',
   guide: 'Installation guide', releases: 'Release notes & all downloads',
   downloads: [
     ['miqat-phone.apk', 'Android phone', 'Prayer times, fasting reminders, Quran radio and TV controls.', 'Download for Android', 'docs/PHONE.md'],
@@ -158,6 +160,7 @@ const L = ar ? {
     <h3>{title}</h3><p>{description}</p>
     <div class="actions"><a class="primary" href={`${REPO}/releases/download/${RELEASE_TAG}/${file}`}>{label}</a><a href={`${REPO}/blob/main/${guide}`}>{L.guide}</a></div>
   </article>)}</div>
+  <p class="section-intro">{L.iosAvailability}</p>
   <a class="release-link" href={`${REPO}/releases/tag/${RELEASE_TAG}`}>{L.releases}</a>
 </section>
 <style>

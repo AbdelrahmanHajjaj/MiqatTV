@@ -68,6 +68,33 @@ The app and widget targets use the `group.tv.miqat.ios` App Group to share
 an offline prayer timetable. A signed widget check needs both targets in a
 development team with that group enabled. Signing identities stay local.
 
+### Installable development IPA
+
+In GitHub Actions, open **Build** on `main`, choose **Development**, and tick
+**iPhone dev IPA**. Clear the other platform boxes for an IPA-only run.
+Register the test iPhones with the Apple Developer team. Create Ad Hoc profiles
+for `tv.miqat.ios` and `tv.miqat.ios.widget` with the same registered iPhones,
+Apple Distribution certificate, and `group.tv.miqat.ios` capability.
+[Apple's registered-device setup](https://developer.apple.com/documentation/xcode/distributing-your-app-to-registered-devices/).
+
+Restrict the GitHub Actions environment `ios-development` to the `main`
+branch before adding these environment secrets:
+
+| Secret | Value |
+| --- | --- |
+| `IOS_CERTIFICATE_BASE64` | Base64-encoded Apple Distribution `.p12` |
+| `IOS_CERTIFICATE_PASSWORD` | Password for the `.p12` |
+| `IOS_APP_PROFILE_BASE64` | Base64-encoded Miqat app Ad Hoc profile |
+| `IOS_WIDGET_PROFILE_BASE64` | Base64-encoded Miqat widget Ad Hoc profile |
+| `IOS_IPA_PASSPHRASE` | Random passphrase of at least 32 characters, kept in the team password manager |
+
+Download the `miqat-ios-dev-ipa` artifact and extract `Miqat.ipa.gpg`. Decrypt
+with `gpg --output Miqat.ipa --decrypt Miqat.ipa.gpg` and enter the passphrase
+when prompted. The artifact is encrypted because the signed IPA includes the
+registered device list and the repository is public. Install the IPA on a
+provisioned iPhone with Developer Mode enabled. The artifact expires after
+seven days.
+
 The app privacy manifest declares app-local UserDefaults use for TV setup and
 demo preferences. Before App Store submission, review the linked dependencies
 and archive privacy report. The development workflow uses Xcode 16.3. Apple

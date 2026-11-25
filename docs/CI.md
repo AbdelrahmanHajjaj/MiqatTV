@@ -8,6 +8,11 @@
 | [Promote to Production](../.github/workflows/promote.yml) | Manual dispatch on `main` | Device simulation, byte-for-byte package promotion and deployment of the release website. |
 | [Publish website](../.github/workflows/publish-website.yml) | Manual dispatch on `main` | Rebuild and publish Pages with the existing stable downloads and update feed. |
 
+**Development** has checkboxes for Android phone, Android TV, LG webOS and an
+optional [iPhone dev IPA](../companion/ios/README.md#installable-development-ipa).
+Leave only iPhone checked for an IPA-only build on `main`. **Staging** assembles
+the Android phone, Android TV and LG webOS set together.
+
 ## PR gate
 
 The Validate run title identifies the PR and branch. Its **Summary** links
