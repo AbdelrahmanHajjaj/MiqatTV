@@ -87,8 +87,8 @@ final class FirstUseTests: XCTestCase {
         let longitude = app.textFields["خط الطول"]
         let apply = app.buttons["تطبيق"]
         tap(custom)
-        replace(latitude, with: "٣٠٫٠٥٠١")
-        replace(longitude, with: "٣١٫٢٤٠١")
+        replace(latitude, with: "٣٠٫٠٥٠١", rightAligned: true)
+        replace(longitude, with: "٣١٫٢٤٠١", rightAligned: true)
         XCTAssertEqual(latitude.value as? String, "٣٠٫٠٥٠١")
         XCTAssertEqual(longitude.value as? String, "٣١٫٢٤٠١")
         XCTAssertTrue(apply.isEnabled)
@@ -169,8 +169,11 @@ final class FirstUseTests: XCTestCase {
     }
 
     @MainActor
-    private func replace(_ field: XCUIElement, with text: String) {
+    private func replace(_ field: XCUIElement, with text: String, rightAligned: Bool = false) {
         tap(field)
+        if rightAligned {
+            field.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.5)).tap()
+        }
         guard let old = field.value as? String else {
             XCTFail("Missing coordinate field value")
             return
